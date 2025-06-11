@@ -25,6 +25,11 @@ app.use(session({
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 // Admin authentication middleware
 const requireAdmin = async (req, res, next) => {
   if (!req.session.adminId) {
