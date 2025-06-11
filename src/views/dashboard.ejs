@@ -1,0 +1,224 @@
+<%- include('layout', { title: 'Business Dashboard' }) %>
+
+<div class="container-fluid mt-4">
+  <div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-3 col-lg-2">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Business Dashboard</h5>
+          <hr>
+          <ul class="nav flex-column">
+            <li class="nav-item">
+              <a class="nav-link active" href="/dashboard">Overview</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/orders">Orders</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/groups">Groups</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/settings">Settings</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-md-9 col-lg-10">
+      <!-- Stats Cards -->
+      <div class="row mb-4">
+        <div class="col-md-4">
+          <div class="card bg-primary text-white">
+            <div class="card-body">
+              <h5 class="card-title">Total Orders</h5>
+              <h2 class="card-text">0</h2>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card bg-success text-white">
+            <div class="card-body">
+              <h5 class="card-title">Active Orders</h5>
+              <h2 class="card-text">0</h2>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card bg-info text-white">
+            <div class="card-body">
+              <h5 class="card-title">Completed Orders</h5>
+              <h2 class="card-text">0</h2>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Groups Status -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">WhatsApp Groups</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Group Name</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (groups && groups.length > 0) { %>
+                  <% groups.forEach(group => { %>
+                    <tr>
+                      <td><%= group.group_name %></td>
+                      <td><%= group.group_type %></td>
+                      <td>
+                        <span class="badge bg-success">Active</span>
+                      </td>
+                      <td>
+                        <button class="btn btn-sm btn-outline-primary">View Details</button>
+                      </td>
+                    </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="4" class="text-center">
+                      <div class="alert alert-info mb-0">
+                        No groups configured yet. Please complete the setup process.
+                      </div>
+                    </td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Orders -->
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Recent Orders</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Items</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="6" class="text-center">
+                    <div class="alert alert-info mb-0">
+                      No orders yet. Orders will appear here when customers place them in your WhatsApp group.
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Stats Modal -->
+<div class="modal fade" id="statsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Group Statistics</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="statsContent">
+                    Loading statistics...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function showGroupStats(groupId) {
+        const modal = new bootstrap.Modal(document.getElementById('statsModal'));
+        modal.show();
+        
+        try {
+            const response = await fetch(`/api/group-stats?groupId=${groupId}`);
+            const data = await response.json();
+            
+            document.getElementById('statsContent').innerHTML = `
+                <div class="row">
+                    <div class="col-6">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6>Total Orders</h6>
+                                <h3>${data.totalOrders}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6>Pending Orders</h6>
+                                <h3>${data.pendingOrders}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <h6>Recent Activity</h6>
+                    <ul class="list-group">
+                        ${data.recentActivity.map(activity => `
+                            <li class="list-group-item">
+                                ${activity.description}
+                                <small class="text-muted float-end">${activity.time}</small>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `;
+        } catch (error) {
+            document.getElementById('statsContent').innerHTML = `
+                <div class="alert alert-danger">
+                    Failed to load statistics. Please try again.
+                </div>
+            `;
+        }
+    }
+
+    async function removeGroup(groupId) {
+        if (!confirm('Are you sure you want to remove this group? This action cannot be undone.')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/remove-group?groupId=${groupId}`, {
+                method: 'POST'
+            });
+            
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Failed to remove group. Please try again.');
+            }
+        } catch (error) {
+            alert('An error occurred. Please try again.');
+        }
+    }
+</script> 

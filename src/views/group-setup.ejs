@@ -1,0 +1,82 @@
+<%- include('layout', { title: 'Group Setup' }) %>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="text-center">Setup Your WhatsApp Groups</h2>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h5>Instructions:</h5>
+                    <ol>
+                        <li>Add the bot to your existing WhatsApp groups:
+                            <ul>
+                                <li><strong>Sales Group:</strong> Where customers will place orders</li>
+                                <li><strong>Delivery Group:</strong> Where delivery staff will manage orders</li>
+                            </ul>
+                        </li>
+                        <li>In each group, type the following command:
+                            <div class="alert alert-secondary mt-2">
+                                <code><%= setupCommand %></code>
+                            </div>
+                        </li>
+                        <li>The bot will automatically detect the group type and complete the setup</li>
+                    </ol>
+                </div>
+
+                <div class="alert alert-warning">
+                    <strong>Important:</strong> Make sure to add the bot to both groups and type the setup command in each group.
+                </div>
+
+                <div id="setup-status" class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Waiting for group setup...</p>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <a href="/dashboard?userId=<%= userId %>" class="btn btn-success" id="continue-btn" style="display: none;">
+                        Continue to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Poll for setup status
+    const checkSetupStatus = async () => {
+        try {
+            const response = await fetch(`/api/setup-status?userId=<%= userId %>&businessId=<%= businessId %>`);
+            const data = await response.json();
+            
+            if (data.status === 'complete') {
+                document.getElementById('setup-status').innerHTML = `
+                    <div class="alert alert-success">
+                        <h5>Setup Complete!</h5>
+                        <p>Your WhatsApp groups have been successfully configured.</p>
+                    </div>
+                `;
+                document.getElementById('continue-btn').style.display = 'block';
+            } else if (data.status === 'error') {
+                document.getElementById('setup-status').innerHTML = `
+                    <div class="alert alert-danger">
+                        <h5>Setup Failed</h5>
+                        <p>${data.message}</p>
+                    </div>
+                `;
+            } else {
+                setTimeout(checkSetupStatus, 5000); // Check again in 5 seconds
+            }
+        } catch (error) {
+            console.error('Error checking setup status:', error);
+            setTimeout(checkSetupStatus, 5000);
+        }
+    };
+
+    // Start checking status
+    checkSetupStatus();
+</script> 

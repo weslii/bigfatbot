@@ -1,0 +1,42 @@
+<%- include('layout', { title: 'Setup Business' }) %>
+
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="mb-0">Setup Your Business</h4>
+        </div>
+        <div class="card-body">
+          <% if (typeof error !== 'undefined') { %>
+            <div class="alert alert-danger" role="alert">
+              <%= error %>
+            </div>
+          <% } %>
+
+          <form action="/setup-business" method="POST">
+            <input type="hidden" name="userId" value="<%= userId %>">
+            
+            <div class="mb-3">
+              <label for="businessName" class="form-label">Business Name</label>
+              <input type="text" class="form-control" id="businessName" name="businessName" required>
+              <div class="form-text">This will be used to identify your business in the system</div>
+            </div>
+
+            <div class="alert alert-info" role="alert">
+              <h5 class="alert-heading">Next Steps</h5>
+              <p>After setting up your business, you'll need to:</p>
+              <ol class="mb-0">
+                <li>Add our bot to your WhatsApp groups</li>
+                <li>Type the setup command in each group</li>
+                <li>Start managing your deliveries!</li>
+              </ol>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Create Business</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 
