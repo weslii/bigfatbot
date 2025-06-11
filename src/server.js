@@ -18,12 +18,18 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Debug session secret
 console.log('SESSION_SECRET is set:', !!process.env.SESSION_SECRET);
 console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('RAILWAY_PUBLIC_DOMAIN:', process.env.RAILWAY_PUBLIC_DOMAIN);
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: process.env.NODE_ENV === 'production' }
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
 }));
 
 // Set view engine
