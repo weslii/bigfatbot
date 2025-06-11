@@ -14,6 +14,11 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Debug session secret
+console.log('SESSION_SECRET is set:', !!process.env.SESSION_SECRET);
+console.log('NODE_ENV:', process.env.NODE_ENV);
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
@@ -32,6 +37,7 @@ app.get('/health', (req, res) => {
 
 // Admin authentication middleware
 const requireAdmin = async (req, res, next) => {
+  console.log('requireAdmin middleware: session =', req.session);
   logger.debug('requireAdmin middleware: session adminId =', req.session.adminId);
   if (!req.session.adminId) {
     logger.debug('No adminId in session, redirecting to login');
@@ -70,6 +76,7 @@ app.post('/admin/login', async (req, res) => {
     }
 
     req.session.adminId = admin.id;
+    console.log('Session after login:', req.session);
     res.redirect('/admin/dashboard');
   } catch (error) {
     logger.error('Admin login error:', error);
