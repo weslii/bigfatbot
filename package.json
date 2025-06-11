@@ -12,7 +12,8 @@
     "migrate": "knex migrate:latest",
     "migrate:rollback": "knex migrate:rollback",
     "migrate:make": "knex migrate:make",
-    "build": "npm install && npm run migrate"
+    "build": "npm install",
+    "postbuild": "npm run migrate || true"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
