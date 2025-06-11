@@ -1,6 +1,6 @@
 const db = require('../config/database');
 const logger = require('../utils/logger');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 class AdminService {
   static async createAdmin(username, email, password, role = 'admin') {
