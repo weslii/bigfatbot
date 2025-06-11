@@ -1,45 +1,58 @@
-<%- include('layout', { title: 'Group Setup' }) %>
+<%- include('header', { title: 'Group Setup' }) %>
 
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <h2 class="text-center">Setup Your WhatsApp Groups</h2>
-            </div>
-            <div class="card-body">
-                <div class="alert alert-info">
-                    <h5>Instructions:</h5>
-                    <ol>
-                        <li>Add the bot to your existing WhatsApp groups:
-                            <ul>
-                                <li><strong>Sales Group:</strong> Where customers will place orders</li>
-                                <li><strong>Delivery Group:</strong> Where delivery staff will manage orders</li>
-                            </ul>
-                        </li>
-                        <li>In each group, type the following command:
-                            <div class="alert alert-secondary mt-2">
-                                <code><%= setupCommand %></code>
-                            </div>
-                        </li>
-                        <li>The bot will automatically detect the group type and complete the setup</li>
-                    </ol>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Setup Your WhatsApp Groups</h4>
                 </div>
-
-                <div class="alert alert-warning">
-                    <strong>Important:</strong> Make sure to add the bot to both groups and type the setup command in each group.
-                </div>
-
-                <div id="setup-status" class="text-center">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
+                <div class="card-body">
+                    <div class="alert alert-success" role="alert">
+                        <h5 class="alert-heading">Business Created Successfully!</h5>
+                        <p>Your business "<%= businessName %>" has been registered. Now let's set up your WhatsApp groups.</p>
                     </div>
-                    <p class="mt-2">Waiting for group setup...</p>
-                </div>
 
-                <div class="d-grid gap-2">
-                    <a href="/dashboard?userId=<%= userId %>" class="btn btn-success" id="continue-btn" style="display: none;">
-                        Continue to Dashboard
-                    </a>
+                    <div class="mb-4">
+                        <h5>Setup Instructions</h5>
+                        <ol>
+                            <li class="mb-3">
+                                <strong>Add the Bot to Your Groups</strong>
+                                <p class="mb-0">Add our WhatsApp bot to your existing groups:</p>
+                                <ul>
+                                    <li>Sales group (where customers place orders)</li>
+                                    <li>Delivery group (where delivery personnel manage orders)</li>
+                                </ul>
+                            </li>
+                            
+                            <li class="mb-3">
+                                <strong>Use the Setup Command</strong>
+                                <p>In each group, type the following command:</p>
+                                <div class="alert alert-light border">
+                                    <code class="user-select-all"><%= setupCommand %></code>
+                                    <button class="btn btn-sm btn-outline-primary float-end" onclick="copyCommand()">Copy</button>
+                                </div>
+                            </li>
+
+                            <li>
+                                <strong>Verify Setup</strong>
+                                <p class="mb-0">The bot will automatically detect the group type and configure it accordingly. You'll receive a confirmation message in each group.</p>
+                            </li>
+                        </ol>
+                    </div>
+
+                    <div class="alert alert-info" role="alert">
+                        <h5 class="alert-heading">Important Notes</h5>
+                        <ul class="mb-0">
+                            <li>Make sure to add the bot to both groups</li>
+                            <li>The bot will automatically determine which group is for sales and which is for delivery</li>
+                            <li>You can always add more groups later through the dashboard</li>
+                        </ul>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <a href="/dashboard?userId=<%= userId %>" class="btn btn-primary">Go to Dashboard</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -47,36 +60,16 @@
 </div>
 
 <script>
-    // Poll for setup status
-    const checkSetupStatus = async () => {
-        try {
-            const response = await fetch(`/api/setup-status?userId=<%= userId %>&businessId=<%= businessId %>`);
-            const data = await response.json();
-            
-            if (data.status === 'complete') {
-                document.getElementById('setup-status').innerHTML = `
-                    <div class="alert alert-success">
-                        <h5>Setup Complete!</h5>
-                        <p>Your WhatsApp groups have been successfully configured.</p>
-                    </div>
-                `;
-                document.getElementById('continue-btn').style.display = 'block';
-            } else if (data.status === 'error') {
-                document.getElementById('setup-status').innerHTML = `
-                    <div class="alert alert-danger">
-                        <h5>Setup Failed</h5>
-                        <p>${data.message}</p>
-                    </div>
-                `;
-            } else {
-                setTimeout(checkSetupStatus, 5000); // Check again in 5 seconds
-            }
-        } catch (error) {
-            console.error('Error checking setup status:', error);
-            setTimeout(checkSetupStatus, 5000);
-        }
-    };
+function copyCommand() {
+    const command = document.querySelector('code').textContent;
+    navigator.clipboard.writeText(command).then(() => {
+        const button = document.querySelector('button');
+        button.textContent = 'Copied!';
+        setTimeout(() => {
+            button.textContent = 'Copy';
+        }, 2000);
+    });
+}
+</script>
 
-    // Start checking status
-    checkSetupStatus();
-</script> 
+<%- include('footer') %> 
