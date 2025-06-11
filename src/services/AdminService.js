@@ -92,6 +92,15 @@ class AdminService {
       throw error;
     }
   }
+
+  static async getAdminById(id) {
+    try {
+      return await db('admins').where({ id }).first();
+    } catch (error) {
+      logger.error('Error fetching admin by ID:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = AdminService; 

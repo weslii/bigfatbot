@@ -32,12 +32,16 @@ app.get('/health', (req, res) => {
 
 // Admin authentication middleware
 const requireAdmin = async (req, res, next) => {
+  logger.debug('requireAdmin middleware: session adminId =', req.session.adminId);
   if (!req.session.adminId) {
+    logger.debug('No adminId in session, redirecting to login');
     return res.redirect('/admin/login');
   }
   try {
     const admin = await AdminService.getAdminById(req.session.adminId);
+    logger.debug('requireAdmin middleware: admin =', admin);
     if (!admin || !admin.is_active) {
+      logger.debug('Admin not found or not active, destroying session and redirecting to login');
       req.session.destroy();
       return res.redirect('/admin/login');
     }
@@ -57,7 +61,9 @@ app.get('/admin/login', (req, res) => {
 app.post('/admin/login', async (req, res) => {
   try {
     const { username, password } = req.body;
+    logger.debug('POST /admin/login: username =', username, 'password =', password);
     const admin = await AdminService.authenticate(username, password);
+    logger.debug('POST /admin/login: admin =', admin);
     
     if (!admin) {
       return res.render('admin/login', { error: 'Invalid credentials' });
