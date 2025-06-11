@@ -3,7 +3,7 @@ builder = "nixpacks"
 buildCommand = "npm run build"
 
 [deploy]
-startCommand = "npm run migrate && npm run start:web"
+startCommand = "npm run start:prod"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
