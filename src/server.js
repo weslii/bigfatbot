@@ -24,19 +24,28 @@ console.log('Redis URL:', process.env.REDIS_URL ? 'Set' : 'Not set');
 let redisStore;
 let isRedisConnected = false;
 
-redisClient.on('connect', () => {
-  console.log('Redis client connected');
-  isRedisConnected = true;
-});
+// Initialize Redis connection
+const initRedis = async () => {
+  try {
+    await redisClient.connect();
+    console.log('Redis client connected');
+    isRedisConnected = true;
+    
+    // Create Redis store after successful connection
+    redisStore = new RedisStore({ client: redisClient });
+    console.log('Redis store initialized');
+    
+    // Update session config with Redis store
+    sessionConfig.store = redisStore;
+    console.log('Session config updated with Redis store');
+  } catch (err) {
+    console.error('Failed to connect to Redis:', err);
+    isRedisConnected = false;
+  }
+};
 
 redisClient.on('error', (err) => {
   console.error('Redis client error:', err);
-  isRedisConnected = false;
-});
-
-// Try to connect to Redis, but don't block server startup
-redisClient.connect().catch(err => {
-  console.error('Failed to connect to Redis:', err);
   isRedisConnected = false;
 });
 
@@ -63,22 +72,21 @@ const sessionConfig = {
   }
 };
 
-// Use Redis store if available, otherwise use memory store
-if (isRedisConnected) {
-  sessionConfig.store = new RedisStore({ client: redisClient });
-  console.log('Using Redis store for sessions');
-} else {
-  console.log('Using memory store for sessions (Redis not available)');
-}
-
-// Debug session store
-console.log('Session config:', JSON.stringify(sessionConfig, null, 2));
-
-app.use(session(sessionConfig));
-
-// Set view engine
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+// Initialize Redis and then set up session middleware
+initRedis().then(() => {
+  // Debug session store
+  console.log('Session config:', JSON.stringify(sessionConfig, null, 2));
+  app.use(session(sessionConfig));
+  
+  // Set view engine
+  app.set('view engine', 'ejs');
+  app.set('views', path.join(__dirname, 'views'));
+  
+  // Start server after Redis is initialized
+  app.listen(port, () => {
+    logger.info(`Dashboard server running on port ${port}`);
+  });
+});
 
 // Health check endpoint
 app.get('/health', async (req, res) => {
@@ -106,6 +114,7 @@ app.get('/health', async (req, res) => {
 // Admin authentication middleware
 const requireAdmin = async (req, res, next) => {
   console.log('requireAdmin middleware: session =', req.session);
+  console.log('Session store type:', req.sessionStore.constructor.name);
   logger.debug('requireAdmin middleware: session adminId =', req.session.adminId);
   if (!req.session.adminId) {
     logger.debug('No adminId in session, redirecting to login');
@@ -143,9 +152,20 @@ app.post('/admin/login', async (req, res) => {
       return res.render('admin/login', { error: 'Invalid credentials' });
     }
 
+    // Set session data
     req.session.adminId = admin.id;
     console.log('Session after login:', req.session);
-    res.redirect('/admin/dashboard');
+    
+    // Force session save
+    req.session.save((err) => {
+      if (err) {
+        console.error('Error saving session:', err);
+        return res.render('admin/login', { error: 'Login failed' });
+      }
+      console.log('Session saved successfully');
+      console.log('Session store type:', req.sessionStore.constructor.name);
+      res.redirect('/admin/dashboard');
+    });
   } catch (error) {
     logger.error('Admin login error:', error);
     res.render('admin/login', { error: 'Login failed' });
@@ -235,11 +255,6 @@ app.get('/dashboard', async (req, res) => {
     logger.error('Dashboard error:', error);
     res.render('error', { error: 'Failed to load dashboard.' });
   }
-});
-
-// Start server
-app.listen(port, () => {
-  logger.info(`Dashboard server running on port ${port}`);
 });
 
 module.exports = app; 
