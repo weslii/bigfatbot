@@ -2,6 +2,7 @@
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
+const RedisStore = require('connect-redis')(session);
 const { createClient } = require('redis');
 const logger = require('./utils/logger');
 const RegistrationService = require('./services/RegistrationService');
@@ -15,9 +16,6 @@ const port = process.env.PORT || 3000;
 console.log('Redis URL:', process.env.REDIS_URL ? 'Set' : 'Not set');
 
 (async () => {
-  // Dynamically import connect-redis to get the correct export
-  const RedisStore = (await import('connect-redis')).default;
-
   const sessionConfig = {
     secret: process.env.SESSION_SECRET || 'your-secret-key',
     resave: false,
