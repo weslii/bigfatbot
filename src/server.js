@@ -2,6 +2,8 @@
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
+const RedisStore = require('connect-redis').default;
+const { createClient } = require('redis');
 const logger = require('./utils/logger');
 const RegistrationService = require('./services/RegistrationService');
 const WhatsAppService = require('./services/WhatsAppService');
@@ -9,6 +11,13 @@ const AdminService = require('./services/AdminService');
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+// Create Redis client
+const redisClient = createClient({
+  url: process.env.REDIS_URL || 'redis://localhost:6379'
+});
+
+redisClient.connect().catch(console.error);
 
 // Middleware
 app.use(express.json());
@@ -20,7 +29,9 @@ console.log('SESSION_SECRET is set:', !!process.env.SESSION_SECRET);
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('RAILWAY_PUBLIC_DOMAIN:', process.env.RAILWAY_PUBLIC_DOMAIN);
 
-app.use(session({
+// Session configuration
+const sessionConfig = {
+  store: new RedisStore({ client: redisClient }),
   secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
   saveUninitialized: false,
@@ -30,7 +41,11 @@ app.use(session({
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
-}));
+};
+
+console.log('Session config:', JSON.stringify(sessionConfig, null, 2));
+
+app.use(session(sessionConfig));
 
 // Set view engine
 app.set('view engine', 'ejs');
