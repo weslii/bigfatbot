@@ -8,6 +8,7 @@ const logger = require('./utils/logger');
 const RegistrationService = require('./services/RegistrationService');
 const WhatsAppService = require('./services/WhatsAppService');
 const AdminService = require('./services/AdminService');
+const db = require('./db');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -20,15 +21,24 @@ const redisClient = createClient({
 // Debug Redis connection
 console.log('Redis URL:', process.env.REDIS_URL ? 'Set' : 'Not set');
 
+let redisStore;
+let isRedisConnected = false;
+
 redisClient.on('connect', () => {
   console.log('Redis client connected');
+  isRedisConnected = true;
 });
 
 redisClient.on('error', (err) => {
   console.error('Redis client error:', err);
+  isRedisConnected = false;
 });
 
-redisClient.connect().catch(console.error);
+// Try to connect to Redis, but don't block server startup
+redisClient.connect().catch(err => {
+  console.error('Failed to connect to Redis:', err);
+  isRedisConnected = false;
+});
 
 // Middleware
 app.use(express.json());
@@ -42,7 +52,6 @@ console.log('RAILWAY_PUBLIC_DOMAIN:', process.env.RAILWAY_PUBLIC_DOMAIN);
 
 // Session configuration
 const sessionConfig = {
-  store: new RedisStore({ client: redisClient }),
   secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
   saveUninitialized: false,
@@ -54,8 +63,15 @@ const sessionConfig = {
   }
 };
 
+// Use Redis store if available, otherwise use memory store
+if (isRedisConnected) {
+  sessionConfig.store = new RedisStore({ client: redisClient });
+  console.log('Using Redis store for sessions');
+} else {
+  console.log('Using memory store for sessions (Redis not available)');
+}
+
 // Debug session store
-console.log('Session store type:', sessionConfig.store.constructor.name);
 console.log('Session config:', JSON.stringify(sessionConfig, null, 2));
 
 app.use(session(sessionConfig));
@@ -65,8 +81,26 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok' });
+app.get('/health', async (req, res) => {
+  try {
+    // Check database connection
+    await db.raw('SELECT 1');
+    
+    const status = {
+      status: 'ok',
+      redis: isRedisConnected ? 'connected' : 'disconnected',
+      database: 'connected'
+    };
+    res.status(200).json(status);
+  } catch (error) {
+    console.error('Health check failed:', error);
+    res.status(500).json({
+      status: 'error',
+      redis: isRedisConnected ? 'connected' : 'disconnected',
+      database: 'disconnected',
+      error: error.message
+    });
+  }
 });
 
 // Admin authentication middleware
