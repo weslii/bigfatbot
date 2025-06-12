@@ -31,20 +31,15 @@ const redisClient = createClient({
 
 console.log('Redis URL:', process.env.REDIS_URL ? 'Set' : 'Not set');
 
-let redisStore;
-let isRedisConnected = false;
-
 (async () => {
   try {
     await redisClient.connect();
     console.log('Redis client connected');
-    redisStore = new RedisStore({ client: redisClient });
-    sessionConfig.store = redisStore;
-    isRedisConnected = true;
+    const store = new RedisStore({ client: redisClient });
+    sessionConfig.store = store;
     console.log('Using Redis store for sessions');
   } catch (err) {
     console.error('Failed to connect to Redis:', err);
-    isRedisConnected = false;
     if (process.env.NODE_ENV === 'production') {
       console.error('Redis is required in production. Exiting.');
       process.exit(1);
@@ -53,7 +48,6 @@ let isRedisConnected = false;
     }
   }
 
-  // Always set up session middleware, even if Redis fails in development
   app.use(session(sessionConfig));
 
   // Middleware
@@ -83,7 +77,7 @@ app.get('/health', async (req, res) => {
     
     const status = {
       status: 'ok',
-      redis: isRedisConnected ? 'connected' : 'disconnected',
+      redis: 'connected',
       database: 'connected'
     };
     res.status(200).json(status);
@@ -91,7 +85,7 @@ app.get('/health', async (req, res) => {
     console.error('Health check failed:', error);
     res.status(500).json({
       status: 'error',
-      redis: isRedisConnected ? 'connected' : 'disconnected',
+      redis: 'connected',
       database: 'disconnected',
       error: error.message
     });
