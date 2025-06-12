@@ -2,7 +2,6 @@
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
-const RedisStore = require('connect-redis').default;
 const { createClient } = require('redis');
 const logger = require('./utils/logger');
 const RegistrationService = require('./services/RegistrationService');
@@ -13,25 +12,28 @@ const db = require('./config/database');
 const app = express();
 const port = process.env.PORT || 3000;
 
-const sessionConfig = {
-  secret: process.env.SESSION_SECRET || 'your-secret-key',
-  resave: false,
-  saveUninitialized: false,
-  cookie: { 
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
-  }
-};
-
-const redisClient = createClient({
-  url: process.env.REDIS_URL || 'redis://localhost:6379'
-});
-
 console.log('Redis URL:', process.env.REDIS_URL ? 'Set' : 'Not set');
 
 (async () => {
+  // Dynamically import connect-redis to get the correct export
+  const RedisStore = (await import('connect-redis')).default;
+
+  const sessionConfig = {
+    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+  };
+
+  const redisClient = createClient({
+    url: process.env.REDIS_URL || 'redis://localhost:6379'
+  });
+
   try {
     await redisClient.connect();
     console.log('Redis client connected');
