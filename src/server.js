@@ -17,6 +17,17 @@ const redisClient = createClient({
   url: process.env.REDIS_URL || 'redis://localhost:6379'
 });
 
+// Debug Redis connection
+console.log('Redis URL:', process.env.REDIS_URL ? 'Set' : 'Not set');
+
+redisClient.on('connect', () => {
+  console.log('Redis client connected');
+});
+
+redisClient.on('error', (err) => {
+  console.error('Redis client error:', err);
+});
+
 redisClient.connect().catch(console.error);
 
 // Middleware
@@ -43,6 +54,8 @@ const sessionConfig = {
   }
 };
 
+// Debug session store
+console.log('Session store type:', sessionConfig.store.constructor.name);
 console.log('Session config:', JSON.stringify(sessionConfig, null, 2));
 
 app.use(session(sessionConfig));
