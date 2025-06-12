@@ -8,7 +8,7 @@ const logger = require('./utils/logger');
 const RegistrationService = require('./services/RegistrationService');
 const WhatsAppService = require('./services/WhatsAppService');
 const AdminService = require('./services/AdminService');
-const db = require('./db');
+const db = require('./config/database');
 
 const app = express();
 const port = process.env.PORT || 3000;
