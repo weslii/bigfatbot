@@ -13,53 +13,6 @@ const db = require('./config/database');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Create Redis client
-const redisClient = createClient({
-  url: process.env.REDIS_URL || 'redis://localhost:6379'
-});
-
-// Debug Redis connection
-console.log('Redis URL:', process.env.REDIS_URL ? 'Set' : 'Not set');
-
-let redisStore;
-let isRedisConnected = false;
-
-// Initialize Redis connection
-const initRedis = async () => {
-  try {
-    await redisClient.connect();
-    console.log('Redis client connected');
-    isRedisConnected = true;
-    
-    // Create Redis store after successful connection
-    redisStore = new RedisStore({ client: redisClient });
-    console.log('Redis store initialized');
-    
-    // Update session config with Redis store
-    sessionConfig.store = redisStore;
-    console.log('Session config updated with Redis store');
-  } catch (err) {
-    console.error('Failed to connect to Redis:', err);
-    isRedisConnected = false;
-  }
-};
-
-redisClient.on('error', (err) => {
-  console.error('Redis client error:', err);
-  isRedisConnected = false;
-});
-
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Debug session secret
-console.log('SESSION_SECRET is set:', !!process.env.SESSION_SECRET);
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('RAILWAY_PUBLIC_DOMAIN:', process.env.RAILWAY_PUBLIC_DOMAIN);
-
-// Session configuration
 const sessionConfig = {
   secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
@@ -72,21 +25,55 @@ const sessionConfig = {
   }
 };
 
-// Initialize Redis and then set up session middleware
-initRedis().then(() => {
-  // Debug session store
-  console.log('Session config:', JSON.stringify(sessionConfig, null, 2));
+const redisClient = createClient({
+  url: process.env.REDIS_URL || 'redis://localhost:6379'
+});
+
+console.log('Redis URL:', process.env.REDIS_URL ? 'Set' : 'Not set');
+
+let redisStore;
+let isRedisConnected = false;
+
+(async () => {
+  try {
+    await redisClient.connect();
+    console.log('Redis client connected');
+    redisStore = new RedisStore({ client: redisClient });
+    sessionConfig.store = redisStore;
+    isRedisConnected = true;
+    console.log('Using Redis store for sessions');
+  } catch (err) {
+    console.error('Failed to connect to Redis:', err);
+    isRedisConnected = false;
+    if (process.env.NODE_ENV === 'production') {
+      console.error('Redis is required in production. Exiting.');
+      process.exit(1);
+    } else {
+      console.log('Using memory store for sessions (Redis not available, development only)');
+    }
+  }
+
+  // Always set up session middleware, even if Redis fails in development
   app.use(session(sessionConfig));
-  
+
+  // Middleware
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
+  app.use(express.static(path.join(__dirname, 'public')));
+
+  console.log('SESSION_SECRET is set:', !!process.env.SESSION_SECRET);
+  console.log('NODE_ENV:', process.env.NODE_ENV);
+  console.log('RAILWAY_PUBLIC_DOMAIN:', process.env.RAILWAY_PUBLIC_DOMAIN);
+
   // Set view engine
   app.set('view engine', 'ejs');
   app.set('views', path.join(__dirname, 'views'));
-  
-  // Start server after Redis is initialized
+
+  // Start server after session middleware is set up
   app.listen(port, () => {
     logger.info(`Dashboard server running on port ${port}`);
   });
-});
+})();
 
 // Health check endpoint
 app.get('/health', async (req, res) => {
