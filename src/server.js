@@ -17,6 +17,25 @@ const port = process.env.PORT || 3000;
 const redisUrl = process.env.REDIS_URL;
 console.log('Redis URL:', redisUrl ? 'Set' : 'Not set');
 
+// Parse Redis URL to get host, port, and password
+let redisConfig = {
+  host: 'redis.railway.internal',
+  port: 6379,
+  password: null,
+  legacyMode: true
+};
+
+if (redisUrl) {
+  try {
+    const url = new URL(redisUrl);
+    redisConfig.host = url.hostname;
+    redisConfig.port = url.port;
+    redisConfig.password = url.password;
+  } catch (err) {
+    console.error('Error parsing Redis URL:', err);
+  }
+}
+
 // Basic middleware setup (must be before routes)
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path} - Body parsing middleware check`);
@@ -43,25 +62,7 @@ app.set('views', path.join(__dirname, 'views'));
     process.exit(1);
   }
 
-  const redisClient = redis.createClient({
-    url: redisUrl,
-    legacyMode: true,
-    retry_strategy: function(options) {
-      if (options.error && options.error.code === 'ECONNREFUSED') {
-        console.error('Redis connection refused. Retrying...');
-        return new Error('Redis connection refused');
-      }
-      if (options.total_retry_time > 1000 * 60 * 60) {
-        console.error('Redis retry time exhausted');
-        return new Error('Redis retry time exhausted');
-      }
-      if (options.attempt > 10) {
-        console.error('Redis max retries reached');
-        return new Error('Redis max retries reached');
-      }
-      return Math.min(options.attempt * 100, 3000);
-    }
-  });
+  const redisClient = redis.createClient(redisConfig);
 
   redisClient.on('error', (err) => {
     console.error('Redis Client Error:', err);
@@ -71,7 +72,12 @@ app.set('views', path.join(__dirname, 'views'));
     console.log('Redis client connected successfully');
   });
 
+  redisClient.on('ready', () => {
+    console.log('Redis client ready');
+  });
+
   try {
+    // In legacy mode, we don't need to call connect()
     const sessionConfig = {
       store: new RedisStore({ 
         client: redisClient,
@@ -94,7 +100,9 @@ app.set('views', path.join(__dirname, 'views'));
   } catch (err) {
     console.error('Failed to connect to Redis:', err);
     console.error('Redis connection details:', {
-      url: redisUrl,
+      host: redisConfig.host,
+      port: redisConfig.port,
+      hasPassword: !!redisConfig.password,
       nodeEnv: process.env.NODE_ENV,
       railwayEnv: process.env.RAILWAY_ENVIRONMENT
     });
