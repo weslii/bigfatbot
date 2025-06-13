@@ -86,13 +86,17 @@ app.set('views', path.join(__dirname, 'views'));
         ttl: 86400 // 24 hours in seconds
       }),
       secret: process.env.SESSION_SECRET || 'your-secret-key',
-      resave: false,
-      saveUninitialized: false,
+      resave: true,
+      saveUninitialized: true,
+      rolling: true,
+      name: 'sessionId', // Explicitly set the cookie name
       cookie: {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        path: '/',
+        domain: process.env.RAILWAY_PUBLIC_DOMAIN || undefined
       }
     };
 
@@ -102,6 +106,7 @@ app.set('views', path.join(__dirname, 'views'));
     app.use((req, res, next) => {
       console.log('Session middleware - Session ID:', req.sessionID);
       console.log('Session middleware - Session data:', req.session);
+      console.log('Session middleware - Cookie:', req.headers.cookie);
       next();
     });
 
@@ -124,6 +129,7 @@ app.set('views', path.join(__dirname, 'views'));
   const requireAdmin = async (req, res, next) => {
     console.log('requireAdmin middleware - Session ID:', req.sessionID);
     console.log('requireAdmin middleware - Session data:', req.session);
+    console.log('requireAdmin middleware - Cookie:', req.headers.cookie);
     logger.debug('requireAdmin middleware: session adminId =', req.session.adminId);
     
     if (!req.session || !req.session.adminId) {
@@ -181,6 +187,7 @@ app.set('views', path.join(__dirname, 'views'));
   app.get('/admin/login', (req, res) => {
     console.log('Login page - Session ID:', req.sessionID);
     console.log('Login page - Session data:', req.session);
+    console.log('Login page - Cookie:', req.headers.cookie);
     
     if (req.session && req.session.adminId) {
       return res.redirect('/admin/dashboard');
@@ -199,6 +206,7 @@ app.set('views', path.join(__dirname, 'views'));
       // Debug logging
       console.log('Login attempt - Session ID:', req.sessionID);
       console.log('Login attempt - Session data:', req.session);
+      console.log('Login attempt - Cookie:', req.headers.cookie);
       console.log('Content-Type:', req.get('Content-Type'));
       console.log('req.body:', req.body);
       console.log('req.body type:', typeof req.body);

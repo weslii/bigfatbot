@@ -7,6 +7,7 @@ if (process.env.NODE_ENV !== 'production') {
 const fs = require('fs');
 const path = require('path');
 const logger = require('./utils/logger');
+const redis = require('redis');
 
 // Debug environment variables before loading database config
 console.log('🔍 Environment Debug:');
@@ -14,11 +15,49 @@ console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
 console.log('PGHOST exists:', !!process.env.PGHOST);
 console.log('POSTGRES_HOST exists:', !!process.env.POSTGRES_HOST);
+console.log('REDIS_URL exists:', !!process.env.REDIS_URL);
 console.log('Railway env vars:', {
   RAILWAY_ENVIRONMENT: process.env.RAILWAY_ENVIRONMENT,
   RAILWAY_PROJECT_ID: !!process.env.RAILWAY_PROJECT_ID,
   RAILWAY_SERVICE_ID: !!process.env.RAILWAY_SERVICE_ID
 });
+
+// Create Redis client for bot
+const redisUrl = process.env.REDIS_URL;
+let redisClient;
+
+if (redisUrl) {
+  redisClient = redis.createClient(redisUrl, {
+    prefix: 'bot:',
+    retry_strategy: function(options) {
+      if (options.error && options.error.code === 'ECONNREFUSED') {
+        logger.error('Redis connection refused');
+        return new Error('Redis connection refused');
+      }
+      if (options.total_retry_time > 1000 * 60 * 60) {
+        logger.error('Redis retry time exhausted');
+        return new Error('Redis retry time exhausted');
+      }
+      if (options.attempt > 10) {
+        logger.error('Redis max retries reached');
+        return new Error('Redis max retries reached');
+      }
+      return Math.min(options.attempt * 100, 3000);
+    }
+  });
+
+  redisClient.on('error', (err) => {
+    logger.error('Redis Client Error:', err);
+  });
+
+  redisClient.on('connect', () => {
+    logger.info('Redis client connected successfully');
+  });
+
+  redisClient.on('ready', () => {
+    logger.info('Redis client ready');
+  });
+}
 
 // Now load database after environment check
 const database = require('./config/database');
