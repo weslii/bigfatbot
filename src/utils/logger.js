@@ -14,7 +14,7 @@ const logger = winston.createLogger({
   format: logFormat,
   transports: [
     // Write all logs to console
-    //you get
+
     new winston.transports.Console({
       format: winston.format.combine(
         winston.format.colorize(),
