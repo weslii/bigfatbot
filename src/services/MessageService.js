@@ -58,8 +58,8 @@ class MessageService {
       }
 
       let message = `📋 *Pending Orders*\n\n`;
-      
-      orders.forEach((order, index) => {
+    
+    orders.forEach((order, index) => {
         message += `*${index + 1}. Order ID:* ${order.order_id}\n`;
         message += `*Customer:* ${order.customer_name}\n`;
         message += `*Phone:* ${order.customer_phone}\n`;
