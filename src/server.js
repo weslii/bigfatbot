@@ -71,17 +71,29 @@ app.set('views', path.join(__dirname, 'views'));
     console.log('Redis client ready');
   });
 
+  // Wait for Redis to be ready before setting up session
+  await new Promise((resolve, reject) => {
+    redisClient.once('ready', resolve);
+    redisClient.once('error', reject);
+  });
+
   try {
     // In legacy mode, we don't need to call connect()
     const sessionConfig = {
       store: new RedisStore({ 
         client: redisClient,
         prefix: 'sess:',
-        ttl: 86400 // 24 hours in seconds
+        ttl: 86400, // 24 hours in seconds
+        disableTouch: false,
+        serializer: {
+          stringify: (data) => JSON.stringify(data),
+          parse: (data) => JSON.parse(data)
+        }
       }),
       secret: process.env.SESSION_SECRET || 'your-secret-key',
       resave: true,
       saveUninitialized: true,
+      rolling: true,
       cookie: {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
@@ -165,6 +177,9 @@ app.set('views', path.join(__dirname, 'views'));
 
   // Admin routes
   app.get('/admin/login', (req, res) => {
+    if (req.session && req.session.adminId) {
+      return res.redirect('/admin/dashboard');
+    }
     res.render('admin/login');
   });
 
@@ -215,22 +230,7 @@ app.set('views', path.join(__dirname, 'views'));
         }
         console.log('Session saved successfully');
         console.log('Session store type:', req.sessionStore.constructor.name);
-        
-        // Regenerate session to prevent session fixation
-        req.session.regenerate((err) => {
-          if (err) {
-            console.error('Error regenerating session:', err);
-            return res.render('admin/login', { error: 'Login failed' });
-          }
-          req.session.adminId = admin.id;
-          req.session.save((err) => {
-            if (err) {
-              console.error('Error saving regenerated session:', err);
-              return res.render('admin/login', { error: 'Login failed' });
-            }
-            res.redirect('/admin/dashboard');
-          });
-        });
+        res.redirect('/admin/dashboard');
       });
     } catch (error) {
       logger.error('Admin login error:', error);

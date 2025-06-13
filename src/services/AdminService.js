@@ -25,18 +25,24 @@ class AdminService {
 
   static async authenticate(username, password) {
     try {
+      logger.debug('Authenticating admin:', { username });
+      
       const admin = await db('admins')
         .where({ username, is_active: true })
         .first();
 
       if (!admin) {
+        logger.debug('Admin not found or not active:', { username });
         return null;
       }
 
       const isValid = await bcrypt.compare(password, admin.password_hash);
       if (!isValid) {
+        logger.debug('Invalid password for admin:', { username });
         return null;
       }
+
+      logger.debug('Admin authenticated successfully:', { username, id: admin.id });
 
       // Update last login
       await db('admins')
@@ -95,7 +101,19 @@ class AdminService {
 
   static async getAdminById(id) {
     try {
-      return await db('admins').where({ id }).first();
+      logger.debug('Fetching admin by ID:', { id });
+      
+      const admin = await db('admins')
+        .where({ id })
+        .first();
+
+      if (!admin) {
+        logger.debug('Admin not found:', { id });
+        return null;
+      }
+
+      logger.debug('Admin found:', { id, username: admin.username });
+      return admin;
     } catch (error) {
       logger.error('Error fetching admin by ID:', error);
       throw error;
