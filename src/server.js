@@ -83,17 +83,11 @@ app.set('views', path.join(__dirname, 'views'));
       store: new RedisStore({ 
         client: redisClient,
         prefix: 'sess:',
-        ttl: 86400, // 24 hours in seconds
-        disableTouch: false,
-        serializer: {
-          stringify: (data) => JSON.stringify(data),
-          parse: (data) => JSON.parse(data)
-        }
+        ttl: 86400 // 24 hours in seconds
       }),
       secret: process.env.SESSION_SECRET || 'your-secret-key',
-      resave: true,
-      saveUninitialized: true,
-      rolling: true,
+      resave: false,
+      saveUninitialized: false,
       cookie: {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
@@ -103,6 +97,14 @@ app.set('views', path.join(__dirname, 'views'));
     };
 
     app.use(session(sessionConfig));
+
+    // Add session debugging middleware
+    app.use((req, res, next) => {
+      console.log('Session middleware - Session ID:', req.sessionID);
+      console.log('Session middleware - Session data:', req.session);
+      next();
+    });
+
     console.log('Using Redis store for sessions');
   } catch (err) {
     console.error('Failed to connect to Redis:', err);
@@ -120,8 +122,8 @@ app.set('views', path.join(__dirname, 'views'));
 
   // Admin authentication middleware
   const requireAdmin = async (req, res, next) => {
-    console.log('requireAdmin middleware: session =', req.session);
-    console.log('Session store type:', req.sessionStore.constructor.name);
+    console.log('requireAdmin middleware - Session ID:', req.sessionID);
+    console.log('requireAdmin middleware - Session data:', req.session);
     logger.debug('requireAdmin middleware: session adminId =', req.session.adminId);
     
     if (!req.session || !req.session.adminId) {
@@ -177,6 +179,9 @@ app.set('views', path.join(__dirname, 'views'));
 
   // Admin routes
   app.get('/admin/login', (req, res) => {
+    console.log('Login page - Session ID:', req.sessionID);
+    console.log('Login page - Session data:', req.session);
+    
     if (req.session && req.session.adminId) {
       return res.redirect('/admin/dashboard');
     }
@@ -192,6 +197,8 @@ app.set('views', path.join(__dirname, 'views'));
   app.post('/admin/login', async (req, res) => {
     try {
       // Debug logging
+      console.log('Login attempt - Session ID:', req.sessionID);
+      console.log('Login attempt - Session data:', req.session);
       console.log('Content-Type:', req.get('Content-Type'));
       console.log('req.body:', req.body);
       console.log('req.body type:', typeof req.body);
