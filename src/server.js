@@ -49,13 +49,18 @@ app.set('views', path.join(__dirname, 'views'));
   };
 
   const redisClient = createClient({
-    url: process.env.REDIS_URL || 'redis://localhost:6379'
+    url: process.env.REDIS_URL || 'redis://localhost:6379',
+    legacyMode: false
   });
 
   try {
     await redisClient.connect();
     console.log('Redis client connected');
-    const store = new RedisStore({ client: redisClient });
+    const store = new RedisStore({ 
+      client: redisClient,
+      prefix: 'sess:',
+      ttl: 86400 // 24 hours in seconds
+    });
     sessionConfig.store = store;
     console.log('Using Redis store for sessions');
   } catch (err) {
