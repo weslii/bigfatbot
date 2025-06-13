@@ -17,32 +17,6 @@ const port = process.env.PORT || 3000;
 const redisUrl = process.env.REDIS_URL;
 console.log('Redis URL:', redisUrl ? 'Set' : 'Not set');
 
-// Parse Redis URL to get host, port, and password
-let redisConfig = {
-  host: 'localhost',
-  port: 6379,
-  password: null,
-  legacyMode: true
-};
-
-if (redisUrl) {
-  try {
-    const url = new URL(redisUrl);
-    // Extract hostname and port from the URL
-    redisConfig.host = url.hostname;
-    redisConfig.port = parseInt(url.port);
-    redisConfig.password = url.password;
-    
-    console.log('Redis config:', {
-      host: redisConfig.host,
-      port: redisConfig.port,
-      hasPassword: !!redisConfig.password
-    });
-  } catch (err) {
-    console.error('Error parsing Redis URL:', err);
-  }
-}
-
 // Basic middleware setup (must be before routes)
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path} - Body parsing middleware check`);
@@ -69,7 +43,21 @@ app.set('views', path.join(__dirname, 'views'));
     process.exit(1);
   }
 
-  const redisClient = redis.createClient(redisConfig);
+  const redisClient = redis.createClient(redisUrl, {
+    legacyMode: true,
+    retry_strategy: function(options) {
+      if (options.error && options.error.code === 'ECONNREFUSED') {
+        return new Error('Redis connection refused');
+      }
+      if (options.total_retry_time > 1000 * 60 * 60) {
+        return new Error('Redis retry time exhausted');
+      }
+      if (options.attempt > 10) {
+        return new Error('Redis max retries reached');
+      }
+      return Math.min(options.attempt * 100, 3000);
+    }
+  });
 
   redisClient.on('error', (err) => {
     console.error('Redis Client Error:', err);
@@ -92,8 +80,8 @@ app.set('views', path.join(__dirname, 'views'));
         ttl: 86400 // 24 hours in seconds
       }),
       secret: process.env.SESSION_SECRET || 'your-secret-key',
-      resave: false,
-      saveUninitialized: false,
+      resave: true,
+      saveUninitialized: true,
       cookie: {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
@@ -107,9 +95,7 @@ app.set('views', path.join(__dirname, 'views'));
   } catch (err) {
     console.error('Failed to connect to Redis:', err);
     console.error('Redis connection details:', {
-      host: redisConfig.host,
-      port: redisConfig.port,
-      hasPassword: !!redisConfig.password,
+      url: redisUrl,
       nodeEnv: process.env.NODE_ENV,
       railwayEnv: process.env.RAILWAY_ENVIRONMENT
     });
@@ -125,18 +111,27 @@ app.set('views', path.join(__dirname, 'views'));
     console.log('requireAdmin middleware: session =', req.session);
     console.log('Session store type:', req.sessionStore.constructor.name);
     logger.debug('requireAdmin middleware: session adminId =', req.session.adminId);
-    if (!req.session.adminId) {
+    
+    if (!req.session || !req.session.adminId) {
       logger.debug('No adminId in session, redirecting to login');
       return res.redirect('/admin/login');
     }
+    
     try {
       const admin = await AdminService.getAdminById(req.session.adminId);
       logger.debug('requireAdmin middleware: admin =', admin);
+      
       if (!admin || !admin.is_active) {
         logger.debug('Admin not found or not active, destroying session and redirecting to login');
-        req.session.destroy();
-        return res.redirect('/admin/login');
+        req.session.destroy((err) => {
+          if (err) {
+            console.error('Error destroying session:', err);
+          }
+          res.redirect('/admin/login');
+        });
+        return;
       }
+      
       req.admin = admin;
       next();
     } catch (error) {
@@ -220,7 +215,22 @@ app.set('views', path.join(__dirname, 'views'));
         }
         console.log('Session saved successfully');
         console.log('Session store type:', req.sessionStore.constructor.name);
-        res.redirect('/admin/dashboard');
+        
+        // Regenerate session to prevent session fixation
+        req.session.regenerate((err) => {
+          if (err) {
+            console.error('Error regenerating session:', err);
+            return res.render('admin/login', { error: 'Login failed' });
+          }
+          req.session.adminId = admin.id;
+          req.session.save((err) => {
+            if (err) {
+              console.error('Error saving regenerated session:', err);
+              return res.render('admin/login', { error: 'Login failed' });
+            }
+            res.redirect('/admin/dashboard');
+          });
+        });
       });
     } catch (error) {
       logger.error('Admin login error:', error);
