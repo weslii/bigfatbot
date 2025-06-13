@@ -19,7 +19,7 @@ console.log('Redis URL:', redisUrl ? 'Set' : 'Not set');
 
 // Parse Redis URL to get host, port, and password
 let redisConfig = {
-  host: 'redis.railway.internal',
+  host: 'localhost',
   port: 6379,
   password: null,
   legacyMode: true
@@ -28,9 +28,16 @@ let redisConfig = {
 if (redisUrl) {
   try {
     const url = new URL(redisUrl);
+    // Extract hostname and port from the URL
     redisConfig.host = url.hostname;
-    redisConfig.port = url.port;
+    redisConfig.port = parseInt(url.port);
     redisConfig.password = url.password;
+    
+    console.log('Redis config:', {
+      host: redisConfig.host,
+      port: redisConfig.port,
+      hasPassword: !!redisConfig.password
+    });
   } catch (err) {
     console.error('Error parsing Redis URL:', err);
   }
