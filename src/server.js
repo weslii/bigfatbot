@@ -3,7 +3,7 @@ const express = require('express');
 const path = require('path');
 const session = require('express-session');
 const RedisStore = require('connect-redis')(session);
-const { createClient } = require('redis');
+const redis = require('redis');
 const logger = require('./utils/logger');
 const RegistrationService = require('./services/RegistrationService');
 const WhatsAppService = require('./services/WhatsAppService');
@@ -13,7 +13,9 @@ const db = require('./config/database');
 const app = express();
 const port = process.env.PORT || 3000;
 
-console.log('Redis URL:', process.env.REDIS_URL ? 'Set' : 'Not set');
+// Parse Redis URL for Railway
+const redisUrl = process.env.REDIS_URL;
+console.log('Redis URL:', redisUrl ? 'Set' : 'Not set');
 
 // Basic middleware setup (must be before routes)
 app.use((req, res, next) => {
@@ -36,44 +38,71 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 (async () => {
-  const sessionConfig = {
-    secret: process.env.SESSION_SECRET || 'your-secret-key',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    }
-  };
+  if (!redisUrl) {
+    console.error('REDIS_URL is not set. Session storage will not work properly.');
+    process.exit(1);
+  }
 
-  const redisClient = createClient({
-    url: process.env.REDIS_URL || 'redis://localhost:6379',
-    legacyMode: false
+  const redisClient = redis.createClient({
+    url: redisUrl,
+    legacyMode: true,
+    retry_strategy: function(options) {
+      if (options.error && options.error.code === 'ECONNREFUSED') {
+        console.error('Redis connection refused. Retrying...');
+        return new Error('Redis connection refused');
+      }
+      if (options.total_retry_time > 1000 * 60 * 60) {
+        console.error('Redis retry time exhausted');
+        return new Error('Redis retry time exhausted');
+      }
+      if (options.attempt > 10) {
+        console.error('Redis max retries reached');
+        return new Error('Redis max retries reached');
+      }
+      return Math.min(options.attempt * 100, 3000);
+    }
+  });
+
+  redisClient.on('error', (err) => {
+    console.error('Redis Client Error:', err);
+  });
+
+  redisClient.on('connect', () => {
+    console.log('Redis client connected successfully');
   });
 
   try {
     await redisClient.connect();
     console.log('Redis client connected');
-    const store = new RedisStore({ 
-      client: redisClient,
-      prefix: 'sess:',
-      ttl: 86400 // 24 hours in seconds
-    });
-    sessionConfig.store = store;
+    
+    const sessionConfig = {
+      store: new RedisStore({ 
+        client: redisClient,
+        prefix: 'sess:',
+        ttl: 86400 // 24 hours in seconds
+      }),
+      secret: process.env.SESSION_SECRET || 'your-secret-key',
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      }
+    };
+
+    app.use(session(sessionConfig));
     console.log('Using Redis store for sessions');
   } catch (err) {
     console.error('Failed to connect to Redis:', err);
-    if (process.env.NODE_ENV === 'production') {
-      console.error('Redis is required in production. Exiting.');
-      process.exit(1);
-    } else {
-      console.log('Using memory store for sessions (Redis not available, development only)');
-    }
+    console.error('Redis connection details:', {
+      url: redisUrl,
+      nodeEnv: process.env.NODE_ENV,
+      railwayEnv: process.env.RAILWAY_ENVIRONMENT
+    });
+    process.exit(1);
   }
-
-  app.use(session(sessionConfig));
 
   console.log('SESSION_SECRET is set:', !!process.env.SESSION_SECRET);
   console.log('NODE_ENV:', process.env.NODE_ENV);
