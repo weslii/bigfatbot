@@ -106,7 +106,7 @@ bot.start();
 // --- Health check endpoint for Railway worker ---
 const express = require('express');
 const healthApp = express();
-const HEALTH_PORT = process.env.HEALTH_PORT || 3001;
+const HEALTH_PORT = process.env.HEALTH_PORT || 3000;
 
 healthApp.get('/health', (req, res) => {
   res.status(200).send('ok');
