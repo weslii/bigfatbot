@@ -102,3 +102,16 @@ class DeliveryBot {
 // Start the bot
 const bot = new DeliveryBot();
 bot.start();
+
+// --- Health check endpoint for Railway worker ---
+const express = require('express');
+const healthApp = express();
+const HEALTH_PORT = process.env.HEALTH_PORT || 3001;
+
+healthApp.get('/health', (req, res) => {
+  res.status(200).send('ok');
+});
+
+healthApp.listen(HEALTH_PORT, () => {
+  console.log(`Bot health check server running on port ${HEALTH_PORT}`);
+});
