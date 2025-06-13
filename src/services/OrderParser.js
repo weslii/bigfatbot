@@ -40,7 +40,7 @@ class OrderParser {
       
       // If we have all required fields, return the data
       if (this.isValidOrderData(patternData)) {
-        return {
+      return {
           customer_name: patternData.customer_name,
           customer_phone: patternData.customer_phone,
           address: patternData.address,
@@ -62,7 +62,7 @@ class OrderParser {
     
     for (const line of lines) {
       const lowerLine = line.toLowerCase();
-      
+
       if (lowerLine.startsWith('name:')) {
         result.customer_name = line.substring(5).trim();
       } else if (lowerLine.startsWith('phone:') || lowerLine.startsWith('number:')) {
@@ -75,7 +75,7 @@ class OrderParser {
         result.delivery_date = this.parseDate(line.split(':')[1].trim());
       }
     }
-    
+
     return result;
   }
 
@@ -152,7 +152,7 @@ class OrderParser {
         result.address = remainingLines[i];
         remainingLines.splice(i, 1);
         break;
-      }
+    }
     }
 
     // Any remaining lines are items

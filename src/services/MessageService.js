@@ -55,7 +55,7 @@ class MessageService {
     try {
       if (!orders || orders.length === 0) {
         return 'No pending orders at the moment.';
-      }
+    }
 
       let message = `📋 *Pending Orders*\n\n`;
     
