@@ -18,6 +18,19 @@ const database = require('./config/database');
 const WhatsAppService = require('./services/WhatsAppService');
 const SchedulerService = require('./services/SchedulerService');
 
+// --- Health check endpoint for Railway worker ---
+const express = require('express');
+const healthApp = express();
+const HEALTH_PORT = process.env.PORT || 3000;
+
+healthApp.get('/health', (req, res) => {
+  res.status(200).send('ok');
+});
+
+healthApp.listen(HEALTH_PORT, () => {
+  console.log(`Bot health check server running on port ${HEALTH_PORT}`);
+});
+
 class DeliveryBot {
   constructor() {
     this.whatsappService = new WhatsAppService();
@@ -102,16 +115,3 @@ class DeliveryBot {
 // Start the bot
 const bot = new DeliveryBot();
 bot.start();
-
-// --- Health check endpoint for Railway worker ---
-const express = require('express');
-const healthApp = express();
-const HEALTH_PORT = process.env.HEALTH_PORT || 3000;
-
-healthApp.get('/health', (req, res) => {
-  res.status(200).send('ok');
-});
-
-healthApp.listen(HEALTH_PORT, () => {
-  console.log(`Bot health check server running on port ${HEALTH_PORT}`);
-});
