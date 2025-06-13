@@ -72,9 +72,6 @@ app.set('views', path.join(__dirname, 'views'));
   });
 
   try {
-    await redisClient.connect();
-    console.log('Redis client connected');
-    
     const sessionConfig = {
       store: new RedisStore({ 
         client: redisClient,
