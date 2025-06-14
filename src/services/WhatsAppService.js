@@ -96,6 +96,21 @@ class WhatsAppService {
 
   async handleMessage(message) {
     try {
+      // Get group info
+      const group = await database.query('groups')
+        .where('group_id', message.from)
+        .first();
+
+      if (!group) {
+        logger.info('Message from unknown group:', message.from);
+        return;
+      }
+
+      // Get delivery group info
+      const deliveryGroup = await database.query('delivery_groups')
+        .where('group_id', group.delivery_group_id)
+        .first();
+
       const chat = await message.getChat();
       const contact = await message.getContact();
       
@@ -106,17 +121,7 @@ class WhatsAppService {
       }
 
       // Get group info from database
-      const group = await database.query.query(
-        'SELECT * FROM groups WHERE group_id = $1',
-        [chat.id._serialized]
-      );
-
-      if (!group.rows[0]) {
-        logger.warn('Message received from unknown group:', chat.id._serialized);
-        return;
-      }
-
-      const groupInfo = group.rows[0];
+      const groupInfo = group;
       
       // Handle sales group messages (new orders)
       if (groupInfo.group_type === 'sales') {
