@@ -13,14 +13,25 @@ class WhatsAppService {
     this.client = new Client({
       authStrategy: new LocalAuth(),
       puppeteer: {
-        args: ['--no-sandbox']
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--disable-gpu'
+        ]
       },
-      qrMaxRetries: 5, // Limit QR code regeneration attempts
+      qrMaxRetries: 10,
+      qrRefreshInterval: 60000, // 60 seconds between QR refreshes
       qrQualityOptions: {
         quality: 0.8,
-        margin: 4
+        margin: 4,
+        scale: 8,
+        errorCorrectionLevel: 'H'
       },
-      qrRefreshInterval: 30000 // 30 seconds between QR refreshes
     });
 
     this.client.on('qr', async (qr) => {
