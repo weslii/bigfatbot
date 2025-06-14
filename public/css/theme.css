@@ -11,11 +11,33 @@ body.pastel-blue-bg {
   background: #f6faff !important;
   border: 1px solid #b3c6e0 !important;
   box-shadow: 0 2px 8px rgba(26,35,126,0.04);
+  border-radius: 10px !important;
 }
 
 .pastel-blue-sidebar {
   background: #d0e6ff !important;
   border: 1px solid #b3c6e0 !important;
+  border-radius: 10px !important;
+}
+
+.pastel-blue-sidebar .nav-link {
+  color: #1a237e !important;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  margin-bottom: 0.25rem;
+}
+
+.pastel-blue-sidebar .nav-link:hover {
+  background: #e3f0ff !important;
+}
+
+.pastel-blue-sidebar .nav-link.active {
+  background: #64b5f6 !important;
+  color: white !important;
+}
+
+.card {
+  border-radius: 10px !important;
 }
 
 .card-header, .card-footer {
