@@ -27,10 +27,6 @@ healthApp.get('/health', (req, res) => {
   res.status(200).send('ok');
 });
 
-healthApp.listen(HEALTH_PORT, () => {
-  console.log(`Bot health check server running on port ${HEALTH_PORT}`);
-});
-
 class DeliveryBot {
   constructor() {
     this.whatsappService = new WhatsAppService();
@@ -59,6 +55,11 @@ class DeliveryBot {
 
       // Setup graceful shutdown
       this.setupGracefulShutdown();
+
+      // Start health check server after bot is initialized
+      healthApp.listen(HEALTH_PORT, () => {
+        console.log(`Bot health check server running on port ${HEALTH_PORT}`);
+      });
 
       logger.info('Delivery Bot started successfully!');
       console.log('\n🤖 WhatsApp Delivery Bot is running!');

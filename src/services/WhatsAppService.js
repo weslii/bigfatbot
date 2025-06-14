@@ -29,8 +29,24 @@ class WhatsAppService {
     this.client.on('message', this.handleMessage.bind(this));
   }
 
-  async initialize() {
-    await this.client.initialize();
+  async start() {
+    try {
+      await this.client.initialize();
+      logger.info('WhatsApp service started successfully');
+    } catch (error) {
+      logger.error('Failed to start WhatsApp service:', error);
+      throw error;
+    }
+  }
+
+  async stop() {
+    try {
+      await this.client.destroy();
+      logger.info('WhatsApp service stopped successfully');
+    } catch (error) {
+      logger.error('Failed to stop WhatsApp service:', error);
+      throw error;
+    }
   }
 
   async handleMessage(message) {
@@ -549,4 +565,4 @@ For help, type /help in the delivery group.
   }
 }
 
-module.exports = new WhatsAppService(); 
+module.exports = WhatsAppService; 
