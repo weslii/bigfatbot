@@ -1,5 +1,5 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
+const qrcode = require('qrcode');
 const { v4: uuidv4 } = require('uuid');
 const database = require('../config/database');
 const logger = require('../utils/logger');
@@ -17,9 +17,18 @@ class WhatsAppService {
       }
     });
 
-    this.client.on('qr', (qr) => {
-      qrcode.generate(qr, { small: true });
-      logger.info('QR Code generated');
+    this.client.on('qr', async (qr) => {
+      try {
+        // Convert QR code to data URL
+        const qrDataUrl = await qrcode.toDataURL(qr);
+        
+        // Log the QR code as a data URL that can be viewed in a browser
+        logger.info('QR Code generated. Please scan using WhatsApp mobile app.');
+        logger.info('To view the QR code, copy this URL and open it in a browser:');
+        logger.info(qrDataUrl);
+      } catch (error) {
+        logger.error('Error generating QR code:', error);
+      }
     });
 
     this.client.on('ready', () => {
