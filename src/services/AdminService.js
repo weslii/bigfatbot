@@ -142,9 +142,9 @@ class AdminService {
     }
   }
 
-  static async getAllOrdersWithDetails() {
+  static async getAllOrdersWithDetails({ status, business, search } = {}) {
     try {
-      return await database.query('orders as o')
+      const query = database.query('orders as o')
         .select(
           'o.id as order_id',
           'o.status',
@@ -158,6 +158,20 @@ class AdminService {
         .leftJoin('users as u', 'o.user_id', 'u.id')
         .leftJoin('groups as g', 'o.business_id', 'g.business_id')
         .orderBy('o.created_at', 'desc');
+
+      if (status) {
+        query.where('o.status', status);
+      }
+      if (business) {
+        query.where('g.business_id', business);
+      }
+      if (search) {
+        query.where(function() {
+          this.where('u.username', 'ilike', `%${search}%`)
+              .orWhere('o.id', 'ilike', `%${search}%`);
+        });
+      }
+      return await query;
     } catch (error) {
       logger.error('Error getting all orders with details:', error);
       throw error;

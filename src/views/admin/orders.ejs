@@ -3,6 +3,39 @@
 <div class="container-fluid mt-4">
   <div class="row">
     <div class="col-12">
+      <div class="card mb-4">
+        <div class="card-body">
+          <form class="row g-3 align-items-end" method="get" action="/admin/orders">
+            <div class="col-md-3">
+              <label for="status" class="form-label">Status</label>
+              <select class="form-select" id="status" name="status">
+                <option value="">All</option>
+                <option value="pending" <%= filter && filter.status === 'pending' ? 'selected' : '' %>>Pending</option>
+                <option value="completed" <%= filter && filter.status === 'completed' ? 'selected' : '' %>>Completed</option>
+                <option value="cancelled" <%= filter && filter.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label for="business" class="form-label">Business</label>
+              <select class="form-select" id="business" name="business">
+                <option value="">All</option>
+                <% if (businesses && businesses.length > 0) { %>
+                  <% businesses.forEach(biz => { %>
+                    <option value="<%= biz.business_id %>" <%= filter && filter.business == biz.business_id ? 'selected' : '' %>><%= biz.business_name %></option>
+                  <% }); %>
+                <% } %>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label for="search" class="form-label">Search (Customer or Order ID)</label>
+              <input type="text" class="form-control" id="search" name="search" value="<%= filter && filter.search ? filter.search : '' %>" placeholder="Search...">
+            </div>
+            <div class="col-md-2">
+              <button type="submit" class="btn btn-primary w-100">Filter/Search</button>
+            </div>
+          </form>
+        </div>
+      </div>
       <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
           <h4 class="mb-0">All Orders</h4>
