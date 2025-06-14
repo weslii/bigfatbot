@@ -6,11 +6,17 @@ class OrderService {
   async createOrder(businessId, orderData) {
     try {
       const orderId = uuidv4();
-      const result = await database.query.query(
-        'INSERT INTO orders (customer_name, items, total_amount, status, business_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-        [orderData.customer_name, orderData.items, orderData.total_amount, 'pending', orderData.business_id]
-      );
-      return result.rows[0];
+      const [order] = await database.query('orders')
+        .insert({
+          id: orderId,
+          customer_name: orderData.customer_name,
+          items: orderData.items,
+          total_amount: orderData.total_amount,
+          status: 'pending',
+          business_id: orderData.business_id
+        })
+        .returning('*');
+      return order;
     } catch (error) {
       logger.error('Error creating order:', error);
       throw error;
