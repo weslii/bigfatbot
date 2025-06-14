@@ -139,6 +139,8 @@ async function initializeSession() {
 const requireAdmin = async (req, res, next) => {
   console.log('requireAdmin middleware - Session:', req.session);
   console.log('requireAdmin middleware - Session ID:', req.sessionID);
+  console.log('requireAdmin middleware - Session adminId:', req.session ? req.session.adminId : undefined);
+  console.log('requireAdmin middleware - Session isAuthenticated:', req.session ? req.session.isAuthenticated : undefined);
   
   if (!req.session || !req.session.adminId || !req.session.isAuthenticated) {
     console.log('requireAdmin middleware - Authentication failed');
@@ -147,6 +149,7 @@ const requireAdmin = async (req, res, next) => {
   
   try {
     const admin = await AdminService.getAdminById(req.session.adminId);
+    console.log('requireAdmin middleware - Admin lookup result:', admin);
     
     if (!admin || !admin.is_active) {
       console.log('requireAdmin middleware - Admin not found or inactive');
