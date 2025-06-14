@@ -82,16 +82,13 @@ class RegistrationService {
 
   static async getUserGroups(userId) {
     try {
-      const query = `
-        SELECT g.*, u.name as user_name 
-        FROM groups g
-        JOIN users u ON g.user_id = u.id
-        WHERE g.user_id = $1
-        ORDER BY g.business_name, g.group_type
-      `;
-      
-      const result = await database.query.query(query, [userId]);
-      return result.rows;
+      const groups = await database.query('groups')
+        .select('groups.*', 'users.full_name as user_name')
+        .join('users', 'groups.user_id', 'users.id')
+        .where('groups.user_id', userId)
+        .orderBy(['groups.business_name', 'groups.group_type']);
+
+      return groups;
     } catch (error) {
       logger.error('Error getting user groups:', error);
       throw error;
@@ -100,16 +97,13 @@ class RegistrationService {
 
   static async getBusinessGroups(businessId) {
     try {
-      const query = `
-        SELECT g.*, u.name as user_name 
-        FROM groups g
-        JOIN users u ON g.user_id = u.id
-        WHERE g.business_id = $1
-        ORDER BY g.group_type
-      `;
-      
-      const result = await database.query.query(query, [businessId]);
-      return result.rows;
+      const groups = await database.query('groups')
+        .select('groups.*', 'users.full_name as user_name')
+        .join('users', 'groups.user_id', 'users.id')
+        .where('groups.business_id', businessId)
+        .orderBy('groups.group_type');
+
+      return groups;
     } catch (error) {
       logger.error('Error getting business groups:', error);
       throw error;

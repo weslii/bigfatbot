@@ -153,21 +153,21 @@ class WhatsAppService {
         const salesConfirmation = MessageService.formatSalesConfirmation(order);
         
         // Get delivery group for this business
-        const deliveryGroup = await database.query.query(
-          'SELECT * FROM groups WHERE business_id = $1 AND group_type = $2',
-          [groupInfo.business_id, 'delivery']
-        );
+        const deliveryGroup = await database.query('groups')
+          .where('business_id', groupInfo.business_id)
+          .where('group_type', 'delivery')
+          .first();
 
-        if (deliveryGroup.rows[0]) {
+        if (deliveryGroup) {
           // Send detailed confirmation to delivery group
-          await this.client.sendMessage(deliveryGroup.rows[0].group_id, deliveryConfirmation);
+          await this.client.sendMessage(deliveryGroup.group_id, deliveryConfirmation);
         }
         
         // Send simplified confirmation to sales group
         await this.client.sendMessage(groupInfo.group_id, salesConfirmation);
         
         logger.info('Order processed and confirmations sent', { 
-          orderId: order.order_id,
+          orderId: order.id,
           businessId: groupInfo.business_id 
         });
       }
@@ -381,46 +381,43 @@ class WhatsAppService {
       const businessId = parts[1];
 
       // Check if business exists
-      const business = await database.query.query(
-        'SELECT * FROM groups WHERE business_id = $1',
-        [businessId]
-      );
+      const business = await database.query('groups')
+        .where('business_id', businessId)
+        .first();
 
-      if (!business.rows[0]) {
+      if (!business) {
         await this.client.sendMessage(chat.id._serialized, '❌ Invalid business ID.');
         return;
       }
 
       // Check if this group is already registered
-      const existingGroup = await database.query.query(
-        'SELECT * FROM groups WHERE group_id = $1',
-        [chat.id._serialized]
-      );
+      const existingGroup = await database.query('groups')
+        .where('group_id', chat.id._serialized)
+        .first();
 
-      if (existingGroup.rows[0]) {
+      if (existingGroup) {
         await this.client.sendMessage(chat.id._serialized, '❌ This group is already registered.');
         return;
       }
 
       // Check if this business already has both groups
-      const groupCount = await database.query.query(
-        'SELECT COUNT(*) FROM groups WHERE business_id = $1',
-        [businessId]
-      );
+      const groupCount = await database.query('groups')
+        .where('business_id', businessId)
+        .count('* as count')
+        .first();
 
-      if (groupCount.rows[0].count >= 2) {
+      if (groupCount.count >= 2) {
         await this.client.sendMessage(chat.id._serialized, '❌ This business already has both groups registered.');
         return;
       }
 
       // Determine group type based on existing groups
-      const existingGroups = await database.query.query(
-        'SELECT group_type FROM groups WHERE business_id = $1',
-        [businessId]
-      );
+      const existingGroups = await database.query('groups')
+        .where('business_id', businessId)
+        .select('group_type');
 
       let groupType;
-      if (existingGroups.rows.length === 0) {
+      if (existingGroups.length === 0) {
         // First group - ask user which type
         await this.client.sendMessage(chat.id._serialized, 
           'Is this a sales group or delivery group?\n' +
@@ -429,31 +426,26 @@ class WhatsAppService {
         return;
       } else {
         // Second group - automatically determine type
-        const existingType = existingGroups.rows[0].group_type;
+        const existingType = existingGroups[0].group_type;
         groupType = existingType === 'sales' ? 'delivery' : 'sales';
       }
 
       // Register the group
-      await database.query.query(
-        `INSERT INTO groups (
-          user_id, business_id, business_name, group_name, 
-          group_id, group_type
-        ) VALUES ($1, $2, $3, $4, $5, $6)`,
-        [
-          business.rows[0].user_id,
-          businessId,
-          business.rows[0].business_name,
-          chat.name,
-          chat.id._serialized,
-          groupType
-        ]
-      );
+      await database.query('groups')
+        .insert({
+          user_id: business.user_id,
+          business_id: businessId,
+          business_name: business.business_name,
+          group_name: chat.name,
+          group_id: chat.id._serialized,
+          group_type: groupType
+        });
 
       // Send confirmation
       await this.client.sendMessage(chat.id._serialized, 
         `✅ ${groupType === 'sales' ? 'Sales' : 'Delivery'} group registered successfully!\n\n` +
         `Group Name: ${chat.name}\n` +
-        `Business: ${business.rows[0].business_name}\n\n` +
+        `Business: ${business.business_name}\n\n` +
         (groupType === 'sales' ? 
           'Customers can now place orders in this group.' :
           'Delivery staff can manage orders in this group.')

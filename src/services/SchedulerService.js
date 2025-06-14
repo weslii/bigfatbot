@@ -91,12 +91,10 @@ class SchedulerService {
   async sendReportsToAllBusinesses(reportType) {
     try {
       // Get all delivery groups
-      const groups = await database.query.query(
-        'SELECT * FROM groups WHERE group_type = $1',
-        ['delivery']
-      );
+      const groups = await database.query('groups')
+        .where('group_type', 'delivery');
 
-      for (const group of groups.rows) {
+      for (const group of groups) {
         try {
           let report;
           let message;
@@ -134,12 +132,10 @@ class SchedulerService {
   async sendPendingOrdersToAllBusinesses() {
     try {
       // Get all delivery groups
-      const groups = await database.query.query(
-        'SELECT * FROM groups WHERE group_type = $1',
-        ['delivery']
-      );
+      const groups = await database.query('groups')
+        .where('group_type', 'delivery');
 
-      for (const group of groups.rows) {
+      for (const group of groups) {
         try {
           const orders = await OrderService.getPendingOrders(group.business_id);
           const message = MessageService.formatPendingOrders(orders);
