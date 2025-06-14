@@ -21,7 +21,7 @@ body.pastel-blue-bg {
 }
 
 .pastel-blue-sidebar .nav-link {
-  color: #1a237e !important;
+  color: #000 !important;
   padding: 0.5rem 1rem;
   border-radius: 5px;
   margin-bottom: 0.25rem;
