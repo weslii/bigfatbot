@@ -6,22 +6,7 @@
     <div class="col-md-3 col-lg-2">
       <div class="card">
         <div class="card-body">
-          <h5 class="card-title">Welcome, <%= admin.username %></h5>
-          <hr>
-          <ul class="nav flex-column">
-            <li class="nav-item">
-              <a class="nav-link active" href="/admin/dashboard">Dashboard</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/admin/businesses">Businesses</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/admin/orders">Orders</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/admin/logout">Logout</a>
-            </li>
-          </ul>
+          <% include('sidebar') %>
         </div>
       </div>
     </div>
