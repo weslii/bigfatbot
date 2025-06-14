@@ -374,8 +374,16 @@ async function startServer() {
 
     app.get('/admin/orders', requireAdmin, async (req, res) => {
       try {
-        const orders = await AdminService.getAllOrdersWithDetails();
-        res.render('admin/orders', { admin: req.admin, orders });
+        const { status, business, search } = req.query;
+        const orders = await AdminService.getAllOrdersWithDetails({ status, business, search });
+        // Get all businesses for the filter dropdown
+        const businesses = await AdminService.getActiveBusinesses();
+        res.render('admin/orders', {
+          admin: req.admin,
+          orders,
+          filter: { status, business, search },
+          businesses
+        });
       } catch (error) {
         logger.error('Admin orders error:', error);
         res.render('error', { error: 'Failed to load orders.' });
