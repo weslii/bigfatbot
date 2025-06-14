@@ -392,6 +392,36 @@ async function startServer() {
       }
     });
 
+    app.post('/admin/orders/:orderId/delete', requireAdmin, async (req, res) => {
+      try {
+        await AdminService.deleteOrder(req.params.orderId);
+        res.redirect('/admin/orders');
+      } catch (error) {
+        logger.error('Delete order error:', error);
+        res.render('error', { error: 'Failed to delete order.' });
+      }
+    });
+
+    app.get('/admin/orders/:orderId/edit', requireAdmin, async (req, res) => {
+      try {
+        const order = await AdminService.getOrderById(req.params.orderId);
+        res.render('admin/edit-order', { admin: req.admin, order });
+      } catch (error) {
+        logger.error('Get order for edit error:', error);
+        res.render('error', { error: 'Failed to load order for editing.' });
+      }
+    });
+
+    app.post('/admin/orders/:orderId/edit', requireAdmin, async (req, res) => {
+      try {
+        await AdminService.editOrder(req.params.orderId, req.body);
+        res.redirect('/admin/orders');
+      } catch (error) {
+        logger.error('Edit order error:', error);
+        res.render('error', { error: 'Failed to edit order.' });
+      }
+    });
+
     // Start the server
     app.listen(port, () => {
       console.log(`Server is running on port ${port}`);

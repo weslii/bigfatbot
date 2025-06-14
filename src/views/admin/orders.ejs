@@ -40,6 +40,42 @@
                             <button type="submit" class="btn btn-sm btn-success ms-1">Mark as Completed</button>
                           </form>
                         <% } %>
+                        <button type="button" class="btn btn-sm btn-warning ms-1" data-bs-toggle="modal" data-bs-target="#editOrderModal-<%= order.order_id %>">Edit</button>
+                        <form action="/admin/orders/<%= order.order_id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this order?');">
+                          <button type="submit" class="btn btn-sm btn-danger ms-1">Delete</button>
+                        </form>
+
+                        <!-- Edit Modal -->
+                        <div class="modal fade" id="editOrderModal-<%= order.order_id %>" tabindex="-1" aria-labelledby="editOrderModalLabel-<%= order.order_id %>" aria-hidden="true">
+                          <div class="modal-dialog">
+                            <div class="modal-content">
+                              <form action="/admin/orders/<%= order.order_id %>/edit" method="POST">
+                                <div class="modal-header">
+                                  <h5 class="modal-title" id="editOrderModalLabel-<%= order.order_id %>">Edit Order <%= order.order_id %></h5>
+                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                  <div class="mb-3">
+                                    <label for="status-<%= order.order_id %>" class="form-label">Status</label>
+                                    <select class="form-select" id="status-<%= order.order_id %>" name="status">
+                                      <option value="pending" <%= order.status === 'pending' ? 'selected' : '' %>>Pending</option>
+                                      <option value="completed" <%= order.status === 'completed' ? 'selected' : '' %>>Completed</option>
+                                      <option value="cancelled" <%= order.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+                                    </select>
+                                  </div>
+                                  <div class="mb-3">
+                                    <label for="items-<%= order.order_id %>" class="form-label">Items (JSON)</label>
+                                    <textarea class="form-control" id="items-<%= order.order_id %>" name="items" rows="2"><%= order.items %></textarea>
+                                  </div>
+                                </div>
+                                <div class="modal-footer">
+                                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                  <button type="submit" class="btn btn-primary">Save changes</button>
+                                </div>
+                              </form>
+                            </div>
+                          </div>
+                        </div>
                       </td>
                     </tr>
                   <% }); %>

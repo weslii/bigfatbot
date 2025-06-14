@@ -1,0 +1,31 @@
+<%- include('../layout', { title: 'Edit Order' }) %>
+
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h4>Edit Order <%= order.order_id %></h4>
+        </div>
+        <div class="card-body">
+          <form action="/admin/orders/<%= order.order_id %>/edit" method="POST">
+            <div class="mb-3">
+              <label for="status" class="form-label">Status</label>
+              <select class="form-select" id="status" name="status">
+                <option value="pending" <%= order.status === 'pending' ? 'selected' : '' %>>Pending</option>
+                <option value="completed" <%= order.status === 'completed' ? 'selected' : '' %>>Completed</option>
+                <option value="cancelled" <%= order.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="items" class="form-label">Items (JSON)</label>
+              <textarea class="form-control" id="items" name="items" rows="2"><%= order.items %></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Save changes</button>
+            <a href="/admin/orders" class="btn btn-secondary ms-2">Cancel</a>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 
