@@ -61,7 +61,7 @@ class AdminService {
     try {
       const [userCount, businessCount, orderCount] = await Promise.all([
         database.query('users').count('* as count').first(),
-        database.query('groups').count('distinct business_id as count').first(),
+        database.query('groups').countDistinct('business_id as count').first(),
         database.query('orders').count('* as count').first()
       ]);
 
