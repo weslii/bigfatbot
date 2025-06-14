@@ -47,8 +47,10 @@ class DeliveryBot {
       // Initialize database
       await database.connect();
 
-      // Start WhatsApp service
-      await this.whatsappService.start();
+      // Start WhatsApp service in the background
+      this.whatsappService.start().catch(error => {
+        logger.error('Failed to start WhatsApp service:', error);
+      });
 
       // Start scheduler
       this.schedulerService.start();
