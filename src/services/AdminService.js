@@ -174,6 +174,51 @@ class AdminService {
       throw error;
     }
   }
+
+  static async deleteOrder(orderId) {
+    try {
+      await database.query('orders').where('id', orderId).del();
+    } catch (error) {
+      logger.error('Error deleting order:', error);
+      throw error;
+    }
+  }
+
+  static async getOrderById(orderId) {
+    try {
+      return await database.query('orders as o')
+        .select(
+          'o.id as order_id',
+          'o.status',
+          'o.created_at',
+          'o.updated_at',
+          'o.items',
+          'u.username as customer_name',
+          'g.business_name',
+          'g.business_id'
+        )
+        .leftJoin('users as u', 'o.user_id', 'u.id')
+        .leftJoin('groups as g', 'o.business_id', 'g.business_id')
+        .where('o.id', orderId)
+        .first();
+    } catch (error) {
+      logger.error('Error getting order by ID:', error);
+      throw error;
+    }
+  }
+
+  static async editOrder(orderId, data) {
+    try {
+      const updateData = {};
+      if (data.status) updateData.status = data.status;
+      if (data.items) updateData.items = data.items;
+      updateData.updated_at = database.query.fn.now();
+      await database.query('orders').where('id', orderId).update(updateData);
+    } catch (error) {
+      logger.error('Error editing order:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = AdminService; 
