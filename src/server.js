@@ -155,143 +155,6 @@ app.get('/health', async (req, res) => {
   }
 });
 
-// Public routes
-app.get('/', (req, res) => {
-  res.render('index');
-});
-
-app.get('/register', (req, res) => {
-  res.render('register');
-});
-
-app.post('/register', async (req, res) => {
-  try {
-    const { name, email, phoneNumber } = req.body;
-    const user = await RegistrationService.registerUser(name, email, phoneNumber);
-    res.redirect(`/setup-business?userId=${user.id}`);
-  } catch (error) {
-    logger.error('Registration error:', error);
-    res.render('register', { error: 'Registration failed. Please try again.' });
-  }
-});
-
-app.get('/setup-business', (req, res) => {
-  const { userId } = req.query;
-  res.render('setup-business', { userId });
-});
-
-app.post('/setup-business', async (req, res) => {
-  try {
-    const { userId, businessName } = req.body;
-    const businessId = await RegistrationService.createBusiness(userId, businessName);
-    res.render('group-setup', { 
-      userId,
-      businessName,
-      businessId,
-      setupCommand: `/setup ${businessId}`
-    });
-  } catch (error) {
-    logger.error('Business setup error:', error);
-    res.render('setup-business', { 
-      error: 'Setup failed. Please try again.',
-      userId: req.body.userId
-    });
-  }
-});
-
-app.get('/dashboard', async (req, res) => {
-  try {
-    const { userId } = req.query;
-    const groups = await RegistrationService.getUserGroups(userId);
-    res.render('dashboard', { groups });
-  } catch (error) {
-    logger.error('Dashboard error:', error);
-    res.render('error', { error: 'Failed to load dashboard.' });
-  }
-});
-
-// Admin routes
-app.get('/admin/login', (req, res) => {
-  if (req.session && req.session.adminId) {
-    return res.redirect('/admin/dashboard');
-  }
-  res.render('admin/login');
-});
-
-app.post('/admin/login', async (req, res) => {
-  try {
-    const { username, password } = req.body;
-    
-    if (!username || !password) {
-      return res.render('admin/login', { error: 'Username and password are required' });
-    }
-    
-    const admin = await AdminService.authenticate(username, password);
-    
-    if (!admin) {
-      return res.render('admin/login', { error: 'Invalid credentials' });
-    }
-
-    // Create a new session
-    req.session.regenerate((err) => {
-      if (err) {
-        console.error('Error regenerating session:', err);
-        return res.render('admin/login', { error: 'Login failed' });
-      }
-
-      // Set session data
-      req.session.adminId = admin.id;
-      req.session.admin = {
-        id: admin.id,
-        username: admin.username,
-        email: admin.email,
-        role: admin.role
-      };
-
-      // Save session
-      req.session.save((err) => {
-        if (err) {
-          console.error('Error saving session:', err);
-          return res.render('admin/login', { error: 'Login failed' });
-        }
-        res.redirect('/admin/dashboard');
-      });
-    });
-  } catch (error) {
-    logger.error('Admin login error:', error);
-    res.render('admin/login', { error: 'Login failed' });
-  }
-});
-
-app.get('/admin/dashboard', requireAdmin, async (req, res) => {
-  try {
-    const [stats, businesses, orders] = await Promise.all([
-      AdminService.getSystemStats(),
-      AdminService.getActiveBusinesses(),
-      AdminService.getRecentOrders()
-    ]);
-
-    res.render('admin/dashboard', {
-      admin: req.admin,
-      stats,
-      businesses,
-      orders
-    });
-  } catch (error) {
-    logger.error('Admin dashboard error:', error);
-    res.render('error', { error: 'Failed to load admin dashboard' });
-  }
-});
-
-app.get('/admin/logout', (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      console.error('Error destroying session:', err);
-    }
-    res.redirect('/admin/login');
-  });
-});
-
 // Start server
 async function startServer() {
   try {
@@ -301,6 +164,144 @@ async function startServer() {
       console.error('Failed to initialize session middleware');
       process.exit(1);
     }
+
+    // Define routes after session middleware is initialized
+    // Public routes
+    app.get('/', (req, res) => {
+      res.render('index');
+    });
+
+    app.get('/register', (req, res) => {
+      res.render('register');
+    });
+
+    app.post('/register', async (req, res) => {
+      try {
+        const { name, email, phoneNumber } = req.body;
+        const user = await RegistrationService.registerUser(name, email, phoneNumber);
+        res.redirect(`/setup-business?userId=${user.id}`);
+      } catch (error) {
+        logger.error('Registration error:', error);
+        res.render('register', { error: 'Registration failed. Please try again.' });
+      }
+    });
+
+    app.get('/setup-business', (req, res) => {
+      const { userId } = req.query;
+      res.render('setup-business', { userId });
+    });
+
+    app.post('/setup-business', async (req, res) => {
+      try {
+        const { userId, businessName } = req.body;
+        const businessId = await RegistrationService.createBusiness(userId, businessName);
+        res.render('group-setup', { 
+          userId,
+          businessName,
+          businessId,
+          setupCommand: `/setup ${businessId}`
+        });
+      } catch (error) {
+        logger.error('Business setup error:', error);
+        res.render('setup-business', { 
+          error: 'Setup failed. Please try again.',
+          userId: req.body.userId
+        });
+      }
+    });
+
+    app.get('/dashboard', async (req, res) => {
+      try {
+        const { userId } = req.query;
+        const groups = await RegistrationService.getUserGroups(userId);
+        res.render('dashboard', { groups });
+      } catch (error) {
+        logger.error('Dashboard error:', error);
+        res.render('error', { error: 'Failed to load dashboard.' });
+      }
+    });
+
+    // Admin routes
+    app.get('/admin/login', (req, res) => {
+      if (req.session && req.session.adminId) {
+        return res.redirect('/admin/dashboard');
+      }
+      res.render('admin/login');
+    });
+
+    app.post('/admin/login', async (req, res) => {
+      try {
+        const { username, password } = req.body;
+        
+        if (!username || !password) {
+          return res.render('admin/login', { error: 'Username and password are required' });
+        }
+        
+        const admin = await AdminService.authenticate(username, password);
+        
+        if (!admin) {
+          return res.render('admin/login', { error: 'Invalid credentials' });
+        }
+
+        // Create a new session
+        req.session.regenerate((err) => {
+          if (err) {
+            console.error('Error regenerating session:', err);
+            return res.render('admin/login', { error: 'Login failed' });
+          }
+
+          // Set session data
+          req.session.adminId = admin.id;
+          req.session.admin = {
+            id: admin.id,
+            username: admin.username,
+            email: admin.email,
+            role: admin.role
+          };
+
+          // Save session
+          req.session.save((err) => {
+            if (err) {
+              console.error('Error saving session:', err);
+              return res.render('admin/login', { error: 'Login failed' });
+            }
+            res.redirect('/admin/dashboard');
+          });
+        });
+      } catch (error) {
+        logger.error('Admin login error:', error);
+        res.render('admin/login', { error: 'Login failed' });
+      }
+    });
+
+    app.get('/admin/dashboard', requireAdmin, async (req, res) => {
+      try {
+        const [stats, businesses, orders] = await Promise.all([
+          AdminService.getSystemStats(),
+          AdminService.getActiveBusinesses(),
+          AdminService.getRecentOrders()
+        ]);
+
+        res.render('admin/dashboard', {
+          admin: req.admin,
+          stats,
+          businesses,
+          orders
+        });
+      } catch (error) {
+        logger.error('Admin dashboard error:', error);
+        res.render('error', { error: 'Failed to load admin dashboard' });
+      }
+    });
+
+    app.get('/admin/logout', (req, res) => {
+      req.session.destroy((err) => {
+        if (err) {
+          console.error('Error destroying session:', err);
+        }
+        res.redirect('/admin/login');
+      });
+    });
 
     // Start the server
     app.listen(port, () => {
