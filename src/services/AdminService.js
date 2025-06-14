@@ -115,7 +115,8 @@ class AdminService {
         username: admin.username,
         email: admin.email,
         role: admin.role,
-        last_login: admin.last_login
+        last_login: admin.last_login,
+        is_active: admin.is_active
       };
     } catch (error) {
       logger.error('Error getting admin by ID:', error);
