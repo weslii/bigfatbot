@@ -1,10 +1,10 @@
 <%- include('../layout', { title: 'Admin Dashboard' }) %>
 
-<div class="container-fluid mt-4">
+<div class="container-fluid mt-4 pastel-blue-bg">
   <div class="row">
     <!-- Sidebar -->
     <div class="col-md-3 col-lg-2">
-      <div class="card">
+      <div class="card pastel-blue-sidebar">
         <div class="card-body">
           <h5 class="card-title">Welcome, <%= admin.username %></h5>
           <hr>
@@ -37,7 +37,7 @@
       <!-- Stats Cards -->
       <div class="row mb-4">
         <div class="col-md-4">
-          <div class="card bg-primary text-white">
+          <div class="card pastel-blue-card text-dark">
             <div class="card-body">
               <h5 class="card-title">Total Businesses</h5>
               <h2 class="card-text"><%= stats.totalBusinesses %></h2>
@@ -45,7 +45,7 @@
           </div>
         </div>
         <div class="col-md-4">
-          <div class="card bg-success text-white">
+          <div class="card pastel-blue-card text-dark">
             <div class="card-body">
               <h5 class="card-title">Active Orders</h5>
               <h2 class="card-text"><%= stats.activeOrders %></h2>
@@ -53,7 +53,7 @@
           </div>
         </div>
         <div class="col-md-4">
-          <div class="card bg-info text-white">
+          <div class="card pastel-blue-card text-dark">
             <div class="card-body">
               <h5 class="card-title">Total Users</h5>
               <h2 class="card-text"><%= stats.totalUsers %></h2>
@@ -63,7 +63,7 @@
       </div>
 
       <!-- Recent Orders -->
-      <div class="card mb-4">
+      <div class="card mb-4 pastel-blue-card text-dark">
         <div class="card-header">
           <h5 class="mb-0">Recent Orders</h5>
         </div>
@@ -100,7 +100,7 @@
       </div>
 
       <!-- Active Businesses -->
-      <div class="card">
+      <div class="card pastel-blue-card text-dark">
         <div class="card-header">
           <h5 class="mb-0">Active Businesses</h5>
         </div>
