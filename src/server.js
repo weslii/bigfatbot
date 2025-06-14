@@ -183,55 +183,6 @@ app.get('/health', async (req, res) => {
   }
 });
 
-// Clear sessions endpoint (for development only)
-app.get('/clear-sessions', async (req, res) => {
-  // Only allow in development environment
-  if (process.env.NODE_ENV === 'production') {
-    return res.status(403).json({
-      status: 'error',
-      message: 'This endpoint is only available in development mode'
-    });
-  }
-
-  try {
-    // Get all session keys
-    const keys = await new Promise((resolve, reject) => {
-      redisClient.keys('sess:*', (err, keys) => {
-        if (err) reject(err);
-        else resolve(keys);
-      });
-    });
-
-    // Get current session ID from cookie
-    const currentSessionId = req.cookies.sessionId;
-    
-    // Filter out current session
-    const sessionsToClear = keys.filter(key => !key.includes(currentSessionId));
-
-    if (sessionsToClear.length > 0) {
-      await new Promise((resolve, reject) => {
-        redisClient.del(sessionsToClear, (err, reply) => {
-          if (err) reject(err);
-          else resolve(reply);
-        });
-      });
-    }
-
-    res.json({
-      status: 'success',
-      message: `Cleared ${sessionsToClear.length} old sessions`,
-      currentSession: currentSessionId ? 'preserved' : 'none',
-      clearedSessions: sessionsToClear
-    });
-  } catch (error) {
-    console.error('Error clearing sessions:', error);
-    res.status(500).json({
-      status: 'error',
-      error: error.message
-    });
-  }
-});
-
 // Start server
 async function startServer() {
   try {
