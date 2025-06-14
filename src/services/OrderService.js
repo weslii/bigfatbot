@@ -1,6 +1,7 @@
-const database = require('../config/database');
+const { database } = require('../config/database');
 const logger = require('../utils/logger');
 const { v4: uuidv4 } = require('uuid');
+const MessageService = require('./MessageService');
 
 class OrderService {
   async createOrder(businessId, orderData) {

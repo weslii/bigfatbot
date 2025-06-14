@@ -1,7 +1,7 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode');
 const { v4: uuidv4 } = require('uuid');
-const database = require('../config/database');
+const { database } = require('../config/database');
 const logger = require('../utils/logger');
 const RegistrationService = require('./RegistrationService');
 const OrderService = require('./OrderService');
