@@ -14,18 +14,31 @@ class WhatsAppService {
       authStrategy: new LocalAuth(),
       puppeteer: {
         args: ['--no-sandbox']
-      }
+      },
+      qrMaxRetries: 5, // Limit QR code regeneration attempts
+      qrQualityOptions: {
+        quality: 0.8,
+        margin: 4
+      },
+      qrRefreshInterval: 30000 // 30 seconds between QR refreshes
     });
 
     this.client.on('qr', async (qr) => {
       try {
         // Convert QR code to data URL
-        const qrDataUrl = await qrcode.toDataURL(qr);
+        const qrDataUrl = await qrcode.toDataURL(qr, {
+          errorCorrectionLevel: 'H',
+          margin: 4,
+          scale: 8
+        });
         
         // Log the QR code as a data URL that can be viewed in a browser
-        logger.info('QR Code generated. Please scan using WhatsApp mobile app.');
+        logger.info('=== NEW QR CODE GENERATED ===');
+        logger.info('Please scan this QR code using WhatsApp mobile app.');
+        logger.info('You have 30 seconds to scan before a new code is generated.');
         logger.info('To view the QR code, copy this URL and open it in a browser:');
         logger.info(qrDataUrl);
+        logger.info('================================');
       } catch (error) {
         logger.error('Error generating QR code:', error);
       }
@@ -33,6 +46,18 @@ class WhatsAppService {
 
     this.client.on('ready', () => {
       logger.info('WhatsApp client is ready');
+    });
+
+    this.client.on('authenticated', () => {
+      logger.info('WhatsApp client is authenticated');
+    });
+
+    this.client.on('auth_failure', (error) => {
+      logger.error('WhatsApp authentication failed:', error);
+    });
+
+    this.client.on('disconnected', (reason) => {
+      logger.warn('WhatsApp client disconnected:', reason);
     });
 
     this.client.on('message', this.handleMessage.bind(this));
