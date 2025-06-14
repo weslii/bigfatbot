@@ -42,7 +42,7 @@ module.exports = {
   BOT: {
     MAX_RETRY_ATTEMPTS: 3,
     RETRY_DELAY: 2000, // milliseconds
-    DAILY_REPORT_TIME: '22:00', // 10 PM
-    PENDING_ORDERS_TIME: '22:30' // 10:30 PM
+    DAILY_REPORT_TIME: '0 22 * * *', // Run at 22:00 (10 PM) every day
+    PENDING_ORDERS_TIME: '30 22 * * *' // Run at 22:30 (10:30 PM) every day
   }
 }; 
