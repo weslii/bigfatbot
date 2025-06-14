@@ -37,7 +37,137 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-(async () => {
+// Admin authentication middleware
+const requireAdmin = async (req, res, next) => {
+  if (!req.session || !req.session.adminId) {
+    return res.redirect('/admin/login');
+  }
+  
+  try {
+    const admin = await AdminService.getAdminById(req.session.adminId);
+    
+    if (!admin || !admin.is_active) {
+      req.session.destroy((err) => {
+        if (err) {
+          console.error('Error destroying session:', err);
+        }
+        res.redirect('/admin/login');
+      });
+      return;
+    }
+    
+    req.admin = admin;
+    next();
+  } catch (error) {
+    logger.error('Admin auth error:', error);
+    res.redirect('/admin/login');
+  }
+};
+
+// Health check endpoint
+app.get('/health', async (req, res) => {
+  try {
+    await db.raw('SELECT 1');
+    res.status(200).json({
+      status: 'ok',
+      redis: 'connected',
+      database: 'connected'
+    });
+  } catch (error) {
+    console.error('Health check failed:', error);
+    res.status(500).json({
+      status: 'error',
+      redis: 'connected',
+      database: 'disconnected',
+      error: error.message
+    });
+  }
+});
+
+// Admin routes
+app.get('/admin/login', (req, res) => {
+  if (req.session && req.session.adminId) {
+    return res.redirect('/admin/dashboard');
+  }
+  res.render('admin/login');
+});
+
+app.post('/admin/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    
+    if (!username || !password) {
+      return res.render('admin/login', { error: 'Username and password are required' });
+    }
+    
+    const admin = await AdminService.authenticate(username, password);
+    
+    if (!admin) {
+      return res.render('admin/login', { error: 'Invalid credentials' });
+    }
+
+    // Create a new session
+    req.session.regenerate((err) => {
+      if (err) {
+        console.error('Error regenerating session:', err);
+        return res.render('admin/login', { error: 'Login failed' });
+      }
+
+      // Set session data
+      req.session.adminId = admin.id;
+      req.session.admin = {
+        id: admin.id,
+        username: admin.username,
+        email: admin.email,
+        role: admin.role
+      };
+
+      // Save session
+      req.session.save((err) => {
+        if (err) {
+          console.error('Error saving session:', err);
+          return res.render('admin/login', { error: 'Login failed' });
+        }
+        res.redirect('/admin/dashboard');
+      });
+    });
+  } catch (error) {
+    logger.error('Admin login error:', error);
+    res.render('admin/login', { error: 'Login failed' });
+  }
+});
+
+app.get('/admin/dashboard', requireAdmin, async (req, res) => {
+  try {
+    const [stats, businesses, orders] = await Promise.all([
+      AdminService.getSystemStats(),
+      AdminService.getActiveBusinesses(),
+      AdminService.getRecentOrders()
+    ]);
+
+    res.render('admin/dashboard', {
+      admin: req.admin,
+      stats,
+      businesses,
+      orders
+    });
+  } catch (error) {
+    logger.error('Admin dashboard error:', error);
+    res.render('error', { error: 'Failed to load admin dashboard' });
+  }
+});
+
+app.get('/admin/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('Error destroying session:', err);
+    }
+    res.redirect('/admin/login');
+  });
+});
+
+// Initialize Redis and start server
+async function startServer() {
   if (!redisUrl) {
     console.error('REDIS_URL is not set. Session storage will not work properly.');
     process.exit(1);
@@ -71,14 +201,14 @@ app.set('views', path.join(__dirname, 'views'));
     console.log('Redis client ready');
   });
 
-  // Wait for Redis to be ready before setting up session
-  await new Promise((resolve, reject) => {
-    redisClient.once('ready', resolve);
-    redisClient.once('error', reject);
-  });
-
   try {
-    // In legacy mode, we don't need to call connect()
+    // Wait for Redis to be ready
+    await new Promise((resolve, reject) => {
+      redisClient.once('ready', resolve);
+      redisClient.once('error', reject);
+    });
+
+    // Configure session middleware
     const sessionConfig = {
       store: new RedisStore({ 
         client: redisClient,
@@ -89,7 +219,7 @@ app.set('views', path.join(__dirname, 'views'));
       resave: false,
       saveUninitialized: false,
       rolling: true,
-      name: 'sessionId', // Explicitly set the cookie name
+      name: 'sessionId',
       cookie: {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
@@ -103,7 +233,6 @@ app.set('views', path.join(__dirname, 'views'));
 
     // Add session debugging middleware
     app.use((req, res, next) => {
-      // Only log session info for admin routes
       if (req.path.startsWith('/admin')) {
         console.log('Session middleware - Path:', req.path);
         console.log('Session middleware - Session ID:', req.sessionID);
@@ -112,223 +241,19 @@ app.set('views', path.join(__dirname, 'views'));
       next();
     });
 
-    console.log('Using Redis store for sessions');
-  } catch (err) {
-    console.error('Failed to connect to Redis:', err);
-    console.error('Redis connection details:', {
-      url: redisUrl,
-      nodeEnv: process.env.NODE_ENV,
-      railwayEnv: process.env.RAILWAY_ENVIRONMENT
+    // Start the server
+    app.listen(port, () => {
+      console.log(`Server is running on port ${port}`);
+      console.log('SESSION_SECRET is set:', !!process.env.SESSION_SECRET);
+      console.log('NODE_ENV:', process.env.NODE_ENV);
+      console.log('RAILWAY_PUBLIC_DOMAIN:', process.env.RAILWAY_PUBLIC_DOMAIN);
     });
+  } catch (err) {
+    console.error('Failed to start server:', err);
     process.exit(1);
   }
+}
 
-  console.log('SESSION_SECRET is set:', !!process.env.SESSION_SECRET);
-  console.log('NODE_ENV:', process.env.NODE_ENV);
-  console.log('RAILWAY_PUBLIC_DOMAIN:', process.env.RAILWAY_PUBLIC_DOMAIN);
-
-  // Admin authentication middleware
-  const requireAdmin = async (req, res, next) => {
-    if (!req.session || !req.session.adminId) {
-      return res.redirect('/admin/login');
-    }
-    
-    try {
-      const admin = await AdminService.getAdminById(req.session.adminId);
-      
-      if (!admin || !admin.is_active) {
-        req.session.destroy((err) => {
-          if (err) {
-            console.error('Error destroying session:', err);
-          }
-          res.redirect('/admin/login');
-        });
-        return;
-      }
-      
-      req.admin = admin;
-      next();
-    } catch (error) {
-      logger.error('Admin auth error:', error);
-      res.redirect('/admin/login');
-    }
-  };
-
-  // Health check endpoint
-  app.get('/health', async (req, res) => {
-    try {
-      // Check database connection
-      await db.raw('SELECT 1');
-      
-      const status = {
-        status: 'ok',
-        redis: 'connected',
-        database: 'connected'
-      };
-      res.status(200).json(status);
-    } catch (error) {
-      console.error('Health check failed:', error);
-      res.status(500).json({
-        status: 'error',
-        redis: 'connected',
-        database: 'disconnected',
-        error: error.message
-      });
-    }
-  });
-
-  // Admin routes
-  app.get('/admin/login', (req, res) => {
-    if (req.session && req.session.adminId) {
-      return res.redirect('/admin/dashboard');
-    }
-    res.render('admin/login');
-  });
-
-  // Add a test route to verify middleware is working
-  app.post('/admin/test', (req, res) => {
-    console.log('Test route - req.body:', req.body);
-    res.json({ body: req.body, success: true });
-  });
-
-  app.post('/admin/login', async (req, res) => {
-    try {
-      const { username, password } = req.body;
-      
-      if (!username || !password) {
-        return res.render('admin/login', { error: 'Username and password are required' });
-      }
-      
-      const admin = await AdminService.authenticate(username, password);
-      
-      if (!admin) {
-        return res.render('admin/login', { error: 'Invalid credentials' });
-      }
-
-      // Create a new session
-      req.session.regenerate((err) => {
-        if (err) {
-          console.error('Error regenerating session:', err);
-          return res.render('admin/login', { error: 'Login failed' });
-        }
-
-        // Set session data
-        req.session.adminId = admin.id;
-        req.session.admin = {
-          id: admin.id,
-          username: admin.username,
-          email: admin.email,
-          role: admin.role
-        };
-
-        // Save session
-        req.session.save((err) => {
-          if (err) {
-            console.error('Error saving session:', err);
-            return res.render('admin/login', { error: 'Login failed' });
-          }
-          res.redirect('/admin/dashboard');
-        });
-      });
-    } catch (error) {
-      logger.error('Admin login error:', error);
-      res.render('admin/login', { error: 'Login failed' });
-    }
-  });
-
-  app.get('/admin/dashboard', requireAdmin, async (req, res) => {
-    try {
-      const [stats, businesses, orders] = await Promise.all([
-        AdminService.getSystemStats(),
-        AdminService.getActiveBusinesses(),
-        AdminService.getRecentOrders()
-      ]);
-
-      res.render('admin/dashboard', {
-        admin: req.admin,
-        stats,
-        businesses,
-        orders
-      });
-    } catch (error) {
-      logger.error('Admin dashboard error:', error);
-      res.render('error', { error: 'Failed to load admin dashboard' });
-    }
-  });
-
-  app.get('/admin/logout', (req, res) => {
-    req.session.destroy((err) => {
-      if (err) {
-        console.error('Error destroying session:', err);
-      }
-      res.redirect('/admin/login');
-    });
-  });
-
-  // Routes
-  app.get('/', (req, res) => {
-    res.render('index');
-  });
-
-  app.get('/register', (req, res) => {
-    res.render('register');
-  });
-
-  app.post('/register', async (req, res) => {
-    try {
-      const { name, email, phoneNumber } = req.body;
-      const user = await RegistrationService.registerUser(name, email, phoneNumber);
-      
-      // Store user ID in session or pass it to the next page
-      res.redirect(`/setup-business?userId=${user.user_id}`);
-    } catch (error) {
-      logger.error('Registration error:', error);
-      res.render('register', { error: 'Registration failed. Please try again.' });
-    }
-  });
-
-  app.get('/setup-business', (req, res) => {
-    const { userId } = req.query;
-    res.render('setup-business', { userId });
-  });
-
-  app.post('/setup-business', async (req, res) => {
-    try {
-      const { userId, businessName } = req.body;
-      
-      // Generate a unique business ID
-      const businessId = await RegistrationService.createBusiness(userId, businessName);
-      
-      res.render('group-setup', { 
-        userId,
-        businessName,
-        businessId,
-        setupCommand: `/setup ${businessId}`
-      });
-    } catch (error) {
-      logger.error('Business setup error:', error);
-      res.render('setup-business', { 
-        error: 'Setup failed. Please try again.',
-        userId: req.body.userId
-      });
-    }
-  });
-
-  app.get('/dashboard', async (req, res) => {
-    try {
-      const { userId } = req.query;
-      const groups = await RegistrationService.getUserGroups(userId);
-      res.render('dashboard', { groups });
-    } catch (error) {
-      logger.error('Dashboard error:', error);
-      res.render('error', { error: 'Failed to load dashboard.' });
-    }
-  });
-
-  // Start server after all middleware and routes are set up
-  app.listen(port, () => {
-    logger.info(`Dashboard server running on port ${port}`);
-  });
-})();
+startServer();
 
 module.exports = app;
