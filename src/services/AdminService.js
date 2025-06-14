@@ -1,4 +1,4 @@
-const db = require('../config/database');
+const database = require('../config/database');
 const logger = require('../utils/logger');
 const bcrypt = require('bcryptjs');
 
@@ -7,7 +7,7 @@ class AdminService {
     try {
       const passwordHash = await bcrypt.hash(password, 10);
       
-      const [admin] = await db('admins')
+      const [admin] = await database.query('admins')
         .insert({
           username,
           email,
@@ -25,31 +25,32 @@ class AdminService {
 
   static async authenticate(username, password) {
     try {
-      logger.debug('Authenticating admin:', { username });
-      
-      const admin = await db('admins')
-        .where({ username, is_active: true })
+      const admin = await database.query('admins')
+        .where('username', username)
         .first();
 
       if (!admin) {
-        logger.debug('Admin not found or not active:', { username });
         return null;
       }
 
       const isValid = await bcrypt.compare(password, admin.password_hash);
       if (!isValid) {
-        logger.debug('Invalid password for admin:', { username });
         return null;
       }
 
-      logger.debug('Admin authenticated successfully:', { username, id: admin.id });
+      // Update last login timestamp
+      await database.query('admins')
+        .where('id', admin.id)
+        .update({
+          last_login: database.query.fn.now()
+        });
 
-      // Update last login
-      await db('admins')
-        .where({ id: admin.id })
-        .update({ last_login: db.fn.now() });
-
-      return admin;
+      return {
+        id: admin.id,
+        username: admin.username,
+        email: admin.email,
+        role: admin.role
+      };
     } catch (error) {
       logger.error('Error authenticating admin:', error);
       throw error;
@@ -59,9 +60,9 @@ class AdminService {
   static async getSystemStats() {
     try {
       const [userCount, businessCount, orderCount] = await Promise.all([
-        db('users').count('* as count').first(),
-        db('groups').count('distinct business_id as count').first(),
-        db('orders').count('* as count').first()
+        database.query('users').count('* as count').first(),
+        database.query('groups').count('distinct business_id as count').first(),
+        database.query('orders').count('* as count').first()
       ]);
 
       return {
@@ -77,7 +78,7 @@ class AdminService {
 
   static async getActiveBusinesses() {
     try {
-      return await db('groups')
+      return await database.query('groups')
         .select('business_id', 'business_name')
         .distinct()
         .orderBy('business_name');
@@ -89,7 +90,7 @@ class AdminService {
 
   static async getRecentOrders(limit = 10) {
     try {
-      return await db('orders')
+      return await database.query('orders')
         .select('*')
         .orderBy('created_at', 'desc')
         .limit(limit);
@@ -101,21 +102,41 @@ class AdminService {
 
   static async getAdminById(id) {
     try {
-      logger.debug('Fetching admin by ID:', { id });
-      
-      const admin = await db('admins')
-        .where({ id })
+      const admin = await database.query('admins')
+        .where('id', id)
         .first();
 
       if (!admin) {
-        logger.debug('Admin not found:', { id });
         return null;
       }
 
-      logger.debug('Admin found:', { id, username: admin.username });
+      return {
+        id: admin.id,
+        username: admin.username,
+        email: admin.email,
+        role: admin.role,
+        last_login: admin.last_login
+      };
+    } catch (error) {
+      logger.error('Error getting admin by ID:', error);
+      throw error;
+    }
+  }
+
+  static async updateAdmin(id, data) {
+    try {
+      const [admin] = await database.query('admins')
+        .where('id', id)
+        .update({
+          email: data.email,
+          role: data.role,
+          is_active: data.is_active
+        })
+        .returning('*');
+
       return admin;
     } catch (error) {
-      logger.error('Error fetching admin by ID:', error);
+      logger.error('Error updating admin:', error);
       throw error;
     }
   }
