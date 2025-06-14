@@ -372,6 +372,26 @@ async function startServer() {
       });
     });
 
+    app.get('/admin/orders', requireAdmin, async (req, res) => {
+      try {
+        const orders = await AdminService.getAllOrdersWithDetails();
+        res.render('admin/orders', { admin: req.admin, orders });
+      } catch (error) {
+        logger.error('Admin orders error:', error);
+        res.render('error', { error: 'Failed to load orders.' });
+      }
+    });
+
+    app.post('/admin/orders/:orderId/complete', requireAdmin, async (req, res) => {
+      try {
+        await AdminService.markOrderCompleted(req.params.orderId);
+        res.redirect('/admin/orders');
+      } catch (error) {
+        logger.error('Mark order completed error:', error);
+        res.render('error', { error: 'Failed to update order.' });
+      }
+    });
+
     // Start the server
     app.listen(port, () => {
       console.log(`Server is running on port ${port}`);

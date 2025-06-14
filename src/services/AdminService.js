@@ -141,6 +141,39 @@ class AdminService {
       throw error;
     }
   }
+
+  static async getAllOrdersWithDetails() {
+    try {
+      return await database.query('orders as o')
+        .select(
+          'o.id as order_id',
+          'o.status',
+          'o.created_at',
+          'o.updated_at',
+          'o.items',
+          'u.username as customer_name',
+          'g.business_name',
+          'g.business_id'
+        )
+        .leftJoin('users as u', 'o.user_id', 'u.id')
+        .leftJoin('groups as g', 'o.business_id', 'g.business_id')
+        .orderBy('o.created_at', 'desc');
+    } catch (error) {
+      logger.error('Error getting all orders with details:', error);
+      throw error;
+    }
+  }
+
+  static async markOrderCompleted(orderId) {
+    try {
+      await database.query('orders')
+        .where('id', orderId)
+        .update({ status: 'completed', updated_at: database.query.fn.now() });
+    } catch (error) {
+      logger.error('Error marking order as completed:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = AdminService; 
