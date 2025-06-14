@@ -97,8 +97,8 @@ async function initializeSession() {
       rolling: true,
       name: 'sessionId',
       cookie: {
-        // Only set secure: true if running in production with a public domain and HTTPS
-        secure: process.env.NODE_ENV === 'production' && !!process.env.RAILWAY_PUBLIC_DOMAIN,
+        // For debugging, always set secure: false
+        secure: false,
         sameSite: 'lax',
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
@@ -267,6 +267,8 @@ async function startServer() {
       try {
         const { username, password } = req.body;
         console.log('POST /admin/login - Attempting login for:', username);
+        console.log('POST /admin/login - Session ID before login:', req.sessionID);
+        console.log('POST /admin/login - Session data before login:', req.session);
         
         if (!username || !password) {
           return res.render('admin/login', { error: 'Username and password are required' });
@@ -281,7 +283,7 @@ async function startServer() {
 
         console.log('POST /admin/login - Login successful for:', username);
 
-        // Set session data directly without regeneration
+        // Set session data directly before save
         req.session.adminId = admin.id;
         req.session.admin = {
           id: admin.id,
@@ -289,6 +291,7 @@ async function startServer() {
           email: admin.email,
           role: admin.role
         };
+        req.session.isAuthenticated = true;
 
         // Force session save
         req.session.save((err) => {
@@ -300,7 +303,8 @@ async function startServer() {
           console.log('Session saved successfully:', {
             sessionId: req.sessionID,
             adminId: req.session.adminId,
-            admin: req.session.admin
+            admin: req.session.admin,
+            isAuthenticated: req.session.isAuthenticated
           });
 
           // Verify session was saved
@@ -308,9 +312,6 @@ async function startServer() {
             console.error('Session verification failed - adminId not set');
             return res.render('admin/login', { error: 'Login failed' });
           }
-
-          // Set a flag to indicate successful login
-          req.session.isAuthenticated = true;
 
           res.redirect('/admin/dashboard');
         });
@@ -322,6 +323,8 @@ async function startServer() {
 
     app.get('/admin/dashboard', requireAdmin, async (req, res) => {
       try {
+        console.log('GET /admin/dashboard - Session ID:', req.sessionID);
+        console.log('GET /admin/dashboard - Session data:', req.session);
         const [stats, businesses, orders] = await Promise.all([
           AdminService.getSystemStats(),
           AdminService.getActiveBusinesses(),
