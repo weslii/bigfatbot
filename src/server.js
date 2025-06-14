@@ -18,24 +18,95 @@ const redisUrl = process.env.REDIS_URL;
 console.log('Redis URL:', redisUrl ? 'Set' : 'Not set');
 
 // Basic middleware setup (must be before routes)
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path} - Body parsing middleware check`);
-  next();
-});
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path} - After body parsing, req.body:`, req.body);
-  next();
-});
-
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Set view engine
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+
+// Initialize Redis and session middleware
+async function initializeSession() {
+  if (!redisUrl) {
+    console.error('REDIS_URL is not set. Session storage will not work properly.');
+    process.exit(1);
+  }
+
+  const redisClient = redis.createClient(redisUrl, {
+    legacyMode: true,
+    retry_strategy: function(options) {
+      if (options.error && options.error.code === 'ECONNREFUSED') {
+        return new Error('Redis connection refused');
+      }
+      if (options.total_retry_time > 1000 * 60 * 60) {
+        return new Error('Redis retry time exhausted');
+      }
+      if (options.attempt > 10) {
+        return new Error('Redis max retries reached');
+      }
+      return Math.min(options.attempt * 100, 3000);
+    }
+  });
+
+  redisClient.on('error', (err) => {
+    console.error('Redis Client Error:', err);
+  });
+
+  redisClient.on('connect', () => {
+    console.log('Redis client connected successfully');
+  });
+
+  redisClient.on('ready', () => {
+    console.log('Redis client ready');
+  });
+
+  try {
+    // Wait for Redis to be ready
+    await new Promise((resolve, reject) => {
+      redisClient.once('ready', resolve);
+      redisClient.once('error', reject);
+    });
+
+    // Configure session middleware
+    const sessionConfig = {
+      store: new RedisStore({ 
+        client: redisClient,
+        prefix: 'sess:',
+        ttl: 86400 // 24 hours in seconds
+      }),
+      secret: process.env.SESSION_SECRET || 'your-secret-key',
+      resave: false,
+      saveUninitialized: false,
+      rolling: true,
+      name: 'sessionId',
+      cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        path: '/'
+      }
+    };
+
+    app.use(session(sessionConfig));
+
+    // Add session debugging middleware
+    app.use((req, res, next) => {
+      if (req.path.startsWith('/admin')) {
+        console.log('Session middleware - Path:', req.path);
+        console.log('Session middleware - Session ID:', req.sessionID);
+        console.log('Session middleware - Session data:', req.session);
+      }
+      next();
+    });
+
+    return true;
+  } catch (err) {
+    console.error('Failed to initialize session:', err);
+    return false;
+  }
+}
 
 // Admin authentication middleware
 const requireAdmin = async (req, res, next) => {
@@ -221,80 +292,15 @@ app.get('/admin/logout', (req, res) => {
   });
 });
 
-// Initialize Redis and start server
+// Start server
 async function startServer() {
-  if (!redisUrl) {
-    console.error('REDIS_URL is not set. Session storage will not work properly.');
-    process.exit(1);
-  }
-
-  const redisClient = redis.createClient(redisUrl, {
-    legacyMode: true,
-    retry_strategy: function(options) {
-      if (options.error && options.error.code === 'ECONNREFUSED') {
-        return new Error('Redis connection refused');
-      }
-      if (options.total_retry_time > 1000 * 60 * 60) {
-        return new Error('Redis retry time exhausted');
-      }
-      if (options.attempt > 10) {
-        return new Error('Redis max retries reached');
-      }
-      return Math.min(options.attempt * 100, 3000);
-    }
-  });
-
-  redisClient.on('error', (err) => {
-    console.error('Redis Client Error:', err);
-  });
-
-  redisClient.on('connect', () => {
-    console.log('Redis client connected successfully');
-  });
-
-  redisClient.on('ready', () => {
-    console.log('Redis client ready');
-  });
-
   try {
-    // Wait for Redis to be ready
-    await new Promise((resolve, reject) => {
-      redisClient.once('ready', resolve);
-      redisClient.once('error', reject);
-    });
-
-    // Configure session middleware
-    const sessionConfig = {
-      store: new RedisStore({ 
-        client: redisClient,
-        prefix: 'sess:',
-        ttl: 86400 // 24 hours in seconds
-      }),
-      secret: process.env.SESSION_SECRET || 'your-secret-key',
-      resave: false,
-      saveUninitialized: false,
-      rolling: true,
-      name: 'sessionId',
-      cookie: {
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        path: '/'
-      }
-    };
-
-    app.use(session(sessionConfig));
-
-    // Add session debugging middleware
-    app.use((req, res, next) => {
-      if (req.path.startsWith('/admin')) {
-        console.log('Session middleware - Path:', req.path);
-        console.log('Session middleware - Session ID:', req.sessionID);
-        console.log('Session middleware - Session data:', req.session);
-      }
-      next();
-    });
+    // Initialize session middleware first
+    const sessionInitialized = await initializeSession();
+    if (!sessionInitialized) {
+      console.error('Failed to initialize session middleware');
+      process.exit(1);
+    }
 
     // Start the server
     app.listen(port, () => {
