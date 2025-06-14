@@ -14,7 +14,7 @@ console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
 console.log('POSTGRES_HOST exists:', !!process.env.POSTGRES_HOST);
 
 // Now load database after environment check
-const { database } = require('./config/database');
+const database = require('./config/database');
 const WhatsAppService = require('./services/WhatsAppService');
 const SchedulerService = require('./services/SchedulerService');
 

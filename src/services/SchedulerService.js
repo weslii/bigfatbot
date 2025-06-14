@@ -3,7 +3,7 @@ const logger = require('../utils/logger');
 const config = require('../config/config');
 const OrderService = require('./OrderService');
 const MessageService = require('./MessageService');
-const { database } = require('../config/database');
+const database = require('../config/database');
 
 class SchedulerService {
   constructor(whatsappService) {
