@@ -95,8 +95,7 @@ app.set('views', path.join(__dirname, 'views'));
         sameSite: 'lax',
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        path: '/',
-        domain: process.env.RAILWAY_PUBLIC_DOMAIN || undefined
+        path: '/'
       }
     };
 
@@ -104,9 +103,12 @@ app.set('views', path.join(__dirname, 'views'));
 
     // Add session debugging middleware
     app.use((req, res, next) => {
-      console.log('Session middleware - Session ID:', req.sessionID);
-      console.log('Session middleware - Session data:', req.session);
-      console.log('Session middleware - Cookie:', req.headers.cookie);
+      // Only log session info for admin routes
+      if (req.path.startsWith('/admin')) {
+        console.log('Session middleware - Path:', req.path);
+        console.log('Session middleware - Session ID:', req.sessionID);
+        console.log('Session middleware - Session data:', req.session);
+      }
       next();
     });
 
@@ -127,22 +129,14 @@ app.set('views', path.join(__dirname, 'views'));
 
   // Admin authentication middleware
   const requireAdmin = async (req, res, next) => {
-    console.log('requireAdmin middleware - Session ID:', req.sessionID);
-    console.log('requireAdmin middleware - Session data:', req.session);
-    console.log('requireAdmin middleware - Cookie:', req.headers.cookie);
-    logger.debug('requireAdmin middleware: session adminId =', req.session.adminId);
-    
     if (!req.session || !req.session.adminId) {
-      logger.debug('No adminId in session, redirecting to login');
       return res.redirect('/admin/login');
     }
     
     try {
       const admin = await AdminService.getAdminById(req.session.adminId);
-      logger.debug('requireAdmin middleware: admin =', admin);
       
       if (!admin || !admin.is_active) {
-        logger.debug('Admin not found or not active, destroying session and redirecting to login');
         req.session.destroy((err) => {
           if (err) {
             console.error('Error destroying session:', err);
@@ -185,10 +179,6 @@ app.set('views', path.join(__dirname, 'views'));
 
   // Admin routes
   app.get('/admin/login', (req, res) => {
-    console.log('Login page - Session ID:', req.sessionID);
-    console.log('Login page - Session data:', req.session);
-    console.log('Login page - Cookie:', req.headers.cookie);
-    
     if (req.session && req.session.adminId) {
       return res.redirect('/admin/dashboard');
     }
@@ -203,18 +193,9 @@ app.set('views', path.join(__dirname, 'views'));
 
   app.post('/admin/login', async (req, res) => {
     try {
-      // Debug logging
-      console.log('Login attempt - Session ID:', req.sessionID);
-      console.log('Login attempt - Session data:', req.session);
-      console.log('Login attempt - Cookie:', req.headers.cookie);
-      console.log('Content-Type:', req.get('Content-Type'));
-      console.log('req.body:', req.body);
-      console.log('req.body type:', typeof req.body);
-      
       const { username, password } = req.body;
       
       if (!username || !password) {
-        logger.error('Missing username or password:', { username: !!username, password: !!password });
         return res.render('admin/login', { error: 'Username and password are required' });
       }
       
@@ -226,7 +207,6 @@ app.set('views', path.join(__dirname, 'views'));
 
       // Set session data
       req.session.adminId = admin.id;
-      console.log('Session after login:', req.session);
       
       // Force session save
       req.session.save((err) => {
@@ -234,8 +214,6 @@ app.set('views', path.join(__dirname, 'views'));
           console.error('Error saving session:', err);
           return res.render('admin/login', { error: 'Login failed' });
         }
-        console.log('Session saved successfully');
-        console.log('Session store type:', req.sessionStore.constructor.name);
         res.redirect('/admin/dashboard');
       });
     } catch (error) {
