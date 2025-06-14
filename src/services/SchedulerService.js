@@ -16,7 +16,7 @@ class SchedulerService {
     this.jobs.push(
       cron.schedule(config.BOT.DAILY_REPORT_TIME, async () => {
         try {
-          await this.sendReportsToAllBusinesses('daily');
+          await this.sendDailyReport();
         } catch (error) {
           logger.error('Error sending daily reports:', error);
         }
@@ -27,7 +27,7 @@ class SchedulerService {
     this.jobs.push(
       cron.schedule(config.BOT.PENDING_ORDERS_TIME, async () => {
         try {
-          await this.sendPendingOrdersToAllBusinesses();
+          await this.sendPendingOrdersReport();
         } catch (error) {
           logger.error('Error sending pending orders reminders:', error);
         }
@@ -35,6 +35,57 @@ class SchedulerService {
     );
 
     logger.info('Scheduler started successfully');
+  }
+
+  async sendDailyReport() {
+    try {
+      // Get all active groups
+      const groups = await database.query('groups')
+        .select('groups.*', 'businesses.name as business_name')
+        .join('businesses', 'groups.business_id', 'businesses.id')
+        .where('groups.is_active', true);
+
+      for (const group of groups) {
+        // Get today's orders for this business
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const orders = await database.query('orders')
+          .where('business_id', group.business_id)
+          .where('created_at', '>=', today)
+          .orderBy('created_at', 'desc');
+
+        // Format and send report
+        const report = this.formatDailyReport(orders, group.business_name);
+        await this.whatsappService.sendMessage(group.group_id, report);
+      }
+    } catch (error) {
+      logger.error('Error sending daily report:', error);
+    }
+  }
+
+  async sendPendingOrdersReport() {
+    try {
+      // Get all active groups
+      const groups = await database.query('groups')
+        .select('groups.*', 'businesses.name as business_name')
+        .join('businesses', 'groups.business_id', 'businesses.id')
+        .where('groups.is_active', true);
+
+      for (const group of groups) {
+        // Get pending orders for this business
+        const pendingOrders = await database.query('orders')
+          .where('business_id', group.business_id)
+          .where('status', 'pending')
+          .orderBy('created_at', 'desc');
+
+        // Format and send report
+        const report = this.formatPendingOrdersReport(pendingOrders, group.business_name);
+        await this.whatsappService.sendMessage(group.group_id, report);
+      }
+    } catch (error) {
+      logger.error('Error sending pending orders report:', error);
+    }
   }
 
   async sendReportsToAllBusinesses(reportType) {

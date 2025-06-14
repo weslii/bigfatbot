@@ -9,47 +9,71 @@ class RegistrationService {
       const userId = uuidv4();
 
       // Create user
-      const user = await database.createUser(name, email, phoneNumber, userId);
-      logger.info('User registered successfully', { userId: user.rows[0].user_id });
-      
-      return user.rows[0];
+      const [user] = await database.query('users')
+        .insert({
+          id: userId,
+          full_name: name,
+          email: email,
+          phone_number: phoneNumber
+        })
+        .returning('*');
+
+      logger.info('User registered successfully', { userId: user.id });
+      return user;
     } catch (error) {
       logger.error('Error registering user:', error);
       throw error;
     }
   }
 
-  static async registerGroup(userId, groupName, businessName, groupType, groupId) {
+  static async registerBusiness(businessData) {
     try {
-      // Generate a unique business ID if this is a new business
-      const existingBusiness = await database.query.query(
-        'SELECT * FROM businesses WHERE user_id = $1',
-        [userId]
-      );
+      // Check if business already exists
+      const existingBusiness = await database.query('businesses')
+        .where('name', businessData.name)
+        .first();
 
-      let businessId;
-      if (existingBusiness.rows.length > 0) {
-        businessId = existingBusiness.rows[0].business_id;
-      } else {
-        businessId = uuidv4();
+      if (existingBusiness) {
+        throw new Error('Business already exists');
+      }
+
+      // Create business
+      const [business] = await database.query('businesses')
+        .insert({
+          name: businessData.name,
+          owner_id: businessData.ownerId,
+          contact_number: businessData.contactNumber
+        })
+        .returning('*');
+
+      return business;
+    } catch (error) {
+      logger.error('Error registering business:', error);
+      throw error;
+    }
+  }
+
+  static async registerGroup(groupData) {
+    try {
+      // Check if group is already registered
+      const existingGroup = await database.query('groups')
+        .where('group_id', groupData.groupId)
+        .first();
+
+      if (existingGroup) {
+        throw new Error('Group is already registered');
       }
 
       // Create group
-      const group = await database.createGroup(
-        userId,
-        groupName,
-        businessName,
-        groupType,
-        groupId,
-        businessId
-      );
+      const [group] = await database.query('groups')
+        .insert({
+          group_id: groupData.groupId,
+          business_id: groupData.businessId,
+          name: groupData.name
+        })
+        .returning('*');
 
-      logger.info('Group registered successfully', {
-        groupId: group.rows[0].group_id,
-        businessId: group.rows[0].business_id
-      });
-
-      return group.rows[0];
+      return group;
     } catch (error) {
       logger.error('Error registering group:', error);
       throw error;
