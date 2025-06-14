@@ -26,6 +26,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+// Set trust proxy for Railway or any proxy environment
+app.set('trust proxy', 1);
+
 // Initialize Redis and session middleware
 async function initializeSession() {
   if (!redisUrl) {
@@ -89,12 +92,13 @@ async function initializeSession() {
     const sessionConfig = {
       store: store,
       secret: process.env.SESSION_SECRET || 'your-secret-key',
-      resave: true, // Changed back to true to ensure session is saved
-      saveUninitialized: true, // Changed back to true to ensure session is created
+      resave: true,
+      saveUninitialized: true,
       rolling: true,
       name: 'sessionId',
       cookie: {
-        secure: process.env.NODE_ENV === 'production',
+        // Only set secure: true if running in production with a public domain and HTTPS
+        secure: process.env.NODE_ENV === 'production' && !!process.env.RAILWAY_PUBLIC_DOMAIN,
         sameSite: 'lax',
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
