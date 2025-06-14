@@ -84,6 +84,61 @@ app.get('/health', async (req, res) => {
   }
 });
 
+// Public routes
+app.get('/', (req, res) => {
+  res.render('index');
+});
+
+app.get('/register', (req, res) => {
+  res.render('register');
+});
+
+app.post('/register', async (req, res) => {
+  try {
+    const { name, email, phoneNumber } = req.body;
+    const user = await RegistrationService.registerUser(name, email, phoneNumber);
+    res.redirect(`/setup-business?userId=${user.id}`);
+  } catch (error) {
+    logger.error('Registration error:', error);
+    res.render('register', { error: 'Registration failed. Please try again.' });
+  }
+});
+
+app.get('/setup-business', (req, res) => {
+  const { userId } = req.query;
+  res.render('setup-business', { userId });
+});
+
+app.post('/setup-business', async (req, res) => {
+  try {
+    const { userId, businessName } = req.body;
+    const businessId = await RegistrationService.createBusiness(userId, businessName);
+    res.render('group-setup', { 
+      userId,
+      businessName,
+      businessId,
+      setupCommand: `/setup ${businessId}`
+    });
+  } catch (error) {
+    logger.error('Business setup error:', error);
+    res.render('setup-business', { 
+      error: 'Setup failed. Please try again.',
+      userId: req.body.userId
+    });
+  }
+});
+
+app.get('/dashboard', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    const groups = await RegistrationService.getUserGroups(userId);
+    res.render('dashboard', { groups });
+  } catch (error) {
+    logger.error('Dashboard error:', error);
+    res.render('error', { error: 'Failed to load dashboard.' });
+  }
+});
+
 // Admin routes
 app.get('/admin/login', (req, res) => {
   if (req.session && req.session.adminId) {
