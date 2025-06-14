@@ -1,5 +1,5 @@
-const { database } = require('../config/database');
 const logger = require('../utils/logger');
+const database = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
 
 class RegistrationService {
