@@ -1,94 +1,134 @@
 <%- include('../layout', { title: 'Admin Dashboard' }) %>
 
-<div class="container-fluid dashboard-container mt-4">
+<div class="container-fluid mt-4">
   <div class="row">
+    <!-- Sidebar -->
     <div class="col-md-3 col-lg-2">
-      <div class="card sidebar-card rounded-4">
-        <div class="card-body p-3">
-          <% include('sidebar') %>
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Welcome, <%= admin.username %></h5>
+          <hr>
+          <ul class="nav flex-column">
+            <li class="nav-item">
+              <a class="nav-link active" href="/admin/dashboard">Dashboard</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/admin/businesses">Businesses</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/admin/orders">Orders</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/admin/users">Users</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/admin/admins">Admins</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-danger" href="/admin/logout">Logout</a>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
+
+    <!-- Main Content -->
     <div class="col-md-9 col-lg-10">
-      <h2 class="fw-bold mb-4">Welcome, Admin!</h2>
-      <div class="row g-4 mb-4">
+      <!-- Stats Cards -->
+      <div class="row mb-4">
         <div class="col-md-4">
-          <div class="stat-card card rounded-4 shadow-sm text-center p-4">
-            <div class="stat-label">Total Users</div>
-            <div class="stat-value display-5 fw-bold"><%= stats.totalUsers %></div>
+          <div class="card bg-primary text-white">
+            <div class="card-body">
+              <h5 class="card-title">Total Businesses</h5>
+              <h2 class="card-text"><%= stats.totalBusinesses %></h2>
+            </div>
           </div>
         </div>
         <div class="col-md-4">
-          <div class="stat-card card rounded-4 shadow-sm text-center p-4">
-            <div class="stat-label">Total Businesses</div>
-            <div class="stat-value display-5 fw-bold"><%= stats.totalBusinesses %></div>
+          <div class="card bg-success text-white">
+            <div class="card-body">
+              <h5 class="card-title">Active Orders</h5>
+              <h2 class="card-text"><%= stats.activeOrders %></h2>
+            </div>
           </div>
         </div>
         <div class="col-md-4">
-          <div class="stat-card card rounded-4 shadow-sm text-center p-4">
-            <div class="stat-label">Total Orders</div>
-            <div class="stat-value display-5 fw-bold"><%= stats.totalOrders %></div>
+          <div class="card bg-info text-white">
+            <div class="card-body">
+              <h5 class="card-title">Total Users</h5>
+              <h2 class="card-text"><%= stats.totalUsers %></h2>
+            </div>
           </div>
         </div>
       </div>
-      <div class="mb-4">
-        <h5 class="fw-bold">Recent Orders</h5>
-        <div class="table-responsive rounded-4 shadow-sm bg-white p-0 mb-4">
-          <table class="table table-borderless align-middle mb-0 dashboard-table">
-            <thead class="table-light rounded-4">
-              <tr>
-                <th>Order ID</th>
-                <th>Business</th>
-                <th>Customer</th>
-                <th>Status</th>
-                <th>Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% orders.forEach(order => { %>
+
+      <!-- Recent Orders -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">Recent Orders</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
                 <tr>
-                  <td><%= order.order_id %></td>
-                  <td><%= order.business_name %></td>
-                  <td><%= order.customer_name %></td>
-                  <td><span class="badge bg-<%= order.status === 'completed' ? 'success' : order.status === 'pending' ? 'warning' : 'secondary' %>"><%= order.status %></span></td>
-                  <td><%= new Date(order.created_at).toLocaleDateString() %></td>
-                  <td>
-                    <a href="/admin/orders/<%= order.order_id %>" class="btn btn-sm btn-action btn-view">View</a>
-                    <a href="/admin/orders/<%= order.order_id %>/edit" class="btn btn-sm btn-action btn-edit">Edit</a>
-                    <form action="/admin/orders/<%= order.order_id %>/delete" method="POST" style="display:inline;">
-                      <button type="submit" class="btn btn-sm btn-action btn-delete">Delete</button>
-                    </form>
-                  </td>
+                  <th>Order ID</th>
+                  <th>Business</th>
+                  <th>Customer</th>
+                  <th>Status</th>
+                  <th>Date</th>
                 </tr>
-              <% }) %>
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                <% orders.forEach(order => { %>
+                  <tr>
+                    <td><%= order.order_id %></td>
+                    <td><%= order.business_name %></td>
+                    <td><%= order.customer_name %></td>
+                    <td>
+                      <span class="badge bg-<%= order.status === 'completed' ? 'success' : 'warning' %>">
+                        <%= order.status %>
+                      </span>
+                    </td>
+                    <td><%= new Date(order.created_at).toLocaleDateString() %></td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-      <div>
-        <h5 class="fw-bold">Active Businesses</h5>
-        <div class="table-responsive rounded-4 shadow-sm bg-white p-0">
-          <table class="table table-borderless align-middle mb-0 dashboard-table">
-            <thead class="table-light rounded-4">
-              <tr>
-                <th>Business Name</th>
-                <th>Owner</th>
-                <th>Groups</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% businesses.forEach(biz => { %>
+
+      <!-- Active Businesses -->
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Active Businesses</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
                 <tr>
-                  <td><%= biz.business_name %></td>
-                  <td><%= biz.owner_name %></td>
-                  <td><%= biz.total_groups %></td>
-                  <td><span class="badge bg-<%= biz.is_active ? 'success' : 'secondary' %>"><%= biz.is_active ? 'Active' : 'Inactive' %></span></td>
+                  <th>Business Name</th>
+                  <th>Owner</th>
+                  <th>Groups</th>
+                  <th>Status</th>
                 </tr>
-              <% }) %>
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                <% businesses.forEach(business => { %>
+                  <tr>
+                    <td><%= business.business_name %></td>
+                    <td><%= business.owner_name %></td>
+                    <td><%= business.total_groups %></td>
+                    <td>
+                      <span class="badge bg-success">Active</span>
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
