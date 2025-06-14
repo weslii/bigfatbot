@@ -89,8 +89,8 @@ async function initializeSession() {
     const sessionConfig = {
       store: store,
       secret: process.env.SESSION_SECRET || 'your-secret-key',
-      resave: false, // Changed to false to prevent unnecessary session saves
-      saveUninitialized: false, // Changed to false to prevent saving empty sessions
+      resave: true, // Changed back to true to ensure session is saved
+      saveUninitialized: true, // Changed back to true to ensure session is created
       rolling: true,
       name: 'sessionId',
       cookie: {
@@ -115,6 +115,15 @@ async function initializeSession() {
       next();
     });
 
+    // Add session error handling middleware
+    app.use((err, req, res, next) => {
+      console.error('Session error:', err);
+      if (err.code === 'ECONNREFUSED') {
+        return res.status(500).render('error', { error: 'Session service unavailable' });
+      }
+      next(err);
+    });
+
     return true;
   } catch (err) {
     console.error('Failed to initialize session:', err);
@@ -124,7 +133,11 @@ async function initializeSession() {
 
 // Admin authentication middleware
 const requireAdmin = async (req, res, next) => {
-  if (!req.session || !req.session.adminId) {
+  console.log('requireAdmin middleware - Session:', req.session);
+  console.log('requireAdmin middleware - Session ID:', req.sessionID);
+  
+  if (!req.session || !req.session.adminId || !req.session.isAuthenticated) {
+    console.log('requireAdmin middleware - Authentication failed');
     return res.redirect('/admin/login');
   }
   
@@ -132,6 +145,7 @@ const requireAdmin = async (req, res, next) => {
     const admin = await AdminService.getAdminById(req.session.adminId);
     
     if (!admin || !admin.is_active) {
+      console.log('requireAdmin middleware - Admin not found or inactive');
       req.session.destroy((err) => {
         if (err) {
           console.error('Error destroying session:', err);
@@ -263,43 +277,38 @@ async function startServer() {
 
         console.log('POST /admin/login - Login successful for:', username);
 
-        // Regenerate session to prevent session fixation
-        req.session.regenerate((err) => {
+        // Set session data directly without regeneration
+        req.session.adminId = admin.id;
+        req.session.admin = {
+          id: admin.id,
+          username: admin.username,
+          email: admin.email,
+          role: admin.role
+        };
+
+        // Force session save
+        req.session.save((err) => {
           if (err) {
-            console.error('Error regenerating session:', err);
+            console.error('Error saving session:', err);
             return res.render('admin/login', { error: 'Login failed' });
           }
 
-          // Set session data
-          req.session.adminId = admin.id;
-          req.session.admin = {
-            id: admin.id,
-            username: admin.username,
-            email: admin.email,
-            role: admin.role
-          };
-
-          // Force session save
-          req.session.save((err) => {
-            if (err) {
-              console.error('Error saving session:', err);
-              return res.render('admin/login', { error: 'Login failed' });
-            }
-
-            console.log('Session saved successfully:', {
-              sessionId: req.sessionID,
-              adminId: req.session.adminId,
-              admin: req.session.admin
-            });
-
-            // Verify session was saved
-            if (!req.session.adminId) {
-              console.error('Session verification failed - adminId not set');
-              return res.render('admin/login', { error: 'Login failed' });
-            }
-
-            res.redirect('/admin/dashboard');
+          console.log('Session saved successfully:', {
+            sessionId: req.sessionID,
+            adminId: req.session.adminId,
+            admin: req.session.admin
           });
+
+          // Verify session was saved
+          if (!req.session.adminId) {
+            console.error('Session verification failed - adminId not set');
+            return res.render('admin/login', { error: 'Login failed' });
+          }
+
+          // Set a flag to indicate successful login
+          req.session.isAuthenticated = true;
+
+          res.redirect('/admin/dashboard');
         });
       } catch (error) {
         logger.error('Admin login error:', error);
