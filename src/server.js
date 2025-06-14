@@ -68,22 +68,29 @@ async function initializeSession() {
       redisClient.once('error', reject);
     });
 
+    // Create Redis store instance
+    const store = new RedisStore({ 
+      client: redisClient,
+      prefix: 'sess:',
+      ttl: 86400, // 24 hours in seconds
+      disableTouch: false, // Enable touch to extend session lifetime
+      scanCount: 100, // Number of keys to scan per iteration
+      serializer: {
+        stringify: (data) => JSON.stringify(data),
+        parse: (data) => JSON.parse(data)
+      }
+    });
+
+    store.on('error', (err) => {
+      console.error('Redis store error:', err);
+    });
+
     // Configure session middleware
     const sessionConfig = {
-      store: new RedisStore({ 
-        client: redisClient,
-        prefix: 'sess:',
-        ttl: 86400, // 24 hours in seconds
-        disableTouch: false, // Enable touch to extend session lifetime
-        scanCount: 100, // Number of keys to scan per iteration
-        serializer: {
-          stringify: (data) => JSON.stringify(data),
-          parse: (data) => JSON.parse(data)
-        }
-      }),
+      store: store,
       secret: process.env.SESSION_SECRET || 'your-secret-key',
-      resave: true,
-      saveUninitialized: true,
+      resave: false, // Changed to false to prevent unnecessary session saves
+      saveUninitialized: false, // Changed to false to prevent saving empty sessions
       rolling: true,
       name: 'sessionId',
       cookie: {
@@ -95,23 +102,6 @@ async function initializeSession() {
       }
     };
 
-    // Add Redis store error handling
-    const store = new RedisStore({ 
-      client: redisClient,
-      prefix: 'sess:',
-      ttl: 86400,
-      disableTouch: false,
-      scanCount: 100,
-      serializer: {
-        stringify: (data) => JSON.stringify(data),
-        parse: (data) => JSON.parse(data)
-      }
-    });
-
-    store.on('error', (err) => {
-      console.error('Redis store error:', err);
-    });
-
     app.use(session(sessionConfig));
 
     // Add session debugging middleware with more details
@@ -121,7 +111,6 @@ async function initializeSession() {
         console.log('Session middleware - Session ID:', req.sessionID);
         console.log('Session middleware - Session data:', req.session);
         console.log('Session middleware - Cookie:', req.session.cookie);
-        console.log('Session middleware - Store:', store);
       }
       next();
     });
@@ -274,31 +263,41 @@ async function startServer() {
 
         console.log('POST /admin/login - Login successful for:', username);
 
-        // Set session data directly
-        req.session.adminId = admin.id;
-        req.session.admin = {
-          id: admin.id,
-          username: admin.username,
-          email: admin.email,
-          role: admin.role
-        };
-
-        // Force session save with callback
-        req.session.save((err) => {
+        // Regenerate session to prevent session fixation
+        req.session.regenerate((err) => {
           if (err) {
-            console.error('Error saving session:', err);
+            console.error('Error regenerating session:', err);
             return res.render('admin/login', { error: 'Login failed' });
           }
-          console.log('Session saved successfully:', req.session);
-          console.log('Session ID after save:', req.sessionID);
-          
-          // Verify session was saved
-          store.get(req.sessionID, (err, session) => {
+
+          // Set session data
+          req.session.adminId = admin.id;
+          req.session.admin = {
+            id: admin.id,
+            username: admin.username,
+            email: admin.email,
+            role: admin.role
+          };
+
+          // Force session save
+          req.session.save((err) => {
             if (err) {
-              console.error('Error verifying session:', err);
-            } else {
-              console.log('Verified session in store:', session);
+              console.error('Error saving session:', err);
+              return res.render('admin/login', { error: 'Login failed' });
             }
+
+            console.log('Session saved successfully:', {
+              sessionId: req.sessionID,
+              adminId: req.session.adminId,
+              admin: req.session.admin
+            });
+
+            // Verify session was saved
+            if (!req.session.adminId) {
+              console.error('Session verification failed - adminId not set');
+              return res.render('admin/login', { error: 'Login failed' });
+            }
+
             res.redirect('/admin/dashboard');
           });
         });
