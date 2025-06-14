@@ -1,0 +1,40 @@
+<%- include('../layout', { title: business ? 'Edit Business' : 'Add Business' }) %>
+
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h4><%= business ? 'Edit Business' : 'Add Business' %></h4>
+        </div>
+        <div class="card-body">
+          <form action="<%= business ? '/admin/businesses/' + business.business_id + '/edit' : '/admin/businesses/add' %>" method="POST">
+            <% if (!business) { %>
+              <div class="mb-3">
+                <label for="business_id" class="form-label">Business ID</label>
+                <input type="text" class="form-control" id="business_id" name="business_id" required>
+              </div>
+            <% } %>
+            <div class="mb-3">
+              <label for="business_name" class="form-label">Business Name</label>
+              <input type="text" class="form-control" id="business_name" name="business_name" value="<%= business ? business.business_name : '' %>" required>
+            </div>
+            <div class="mb-3">
+              <label for="owner_id" class="form-label">Owner ID</label>
+              <input type="text" class="form-control" id="owner_id" name="owner_id" value="<%= business ? business.owner_id : '' %>" required>
+            </div>
+            <div class="mb-3">
+              <label for="is_active" class="form-label">Active</label>
+              <select class="form-select" id="is_active" name="is_active">
+                <option value="true" <%= business && business.is_active ? 'selected' : '' %>>Active</option>
+                <option value="false" <%= business && !business.is_active ? 'selected' : '' %>>Inactive</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary"><%= business ? 'Save Changes' : 'Add Business' %></button>
+            <a href="/admin/businesses" class="btn btn-secondary ms-2">Cancel</a>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 

@@ -233,6 +233,98 @@ class AdminService {
       throw error;
     }
   }
+
+  static async getAllBusinessesWithOwners() {
+    try {
+      return await database.query('groups as g')
+        .select(
+          'g.business_id',
+          'g.business_name',
+          'g.is_active',
+          'g.owner_id',
+          'u.username as owner_name',
+          'u.email as owner_email'
+        )
+        .leftJoin('users as u', 'g.owner_id', 'u.id')
+        .orderBy('g.business_name');
+    } catch (error) {
+      logger.error('Error getting all businesses with owners:', error);
+      throw error;
+    }
+  }
+
+  static async getBusinessById(businessId) {
+    try {
+      return await database.query('groups as g')
+        .select(
+          'g.business_id',
+          'g.business_name',
+          'g.is_active',
+          'g.owner_id',
+          'u.username as owner_name',
+          'u.email as owner_email'
+        )
+        .leftJoin('users as u', 'g.owner_id', 'u.id')
+        .where('g.business_id', businessId)
+        .first();
+    } catch (error) {
+      logger.error('Error getting business by ID:', error);
+      throw error;
+    }
+  }
+
+  static async addBusiness(data) {
+    try {
+      await database.query('groups').insert({
+        business_id: data.business_id,
+        business_name: data.business_name,
+        is_active: data.is_active !== undefined ? data.is_active : true,
+        owner_id: data.owner_id
+      });
+    } catch (error) {
+      logger.error('Error adding business:', error);
+      throw error;
+    }
+  }
+
+  static async editBusiness(businessId, data) {
+    try {
+      await database.query('groups')
+        .where('business_id', businessId)
+        .update({
+          business_name: data.business_name,
+          is_active: data.is_active !== undefined ? data.is_active : true,
+          owner_id: data.owner_id
+        });
+    } catch (error) {
+      logger.error('Error editing business:', error);
+      throw error;
+    }
+  }
+
+  static async toggleBusinessActive(businessId) {
+    try {
+      const business = await database.query('groups')
+        .where('business_id', businessId)
+        .first();
+      if (!business) throw new Error('Business not found');
+      await database.query('groups')
+        .where('business_id', businessId)
+        .update({ is_active: !business.is_active });
+    } catch (error) {
+      logger.error('Error toggling business active:', error);
+      throw error;
+    }
+  }
+
+  static async deleteBusiness(businessId) {
+    try {
+      await database.query('groups').where('business_id', businessId).del();
+    } catch (error) {
+      logger.error('Error deleting business:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = AdminService; 
