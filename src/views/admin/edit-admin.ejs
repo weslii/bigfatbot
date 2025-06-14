@@ -1,0 +1,45 @@
+<%- include('../layout', { title: adminUser ? 'Edit Admin' : 'Add Admin' }) %>
+
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h4><%= adminUser ? 'Edit Admin' : 'Add Admin' %></h4>
+        </div>
+        <div class="card-body">
+          <form action="<%= adminUser ? '/admin/admins/' + adminUser.id + '/edit' : '/admin/admins/add' %>" method="POST">
+            <div class="mb-3">
+              <label for="username" class="form-label">Username</label>
+              <input type="text" class="form-control" id="username" name="username" value="<%= adminUser ? adminUser.username : '' %>" <%= adminUser ? 'readonly' : '' %> required>
+            </div>
+            <div class="mb-3">
+              <label for="email" class="form-label">Email</label>
+              <input type="email" class="form-control" id="email" name="email" value="<%= adminUser ? adminUser.email : '' %>" required>
+            </div>
+            <div class="mb-3">
+              <label for="password" class="form-label">Password <%= adminUser ? '(leave blank to keep current)' : '' %></label>
+              <input type="password" class="form-control" id="password" name="password" <%= adminUser ? '' : 'required' %>>
+            </div>
+            <div class="mb-3">
+              <label for="role" class="form-label">Role</label>
+              <select class="form-select" id="role" name="role">
+                <option value="admin" <%= adminUser && adminUser.role === 'admin' ? 'selected' : '' %>>Admin</option>
+                <option value="super_admin" <%= adminUser && adminUser.role === 'super_admin' ? 'selected' : '' %>>Super Admin</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="is_active" class="form-label">Active</label>
+              <select class="form-select" id="is_active" name="is_active">
+                <option value="true" <%= adminUser && adminUser.is_active ? 'selected' : '' %>>Active</option>
+                <option value="false" <%= adminUser && !adminUser.is_active ? 'selected' : '' %>>Inactive</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary"><%= adminUser ? 'Save Changes' : 'Add Admin' %></button>
+            <a href="/admin/admins" class="btn btn-secondary ms-2">Cancel</a>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 
