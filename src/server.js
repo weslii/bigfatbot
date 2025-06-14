@@ -183,6 +183,39 @@ app.get('/health', async (req, res) => {
   }
 });
 
+// Clear sessions endpoint (for development only)
+app.get('/clear-sessions', async (req, res) => {
+  try {
+    const keys = await new Promise((resolve, reject) => {
+      redisClient.keys('sess:*', (err, keys) => {
+        if (err) reject(err);
+        else resolve(keys);
+      });
+    });
+
+    if (keys.length > 0) {
+      await new Promise((resolve, reject) => {
+        redisClient.del(keys, (err, reply) => {
+          if (err) reject(err);
+          else resolve(reply);
+        });
+      });
+    }
+
+    res.json({
+      status: 'success',
+      message: `Cleared ${keys.length} sessions`,
+      keys
+    });
+  } catch (error) {
+    console.error('Error clearing sessions:', error);
+    res.status(500).json({
+      status: 'error',
+      error: error.message
+    });
+  }
+});
+
 // Start server
 async function startServer() {
   try {
