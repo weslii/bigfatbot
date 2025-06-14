@@ -151,11 +151,10 @@ class AdminService {
           'o.created_at',
           'o.updated_at',
           'o.items',
-          'u.username as customer_name',
+          'o.customer_name',
           'g.business_name',
           'g.business_id'
         )
-        .leftJoin('users as u', 'o.user_id', 'u.id')
         .leftJoin('groups as g', 'o.business_id', 'g.business_id')
         .orderBy('o.created_at', 'desc');
 
@@ -167,7 +166,7 @@ class AdminService {
       }
       if (search) {
         query.where(function() {
-          this.where('u.username', 'ilike', `%${search}%`)
+          this.where('o.customer_name', 'ilike', `%${search}%`)
               .orWhere('o.id', 'ilike', `%${search}%`);
         });
       }
@@ -207,11 +206,10 @@ class AdminService {
           'o.created_at',
           'o.updated_at',
           'o.items',
-          'u.username as customer_name',
+          'o.customer_name',
           'g.business_name',
           'g.business_id'
         )
-        .leftJoin('users as u', 'o.user_id', 'u.id')
         .leftJoin('groups as g', 'o.business_id', 'g.business_id')
         .where('o.id', orderId)
         .first();
