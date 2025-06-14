@@ -402,6 +402,75 @@ class AdminService {
       throw error;
     }
   }
+
+  static async getAllAdmins() {
+    try {
+      return await database.query('admins')
+        .select('id', 'username', 'email', 'role', 'is_active', 'last_login')
+        .orderBy('username');
+    } catch (error) {
+      logger.error('Error getting all admins:', error);
+      throw error;
+    }
+  }
+
+  static async addAdmin(data) {
+    try {
+      await database.query('admins').insert({
+        username: data.username,
+        email: data.email,
+        password_hash: data.password ? await require('bcryptjs').hash(data.password, 10) : '',
+        role: data.role || 'admin',
+        is_active: data.is_active !== undefined ? data.is_active : true
+      });
+    } catch (error) {
+      logger.error('Error adding admin:', error);
+      throw error;
+    }
+  }
+
+  static async editAdmin(adminId, data) {
+    try {
+      const updateData = {
+        email: data.email,
+        role: data.role,
+        is_active: data.is_active !== undefined ? data.is_active : true
+      };
+      if (data.password) {
+        updateData.password_hash = await require('bcryptjs').hash(data.password, 10);
+      }
+      await database.query('admins')
+        .where('id', adminId)
+        .update(updateData);
+    } catch (error) {
+      logger.error('Error editing admin:', error);
+      throw error;
+    }
+  }
+
+  static async toggleAdminActive(adminId) {
+    try {
+      const admin = await database.query('admins')
+        .where('id', adminId)
+        .first();
+      if (!admin) throw new Error('Admin not found');
+      await database.query('admins')
+        .where('id', adminId)
+        .update({ is_active: !admin.is_active });
+    } catch (error) {
+      logger.error('Error toggling admin active:', error);
+      throw error;
+    }
+  }
+
+  static async deleteAdmin(adminId) {
+    try {
+      await database.query('admins').where('id', adminId).del();
+    } catch (error) {
+      logger.error('Error deleting admin:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = AdminService; 
