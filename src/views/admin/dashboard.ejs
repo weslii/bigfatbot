@@ -6,7 +6,7 @@
     <div class="col-md-3 col-lg-2">
       <div class="card pastel-blue-sidebar">
         <div class="card-body">
-          <h5 class="card-title">Welcome, <%= admin.username %></h5>
+          <h5 class="card-title text-dark">Welcome, <%= admin.username %></h5>
           <hr>
           <ul class="nav flex-column">
             <li class="nav-item">
@@ -133,4 +133,20 @@
       </div>
     </div>
   </div>
-</div> 
+</div>
+
+<script>
+// Add active state to current page in sidebar
+document.addEventListener('DOMContentLoaded', function() {
+  const currentPath = window.location.pathname;
+  const navLinks = document.querySelectorAll('.nav-link');
+  
+  navLinks.forEach(link => {
+    if (link.getAttribute('href') === currentPath) {
+      link.classList.add('active');
+    } else {
+      link.classList.remove('active');
+    }
+  });
+});
+</script> 
