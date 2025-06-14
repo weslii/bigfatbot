@@ -76,8 +76,8 @@ async function initializeSession() {
         ttl: 86400 // 24 hours in seconds
       }),
       secret: process.env.SESSION_SECRET || 'your-secret-key',
-      resave: false,
-      saveUninitialized: false,
+      resave: true,
+      saveUninitialized: true,
       rolling: true,
       name: 'sessionId',
       cookie: {
@@ -223,6 +223,7 @@ async function startServer() {
 
     // Admin routes
     app.get('/admin/login', (req, res) => {
+      console.log('GET /admin/login - Session:', req.session);
       if (req.session && req.session.adminId) {
         return res.redirect('/admin/dashboard');
       }
@@ -232,6 +233,7 @@ async function startServer() {
     app.post('/admin/login', async (req, res) => {
       try {
         const { username, password } = req.body;
+        console.log('POST /admin/login - Attempting login for:', username);
         
         if (!username || !password) {
           return res.render('admin/login', { error: 'Username and password are required' });
@@ -240,33 +242,29 @@ async function startServer() {
         const admin = await AdminService.authenticate(username, password);
         
         if (!admin) {
+          console.log('POST /admin/login - Invalid credentials for:', username);
           return res.render('admin/login', { error: 'Invalid credentials' });
         }
 
-        // Create a new session
-        req.session.regenerate((err) => {
+        console.log('POST /admin/login - Login successful for:', username);
+
+        // Set session data directly
+        req.session.adminId = admin.id;
+        req.session.admin = {
+          id: admin.id,
+          username: admin.username,
+          email: admin.email,
+          role: admin.role
+        };
+
+        // Force session save
+        req.session.save((err) => {
           if (err) {
-            console.error('Error regenerating session:', err);
+            console.error('Error saving session:', err);
             return res.render('admin/login', { error: 'Login failed' });
           }
-
-          // Set session data
-          req.session.adminId = admin.id;
-          req.session.admin = {
-            id: admin.id,
-            username: admin.username,
-            email: admin.email,
-            role: admin.role
-          };
-
-          // Save session
-          req.session.save((err) => {
-            if (err) {
-              console.error('Error saving session:', err);
-              return res.render('admin/login', { error: 'Login failed' });
-            }
-            res.redirect('/admin/dashboard');
-          });
+          console.log('Session saved successfully:', req.session);
+          res.redirect('/admin/dashboard');
         });
       } catch (error) {
         logger.error('Admin login error:', error);
