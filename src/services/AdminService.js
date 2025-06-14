@@ -325,6 +325,83 @@ class AdminService {
       throw error;
     }
   }
+
+  static async getAllUsers() {
+    try {
+      return await database.query('users')
+        .select('id', 'username', 'email', 'phone_number', 'is_active', 'created_at')
+        .orderBy('created_at', 'desc');
+    } catch (error) {
+      logger.error('Error getting all users:', error);
+      throw error;
+    }
+  }
+
+  static async getUserById(userId) {
+    try {
+      return await database.query('users')
+        .select('id', 'username', 'email', 'phone_number', 'is_active', 'created_at')
+        .where('id', userId)
+        .first();
+    } catch (error) {
+      logger.error('Error getting user by ID:', error);
+      throw error;
+    }
+  }
+
+  static async addUser(data) {
+    try {
+      await database.query('users').insert({
+        username: data.username,
+        email: data.email,
+        phone_number: data.phone_number,
+        is_active: data.is_active !== undefined ? data.is_active : true
+      });
+    } catch (error) {
+      logger.error('Error adding user:', error);
+      throw error;
+    }
+  }
+
+  static async editUser(userId, data) {
+    try {
+      await database.query('users')
+        .where('id', userId)
+        .update({
+          username: data.username,
+          email: data.email,
+          phone_number: data.phone_number,
+          is_active: data.is_active !== undefined ? data.is_active : true
+        });
+    } catch (error) {
+      logger.error('Error editing user:', error);
+      throw error;
+    }
+  }
+
+  static async toggleUserActive(userId) {
+    try {
+      const user = await database.query('users')
+        .where('id', userId)
+        .first();
+      if (!user) throw new Error('User not found');
+      await database.query('users')
+        .where('id', userId)
+        .update({ is_active: !user.is_active });
+    } catch (error) {
+      logger.error('Error toggling user active:', error);
+      throw error;
+    }
+  }
+
+  static async deleteUser(userId) {
+    try {
+      await database.query('users').where('id', userId).del();
+    } catch (error) {
+      logger.error('Error deleting user:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = AdminService; 
