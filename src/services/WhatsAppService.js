@@ -61,7 +61,7 @@ class WhatsAppService {
       }
 
       // Get group info from database
-      const group = await database.query(
+      const group = await database.query.query(
         'SELECT * FROM groups WHERE group_id = $1',
         [chat.id._serialized]
       );
@@ -103,7 +103,7 @@ class WhatsAppService {
         const salesConfirmation = MessageService.formatSalesConfirmation(order);
         
         // Get delivery group for this business
-        const deliveryGroup = await database.query(
+        const deliveryGroup = await database.query.query(
           'SELECT * FROM groups WHERE business_id = $1 AND group_type = $2',
           [groupInfo.business_id, 'delivery']
         );
@@ -331,7 +331,7 @@ class WhatsAppService {
       const businessId = parts[1];
 
       // Check if business exists
-      const business = await database.query(
+      const business = await database.query.query(
         'SELECT * FROM groups WHERE business_id = $1',
         [businessId]
       );
@@ -342,7 +342,7 @@ class WhatsAppService {
       }
 
       // Check if this group is already registered
-      const existingGroup = await database.query(
+      const existingGroup = await database.query.query(
         'SELECT * FROM groups WHERE group_id = $1',
         [chat.id._serialized]
       );
@@ -353,7 +353,7 @@ class WhatsAppService {
       }
 
       // Check if this business already has both groups
-      const groupCount = await database.query(
+      const groupCount = await database.query.query(
         'SELECT COUNT(*) FROM groups WHERE business_id = $1',
         [businessId]
       );
@@ -364,7 +364,7 @@ class WhatsAppService {
       }
 
       // Determine group type based on existing groups
-      const existingGroups = await database.query(
+      const existingGroups = await database.query.query(
         'SELECT group_type FROM groups WHERE business_id = $1',
         [businessId]
       );
@@ -384,7 +384,7 @@ class WhatsAppService {
       }
 
       // Register the group
-      await database.query(
+      await database.query.query(
         `INSERT INTO groups (
           user_id, business_id, business_name, group_name, 
           group_id, group_type

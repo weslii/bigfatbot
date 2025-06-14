@@ -22,9 +22,9 @@ class RegistrationService {
   static async registerGroup(userId, groupName, businessName, groupType, groupId) {
     try {
       // Generate a unique business ID if this is a new business
-      const existingBusiness = await database.query(
-        'SELECT business_id FROM groups WHERE user_id = $1 AND business_name = $2 LIMIT 1',
-        [userId, businessName]
+      const existingBusiness = await database.query.query(
+        'SELECT * FROM businesses WHERE user_id = $1',
+        [userId]
       );
 
       let businessId;
@@ -66,7 +66,7 @@ class RegistrationService {
         ORDER BY g.business_name, g.group_type
       `;
       
-      const result = await database.query(query, [userId]);
+      const result = await database.query.query(query, [userId]);
       return result.rows;
     } catch (error) {
       logger.error('Error getting user groups:', error);
@@ -84,7 +84,7 @@ class RegistrationService {
         ORDER BY g.group_type
       `;
       
-      const result = await database.query(query, [businessId]);
+      const result = await database.query.query(query, [businessId]);
       return result.rows;
     } catch (error) {
       logger.error('Error getting business groups:', error);
@@ -95,7 +95,7 @@ class RegistrationService {
   static async validateGroup(groupId) {
     try {
       const query = 'SELECT * FROM groups WHERE group_id = $1';
-      const result = await database.query(query, [groupId]);
+      const result = await database.query.query(query, [groupId]);
       return result.rows[0];
     } catch (error) {
       logger.error('Error validating group:', error);
@@ -106,7 +106,7 @@ class RegistrationService {
   static async validateUser(userId) {
     try {
       const query = 'SELECT * FROM users WHERE user_id = $1';
-      const result = await database.query(query, [userId]);
+      const result = await database.query.query(query, [userId]);
       return result.rows[0];
     } catch (error) {
       logger.error('Error validating user:', error);
