@@ -190,6 +190,23 @@ app.get('/health', async (req, res) => {
   }
 });
 
+// Debug route to inspect session data and session ID
+app.get('/admin/debug-session', async (req, res) => {
+  let admin = null;
+  if (req.session && req.session.adminId) {
+    try {
+      admin = await AdminService.getAdminById(req.session.adminId);
+    } catch (e) {
+      admin = { error: e.message };
+    }
+  }
+  res.json({
+    sessionId: req.sessionID,
+    session: req.session,
+    adminLookup: admin
+  });
+});
+
 // Start server
 async function startServer() {
   try {
