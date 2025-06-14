@@ -22,11 +22,6 @@ app.use(express.json());
 
 // Configure session middleware
 const sessionConfig = {
-  store: new RedisStore({ 
-    client: redisClient,
-    prefix: 'sess:',
-    ttl: 86400 // 24 hours in seconds
-  }),
   secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
   saveUninitialized: false,
@@ -40,6 +35,18 @@ const sessionConfig = {
     path: '/'
   }
 };
+
+// Use Redis store if available, otherwise use memory store
+if (redisClient) {
+  sessionConfig.store = new RedisStore({ 
+    client: redisClient,
+    prefix: 'sess:',
+    ttl: 86400 // 24 hours in seconds
+  });
+  console.log('Using Redis store for sessions');
+} else {
+  console.log('Using memory store for sessions (Redis not available)');
+}
 
 app.use(session(sessionConfig));
 
