@@ -86,8 +86,8 @@ app.set('views', path.join(__dirname, 'views'));
         ttl: 86400 // 24 hours in seconds
       }),
       secret: process.env.SESSION_SECRET || 'your-secret-key',
-      resave: true,
-      saveUninitialized: true,
+      resave: false,
+      saveUninitialized: false,
       rolling: true,
       name: 'sessionId', // Explicitly set the cookie name
       cookie: {
@@ -211,23 +211,14 @@ app.set('views', path.join(__dirname, 'views'));
       console.log('req.body:', req.body);
       console.log('req.body type:', typeof req.body);
       
-      // Check if req.body exists and has the required properties
-      if (!req.body || typeof req.body !== 'object') {
-        logger.error('req.body is not an object:', req.body);
-        return res.render('admin/login', { error: 'Invalid request format' });
-      }
-      
       const { username, password } = req.body;
       
-      // Additional validation
       if (!username || !password) {
         logger.error('Missing username or password:', { username: !!username, password: !!password });
         return res.render('admin/login', { error: 'Username and password are required' });
       }
       
-      logger.debug('POST /admin/login: username =', username, 'password =', password);
       const admin = await AdminService.authenticate(username, password);
-      logger.debug('POST /admin/login: admin =', admin);
       
       if (!admin) {
         return res.render('admin/login', { error: 'Invalid credentials' });

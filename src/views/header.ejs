@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="WhatsApp Delivery Bot - Streamline your delivery business">
     <title><%= typeof title !== 'undefined' ? title : 'WhatsApp Delivery Bot' %></title>
     
     <!-- Bootstrap CSS -->
@@ -12,6 +14,9 @@
     <style>
         body {
             background-color: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
         .navbar {
             background-color: #25D366;
@@ -36,6 +41,14 @@
         .btn-primary:hover {
             background-color: #128C7E;
             border-color: #128C7E;
+        }
+        .btn-primary:disabled {
+            background-color: #25D366;
+            border-color: #25D366;
+            opacity: 0.65;
+        }
+        .spinner-border {
+            margin-right: 0.5rem;
         }
     </style>
 </head>
@@ -63,5 +76,7 @@
         </div>
     </nav>
 
+    <!-- Main Content Container -->
+    <div class="flex-grow-1">
 </body>
 </html> 
