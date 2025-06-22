@@ -267,18 +267,18 @@ async function startServer() {
 
     app.get('/register', (req, res) => {
       res.render('register');
-    });
+});
 
     app.post('/register', async (req, res) => {
-      try {
+  try {
         const { name, email, phoneNumber } = req.body;
         const user = await RegistrationService.registerUser(name, email, phoneNumber);
         res.redirect(`/setup-business?userId=${user.id}`);
-      } catch (error) {
+  } catch (error) {
         logger.error('Registration error:', error);
         res.render('register', { error: 'Registration failed. Please try again.' });
-      }
-    });
+  }
+});
 
     app.get('/setup-business', (req, res) => {
       const { userId } = req.query;
@@ -286,7 +286,7 @@ async function startServer() {
     });
 
     app.post('/setup-business', async (req, res) => {
-      try {
+  try {
         const { userId, businessName } = req.body;
         const result = await RegistrationService.createBusiness(userId, businessName);
         
@@ -301,17 +301,17 @@ async function startServer() {
           businessId: result.businessId,
           setupCommand
         });
-      } catch (error) {
+  } catch (error) {
         logger.error('Business setup error:', error);
         res.render('setup-business', { 
           error: 'Setup failed. Please try again.',
           userId: req.body.userId
         });
-      }
-    });
+  }
+});
 
     app.get('/dashboard', async (req, res) => {
-      try {
+  try {
         const { userId } = req.query;
         const [groups, businesses, orderStats, recentOrders] = await Promise.all([
           RegistrationService.getUserGroups(userId),
@@ -320,11 +320,11 @@ async function startServer() {
           OrderService.getUserRecentOrders(userId, 5)
         ]);
         res.render('dashboard', { groups, businesses, userId, orderStats, recentOrders });
-      } catch (error) {
+  } catch (error) {
         logger.error('Dashboard error:', error);
         res.render('error', { error: 'Failed to load dashboard.' });
-      }
-    });
+  }
+});
 
     // Add new business for existing users
     app.get('/add-business', (req, res) => {
@@ -333,32 +333,35 @@ async function startServer() {
         return res.redirect('/register');
       }
       res.render('add-business', { userId });
-    });
+});
 
     app.post('/add-business', async (req, res) => {
-      try {
+  try {
         const { userId, businessName } = req.body;
         const result = await RegistrationService.addBusinessToUser(userId, businessName);
         res.redirect(`/dashboard?userId=${userId}`);
-      } catch (error) {
+  } catch (error) {
         logger.error('Add business error:', error);
         res.render('add-business', { 
           error: 'Failed to add business. Please try again.',
           userId: req.body.userId
         });
-      }
-    });
+  }
+});
 
     // Orders page for users
     app.get('/orders', async (req, res) => {
-      try {
+  try {
         const { userId, business, status, search, page = 1, pageSize = 25 } = req.query;
         
         // Get user's businesses for the filter dropdown
         const businesses = await RegistrationService.getUserBusinesses(userId);
         
         // Get all business IDs for the user
-        const userBusinesses = await db.raw('SELECT business_id FROM groups WHERE user_id = ? GROUP BY business_id', [userId]);
+        const userBusinesses = await db.query('groups')
+          .select('business_id')
+          .where('user_id', userId)
+          .groupBy('business_id');
         
         const businessIds = userBusinesses.map(b => b.business_id);
         
@@ -375,31 +378,37 @@ async function startServer() {
             totalPages: 0,
             totalOrders: 0
           });
-        }
+  }
 
         // Build query based on filters
-        let query = db.raw('SELECT * FROM orders WHERE business_id IN (?)', [businessIds]);
+        let query = db.query('orders as o')
+          .select(
+            'o.*',
+            'g.business_name'
+          )
+          .join('groups as g', 'o.business_id', 'g.business_id')
+          .whereIn('o.business_id', businessIds);
 
         // Apply business filter
         if (business) {
-          query = query.where('business_id', business);
+          query = query.where('o.business_id', business);
         }
 
         // Apply status filter
         if (status) {
-          query = query.where('status', status);
+          query = query.where('o.status', status);
         }
 
         // Apply search filter
         if (search) {
           query = query.where(function() {
-            this.where('customer_name', 'ilike', `%${search}%`)
-              .orWhere('order_id', 'ilike', `%${search}%`);
-          });
+            this.where('o.customer_name', 'ilike', `%${search}%`)
+              .orWhere('o.order_id', 'ilike', `%${search}%`);
+});
         }
 
         // Get total count for pagination
-        const totalCount = await query.clone().count('id as count').first();
+        const totalCount = await query.clone().count('o.id as count').first();
         const totalOrders = parseInt(totalCount.count);
         const totalPages = Math.ceil(totalOrders / parseInt(pageSize));
         const currentPage = Math.max(1, Math.min(parseInt(page), totalPages || 1));
@@ -407,7 +416,7 @@ async function startServer() {
 
         // Get orders with pagination
         const orders = await query
-          .orderBy('created_at', 'desc')
+          .orderBy('o.created_at', 'desc')
           .limit(parseInt(pageSize))
           .offset(offset);
 
@@ -423,11 +432,11 @@ async function startServer() {
           totalPages,
           totalOrders
         });
-      } catch (error) {
+  } catch (error) {
         logger.error('Orders page error:', error);
         res.render('error', { error: 'Failed to load orders.' });
-      }
-    });
+  }
+});
 
     // Order management API endpoints
     app.get('/api/orders/:orderId', async (req, res) => {
@@ -446,25 +455,36 @@ async function startServer() {
         }
         
         // Get user's business IDs to ensure they can only access their orders
-        const userBusinesses = await db.raw('SELECT business_id FROM groups WHERE user_id = ? GROUP BY business_id', [userId]);
+        const userBusinesses = await db.query('groups')
+          .select('business_id')
+          .where('user_id', userId)
+          .groupBy('business_id');
         
         const businessIds = userBusinesses.map(b => b.business_id);
         
-        const order = await db.raw('SELECT * FROM orders WHERE id = ? AND business_id IN (?)', [orderId, businessIds]);
+        const order = await db.query('orders as o')
+          .select(
+            'o.*',
+            'g.business_name'
+          )
+          .join('groups as g', 'o.business_id', 'g.business_id')
+          .where('o.id', orderId)
+          .whereIn('o.business_id', businessIds)
+          .first();
         
-        if (order.length === 0) {
+        if (!order) {
           return res.status(404).json({ error: 'Order not found' });
         }
         
-        res.json(order[0]);
-      } catch (error) {
+        res.json(order);
+  } catch (error) {
         logger.error('Get order details error:', error);
         res.status(500).json({ error: 'Failed to get order details' });
-      }
-    });
+  }
+});
 
     app.post('/api/orders/:orderId/status', async (req, res) => {
-      try {
+  try {
         const { orderId } = req.params;
         const { status, userId } = req.body;
         
@@ -482,52 +502,70 @@ async function startServer() {
         const validStatuses = ['pending', 'processing', 'delivered', 'cancelled'];
         if (!validStatuses.includes(status)) {
           return res.status(400).json({ error: 'Invalid status value' });
-        }
+  }
         
         // Get user's business IDs to ensure they can only update their orders
-        const userBusinesses = await db.raw('SELECT business_id FROM groups WHERE user_id = ? GROUP BY business_id', [userId]);
+        const userBusinesses = await db.query('groups')
+          .select('business_id')
+          .where('user_id', userId)
+          .groupBy('business_id');
         
         const businessIds = userBusinesses.map(b => b.business_id);
         
-        const result = await db.raw('UPDATE orders SET status = ?, updated_at = ? WHERE id = ? AND business_id IN (?)', [status, new Date(), orderId, businessIds]);
+        const result = await db.query('orders')
+          .where('id', orderId)
+          .whereIn('business_id', businessIds)
+          .update({ 
+            status: status,
+            updated_at: new Date()
+          });
         
-        if (result.rowCount === 0) {
+        if (result === 0) {
           return res.status(404).json({ error: 'Order not found' });
         }
         
         res.json({ success: true, message: 'Order status updated' });
-      } catch (error) {
+  } catch (error) {
         logger.error('Update order status error:', error);
         res.status(500).json({ error: 'Failed to update order status' });
-      }
-    });
+  }
+});
 
     app.put('/api/orders/:orderId', async (req, res) => {
-      try {
+  try {
         const { orderId } = req.params;
         const { userId, ...updateData } = req.body;
         
         // Get user's business IDs to ensure they can only update their orders
-        const userBusinesses = await db.raw('SELECT business_id FROM groups WHERE user_id = ? GROUP BY business_id', [userId]);
+        const userBusinesses = await db.query('groups')
+          .select('business_id')
+          .where('user_id', userId)
+          .groupBy('business_id');
         
         const businessIds = userBusinesses.map(b => b.business_id);
         
-        const result = await db.raw('UPDATE orders SET ? WHERE id = ? AND business_id IN (?)', [updateData, orderId, businessIds]);
+        const result = await db.query('orders')
+          .where('id', orderId)
+          .whereIn('business_id', businessIds)
+          .update({ 
+            ...updateData,
+            updated_at: new Date()
+          });
         
-        if (result.rowCount === 0) {
+        if (result === 0) {
           return res.status(404).json({ error: 'Order not found' });
         }
         
         res.json({ success: true, message: 'Order updated' });
-      } catch (error) {
+  } catch (error) {
         logger.error('Update order error:', error);
         res.status(500).json({ error: 'Failed to update order' });
-      }
-    });
+  }
+});
 
     // Order count API endpoint for real-time updates
     app.get('/api/orders/count', async (req, res) => {
-      try {
+  try {
         const { userId, business_id, status, search, count_only } = req.query;
         
         if (!userId) {
@@ -535,7 +573,10 @@ async function startServer() {
         }
 
         // Get user's business IDs
-        const userBusinesses = await db.raw('SELECT business_id FROM groups WHERE user_id = ? GROUP BY business_id', [userId]);
+        const userBusinesses = await db.query('groups')
+          .select('business_id')
+          .where('user_id', userId)
+          .groupBy('business_id');
         
         const businessIds = userBusinesses.map(b => b.business_id);
         
@@ -544,32 +585,34 @@ async function startServer() {
         }
 
         // Build query
-        let query = db.raw('SELECT * FROM orders WHERE business_id IN (?)', [businessIds]);
+        let query = db.query('orders as o')
+          .join('groups as g', 'o.business_id', 'g.business_id')
+          .whereIn('o.business_id', businessIds);
 
         // Apply filters
         if (business_id) {
-          query = query.where('business_id', business_id);
+          query = query.where('o.business_id', business_id);
         }
         
         if (status) {
-          query = query.where('status', status);
+          query = query.where('o.status', status);
         }
         
         if (search) {
           query = query.where(function() {
-            this.where('customer_name', 'like', `%${search}%`)
-              .orWhere('order_id', 'like', `%${search}%`);
+            this.where('o.customer_name', 'like', `%${search}%`)
+              .orWhere('o.order_id', 'like', `%${search}%`);
           });
         }
 
-        const count = await query.count('id as count').first();
+        const count = await query.count('o.id as count').first();
         
         res.json({ count: parseInt(count.count) });
-      } catch (error) {
+  } catch (error) {
         logger.error('Order count error:', error);
         res.status(500).json({ error: 'Failed to get order count' });
-      }
-    });
+  }
+});
 
     // Groups page route
     app.get('/groups', async (req, res) => {
@@ -580,21 +623,26 @@ async function startServer() {
         }
 
         // Get user's businesses
-        const businesses = await db.raw('SELECT business_id, business_name FROM groups WHERE user_id = ? GROUP BY business_id, business_name', [userId]);
+        const businesses = await db.query('groups')
+          .select('business_id', 'business_name')
+          .where('user_id', userId)
+          .groupBy('business_id', 'business_name');
 
         // Get user's groups
-        const groups = await db.raw('SELECT * FROM groups WHERE user_id = ? ORDER BY created_at DESC', [userId]);
+        const groups = await db.query('groups')
+          .where('user_id', userId)
+          .orderBy('created_at', 'desc');
 
         res.render('groups', {
           userId,
           businesses,
           groups
         });
-      } catch (error) {
+  } catch (error) {
         logger.error('Groups page error:', error);
         res.status(500).render('error', { error: 'Failed to load groups page' });
-      }
-    });
+  }
+});
 
     // Groups API endpoints
     app.post('/api/groups', async (req, res) => {
@@ -602,78 +650,102 @@ async function startServer() {
         const { business_id, group_type, group_name, group_id, user_id } = req.body;
         
         // Validate user owns this business
-        const business = await db.raw('SELECT * FROM groups WHERE business_id = ? AND user_id = ?', [business_id, user_id]);
+        const business = await db.query('groups')
+          .where('business_id', business_id)
+          .where('user_id', user_id)
+          .first();
         
-        if (business.length === 0) {
+        if (!business) {
           return res.status(403).json({ error: 'You do not own this business' });
         }
 
         // Check if group already exists
-        const existingGroup = await db.raw('SELECT * FROM groups WHERE group_id = ?', [group_id]);
+        const existingGroup = await db.query('groups')
+          .where('group_id', group_id)
+          .first();
         
-        if (existingGroup.length > 0) {
+        if (existingGroup) {
           return res.status(400).json({ error: 'Group already exists' });
         }
 
         // Check if this business already has the maximum number of groups (2)
-        const groupCount = await db.raw('SELECT COUNT(*) FROM groups WHERE business_id = ?', [business_id]);
+        const groupCount = await db.query('groups')
+          .where('business_id', business_id)
+          .count('* as count')
+          .first();
 
-        if (groupCount[0].count >= 2) {
+        if (groupCount.count >= 2) {
           return res.status(400).json({ error: 'This business already has the maximum number of groups (1 sales + 1 delivery)' });
         }
 
         // Check if this business already has a group of this type
-        const existingTypeGroup = await db.raw('SELECT * FROM groups WHERE business_id = ? AND group_type = ?', [business_id, group_type]);
+        const existingTypeGroup = await db.query('groups')
+          .where('business_id', business_id)
+          .where('group_type', group_type)
+          .first();
 
-        if (existingTypeGroup.length > 0) {
+        if (existingTypeGroup) {
           return res.status(400).json({ error: `This business already has a ${group_type} group` });
         }
 
         // Create group
-        await db.raw('INSERT INTO groups (user_id, business_id, business_name, group_name, group_id, group_type) VALUES (?, ?, ?, ?, ?, ?)', [user_id, business_id, business[0].business_name, group_name, group_id, group_type]);
+        await db.query('groups').insert({
+          user_id,
+          business_id,
+          business_name: business.business_name,
+          group_name,
+          group_id,
+          group_type
+        });
 
         res.json({ success: true, message: 'Group added successfully' });
-      } catch (error) {
+  } catch (error) {
         logger.error('Add group error:', error);
         res.status(500).json({ error: 'Failed to add group' });
-      }
-    });
+  }
+});
 
     app.get('/api/groups/:groupId', async (req, res) => {
-      try {
+  try {
         const { groupId } = req.params;
         const { userId } = req.query;
         
-        const group = await db.raw('SELECT * FROM groups WHERE id = ? AND user_id = ?', [groupId, userId]);
+        const group = await db.query('groups')
+          .where('id', groupId)
+          .where('user_id', userId)
+          .first();
         
-        if (group.length === 0) {
+        if (!group) {
           return res.status(404).json({ error: 'Group not found' });
         }
         
-        res.json(group[0]);
-      } catch (error) {
+        res.json(group);
+  } catch (error) {
         logger.error('Get group error:', error);
         res.status(500).json({ error: 'Failed to get group' });
-      }
-    });
+  }
+});
 
     app.delete('/api/groups/:groupId', async (req, res) => {
-      try {
+  try {
         const { groupId } = req.params;
         const { userId } = req.query;
         
-        const result = await db.raw('DELETE FROM groups WHERE id = ? AND user_id = ?', [groupId, userId]);
+        const result = await db.query('groups')
+          .where('id', groupId)
+          .where('user_id', userId)
+          .del();
         
-        if (result.rowCount === 0) {
+        if (result === 0) {
           return res.status(404).json({ error: 'Group not found' });
         }
         
         res.json({ success: true, message: 'Group removed successfully' });
-      } catch (error) {
+  } catch (error) {
         logger.error('Remove group error:', error);
         res.status(500).json({ error: 'Failed to remove group' });
-      }
-    });
+  }
+});
 
     // Settings page route
     app.get('/settings', async (req, res) => {
@@ -684,53 +756,74 @@ async function startServer() {
         }
 
         // Get user data
-        const user = await db.raw('SELECT * FROM users WHERE id = ?', [userId]);
+        const user = await db.query('users')
+          .where('id', userId)
+          .first();
 
-        if (user.length === 0) {
+        if (!user) {
           return res.redirect('/login');
         }
 
         // Get user's businesses
-        const businesses = await db.raw('SELECT business_id, business_name, created_at FROM groups WHERE user_id = ? GROUP BY business_id, business_name, created_at', [userId]);
+        const businesses = await db.query('groups')
+          .select('business_id', 'business_name', 'created_at')
+          .where('user_id', userId)
+          .groupBy('business_id', 'business_name', 'created_at');
 
         // Get user's groups
-        const groups = await db.raw('SELECT * FROM groups WHERE user_id = ?', [userId]);
+        const groups = await db.query('groups')
+          .where('user_id', userId);
 
         // Get user's orders for business stats
-        const orders = await db.raw('SELECT * FROM orders WHERE business_id IN (SELECT business_id FROM groups WHERE user_id = ?) AND business_id = ?', [userId, userId]);
+        const orders = await db.query('orders as o')
+          .select('o.*', 'g.business_id')
+          .join('groups as g', 'o.business_id', 'g.business_id')
+          .where('g.user_id', userId);
 
         res.render('settings', {
           userId,
-          user: user[0],
+          user,
           businesses,
           groups,
           orders
         });
-      } catch (error) {
+  } catch (error) {
         logger.error('Settings page error:', error);
         res.status(500).render('error', { error: 'Failed to load settings page' });
-      }
-    });
+  }
+});
 
     // Settings API endpoints
     app.put('/api/settings/profile', async (req, res) => {
-      try {
+  try {
         const { full_name, email, phone, timezone, address, user_id } = req.body;
         
         // Validate user owns this profile
         if (user_id !== req.session.userId) {
           return res.status(403).json({ error: 'Unauthorized' });
-        }
+    }
 
         // Check if email is already taken by another user
-        const existingUser = await db.raw('SELECT * FROM users WHERE email = ? AND id != ?', [email, user_id]);
+        const existingUser = await db.query('users')
+          .where('email', email)
+          .whereNot('id', user_id)
+          .first();
 
-        if (existingUser.length > 0) {
+        if (existingUser) {
           return res.status(400).json({ error: 'Email address is already in use' });
         }
 
         // Update profile
-        await db.raw('UPDATE users SET full_name = ?, email = ?, phone = ?, timezone = ?, address = ?, updated_at = ? WHERE id = ?', [full_name, email, phone, timezone, address, new Date(), user_id]);
+        await db.query('users')
+          .where('id', user_id)
+          .update({
+            full_name,
+            email,
+            phone,
+            timezone,
+            address,
+            updated_at: new Date()
+          });
 
         res.json({ success: true, message: 'Profile updated successfully' });
       } catch (error) {
@@ -749,15 +842,17 @@ async function startServer() {
         }
 
         // Get user
-        const user = await db.raw('SELECT * FROM users WHERE id = ?', [user_id]);
+        const user = await db.query('users')
+          .where('id', user_id)
+          .first();
 
-        if (user.length === 0) {
+        if (!user) {
           return res.status(404).json({ error: 'User not found' });
         }
 
         // Verify current password
         const bcrypt = require('bcrypt');
-        const isValidPassword = await bcrypt.compare(current_password, user[0].password);
+        const isValidPassword = await bcrypt.compare(current_password, user.password);
         
         if (!isValidPassword) {
           return res.status(400).json({ error: 'Current password is incorrect' });
@@ -767,7 +862,12 @@ async function startServer() {
         const hashedPassword = await bcrypt.hash(new_password, 10);
 
         // Update password
-        await db.raw('UPDATE users SET password = ?, updated_at = ? WHERE id = ?', [hashedPassword, new Date(), user_id]);
+        await db.query('users')
+          .where('id', user_id)
+          .update({
+            password: hashedPassword,
+            updated_at: new Date()
+          });
 
         res.json({ success: true, message: 'Password changed successfully' });
       } catch (error) {
@@ -794,7 +894,17 @@ async function startServer() {
         }
 
         // Update notification preferences
-        await db.raw('UPDATE users SET email_new_orders = ?, email_daily_reports = ?, email_weekly_reports = ?, whatsapp_new_orders = ?, whatsapp_reminders = ?, dashboard_alerts = ?, updated_at = ? WHERE id = ?', [email_new_orders, email_daily_reports, email_weekly_reports, whatsapp_new_orders, whatsapp_reminders, dashboard_alerts, new Date(), user_id]);
+        await db.query('users')
+          .where('id', user_id)
+          .update({
+            email_new_orders,
+            email_daily_reports,
+            email_weekly_reports,
+            whatsapp_new_orders,
+            whatsapp_reminders,
+            dashboard_alerts,
+            updated_at: new Date()
+          });
 
         res.json({ success: true, message: 'Notification preferences saved' });
       } catch (error) {
@@ -1166,17 +1276,24 @@ async function startServer() {
         const { businessId } = req.params;
 
         // Get business details
-        const business = await db.raw('SELECT * FROM groups WHERE business_id = ? AND user_id = ?', [businessId, userId]);
+        const business = await db.query('groups')
+          .select('business_id', 'business_name', 'created_at')
+          .where('business_id', businessId)
+          .where('user_id', userId)
+          .first();
 
-        if (business.length === 0) {
+        if (!business) {
           return res.status(404).render('error', { error: 'Business not found' });
         }
 
         // Get business groups
-        const businessGroups = await db.raw('SELECT * FROM groups WHERE business_id = ? ORDER BY created_at DESC', [businessId]);
+        const businessGroups = await db.query('groups')
+          .where('business_id', businessId)
+          .orderBy('created_at', 'desc');
 
         // Get business orders for stats
-        const businessOrders = await db.raw('SELECT * FROM orders WHERE business_id = ?', [businessId]);
+        const businessOrders = await db.query('orders')
+          .where('business_id', businessId);
 
         // Calculate business stats
         const businessStats = {
@@ -1186,11 +1303,14 @@ async function startServer() {
         };
 
         // Get recent orders
-        const recentOrders = await db.raw('SELECT * FROM orders WHERE business_id = ? ORDER BY created_at DESC LIMIT 10', [businessId]);
+        const recentOrders = await db.query('orders')
+          .where('business_id', businessId)
+          .orderBy('created_at', 'desc')
+          .limit(10);
 
         res.render('business', {
           userId,
-          business: business[0],
+          business,
           businessGroups,
           businessStats,
           recentOrders
@@ -1232,7 +1352,14 @@ async function startServer() {
         const businessId = require('uuid').v4();
 
         // Create business (as a group entry)
-        await db.raw('INSERT INTO groups (user_id, business_id, business_name, group_name, group_id, group_type) VALUES (?, ?, ?, ?, ?, ?)', [user_id, businessId, business_name, `${business_name} - Main Group`, `default_${businessId}`, 'main']);
+        await db.query('groups').insert({
+          user_id,
+          business_id: businessId,
+          business_name,
+          group_name: `${business_name} - Main Group`,
+          group_id: `default_${businessId}`,
+          group_type: 'main'
+        });
 
         res.json({ 
           success: true, 
@@ -1251,14 +1378,22 @@ async function startServer() {
         const { business_name, description, phone, email, address, user_id } = req.body;
         
         // Validate user owns this business
-        const business = await db.raw('SELECT * FROM groups WHERE business_id = ? AND user_id = ?', [businessId, user_id]);
+        const business = await db.query('groups')
+          .where('business_id', businessId)
+          .where('user_id', user_id)
+          .first();
 
-        if (business.length === 0) {
+        if (!business) {
           return res.status(403).json({ error: 'You do not own this business' });
         }
 
         // Update business name in all related groups
-        await db.raw('UPDATE groups SET business_name = ? WHERE business_id = ?', [business_name, businessId]);
+        await db.query('groups')
+          .where('business_id', businessId)
+          .update({
+            business_name,
+            updated_at: new Date()
+          });
 
         res.json({ success: true, message: 'Business updated successfully' });
       } catch (error) {
@@ -1273,17 +1408,24 @@ async function startServer() {
         const { user_id } = req.query;
         
         // Validate user owns this business
-        const business = await db.raw('SELECT * FROM groups WHERE business_id = ? AND user_id = ?', [businessId, user_id]);
+        const business = await db.query('groups')
+          .where('business_id', businessId)
+          .where('user_id', user_id)
+          .first();
 
-        if (business.length === 0) {
+        if (!business) {
           return res.status(403).json({ error: 'You do not own this business' });
         }
 
         // Delete all groups for this business
-        await db.raw('DELETE FROM groups WHERE business_id = ?', [businessId]);
+        await db.query('groups')
+          .where('business_id', businessId)
+          .del();
 
         // Delete all orders for this business
-        await db.raw('DELETE FROM orders WHERE business_id = ?', [businessId]);
+        await db.query('orders')
+          .where('business_id', businessId)
+          .del();
 
         res.json({ success: true, message: 'Business deleted successfully' });
       } catch (error) {
@@ -1306,18 +1448,24 @@ async function startServer() {
         }
 
         // Get business details
-        const business = await db.raw('SELECT * FROM groups WHERE business_id = ? AND user_id = ?', [businessId, userId]);
+        const business = await db.query('groups')
+          .select('business_id', 'business_name', 'setup_identifier')
+          .where('business_id', businessId)
+          .where('user_id', userId)
+          .first();
 
-        if (business.length === 0) {
+        if (!business) {
           return res.status(404).render('error', { error: 'Business not found' });
         }
 
         // Get business groups
-        const businessGroups = await db.raw('SELECT * FROM groups WHERE business_id = ? ORDER BY created_at DESC', [businessId]);
+        const businessGroups = await db.query('groups')
+          .where('business_id', businessId)
+          .orderBy('created_at', 'desc');
 
         res.render('setup-group', {
           userId,
-          business: business[0],
+          business,
           businessGroups
         });
       } catch (error) {
@@ -1336,7 +1484,10 @@ async function startServer() {
         }
 
         // Get user's business IDs
-        const userBusinesses = await db.raw('SELECT business_id FROM groups WHERE user_id = ? GROUP BY business_id', [userId]);
+        const userBusinesses = await db.query('groups')
+          .select('business_id')
+          .where('user_id', userId)
+          .groupBy('business_id');
         
         const businessIds = userBusinesses.map(b => b.business_id);
         
@@ -1345,25 +1496,27 @@ async function startServer() {
         }
 
         // Build query
-        let query = db.raw('SELECT * FROM orders WHERE business_id IN (?)', [businessIds]);
+        let query = db.query('orders as o')
+          .join('groups as g', 'o.business_id', 'g.business_id')
+          .whereIn('o.business_id', businessIds);
 
         // Apply filters
         if (business_id) {
-          query = query.where('business_id', business_id);
+          query = query.where('o.business_id', business_id);
         }
         
         if (status) {
-          query = query.where('status', status);
+          query = query.where('o.status', status);
         }
         
         if (search) {
           query = query.where(function() {
-            this.where('customer_name', 'like', `%${search}%`)
-              .orWhere('order_id', 'like', `%${search}%`);
+            this.where('o.customer_name', 'like', `%${search}%`)
+              .orWhere('o.order_id', 'like', `%${search}%`);
           });
         }
 
-        const orders = await query.orderBy('created_at', 'desc');
+        const orders = await query.orderBy('o.created_at', 'desc');
 
         if (format === 'json') {
           res.setHeader('Content-Type', 'application/json');
@@ -1392,9 +1545,11 @@ async function startServer() {
         }
 
         // Check if user is admin (you can modify this logic)
-        const user = await db.raw('SELECT * FROM users WHERE id = ?', [userId]);
+        const user = await db.query('users')
+          .where('id', userId)
+          .first();
         
-        if (user.length === 0) {
+        if (!user) {
           return res.status(404).json({ error: 'User not found' });
         }
 
