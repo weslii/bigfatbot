@@ -37,9 +37,9 @@ const getConnection = () => {
   console.log('🔍 Getting database connection...');
   
   // Check for Railway's individual environment variables first (preferred)
-  if (process.env.POSTGRES_HOST || process.env.POSTGRES_DB || process.env.PGHOST) {
+  if (process.env.POSTGRES_HOST || process.env.POSTGRES_DB || process.env.PGHOST || process.env.PGDATABASE) {
     console.log('📡 Using Railway POSTGRES_* or PG* variables (preferred)');
-    return {
+    const connection = {
       host: process.env.POSTGRES_HOST || process.env.PGHOST || 'localhost',
       port: process.env.POSTGRES_PORT || process.env.PGPORT || 5432,
       database: process.env.POSTGRES_DB || process.env.PGDATABASE || 'railway',
@@ -47,6 +47,15 @@ const getConnection = () => {
       password: process.env.POSTGRES_PASSWORD || process.env.PGPASSWORD || '',
       ssl: { rejectUnauthorized: false }
     };
+    
+    console.log('🔍 Connection details from individual variables:', {
+      host: connection.host,
+      port: connection.port,
+      database: connection.database,
+      user: connection.user
+    });
+    
+    return connection;
   }
   
   // Fallback to DATABASE_URL if no individual variables

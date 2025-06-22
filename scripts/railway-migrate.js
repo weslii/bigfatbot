@@ -16,11 +16,11 @@ const runMigrations = async () => {
     console.log('- POSTGRES_DB:', process.env.POSTGRES_DB ? 'Set' : 'Not set');
     console.log('- POSTGRES_USER:', process.env.POSTGRES_USER ? 'Set' : 'Not set');
     console.log('- POSTGRES_PASSWORD:', process.env.POSTGRES_PASSWORD ? 'Set' : 'Not set');
-    console.log('- PGHOST:', process.env.PGHOST ? 'Set' : 'Not set');
-    console.log('- PGPORT:', process.env.PGPORT ? 'Set' : 'Not set');
-    console.log('- PGDATABASE:', process.env.PGDATABASE ? 'Set' : 'Not set');
-    console.log('- PGUSER:', process.env.PGUSER ? 'Set' : 'Not set');
-    console.log('- PGPASSWORD:', process.env.PGPASSWORD ? 'Set' : 'Not set');
+    console.log('- PGHOST:', process.env.PGHOST ? `Set (${process.env.PGHOST})` : 'Not set');
+    console.log('- PGPORT:', process.env.PGPORT ? `Set (${process.env.PGPORT})` : 'Not set');
+    console.log('- PGDATABASE:', process.env.PGDATABASE ? `Set (${process.env.PGDATABASE})` : 'Not set');
+    console.log('- PGUSER:', process.env.PGUSER ? `Set (${process.env.PGUSER})` : 'Not set');
+    console.log('- PGPASSWORD:', process.env.PGPASSWORD ? 'Set (masked)' : 'Not set');
     console.log('- NODE_ENV:', process.env.NODE_ENV || 'development');
     
     // Check for required environment variables
