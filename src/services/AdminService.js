@@ -238,12 +238,11 @@ class AdminService {
         .select(
           'g.business_id',
           'g.business_name',
-          'g.is_active',
-          'g.owner_id',
-          'u.username as owner_name',
+          'g.user_id',
+          'u.full_name as owner_name',
           'u.email as owner_email'
         )
-        .leftJoin('users as u', 'g.owner_id', 'u.id')
+        .leftJoin('users as u', 'g.user_id', 'u.id')
         .orderBy('g.business_name');
     } catch (error) {
       logger.error('Error getting all businesses with owners:', error);
@@ -257,12 +256,11 @@ class AdminService {
         .select(
           'g.business_id',
           'g.business_name',
-          'g.is_active',
-          'g.owner_id',
-          'u.username as owner_name',
+          'g.user_id',
+          'u.full_name as owner_name',
           'u.email as owner_email'
         )
-        .leftJoin('users as u', 'g.owner_id', 'u.id')
+        .leftJoin('users as u', 'g.user_id', 'u.id')
         .where('g.business_id', businessId)
         .first();
     } catch (error) {
@@ -276,8 +274,7 @@ class AdminService {
       await database.query('groups').insert({
         business_id: data.business_id,
         business_name: data.business_name,
-        is_active: data.is_active !== undefined ? data.is_active : true,
-        owner_id: data.owner_id
+        user_id: data.user_id
       });
     } catch (error) {
       logger.error('Error adding business:', error);
@@ -291,26 +288,10 @@ class AdminService {
         .where('business_id', businessId)
         .update({
           business_name: data.business_name,
-          is_active: data.is_active !== undefined ? data.is_active : true,
-          owner_id: data.owner_id
+          user_id: data.user_id
         });
     } catch (error) {
       logger.error('Error editing business:', error);
-      throw error;
-    }
-  }
-
-  static async toggleBusinessActive(businessId) {
-    try {
-      const business = await database.query('groups')
-        .where('business_id', businessId)
-        .first();
-      if (!business) throw new Error('Business not found');
-      await database.query('groups')
-        .where('business_id', businessId)
-        .update({ is_active: !business.is_active });
-    } catch (error) {
-      logger.error('Error toggling business active:', error);
       throw error;
     }
   }

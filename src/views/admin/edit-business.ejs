@@ -20,15 +20,8 @@
               <input type="text" class="form-control" id="business_name" name="business_name" value="<%= business ? business.business_name : '' %>" required>
             </div>
             <div class="mb-3">
-              <label for="owner_id" class="form-label">Owner ID</label>
-              <input type="text" class="form-control" id="owner_id" name="owner_id" value="<%= business ? business.owner_id : '' %>" required>
-            </div>
-            <div class="mb-3">
-              <label for="is_active" class="form-label">Active</label>
-              <select class="form-select" id="is_active" name="is_active">
-                <option value="true" <%= business && business.is_active ? 'selected' : '' %>>Active</option>
-                <option value="false" <%= business && !business.is_active ? 'selected' : '' %>>Inactive</option>
-              </select>
+              <label for="user_id" class="form-label">Owner User ID</label>
+              <input type="text" class="form-control" id="user_id" name="user_id" value="<%= business ? business.user_id : '' %>" required>
             </div>
             <button type="submit" class="btn btn-primary"><%= business ? 'Save Changes' : 'Add Business' %></button>
             <a href="/admin/businesses" class="btn btn-secondary ms-2">Cancel</a>
