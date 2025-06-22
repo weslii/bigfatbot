@@ -131,6 +131,31 @@
           </div>
         </div>
       </div>
+
+      <!-- WhatsApp Bot Management -->
+      <div class="card mt-4 pastel-blue-card text-dark">
+        <div class="card-header">
+          <h5 class="mb-0">WhatsApp Bot Management</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <h6>Change Bot Number</h6>
+              <p class="text-muted">Use this to change the WhatsApp number the bot uses. You'll need to restart the bot after changing.</p>
+              <button id="changeNumberBtn" class="btn btn-warning">
+                <i class="fas fa-phone"></i> Change WhatsApp Number
+              </button>
+            </div>
+            <div class="col-md-6">
+              <h6>Current Status</h6>
+              <p class="text-muted">Bot status and connection information will appear here.</p>
+              <div id="botStatus" class="alert alert-info">
+                <i class="fas fa-info-circle"></i> Bot status monitoring not implemented yet.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -148,5 +173,42 @@ document.addEventListener('DOMContentLoaded', function() {
       link.classList.remove('active');
     }
   });
+
+  // WhatsApp number change functionality
+  const changeNumberBtn = document.getElementById('changeNumberBtn');
+  if (changeNumberBtn) {
+    changeNumberBtn.addEventListener('click', async function() {
+      if (confirm('Are you sure you want to change the WhatsApp bot number? This will log out the current session and require a restart.')) {
+        try {
+          changeNumberBtn.disabled = true;
+          changeNumberBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Changing...';
+          
+          const response = await fetch('/api/whatsapp/change-number', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userId: '<%= admin.id %>' // Use admin ID
+            })
+          });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            alert('WhatsApp number change initiated successfully! Please restart the bot to complete the process.');
+          } else {
+            alert('Error: ' + (result.error || 'Failed to change WhatsApp number'));
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Error: Failed to change WhatsApp number');
+        } finally {
+          changeNumberBtn.disabled = false;
+          changeNumberBtn.innerHTML = '<i class="fas fa-phone"></i> Change WhatsApp Number';
+        }
+      }
+    });
+  }
 });
 </script> 

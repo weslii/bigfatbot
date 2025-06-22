@@ -1,6 +1,7 @@
 const database = require('../config/database');
 const logger = require('../utils/logger');
 const bcrypt = require('bcryptjs');
+const ShortCodeGenerator = require('../utils/shortCodeGenerator');
 
 class AdminService {
   static async createAdmin(username, email, password, role = 'admin') {
@@ -239,6 +240,8 @@ class AdminService {
           'g.business_id',
           'g.business_name',
           'g.user_id',
+          'g.short_code',
+          'g.setup_identifier',
           'u.full_name as owner_name',
           'u.email as owner_email'
         )
@@ -271,11 +274,23 @@ class AdminService {
 
   static async addBusiness(data) {
     try {
+      // Generate short code and setup identifier
+      const { shortCode, setupIdentifier } = await ShortCodeGenerator.generateBusinessSetupCode(data.business_name);
+      
       await database.query('groups').insert({
         business_id: data.business_id,
         business_name: data.business_name,
-        user_id: data.user_id
+        user_id: data.user_id,
+        short_code: shortCode,
+        setup_identifier: setupIdentifier
       });
+
+      return {
+        business_id: data.business_id,
+        business_name: data.business_name,
+        short_code: shortCode,
+        setup_identifier: setupIdentifier
+      };
     } catch (error) {
       logger.error('Error adding business:', error);
       throw error;
@@ -358,7 +373,59 @@ class AdminService {
 
   static async deleteUser(userId) {
     try {
-      await database.query('users').where('id', userId).del();
+      // Get user details for confirmation
+      const user = await this.getUserById(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      // Check if user has associated businesses
+      const userBusinesses = await database.query('groups')
+        .where('user_id', userId)
+        .select('business_id', 'business_name');
+
+      // Check if user has associated orders
+      const userOrders = await database.query('orders')
+        .where('user_id', userId)
+        .count('* as count')
+        .first();
+
+      const hasData = userBusinesses.length > 0 || parseInt(userOrders.count) > 0;
+
+      if (hasData) {
+        // User has data - delete everything
+        // 1. Delete orders first
+        if (parseInt(userOrders.count) > 0) {
+          await database.query('orders').where('user_id', userId).del();
+        }
+
+        // 2. Delete businesses (groups)
+        if (userBusinesses.length > 0) {
+          await database.query('groups').where('user_id', userId).del();
+        }
+
+        // 3. Delete user
+        await database.query('users').where('id', userId).del();
+
+        return {
+          success: true,
+          message: `User "${user.full_name}" deleted successfully along with ${userBusinesses.length} business(es) and ${userOrders.count} order(s).`,
+          deletedBusinesses: userBusinesses.length,
+          deletedOrders: parseInt(userOrders.count),
+          wasBulkDelete: true
+        };
+      } else {
+        // User has no data - just delete user
+        await database.query('users').where('id', userId).del();
+        
+        return {
+          success: true,
+          message: `User "${user.full_name}" deleted successfully.`,
+          deletedBusinesses: 0,
+          deletedOrders: 0,
+          wasBulkDelete: false
+        };
+      }
     } catch (error) {
       logger.error('Error deleting user:', error);
       throw error;
