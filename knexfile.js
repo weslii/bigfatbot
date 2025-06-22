@@ -36,26 +36,27 @@ const parseDbUrl = (url) => {
 const getConnection = () => {
   console.log('🔍 Getting database connection...');
   
-  if (process.env.DATABASE_URL) {
-    console.log('📡 Using DATABASE_URL');
-    return parseDbUrl(process.env.DATABASE_URL);
-  }
-  
-  // Check for Railway's individual environment variables
-  if (process.env.POSTGRES_HOST) {
-    console.log('📡 Using Railway POSTGRES_* variables');
+  // Check for Railway's individual environment variables first (preferred)
+  if (process.env.POSTGRES_HOST || process.env.POSTGRES_DB || process.env.PGHOST) {
+    console.log('📡 Using Railway POSTGRES_* or PG* variables (preferred)');
     return {
-      host: process.env.POSTGRES_HOST,
-      port: process.env.POSTGRES_PORT || 5432,
-      database: process.env.POSTGRES_DB || 'railway',
-      user: process.env.POSTGRES_USER || 'postgres',
-      password: process.env.POSTGRES_PASSWORD || '',
+      host: process.env.POSTGRES_HOST || process.env.PGHOST || 'localhost',
+      port: process.env.POSTGRES_PORT || process.env.PGPORT || 5432,
+      database: process.env.POSTGRES_DB || process.env.PGDATABASE || 'railway',
+      user: process.env.POSTGRES_USER || process.env.PGUSER || 'postgres',
+      password: process.env.POSTGRES_PASSWORD || process.env.PGPASSWORD || '',
       ssl: { rejectUnauthorized: false }
     };
   }
   
+  // Fallback to DATABASE_URL if no individual variables
+  if (process.env.DATABASE_URL) {
+    console.log('📡 Using DATABASE_URL (fallback)');
+    return parseDbUrl(process.env.DATABASE_URL);
+  }
+  
   // Fallback to traditional DB_* variables
-  console.log('📡 Using traditional DB_* variables');
+  console.log('📡 Using traditional DB_* variables (fallback)');
   return {
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 5432,
