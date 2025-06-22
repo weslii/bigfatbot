@@ -9,6 +9,7 @@ const RegistrationService = require('./services/RegistrationService');
 const WhatsAppService = require('./services/WhatsAppService');
 const AdminService = require('./services/AdminService');
 const db = require('./config/database');
+const OrderService = require('./services/OrderService');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -279,11 +280,13 @@ async function startServer() {
     app.get('/dashboard', async (req, res) => {
       try {
         const { userId } = req.query;
-        const [groups, businesses] = await Promise.all([
+        const [groups, businesses, orderStats, recentOrders] = await Promise.all([
           RegistrationService.getUserGroups(userId),
-          RegistrationService.getUserBusinesses(userId)
+          RegistrationService.getUserBusinesses(userId),
+          OrderService.getUserOrderStats(userId),
+          OrderService.getUserRecentOrders(userId, 5)
         ]);
-        res.render('dashboard', { groups, businesses, userId });
+        res.render('dashboard', { groups, businesses, userId, orderStats, recentOrders });
       } catch (error) {
         logger.error('Dashboard error:', error);
         res.render('error', { error: 'Failed to load dashboard.' });
@@ -310,6 +313,570 @@ async function startServer() {
           error: 'Failed to add business. Please try again.',
           userId: req.body.userId
         });
+      }
+    });
+
+    // Orders page for users
+    app.get('/orders', async (req, res) => {
+      try {
+        const { userId, business, status, search, page = 1, pageSize = 25 } = req.query;
+        
+        // Get user's businesses for the filter dropdown
+        const businesses = await RegistrationService.getUserBusinesses(userId);
+        
+        // Get all business IDs for the user
+        const userBusinesses = await db.query('groups')
+          .select('business_id')
+          .where('user_id', userId)
+          .groupBy('business_id');
+        
+        const businessIds = userBusinesses.map(b => b.business_id);
+        
+        if (businessIds.length === 0) {
+          return res.render('orders', { 
+            orders: [], 
+            businesses: [], 
+            userId,
+            selectedBusiness: business,
+            selectedStatus: status,
+            search,
+            page: parseInt(page),
+            pageSize: parseInt(pageSize),
+            totalPages: 0,
+            totalOrders: 0
+          });
+        }
+
+        // Build query based on filters
+        let query = db.query('orders as o')
+          .select(
+            'o.*',
+            'g.business_name'
+          )
+          .join('groups as g', 'o.business_id', 'g.business_id')
+          .whereIn('o.business_id', businessIds);
+
+        // Apply business filter
+        if (business) {
+          query = query.where('o.business_id', business);
+        }
+
+        // Apply status filter
+        if (status) {
+          query = query.where('o.status', status);
+        }
+
+        // Apply search filter
+        if (search) {
+          query = query.where(function() {
+            this.where('o.customer_name', 'ilike', `%${search}%`)
+              .orWhere('o.order_id', 'ilike', `%${search}%`);
+          });
+        }
+
+        // Get total count for pagination
+        const totalCount = await query.clone().count('o.id as count').first();
+        const totalOrders = parseInt(totalCount.count);
+        const totalPages = Math.ceil(totalOrders / parseInt(pageSize));
+        const currentPage = Math.max(1, Math.min(parseInt(page), totalPages || 1));
+        const offset = (currentPage - 1) * parseInt(pageSize);
+
+        // Get orders with pagination
+        const orders = await query
+          .orderBy('o.created_at', 'desc')
+          .limit(parseInt(pageSize))
+          .offset(offset);
+
+        res.render('orders', { 
+          orders, 
+          businesses, 
+          userId,
+          selectedBusiness: business,
+          selectedStatus: status,
+          search,
+          page: currentPage,
+          pageSize: parseInt(pageSize),
+          totalPages,
+          totalOrders
+        });
+      } catch (error) {
+        logger.error('Orders page error:', error);
+        res.render('error', { error: 'Failed to load orders.' });
+      }
+    });
+
+    // Order management API endpoints
+    app.get('/api/orders/:orderId', async (req, res) => {
+      try {
+        const { orderId } = req.params;
+        const { userId } = req.query;
+        
+        // Input validation
+        if (!orderId || !userId) {
+          return res.status(400).json({ error: 'Order ID and User ID are required' });
+        }
+        
+        // Validate orderId format (should be numeric)
+        if (!/^\d+$/.test(orderId)) {
+          return res.status(400).json({ error: 'Invalid order ID format' });
+        }
+        
+        // Get user's business IDs to ensure they can only access their orders
+        const userBusinesses = await db.query('groups')
+          .select('business_id')
+          .where('user_id', userId)
+          .groupBy('business_id');
+        
+        const businessIds = userBusinesses.map(b => b.business_id);
+        
+        const order = await db.query('orders as o')
+          .select(
+            'o.*',
+            'g.business_name'
+          )
+          .join('groups as g', 'o.business_id', 'g.business_id')
+          .where('o.id', orderId)
+          .whereIn('o.business_id', businessIds)
+          .first();
+        
+        if (!order) {
+          return res.status(404).json({ error: 'Order not found' });
+        }
+        
+        res.json(order);
+      } catch (error) {
+        logger.error('Get order details error:', error);
+        res.status(500).json({ error: 'Failed to get order details' });
+      }
+    });
+
+    app.post('/api/orders/:orderId/status', async (req, res) => {
+      try {
+        const { orderId } = req.params;
+        const { status, userId } = req.body;
+        
+        // Input validation
+        if (!orderId || !status || !userId) {
+          return res.status(400).json({ error: 'Order ID, status, and User ID are required' });
+        }
+        
+        // Validate orderId format
+        if (!/^\d+$/.test(orderId)) {
+          return res.status(400).json({ error: 'Invalid order ID format' });
+        }
+        
+        // Validate status
+        const validStatuses = ['pending', 'processing', 'delivered', 'cancelled'];
+        if (!validStatuses.includes(status)) {
+          return res.status(400).json({ error: 'Invalid status value' });
+        }
+        
+        // Get user's business IDs to ensure they can only update their orders
+        const userBusinesses = await db.query('groups')
+          .select('business_id')
+          .where('user_id', userId)
+          .groupBy('business_id');
+        
+        const businessIds = userBusinesses.map(b => b.business_id);
+        
+        const result = await db.query('orders')
+          .where('id', orderId)
+          .whereIn('business_id', businessIds)
+          .update({ 
+            status: status,
+            updated_at: new Date()
+          });
+        
+        if (result === 0) {
+          return res.status(404).json({ error: 'Order not found' });
+        }
+        
+        res.json({ success: true, message: 'Order status updated' });
+      } catch (error) {
+        logger.error('Update order status error:', error);
+        res.status(500).json({ error: 'Failed to update order status' });
+      }
+    });
+
+    app.put('/api/orders/:orderId', async (req, res) => {
+      try {
+        const { orderId } = req.params;
+        const { userId, ...updateData } = req.body;
+        
+        // Get user's business IDs to ensure they can only update their orders
+        const userBusinesses = await db.query('groups')
+          .select('business_id')
+          .where('user_id', userId)
+          .groupBy('business_id');
+        
+        const businessIds = userBusinesses.map(b => b.business_id);
+        
+        const result = await db.query('orders')
+          .where('id', orderId)
+          .whereIn('business_id', businessIds)
+          .update({ 
+            ...updateData,
+            updated_at: new Date()
+          });
+        
+        if (result === 0) {
+          return res.status(404).json({ error: 'Order not found' });
+        }
+        
+        res.json({ success: true, message: 'Order updated' });
+      } catch (error) {
+        logger.error('Update order error:', error);
+        res.status(500).json({ error: 'Failed to update order' });
+      }
+    });
+
+    // Order count API endpoint for real-time updates
+    app.get('/api/orders/count', async (req, res) => {
+      try {
+        const { userId, business_id, status, search, count_only } = req.query;
+        
+        if (!userId) {
+          return res.status(400).json({ error: 'User ID is required' });
+        }
+
+        // Get user's business IDs
+        const userBusinesses = await db.query('groups')
+          .select('business_id')
+          .where('user_id', userId)
+          .groupBy('business_id');
+        
+        const businessIds = userBusinesses.map(b => b.business_id);
+        
+        if (businessIds.length === 0) {
+          return res.json({ count: 0 });
+        }
+
+        // Build query
+        let query = db.query('orders as o')
+          .join('groups as g', 'o.business_id', 'g.business_id')
+          .whereIn('o.business_id', businessIds);
+
+        // Apply filters
+        if (business_id) {
+          query = query.where('o.business_id', business_id);
+        }
+        
+        if (status) {
+          query = query.where('o.status', status);
+        }
+        
+        if (search) {
+          query = query.where(function() {
+            this.where('o.customer_name', 'like', `%${search}%`)
+              .orWhere('o.order_id', 'like', `%${search}%`);
+          });
+        }
+
+        const count = await query.count('o.id as count').first();
+        
+        res.json({ count: parseInt(count.count) });
+      } catch (error) {
+        logger.error('Order count error:', error);
+        res.status(500).json({ error: 'Failed to get order count' });
+      }
+    });
+
+    // Groups page route
+    app.get('/groups', async (req, res) => {
+      try {
+        const userId = req.session.userId;
+        if (!userId) {
+          return res.redirect('/login');
+        }
+
+        // Get user's businesses
+        const businesses = await db.query('groups')
+          .select('business_id', 'business_name')
+          .where('user_id', userId)
+          .groupBy('business_id', 'business_name');
+
+        // Get user's groups
+        const groups = await db.query('groups')
+          .where('user_id', userId)
+          .orderBy('created_at', 'desc');
+
+        res.render('groups', {
+          userId,
+          businesses,
+          groups
+        });
+      } catch (error) {
+        logger.error('Groups page error:', error);
+        res.status(500).render('error', { error: 'Failed to load groups page' });
+      }
+    });
+
+    // Groups API endpoints
+    app.post('/api/groups', async (req, res) => {
+      try {
+        const { business_id, group_type, group_name, group_id, user_id } = req.body;
+        
+        // Validate user owns this business
+        const business = await db.query('groups')
+          .where('business_id', business_id)
+          .where('user_id', user_id)
+          .first();
+        
+        if (!business) {
+          return res.status(403).json({ error: 'You do not own this business' });
+        }
+
+        // Check if group already exists
+        const existingGroup = await db.query('groups')
+          .where('group_id', group_id)
+          .first();
+        
+        if (existingGroup) {
+          return res.status(400).json({ error: 'Group already exists' });
+        }
+
+        // Check if this business already has the maximum number of groups (2)
+        const groupCount = await db.query('groups')
+          .where('business_id', business_id)
+          .count('* as count')
+          .first();
+
+        if (groupCount.count >= 2) {
+          return res.status(400).json({ error: 'This business already has the maximum number of groups (1 sales + 1 delivery)' });
+        }
+
+        // Check if this business already has a group of this type
+        const existingTypeGroup = await db.query('groups')
+          .where('business_id', business_id)
+          .where('group_type', group_type)
+          .first();
+
+        if (existingTypeGroup) {
+          return res.status(400).json({ error: `This business already has a ${group_type} group` });
+        }
+
+        // Create group
+        await db.query('groups').insert({
+          user_id,
+          business_id,
+          business_name: business.business_name,
+          group_name,
+          group_id,
+          group_type
+        });
+
+        res.json({ success: true, message: 'Group added successfully' });
+      } catch (error) {
+        logger.error('Add group error:', error);
+        res.status(500).json({ error: 'Failed to add group' });
+      }
+    });
+
+    app.get('/api/groups/:groupId', async (req, res) => {
+      try {
+        const { groupId } = req.params;
+        const { userId } = req.query;
+        
+        const group = await db.query('groups')
+          .where('id', groupId)
+          .where('user_id', userId)
+          .first();
+        
+        if (!group) {
+          return res.status(404).json({ error: 'Group not found' });
+        }
+        
+        res.json(group);
+      } catch (error) {
+        logger.error('Get group error:', error);
+        res.status(500).json({ error: 'Failed to get group' });
+      }
+    });
+
+    app.delete('/api/groups/:groupId', async (req, res) => {
+      try {
+        const { groupId } = req.params;
+        const { userId } = req.query;
+        
+        const result = await db.query('groups')
+          .where('id', groupId)
+          .where('user_id', userId)
+          .del();
+        
+        if (result === 0) {
+          return res.status(404).json({ error: 'Group not found' });
+        }
+        
+        res.json({ success: true, message: 'Group removed successfully' });
+      } catch (error) {
+        logger.error('Remove group error:', error);
+        res.status(500).json({ error: 'Failed to remove group' });
+      }
+    });
+
+    // Settings page route
+    app.get('/settings', async (req, res) => {
+      try {
+        const userId = req.session.userId;
+        if (!userId) {
+          return res.redirect('/login');
+        }
+
+        // Get user data
+        const user = await db.query('users')
+          .where('id', userId)
+          .first();
+
+        if (!user) {
+          return res.redirect('/login');
+        }
+
+        // Get user's businesses
+        const businesses = await db.query('groups')
+          .select('business_id', 'business_name', 'created_at')
+          .where('user_id', userId)
+          .groupBy('business_id', 'business_name', 'created_at');
+
+        // Get user's groups
+        const groups = await db.query('groups')
+          .where('user_id', userId);
+
+        // Get user's orders for business stats
+        const orders = await db.query('orders as o')
+          .select('o.*', 'g.business_id')
+          .join('groups as g', 'o.business_id', 'g.business_id')
+          .where('g.user_id', userId);
+
+        res.render('settings', {
+          userId,
+          user,
+          businesses,
+          groups,
+          orders
+        });
+      } catch (error) {
+        logger.error('Settings page error:', error);
+        res.status(500).render('error', { error: 'Failed to load settings page' });
+      }
+    });
+
+    // Settings API endpoints
+    app.put('/api/settings/profile', async (req, res) => {
+      try {
+        const { full_name, email, phone, timezone, address, user_id } = req.body;
+        
+        // Validate user owns this profile
+        if (user_id !== req.session.userId) {
+          return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        // Check if email is already taken by another user
+        const existingUser = await db.query('users')
+          .where('email', email)
+          .whereNot('id', user_id)
+          .first();
+
+        if (existingUser) {
+          return res.status(400).json({ error: 'Email address is already in use' });
+        }
+
+        // Update profile
+        await db.query('users')
+          .where('id', user_id)
+          .update({
+            full_name,
+            email,
+            phone,
+            timezone,
+            address,
+            updated_at: new Date()
+          });
+
+        res.json({ success: true, message: 'Profile updated successfully' });
+      } catch (error) {
+        logger.error('Update profile error:', error);
+        res.status(500).json({ error: 'Failed to update profile' });
+      }
+    });
+
+    app.put('/api/settings/password', async (req, res) => {
+      try {
+        const { current_password, new_password, user_id } = req.body;
+        
+        // Validate user owns this account
+        if (user_id !== req.session.userId) {
+          return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        // Get user
+        const user = await db.query('users')
+          .where('id', user_id)
+          .first();
+
+        if (!user) {
+          return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Verify current password
+        const bcrypt = require('bcrypt');
+        const isValidPassword = await bcrypt.compare(current_password, user.password);
+        
+        if (!isValidPassword) {
+          return res.status(400).json({ error: 'Current password is incorrect' });
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(new_password, 10);
+
+        // Update password
+        await db.query('users')
+          .where('id', user_id)
+          .update({
+            password: hashedPassword,
+            updated_at: new Date()
+          });
+
+        res.json({ success: true, message: 'Password changed successfully' });
+      } catch (error) {
+        logger.error('Change password error:', error);
+        res.status(500).json({ error: 'Failed to change password' });
+      }
+    });
+
+    app.put('/api/settings/notifications', async (req, res) => {
+      try {
+        const { 
+          email_new_orders, 
+          email_daily_reports, 
+          email_weekly_reports,
+          whatsapp_new_orders,
+          whatsapp_reminders,
+          dashboard_alerts,
+          user_id 
+        } = req.body;
+        
+        // Validate user owns this account
+        if (user_id !== req.session.userId) {
+          return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        // Update notification preferences
+        await db.query('users')
+          .where('id', user_id)
+          .update({
+            email_new_orders,
+            email_daily_reports,
+            email_weekly_reports,
+            whatsapp_new_orders,
+            whatsapp_reminders,
+            dashboard_alerts,
+            updated_at: new Date()
+          });
+
+        res.json({ success: true, message: 'Notification preferences saved' });
+      } catch (error) {
+        logger.error('Update notifications error:', error);
+        res.status(500).json({ error: 'Failed to update notification preferences' });
       }
     });
 
@@ -658,6 +1225,348 @@ async function startServer() {
         res.render('error', { error: 'Failed to delete admin.' });
       }
     });
+
+    // Business management routes
+    app.get('/business/:businessId', async (req, res) => {
+      try {
+        const userId = req.session.userId;
+        if (!userId) {
+          return res.redirect('/login');
+        }
+
+        const { businessId } = req.params;
+
+        // Get business details
+        const business = await db.query('groups')
+          .select('business_id', 'business_name', 'created_at')
+          .where('business_id', businessId)
+          .where('user_id', userId)
+          .first();
+
+        if (!business) {
+          return res.status(404).render('error', { error: 'Business not found' });
+        }
+
+        // Get business groups
+        const businessGroups = await db.query('groups')
+          .where('business_id', businessId)
+          .orderBy('created_at', 'desc');
+
+        // Get business orders for stats
+        const businessOrders = await db.query('orders')
+          .where('business_id', businessId);
+
+        // Calculate business stats
+        const businessStats = {
+          totalOrders: businessOrders.length,
+          completedOrders: businessOrders.filter(o => o.status === 'delivered').length,
+          pendingOrders: businessOrders.filter(o => o.status === 'pending').length
+        };
+
+        // Get recent orders
+        const recentOrders = await db.query('orders')
+          .where('business_id', businessId)
+          .orderBy('created_at', 'desc')
+          .limit(10);
+
+        res.render('business', {
+          userId,
+          business,
+          businessGroups,
+          businessStats,
+          recentOrders
+        });
+      } catch (error) {
+        logger.error('Business page error:', error);
+        res.status(500).render('error', { error: 'Failed to load business page' });
+      }
+    });
+
+    app.get('/business/add', async (req, res) => {
+      try {
+        const userId = req.session.userId;
+        if (!userId) {
+          return res.redirect('/login');
+        }
+
+        res.render('business', {
+          userId,
+          business: null
+        });
+      } catch (error) {
+        logger.error('Add business page error:', error);
+        res.status(500).render('error', { error: 'Failed to load add business page' });
+      }
+    });
+
+    // Business API endpoints
+    app.post('/api/businesses', async (req, res) => {
+      try {
+        const { business_name, description, phone, email, address, user_id } = req.body;
+        
+        // Validate user
+        if (user_id !== req.session.userId) {
+          return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        // Generate business ID
+        const businessId = require('uuid').v4();
+
+        // Create business (as a group entry)
+        await db.query('groups').insert({
+          user_id,
+          business_id: businessId,
+          business_name,
+          group_name: `${business_name} - Main Group`,
+          group_id: `default_${businessId}`,
+          group_type: 'main'
+        });
+
+        res.json({ 
+          success: true, 
+          message: 'Business created successfully',
+          business_id: businessId
+        });
+      } catch (error) {
+        logger.error('Create business error:', error);
+        res.status(500).json({ error: 'Failed to create business' });
+      }
+    });
+
+    app.put('/api/businesses/:businessId', async (req, res) => {
+      try {
+        const { businessId } = req.params;
+        const { business_name, description, phone, email, address, user_id } = req.body;
+        
+        // Validate user owns this business
+        const business = await db.query('groups')
+          .where('business_id', businessId)
+          .where('user_id', user_id)
+          .first();
+
+        if (!business) {
+          return res.status(403).json({ error: 'You do not own this business' });
+        }
+
+        // Update business name in all related groups
+        await db.query('groups')
+          .where('business_id', businessId)
+          .update({
+            business_name,
+            updated_at: new Date()
+          });
+
+        res.json({ success: true, message: 'Business updated successfully' });
+      } catch (error) {
+        logger.error('Update business error:', error);
+        res.status(500).json({ error: 'Failed to update business' });
+      }
+    });
+
+    app.delete('/api/businesses/:businessId', async (req, res) => {
+      try {
+        const { businessId } = req.params;
+        const { user_id } = req.query;
+        
+        // Validate user owns this business
+        const business = await db.query('groups')
+          .where('business_id', businessId)
+          .where('user_id', user_id)
+          .first();
+
+        if (!business) {
+          return res.status(403).json({ error: 'You do not own this business' });
+        }
+
+        // Delete all groups for this business
+        await db.query('groups')
+          .where('business_id', businessId)
+          .del();
+
+        // Delete all orders for this business
+        await db.query('orders')
+          .where('business_id', businessId)
+          .del();
+
+        res.json({ success: true, message: 'Business deleted successfully' });
+      } catch (error) {
+        logger.error('Delete business error:', error);
+        res.status(500).json({ error: 'Failed to delete business' });
+      }
+    });
+
+    // Setup group route
+    app.get('/setup-group', async (req, res) => {
+      try {
+        const userId = req.session.userId;
+        if (!userId) {
+          return res.redirect('/login');
+        }
+
+        const { businessId } = req.query;
+        if (!businessId) {
+          return res.redirect('/dashboard');
+        }
+
+        // Get business details
+        const business = await db.query('groups')
+          .select('business_id', 'business_name')
+          .where('business_id', businessId)
+          .where('user_id', userId)
+          .first();
+
+        if (!business) {
+          return res.status(404).render('error', { error: 'Business not found' });
+        }
+
+        // Get business groups
+        const businessGroups = await db.query('groups')
+          .where('business_id', businessId)
+          .orderBy('created_at', 'desc');
+
+        res.render('setup-group', {
+          userId,
+          business,
+          businessGroups
+        });
+      } catch (error) {
+        logger.error('Setup group page error:', error);
+        res.status(500).render('error', { error: 'Failed to load setup group page' });
+      }
+    });
+
+    // Export functionality
+    app.get('/api/export/orders', async (req, res) => {
+      try {
+        const userId = req.session.userId;
+        if (!userId) {
+          return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        const { 
+          business_id, 
+          status, 
+          start_date, 
+          end_date, 
+          format = 'csv' 
+        } = req.query;
+
+        // Get user's business IDs to ensure they can only export their orders
+        const userBusinesses = await db.query('groups')
+          .select('business_id')
+          .where('user_id', userId)
+          .groupBy('business_id');
+        
+        const businessIds = userBusinesses.map(b => b.business_id);
+
+        if (businessIds.length === 0) {
+          return res.status(404).json({ error: 'No businesses found' });
+        }
+
+        // Build query
+        let query = db.query('orders as o')
+          .select(
+            'o.order_id',
+            'o.customer_name',
+            'o.customer_phone',
+            'o.address',
+            'o.items',
+            'o.status',
+            'o.notes',
+            'o.delivery_date',
+            'o.created_at',
+            'o.updated_at',
+            'g.business_name'
+          )
+          .join('groups as g', 'o.business_id', 'g.business_id')
+          .whereIn('o.business_id', businessIds);
+
+        // Apply filters
+        if (business_id) {
+          query = query.where('o.business_id', business_id);
+        }
+
+        if (status) {
+          query = query.where('o.status', status);
+        }
+
+        if (start_date) {
+          query = query.where('o.created_at', '>=', new Date(start_date));
+        }
+
+        if (end_date) {
+          query = query.where('o.created_at', '<=', new Date(end_date + ' 23:59:59'));
+        }
+
+        const orders = await query.orderBy('o.created_at', 'desc');
+
+        if (format === 'csv') {
+          // Generate CSV
+          const csv = generateOrdersCSV(orders);
+          
+          res.setHeader('Content-Type', 'text/csv');
+          res.setHeader('Content-Disposition', `attachment; filename="orders_${new Date().toISOString().split('T')[0]}.csv"`);
+          res.send(csv);
+        } else {
+          res.json({ orders });
+        }
+      } catch (error) {
+        logger.error('Export orders error:', error);
+        res.status(500).json({ error: 'Failed to export orders' });
+      }
+    });
+
+    // Helper function to generate CSV
+    function generateOrdersCSV(orders) {
+      const headers = [
+        'Order ID',
+        'Business',
+        'Customer Name',
+        'Customer Phone',
+        'Address',
+        'Items',
+        'Status',
+        'Notes',
+        'Delivery Date',
+        'Created Date',
+        'Updated Date'
+      ];
+
+      const csvRows = [headers.join(',')];
+
+      orders.forEach(order => {
+        // Parse items if it's JSON
+        let items = '';
+        try {
+          if (order.items) {
+            const parsedItems = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
+            items = Array.isArray(parsedItems) 
+              ? parsedItems.map(item => `${item.name || item} (${item.quantity || 1})`).join('; ')
+              : order.items;
+          }
+        } catch (e) {
+          items = order.items || '';
+        }
+
+        const row = [
+          `"${order.order_id || ''}"`,
+          `"${order.business_name || ''}"`,
+          `"${order.customer_name || ''}"`,
+          `"${order.customer_phone || ''}"`,
+          `"${(order.address || '').replace(/"/g, '""')}"`,
+          `"${items.replace(/"/g, '""')}"`,
+          `"${order.status || ''}"`,
+          `"${(order.notes || '').replace(/"/g, '""')}"`,
+          `"${order.delivery_date ? new Date(order.delivery_date).toLocaleDateString() : ''}"`,
+          `"${new Date(order.created_at).toLocaleString()}"`,
+          `"${order.updated_at ? new Date(order.updated_at).toLocaleString() : ''}"`
+        ];
+
+        csvRows.push(row.join(','));
+      });
+
+      return csvRows.join('\n');
+    }
 
     // Start the server
     app.listen(port, () => {
