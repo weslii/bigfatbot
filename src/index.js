@@ -48,16 +48,29 @@ class DeliveryBot {
 
       logger.info('Starting Delivery Bot...');
 
-      // Initialize database
-      await database.connect();
+      // Try to initialize database, but don't fail if it doesn't work
+      try {
+        await database.connect();
+        logger.info('Database connection established');
+      } catch (dbError) {
+        logger.warn('Database connection failed, continuing without database:', dbError.message);
+        console.log('⚠️  Database connection failed, bot will run without database features');
+      }
 
       // Start WhatsApp service in the background
       this.whatsappService.start().catch(error => {
         logger.error('Failed to start WhatsApp service:', error);
+        console.log('❌ WhatsApp service failed to start:', error.message);
       });
 
-      // Start scheduler
-      this.schedulerService.start();
+      // Start scheduler only if database is available
+      try {
+        this.schedulerService.start();
+        logger.info('Scheduler started');
+      } catch (schedulerError) {
+        logger.warn('Scheduler failed to start:', schedulerError.message);
+        console.log('⚠️  Scheduler failed to start, continuing without scheduled tasks');
+      }
 
       // Setup graceful shutdown
       this.setupGracefulShutdown();
@@ -77,6 +90,7 @@ class DeliveryBot {
 
     } catch (error) {
       logger.error('Failed to start Delivery Bot:', error);
+      console.error('💥 Failed to start bot:', error.message);
       process.exit(1);
     }
   }

@@ -17,7 +17,7 @@ memoryLimit = "512M"
 
 [[services.workers]]
 name = "whatsapp-bot"
-command = "node scripts/railway-bot-start.js"
+command = "node scripts/simple-bot-start.js"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
 memoryLimit = "512M"
