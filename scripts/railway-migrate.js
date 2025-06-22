@@ -24,14 +24,19 @@ const runMigrations = async () => {
     }
     
     // Get the appropriate configuration
-    const config = knexfile[process.env.NODE_ENV || 'production'];
-    console.log('📊 Using environment:', process.env.NODE_ENV || 'production');
+    const environment = process.env.NODE_ENV || 'production';
+    console.log('📊 Using environment:', environment);
+    
+    const config = knexfile[environment];
+    console.log('🔍 Raw knexfile config:', JSON.stringify(config, null, 2));
+    
     console.log('🔗 Database host:', config.connection.host);
     console.log('📦 Database name:', config.connection.database);
     console.log('👤 Database user:', config.connection.user);
     console.log('🔌 Database port:', config.connection.port);
     
-    // Initialize knex
+    // Initialize knex with explicit configuration
+    console.log('🔧 Creating knex instance...');
     db = knex(config);
     
     // Test connection
