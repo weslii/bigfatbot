@@ -384,19 +384,25 @@ class AdminService {
         .where('user_id', userId)
         .select('business_id', 'business_name');
 
-      // Check if user has associated orders
-      const userOrders = await database.query('orders')
-        .where('user_id', userId)
-        .count('* as count')
-        .first();
+      // Check if user has associated orders through their businesses
+      let totalUserOrders = 0;
+      if (userBusinesses.length > 0) {
+        const businessIds = userBusinesses.map(biz => biz.business_id);
+        const userOrders = await database.query('orders')
+          .whereIn('business_id', businessIds)
+          .count('* as count')
+          .first();
+        totalUserOrders = parseInt(userOrders.count);
+      }
 
-      const hasData = userBusinesses.length > 0 || parseInt(userOrders.count) > 0;
+      const hasData = userBusinesses.length > 0 || totalUserOrders > 0;
 
       if (hasData) {
         // User has data - delete everything
-        // 1. Delete orders first
-        if (parseInt(userOrders.count) > 0) {
-          await database.query('orders').where('user_id', userId).del();
+        // 1. Delete orders first (through business relationship)
+        if (totalUserOrders > 0) {
+          const businessIds = userBusinesses.map(biz => biz.business_id);
+          await database.query('orders').whereIn('business_id', businessIds).del();
         }
 
         // 2. Delete businesses (groups)
@@ -409,9 +415,9 @@ class AdminService {
 
         return {
           success: true,
-          message: `User "${user.full_name}" deleted successfully along with ${userBusinesses.length} business(es) and ${userOrders.count} order(s).`,
+          message: `User "${user.full_name}" deleted successfully along with ${userBusinesses.length} business(es) and ${totalUserOrders} order(s).`,
           deletedBusinesses: userBusinesses.length,
-          deletedOrders: parseInt(userOrders.count),
+          deletedOrders: totalUserOrders,
           wasBulkDelete: true
         };
       } else {
