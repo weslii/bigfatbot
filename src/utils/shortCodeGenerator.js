@@ -30,7 +30,7 @@ class ShortCodeGenerator {
       
       try {
         // Check if short_code column exists first
-        const columnExists = await database.raw(`
+        const columnExists = await database.query.raw(`
           SELECT column_name 
           FROM information_schema.columns 
           WHERE table_name = 'groups' AND column_name = 'short_code'
