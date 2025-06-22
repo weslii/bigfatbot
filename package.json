@@ -16,7 +16,8 @@
     "build": "npm install",
     "postbuild": "npm run migrate:railway",
     "wait-for-db": "node scripts/wait-for-db.js",
-    "start:prod": "npm run wait-for-db && npm run migrate:railway && npm run start:web"
+    "start:prod": "npm run wait-for-db && npm run migrate:railway && npm run start:web",
+    "debug:env": "node debug-railway-env.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

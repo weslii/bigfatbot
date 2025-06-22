@@ -8,15 +8,34 @@ const runMigrations = async () => {
   try {
     console.log('🚀 Starting Railway migrations...');
     
+    // Debug environment variables
+    console.log('🔍 Environment Debug:');
+    console.log('- DATABASE_URL:', process.env.DATABASE_URL ? 'Set' : 'Not set');
+    console.log('- POSTGRES_HOST:', process.env.POSTGRES_HOST ? 'Set' : 'Not set');
+    console.log('- POSTGRES_PORT:', process.env.POSTGRES_PORT ? 'Set' : 'Not set');
+    console.log('- POSTGRES_DB:', process.env.POSTGRES_DB ? 'Set' : 'Not set');
+    console.log('- POSTGRES_USER:', process.env.POSTGRES_USER ? 'Set' : 'Not set');
+    console.log('- POSTGRES_PASSWORD:', process.env.POSTGRES_PASSWORD ? 'Set' : 'Not set');
+    console.log('- NODE_ENV:', process.env.NODE_ENV || 'development');
+    
+    // Check for required environment variables
+    if (!process.env.DATABASE_URL && !process.env.POSTGRES_HOST) {
+      throw new Error('DATABASE_URL or POSTGRES_HOST environment variable is required');
+    }
+    
     // Get the appropriate configuration
     const config = knexfile[process.env.NODE_ENV || 'production'];
     console.log('📊 Using environment:', process.env.NODE_ENV || 'production');
     console.log('🔗 Database host:', config.connection.host);
+    console.log('📦 Database name:', config.connection.database);
+    console.log('👤 Database user:', config.connection.user);
+    console.log('🔌 Database port:', config.connection.port);
     
     // Initialize knex
     db = knex(config);
     
     // Test connection
+    console.log('🔌 Testing database connection...');
     await db.raw('SELECT 1');
     console.log('✅ Database connection successful');
     
@@ -49,6 +68,13 @@ const runMigrations = async () => {
     
   } catch (error) {
     console.error('❌ Migration failed:', error);
+    console.error('🔍 Error details:', {
+      message: error.message,
+      code: error.code,
+      errno: error.errno,
+      syscall: error.syscall,
+      hostname: error.hostname
+    });
     throw error;
   } finally {
     if (db) {
