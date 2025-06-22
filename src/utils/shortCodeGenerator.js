@@ -28,12 +28,31 @@ class ShortCodeGenerator {
     while (attempts < maxAttempts) {
       const shortCode = this.generateShortCode();
       
-      // Check if code already exists
-      const existing = await database.query('groups')
-        .where('short_code', shortCode)
-        .first();
-      
-      if (!existing) {
+      try {
+        // Check if short_code column exists first
+        const columnExists = await database.raw(`
+          SELECT column_name 
+          FROM information_schema.columns 
+          WHERE table_name = 'groups' AND column_name = 'short_code'
+        `);
+        
+        if (columnExists.rows.length === 0) {
+          // Migration hasn't run yet, return a temporary code
+          logger.warn('short_code column not found, using temporary code');
+          return shortCode;
+        }
+        
+        // Check if code already exists
+        const existing = await database.query('groups')
+          .where('short_code', shortCode)
+          .first();
+        
+        if (!existing) {
+          return shortCode;
+        }
+      } catch (error) {
+        // If there's any error, assume migration hasn't run
+        logger.warn('Error checking short_code, using temporary code:', error.message);
         return shortCode;
       }
       
