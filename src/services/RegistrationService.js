@@ -134,94 +134,122 @@ class RegistrationService {
   }
 
   static async createBusiness(userId, businessName) {
-    try {
-      // Generate a unique business ID
-      const businessId = uuidv4();
+    let attempts = 0;
+    const maxAttempts = 3;
+    
+    while (attempts < maxAttempts) {
+      try {
+        // Generate a unique business ID
+        const businessId = uuidv4();
 
-      // Generate short code and setup identifier
-      const { shortCode, setupIdentifier } = await ShortCodeGenerator.generateBusinessSetupCode(businessName);
+        // Generate short code and setup identifier
+        const { shortCode, setupIdentifier } = await ShortCodeGenerator.generateBusinessSetupCode(businessName);
 
-      // Check if short_code column exists
-      const columnExists = await database.query.raw(`
-        SELECT column_name 
-        FROM information_schema.columns 
-        WHERE table_name = 'groups' AND column_name = 'short_code'
-      `);
+        // Check if short_code column exists
+        const columnExists = await database.query.raw(`
+          SELECT column_name 
+          FROM information_schema.columns 
+          WHERE table_name = 'groups' AND column_name = 'short_code'
+        `);
 
-      const insertData = {
-        user_id: userId,
-        business_id: businessId,
-        business_name: businessName,
-        group_name: `${businessName} - Main Group`,
-        group_id: `default_${businessId}`,
-        group_type: 'main'
-      };
+        const insertData = {
+          user_id: userId,
+          business_id: businessId,
+          business_name: businessName,
+          group_name: `${businessName} - Main Group`,
+          group_id: `default_${businessId}`,
+          group_type: 'main'
+        };
 
-      // Only add short code columns if they exist
-      if (columnExists.rows.length > 0) {
-        insertData.short_code = shortCode;
-        insertData.setup_identifier = setupIdentifier;
+        // Only add short code columns if they exist
+        if (columnExists.rows.length > 0) {
+          insertData.short_code = shortCode;
+          insertData.setup_identifier = setupIdentifier;
+        }
+
+        // Create a default group entry for the business
+        const [group] = await database.query('groups')
+          .insert(insertData)
+          .returning('*');
+
+        logger.info('Business created successfully', { businessId, userId, setupIdentifier });
+        return {
+          businessId,
+          setupIdentifier: columnExists.rows.length > 0 ? setupIdentifier : businessId
+        };
+      } catch (error) {
+        attempts++;
+        
+        // If it's a duplicate short code error and we haven't exceeded max attempts, try again
+        if (error.code === '23505' && error.constraint === 'groups_short_code_unique' && attempts < maxAttempts) {
+          logger.warn(`Duplicate short code detected, retrying... (attempt ${attempts}/${maxAttempts})`);
+          continue;
+        }
+        
+        // For any other error or if we've exceeded attempts, throw the error
+        logger.error('Error creating business:', error);
+        throw error;
       }
-
-      // Create a default group entry for the business
-      const [group] = await database.query('groups')
-        .insert(insertData)
-        .returning('*');
-
-      logger.info('Business created successfully', { businessId, userId, setupIdentifier });
-      return {
-        businessId,
-        setupIdentifier: columnExists.rows.length > 0 ? setupIdentifier : businessId
-      };
-    } catch (error) {
-      logger.error('Error creating business:', error);
-      throw error;
     }
   }
 
   static async addBusinessToUser(userId, businessName) {
-    try {
-      // Generate a unique business ID
-      const businessId = uuidv4();
+    let attempts = 0;
+    const maxAttempts = 3;
+    
+    while (attempts < maxAttempts) {
+      try {
+        // Generate a unique business ID
+        const businessId = uuidv4();
 
-      // Generate short code and setup identifier
-      const { shortCode, setupIdentifier } = await ShortCodeGenerator.generateBusinessSetupCode(businessName);
+        // Generate short code and setup identifier
+        const { shortCode, setupIdentifier } = await ShortCodeGenerator.generateBusinessSetupCode(businessName);
 
-      // Check if short_code column exists
-      const columnExists = await database.query.raw(`
-        SELECT column_name 
-        FROM information_schema.columns 
-        WHERE table_name = 'groups' AND column_name = 'short_code'
-      `);
+        // Check if short_code column exists
+        const columnExists = await database.query.raw(`
+          SELECT column_name 
+          FROM information_schema.columns 
+          WHERE table_name = 'groups' AND column_name = 'short_code'
+        `);
 
-      const insertData = {
-        user_id: userId,
-        business_id: businessId,
-        business_name: businessName,
-        group_name: `${businessName} - Main Group`,
-        group_id: `default_${businessId}`,
-        group_type: 'main'
-      };
+        const insertData = {
+          user_id: userId,
+          business_id: businessId,
+          business_name: businessName,
+          group_name: `${businessName} - Main Group`,
+          group_id: `default_${businessId}`,
+          group_type: 'main'
+        };
 
-      // Only add short code columns if they exist
-      if (columnExists.rows.length > 0) {
-        insertData.short_code = shortCode;
-        insertData.setup_identifier = setupIdentifier;
+        // Only add short code columns if they exist
+        if (columnExists.rows.length > 0) {
+          insertData.short_code = shortCode;
+          insertData.setup_identifier = setupIdentifier;
+        }
+
+        // Create a default group entry for the business
+        const [group] = await database.query('groups')
+          .insert(insertData)
+          .returning('*');
+
+        logger.info('Business added to user successfully', { businessId, userId, setupIdentifier });
+        return {
+          businessId,
+          setupIdentifier: columnExists.rows.length > 0 ? setupIdentifier : businessId
+        };
+      } catch (error) {
+        attempts++;
+        
+        // If it's a duplicate short code error and we haven't exceeded max attempts, try again
+        if (error.code === '23505' && error.constraint === 'groups_short_code_unique' && attempts < maxAttempts) {
+          logger.warn(`Duplicate short code detected, retrying... (attempt ${attempts}/${maxAttempts})`);
+          continue;
+        }
+        
+        // For any other error or if we've exceeded attempts, throw the error
+        logger.error('Error adding business to user:', error);
+        throw error;
       }
-
-      // Create a default group entry for the business
-      const [group] = await database.query('groups')
-        .insert(insertData)
-        .returning('*');
-
-      logger.info('Business added to user successfully', { businessId, userId, setupIdentifier });
-      return {
-        businessId,
-        setupIdentifier: columnExists.rows.length > 0 ? setupIdentifier : businessId
-      };
-    } catch (error) {
-      logger.error('Error adding business to user:', error);
-      throw error;
     }
   }
 
