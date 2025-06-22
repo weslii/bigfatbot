@@ -142,7 +142,7 @@ class RegistrationService {
       const { shortCode, setupIdentifier } = await ShortCodeGenerator.generateBusinessSetupCode(businessName);
 
       // Check if short_code column exists
-      const columnExists = await database.raw(`
+      const columnExists = await database.query.raw(`
         SELECT column_name 
         FROM information_schema.columns 
         WHERE table_name = 'groups' AND column_name = 'short_code'
@@ -188,7 +188,7 @@ class RegistrationService {
       const { shortCode, setupIdentifier } = await ShortCodeGenerator.generateBusinessSetupCode(businessName);
 
       // Check if short_code column exists
-      const columnExists = await database.raw(`
+      const columnExists = await database.query.raw(`
         SELECT column_name 
         FROM information_schema.columns 
         WHERE table_name = 'groups' AND column_name = 'short_code'
