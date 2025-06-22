@@ -135,6 +135,41 @@ async function initializeSession() {
   }
 }
 
+// Admin authentication middleware
+const requireAdmin = async (req, res, next) => {
+  console.log('requireAdmin middleware - Session:', req.session);
+  console.log('requireAdmin middleware - Session ID:', req.sessionID);
+  console.log('requireAdmin middleware - Session adminId:', req.session ? req.session.adminId : undefined);
+  console.log('requireAdmin middleware - Session isAuthenticated:', req.session ? req.session.isAuthenticated : undefined);
+  
+  if (!req.session || !req.session.adminId || !req.session.isAuthenticated) {
+    console.log('requireAdmin middleware - Authentication failed');
+    return res.redirect('/admin/login');
+  }
+  
+  try {
+    const admin = await AdminService.getAdminById(req.session.adminId);
+    console.log('requireAdmin middleware - Admin lookup result:', admin);
+    
+    if (!admin || !admin.is_active) {
+      console.log('requireAdmin middleware - Admin not found or inactive');
+      req.session.destroy((err) => {
+        if (err) {
+          console.error('Error destroying session:', err);
+        }
+        res.redirect('/admin/login');
+      });
+      return;
+    }
+    
+    req.admin = admin;
+    next();
+  } catch (error) {
+    logger.error('Admin auth error:', error);
+    res.redirect('/admin/login');
+  }
+};
+
 // Health check endpoint
 app.get('/health', async (req, res) => {
   try {
@@ -393,41 +428,6 @@ async function startServer() {
       console.error('Failed to initialize session middleware');
       process.exit(1);
     }
-
-    // Admin authentication middleware - must be defined after session middleware
-    const requireAdmin = async (req, res, next) => {
-      console.log('requireAdmin middleware - Session:', req.session);
-      console.log('requireAdmin middleware - Session ID:', req.sessionID);
-      console.log('requireAdmin middleware - Session adminId:', req.session ? req.session.adminId : undefined);
-      console.log('requireAdmin middleware - Session isAuthenticated:', req.session ? req.session.isAuthenticated : undefined);
-      
-      if (!req.session || !req.session.adminId || !req.session.isAuthenticated) {
-        console.log('requireAdmin middleware - Authentication failed');
-        return res.redirect('/admin/login');
-      }
-      
-      try {
-        const admin = await AdminService.getAdminById(req.session.adminId);
-        console.log('requireAdmin middleware - Admin lookup result:', admin);
-        
-        if (!admin || !admin.is_active) {
-          console.log('requireAdmin middleware - Admin not found or inactive');
-          req.session.destroy((err) => {
-            if (err) {
-              console.error('Error destroying session:', err);
-            }
-            res.redirect('/admin/login');
-          });
-          return;
-        }
-        
-        req.admin = admin;
-        next();
-      } catch (error) {
-        logger.error('Admin auth error:', error);
-        res.redirect('/admin/login');
-      }
-    };
 
     // Define routes after session middleware is initialized
     // Public routes
