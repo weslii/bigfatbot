@@ -121,6 +121,114 @@ class OrderService {
       throw error;
     }
   }
+
+  async getUserOrderStats(userId) {
+    try {
+      // Get all business IDs for the user
+      const userBusinesses = await database.query('groups')
+        .select('business_id')
+        .where('user_id', userId)
+        .groupBy('business_id');
+
+      const businessIds = userBusinesses.map(b => b.business_id);
+
+      if (businessIds.length === 0) {
+        return {
+          totalOrders: 0,
+          activeOrders: 0,
+          completedOrders: 0
+        };
+      }
+
+      // Get order statistics across all user's businesses
+      const stats = await database.query('orders')
+        .select(
+          database.query.raw('COUNT(*) as total_orders'),
+          database.query.raw('SUM(CASE WHEN status = \'pending\' OR status = \'processing\' THEN 1 ELSE 0 END) as active_orders'),
+          database.query.raw('SUM(CASE WHEN status = \'delivered\' OR status = \'completed\' THEN 1 ELSE 0 END) as completed_orders')
+        )
+        .whereIn('business_id', businessIds)
+        .first();
+
+      return {
+        totalOrders: parseInt(stats.total_orders) || 0,
+        activeOrders: parseInt(stats.active_orders) || 0,
+        completedOrders: parseInt(stats.completed_orders) || 0
+      };
+    } catch (error) {
+      logger.error('Error getting user order stats:', error);
+      return {
+        totalOrders: 0,
+        activeOrders: 0,
+        completedOrders: 0
+      };
+    }
+  }
+
+  async getUserRecentOrders(userId, limit = 10) {
+    try {
+      // Get all business IDs for the user
+      const userBusinesses = await database.query('groups')
+        .select('business_id')
+        .where('user_id', userId)
+        .groupBy('business_id');
+
+      const businessIds = userBusinesses.map(b => b.business_id);
+
+      if (businessIds.length === 0) {
+        return [];
+      }
+
+      // Get recent orders across all user's businesses with business names
+      const orders = await database.query('orders as o')
+        .select(
+          'o.*',
+          'g.business_name'
+        )
+        .join('groups as g', 'o.business_id', 'g.business_id')
+        .whereIn('o.business_id', businessIds)
+        .orderBy('o.created_at', 'desc')
+        .limit(limit);
+
+      return orders;
+    } catch (error) {
+      logger.error('Error getting user recent orders:', error);
+      return [];
+    }
+  }
+
+  async getBusinessOrders(businessId, filters = {}) {
+    try {
+      let query = database.query('orders as o')
+        .select(
+          'o.*',
+          'g.business_name'
+        )
+        .join('groups as g', 'o.business_id', 'g.business_id')
+        .where('o.business_id', businessId);
+
+      // Apply filters
+      if (filters.status) {
+        query = query.where('o.status', filters.status);
+      }
+
+      if (filters.search) {
+        query = query.where(function() {
+          this.where('o.customer_name', 'ilike', `%${filters.search}%`)
+            .orWhere('o.order_id', 'ilike', `%${filters.search}%`);
+        });
+      }
+
+      const orders = await query
+        .orderBy('o.created_at', 'desc')
+        .limit(filters.limit || 50);
+
+      return orders;
+    } catch (error) {
+      logger.error('Error getting business orders:', error);
+      return [];
+    }
+  }
 }
 
 module.exports = new OrderService(); 

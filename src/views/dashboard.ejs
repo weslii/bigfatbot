@@ -80,7 +80,7 @@
           <div class="card bg-primary text-white">
             <div class="card-body">
               <h5 class="card-title">Total Orders</h5>
-              <h2 class="card-text">0</h2>
+              <h2 class="card-text"><%= orderStats ? orderStats.totalOrders : 0 %></h2>
             </div>
           </div>
         </div>
@@ -88,7 +88,7 @@
           <div class="card bg-success text-white">
             <div class="card-body">
               <h5 class="card-title">Active Orders</h5>
-              <h2 class="card-text">0</h2>
+              <h2 class="card-text"><%= orderStats ? orderStats.activeOrders : 0 %></h2>
             </div>
           </div>
         </div>
@@ -96,7 +96,7 @@
           <div class="card bg-info text-white">
             <div class="card-body">
               <h5 class="card-title">Completed Orders</h5>
-              <h2 class="card-text">0</h2>
+              <h2 class="card-text"><%= orderStats ? orderStats.completedOrders : 0 %></h2>
             </div>
           </div>
         </div>
@@ -160,6 +160,7 @@
               <thead>
                 <tr>
                   <th>Order ID</th>
+                  <th>Business</th>
                   <th>Customer</th>
                   <th>Items</th>
                   <th>Status</th>
@@ -168,13 +169,33 @@
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td colspan="6" class="text-center">
-                    <div class="alert alert-info mb-0">
-                      No orders yet. Orders will appear here when customers place them in your WhatsApp group.
-                    </div>
-                  </td>
-                </tr>
+                <% if (recentOrders && recentOrders.length > 0) { %>
+                  <% recentOrders.forEach(order => { %>
+                    <tr>
+                      <td><%= order.id.substring(0, 8) %>...</td>
+                      <td><%= order.business_name %></td>
+                      <td><%= order.customer_name %></td>
+                      <td><%= order.items ? order.items.length : 0 %> items</td>
+                      <td>
+                        <span class="badge bg-<%= order.status === 'pending' ? 'warning' : (order.status === 'delivered' ? 'success' : 'secondary') %>">
+                          <%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %>
+                        </span>
+                      </td>
+                      <td><%= new Date(order.created_at).toLocaleDateString() %></td>
+                      <td>
+                        <button class="btn btn-sm btn-outline-primary">View Details</button>
+                      </td>
+                    </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="7" class="text-center">
+                      <div class="alert alert-info mb-0">
+                        No orders yet. Orders will appear here when customers place them in your WhatsApp group.
+                      </div>
+                    </td>
+                  </tr>
+                <% } %>
               </tbody>
             </table>
           </div>
