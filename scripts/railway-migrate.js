@@ -16,11 +16,16 @@ const runMigrations = async () => {
     console.log('- POSTGRES_DB:', process.env.POSTGRES_DB ? 'Set' : 'Not set');
     console.log('- POSTGRES_USER:', process.env.POSTGRES_USER ? 'Set' : 'Not set');
     console.log('- POSTGRES_PASSWORD:', process.env.POSTGRES_PASSWORD ? 'Set' : 'Not set');
+    console.log('- PGHOST:', process.env.PGHOST ? 'Set' : 'Not set');
+    console.log('- PGPORT:', process.env.PGPORT ? 'Set' : 'Not set');
+    console.log('- PGDATABASE:', process.env.PGDATABASE ? 'Set' : 'Not set');
+    console.log('- PGUSER:', process.env.PGUSER ? 'Set' : 'Not set');
+    console.log('- PGPASSWORD:', process.env.PGPASSWORD ? 'Set' : 'Not set');
     console.log('- NODE_ENV:', process.env.NODE_ENV || 'development');
     
     // Check for required environment variables
-    if (!process.env.DATABASE_URL && !process.env.POSTGRES_HOST) {
-      throw new Error('DATABASE_URL or POSTGRES_HOST environment variable is required');
+    if (!process.env.DATABASE_URL && !process.env.POSTGRES_HOST && !process.env.POSTGRES_DB && !process.env.PGHOST) {
+      throw new Error('DATABASE_URL, POSTGRES_* variables, or PG* variables are required');
     }
     
     // Get the appropriate configuration
