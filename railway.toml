@@ -2,10 +2,7 @@
 builder = "nixpacks"
 buildCommand = "npm run build"
 
-[deploy]
-startCommand = "npm run start:prod"
-healthcheckPath = "/health"
-healthcheckTimeout = 300
+
 
 [services]
 [[services.web]]

@@ -21,14 +21,10 @@ const SchedulerService = require('./services/SchedulerService');
 // --- Health check endpoint for Railway worker ---
 const express = require('express');
 const healthApp = express();
-const HEALTH_PORT = process.env.BOT_PORT || 3001; // Use different port for bot
+const HEALTH_PORT = process.env.PORT || 3000;
 
 healthApp.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'ok',
-    service: 'whatsapp-bot',
-    timestamp: new Date().toISOString()
-  });
+  res.status(200).send('ok');
 });
 
 class DeliveryBot {
@@ -48,29 +44,16 @@ class DeliveryBot {
 
       logger.info('Starting Delivery Bot...');
 
-      // Try to initialize database, but don't fail if it doesn't work
-      try {
-        await database.connect();
-        logger.info('Database connection established');
-      } catch (dbError) {
-        logger.warn('Database connection failed, continuing without database:', dbError.message);
-        console.log('⚠️  Database connection failed, bot will run without database features');
-      }
+      // Initialize database
+      await database.connect();
 
       // Start WhatsApp service in the background
       this.whatsappService.start().catch(error => {
         logger.error('Failed to start WhatsApp service:', error);
-        console.log('❌ WhatsApp service failed to start:', error.message);
       });
 
-      // Start scheduler only if database is available
-      try {
-        this.schedulerService.start();
-        logger.info('Scheduler started');
-      } catch (schedulerError) {
-        logger.warn('Scheduler failed to start:', schedulerError.message);
-        console.log('⚠️  Scheduler failed to start, continuing without scheduled tasks');
-      }
+      // Start scheduler
+      this.schedulerService.start();
 
       // Setup graceful shutdown
       this.setupGracefulShutdown();
@@ -90,7 +73,6 @@ class DeliveryBot {
 
     } catch (error) {
       logger.error('Failed to start Delivery Bot:', error);
-      console.error('💥 Failed to start bot:', error.message);
       process.exit(1);
     }
   }

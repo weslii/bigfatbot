@@ -422,7 +422,7 @@ class AdminService {
         };
       } else {
         // User has no data - just delete user
-        await database.query('users').where('id', userId).del();
+      await database.query('users').where('id', userId).del();
         
         return {
           success: true,

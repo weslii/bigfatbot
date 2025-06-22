@@ -206,7 +206,7 @@ class WhatsAppService {
         logger.warn('Order parsing failed', { 
           messageBody: message.body.substring(0, 100) + '...',
           senderName: contact.name || contact.number,
-          businessId: groupInfo.business_id
+          businessId: groupInfo.business_id 
         });
         
         // Only send error message if it looks like an order attempt
@@ -438,7 +438,7 @@ class WhatsAppService {
       if (!business) {
         business = await database.query('groups')
           .where('business_id', setupIdentifier)
-          .first();
+        .first();
       }
 
       if (!business) {
@@ -487,12 +487,12 @@ class WhatsAppService {
 
       // Register the group
       const insertData = {
-        user_id: business.user_id,
+          user_id: business.user_id,
         business_id: business.business_id,
-        business_name: business.business_name,
-        group_name: chat.name,
-        group_id: chat.id._serialized,
-        group_type: groupType
+          business_name: business.business_name,
+          group_name: chat.name,
+          group_id: chat.id._serialized,
+          group_type: groupType
       };
 
       // Add short code data if available
