@@ -1,6 +1,7 @@
 const logger = require('../utils/logger');
 const database = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
+const ShortCodeGenerator = require('../utils/shortCodeGenerator');
 
 class RegistrationService {
   static async registerUser(name, email, phoneNumber) {
@@ -137,6 +138,9 @@ class RegistrationService {
       // Generate a unique business ID
       const businessId = uuidv4();
 
+      // Generate short code and setup identifier
+      const { shortCode, setupIdentifier } = await ShortCodeGenerator.generateBusinessSetupCode(businessName);
+
       // Create a default group entry for the business
       const [group] = await database.query('groups')
         .insert({
@@ -145,12 +149,17 @@ class RegistrationService {
           business_name: businessName,
           group_name: `${businessName} - Main Group`,
           group_id: `default_${businessId}`,
-          group_type: 'main'
+          group_type: 'main',
+          short_code: shortCode,
+          setup_identifier: setupIdentifier
         })
         .returning('*');
 
-      logger.info('Business created successfully', { businessId, userId });
-      return businessId;
+      logger.info('Business created successfully', { businessId, userId, setupIdentifier });
+      return {
+        businessId,
+        setupIdentifier
+      };
     } catch (error) {
       logger.error('Error creating business:', error);
       throw error;
@@ -162,6 +171,9 @@ class RegistrationService {
       // Generate a unique business ID
       const businessId = uuidv4();
 
+      // Generate short code and setup identifier
+      const { shortCode, setupIdentifier } = await ShortCodeGenerator.generateBusinessSetupCode(businessName);
+
       // Create a default group entry for the business
       const [group] = await database.query('groups')
         .insert({
@@ -170,12 +182,17 @@ class RegistrationService {
           business_name: businessName,
           group_name: `${businessName} - Main Group`,
           group_id: `default_${businessId}`,
-          group_type: 'main'
+          group_type: 'main',
+          short_code: shortCode,
+          setup_identifier: setupIdentifier
         })
         .returning('*');
 
-      logger.info('Business added to user successfully', { businessId, userId });
-      return businessId;
+      logger.info('Business added to user successfully', { businessId, userId, setupIdentifier });
+      return {
+        businessId,
+        setupIdentifier
+      };
     } catch (error) {
       logger.error('Error adding business to user:', error);
       throw error;

@@ -124,11 +124,21 @@
                 <ol class="mb-0">
                   <li>Create a WhatsApp group for your business</li>
                   <li>Add our bot to the group as an admin</li>
-                  <li>Type <code>/setup <%= business.business_id %></code> in the group</li>
+                  <li>Type <code>/setup <%= business.setup_identifier || business.business_id %></code> in the group</li>
                   <li>Copy the Group ID that the bot provides</li>
                   <li>Enter the Group ID above and save</li>
                 </ol>
               </div>
+              
+              <li class="mb-3">
+                <strong>Use the Setup Command</strong>
+                <p>In each group, type the following command:</p>
+                <div class="alert alert-light border">
+                  <code class="user-select-all"><%= setupCommand %></code>
+                  <button class="btn btn-sm btn-outline-primary float-end" onclick="copyCommand()">Copy</button>
+                </div>
+                <p class="text-muted small">This command will automatically configure your group for the correct purpose (sales or delivery).</p>
+              </li>
               
               <button type="submit" class="btn btn-primary">
                 <i class="fas fa-plus"></i> Add Group
