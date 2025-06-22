@@ -10,6 +10,7 @@ exports.up = function(knex) {
     table.date('delivery_date');
     table.string('status', 50).notNullable().defaultTo('pending');
     table.string('delivery_person', 255);
+    table.string('updated_by', 255);
     table.text('notes');
     table.timestamp('created_at').defaultTo(knex.fn.now());
     table.timestamp('updated_at').defaultTo(knex.fn.now());

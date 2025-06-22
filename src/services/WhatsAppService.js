@@ -7,6 +7,7 @@ const RegistrationService = require('./RegistrationService');
 const OrderService = require('./OrderService');
 const MessageService = require('./MessageService');
 const OrderParser = require('./OrderParser');
+const ShortCodeGenerator = require('../utils/shortCodeGenerator');
 
 class WhatsAppService {
   constructor() {
@@ -21,8 +22,25 @@ class WhatsAppService {
           '--disable-accelerated-2d-canvas',
           '--no-first-run',
           '--no-zygote',
-          '--disable-gpu'
-        ]
+          '--disable-gpu',
+          '--disable-extensions',
+          '--disable-plugins',
+          '--disable-background-timer-throttling',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-renderer-backgrounding',
+          '--disable-features=TranslateUI',
+          '--disable-ipc-flooding-protection',
+          '--memory-pressure-off',
+          '--no-default-browser-check',
+          '--disable-default-apps',
+          '--disable-sync',
+          '--disable-translate',
+          '--hide-scrollbars',
+          '--mute-audio'
+        ],
+        defaultViewport: { width: 1024, height: 768 },
+        timeout: 60000,
+        protocolTimeout: 60000
       },
       qrMaxRetries: 10,
       qrRefreshInterval: 60000, // 60 seconds between QR refreshes
@@ -94,9 +112,29 @@ class WhatsAppService {
     }
   }
 
+  async changeNumber() {
+    try {
+      logger.info('Logging out current WhatsApp session...');
+      await this.client.logout();
+      logger.info('Successfully logged out. Restart the bot to use a new number.');
+    } catch (error) {
+      logger.error('Failed to logout:', error);
+      throw error;
+    }
+  }
+
   async handleMessage(message) {
     try {
-      // Get group info
+      const chat = await message.getChat();
+      const contact = await message.getContact();
+      
+      // Handle setup command FIRST (before checking if group is registered)
+      if (message.body.startsWith('/setup')) {
+        await this.handleSetupCommand(message, chat, contact);
+        return;
+      }
+
+      // Get group info (only for non-setup messages)
       const group = await database.query('groups')
         .where('group_id', message.from)
         .first();
@@ -110,15 +148,6 @@ class WhatsAppService {
       const deliveryGroup = await database.query('delivery_groups')
         .where('group_id', group.delivery_group_id)
         .first();
-
-      const chat = await message.getChat();
-      const contact = await message.getContact();
-      
-      // Handle setup command
-      if (message.body.startsWith('/setup')) {
-        await this.handleSetupCommand(message, chat, contact);
-        return;
-      }
 
       // Get group info from database
       const groupInfo = group;
@@ -148,7 +177,7 @@ class WhatsAppService {
         // Add business_id to order data
         orderData.business_id = groupInfo.business_id;
         
-        const order = await OrderService.createOrder(orderData);
+        const order = await OrderService.createOrder(groupInfo.business_id, orderData);
         const deliveryConfirmation = MessageService.formatOrderConfirmation(order);
         const salesConfirmation = MessageService.formatSalesConfirmation(order);
         
@@ -168,15 +197,36 @@ class WhatsAppService {
         
         logger.info('Order processed and confirmations sent', { 
           orderId: order.id,
-          businessId: groupInfo.business_id 
+          businessId: groupInfo.business_id,
+          customerName: orderData.customer_name,
+          items: orderData.items
         });
+      } else {
+        // Enhanced error message for failed parsing
+        logger.warn('Order parsing failed', { 
+          messageBody: message.body.substring(0, 100) + '...',
+          senderName: contact.name || contact.number,
+          businessId: groupInfo.business_id
+        });
+        
+        // Only send error message if it looks like an order attempt
+        if (message.body.length > 20 && !message.body.startsWith('/')) {
+          await this.client.sendMessage(groupInfo.group_id, 
+            '❌ Could not process order. Please ensure your message includes:\n' +
+            '• Customer name\n' +
+            '• Phone number\n' +
+            '• Delivery address\n' +
+            '• Order items\n\n' +
+            'Example format:\n' +
+            'John Doe\n' +
+            '08012345678\n' +
+            '123 Lekki Phase 1, Lagos\n' +
+            '2 Cakes, 1 Pizza'
+          );
+        }
       }
     } catch (error) {
       logger.error('Error handling sales group message:', error);
-      // Send error message to sales group if order parsing failed
-      if (message.body.length > 20) { // Only if it looks like an order attempt
-        await this.client.sendMessage(groupInfo.group_id, '❌ Could not process order. Please check the format and try again.');
-      }
     }
   }
 
@@ -371,22 +421,20 @@ class WhatsAppService {
         return;
       }
 
-      // Parse business ID from command
+      // Parse setup identifier from command
       const parts = message.body.split(' ');
       if (parts.length !== 2) {
-        await this.client.sendMessage(chat.id._serialized, '❌ Invalid setup command. Use: /setup <business_id>');
+        await this.client.sendMessage(chat.id._serialized, '❌ Invalid setup command. Use: /setup <businessname-CODE>\n\nExample: /setup cakeshop-ABC123');
         return;
       }
 
-      const businessId = parts[1];
+      const setupIdentifier = parts[1];
 
-      // Check if business exists
-      const business = await database.query('groups')
-        .where('business_id', businessId)
-        .first();
+      // Find business by setup identifier
+      const business = await ShortCodeGenerator.findBusinessBySetupIdentifier(setupIdentifier);
 
       if (!business) {
-        await this.client.sendMessage(chat.id._serialized, '❌ Invalid business ID.');
+        await this.client.sendMessage(chat.id._serialized, '❌ Business not found. Please check your setup code.\n\nMake sure you\'re using the correct format: /setup businessname-CODE');
         return;
       }
 
@@ -402,7 +450,7 @@ class WhatsAppService {
 
       // Check if this business already has both groups
       const groupCount = await database.query('groups')
-        .where('business_id', businessId)
+        .where('business_id', business.business_id)
         .count('* as count')
         .first();
 
@@ -413,15 +461,14 @@ class WhatsAppService {
 
       // Determine group type based on existing groups
       const existingGroups = await database.query('groups')
-        .where('business_id', businessId)
+        .where('business_id', business.business_id)
         .select('group_type');
 
       let groupType;
       if (existingGroups.length === 0) {
         // First group - ask user which type
         await this.client.sendMessage(chat.id._serialized, 
-          'Is this a sales group or delivery group?\n' +
-          'Reply with "sales" or "delivery"'
+          `🤖 *Business Setup*\n\nBusiness: ${business.business_name}\n\nIs this a sales group or delivery group?\n\nReply with "sales" or "delivery"`
         );
         return;
       } else {
@@ -434,27 +481,31 @@ class WhatsAppService {
       await database.query('groups')
         .insert({
           user_id: business.user_id,
-          business_id: businessId,
+          business_id: business.business_id,
           business_name: business.business_name,
           group_name: chat.name,
           group_id: chat.id._serialized,
-          group_type: groupType
+          group_type: groupType,
+          short_code: business.short_code,
+          setup_identifier: business.setup_identifier
         });
 
       // Send confirmation
       await this.client.sendMessage(chat.id._serialized, 
-        `✅ ${groupType === 'sales' ? 'Sales' : 'Delivery'} group registered successfully!\n\n` +
-        `Group Name: ${chat.name}\n` +
-        `Business: ${business.business_name}\n\n` +
+        `✅ *${groupType === 'sales' ? 'Sales' : 'Delivery'} Group Registered!*\n\n` +
+        `*Business:* ${business.business_name}\n` +
+        `*Group:* ${chat.name}\n` +
+        `*Type:* ${groupType}\n\n` +
         (groupType === 'sales' ? 
-          'Customers can now place orders in this group.' :
-          'Delivery staff can manage orders in this group.')
+          '🛍️ Customers can now place orders in this group.' :
+          '🚚 Delivery staff can manage orders in this group.')
       );
 
       logger.info('Group registered successfully', {
         groupId: chat.id._serialized,
         groupName: chat.name,
-        businessId,
+        businessId: business.business_id,
+        businessName: business.business_name,
         groupType
       });
     } catch (error) {

@@ -10,6 +10,8 @@ const WhatsAppService = require('./services/WhatsAppService');
 const AdminService = require('./services/AdminService');
 const db = require('./config/database');
 const OrderService = require('./services/OrderService');
+const cacheService = require('./services/CacheService');
+const memoryMonitor = require('./utils/memoryMonitor');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -191,6 +193,23 @@ app.get('/health', async (req, res) => {
   }
 });
 
+// Memory usage endpoint for monitoring
+app.get('/memory', (req, res) => {
+  try {
+    const memoryUsage = memoryMonitor.getMemoryUsage();
+    res.json({
+      status: 'ok',
+      memory: memoryUsage,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      error: error.message
+    });
+  }
+});
+
 // Debug route to inspect session data and session ID
 app.get('/admin/debug-session', async (req, res) => {
   let admin = null;
@@ -230,6 +249,14 @@ async function startServer() {
     if (!sessionInitialized) {
       console.error('Failed to initialize session middleware');
       process.exit(1);
+    }
+
+    // Initialize cache service
+    const cacheInitialized = await cacheService.connect();
+    if (cacheInitialized) {
+      logger.info('Cache service initialized successfully');
+    } else {
+      logger.warn('Cache service initialization failed, continuing without caching');
     }
 
     // Define routes after session middleware is initialized
@@ -1109,7 +1136,10 @@ async function startServer() {
       console.log('=== /admin/users route hit ===');
       try {
         const users = await AdminService.getAllUsers();
-        res.render('admin/users', { admin: req.admin, users });
+        const successMessage = req.session.successMessage;
+        // Clear the success message from session after displaying
+        delete req.session.successMessage;
+        res.render('admin/users', { admin: req.admin, users, successMessage });
       } catch (error) {
         logger.error('Admin users error:', error);
         res.render('error', { error: 'Failed to load users.' });
@@ -1152,14 +1182,17 @@ async function startServer() {
     
     app.post('/admin/users/:userId/delete', requireAdmin, async (req, res) => {
       try {
-        await AdminService.deleteUser(req.params.userId);
+        const result = await AdminService.deleteUser(req.params.userId);
+        // Add success message to session for display
+        req.session.successMessage = result.message;
         res.redirect('/admin/users');
       } catch (error) {
         logger.error('Delete user error:', error);
-        res.render('error', { error: 'Failed to delete user.' });
+        // Display the specific error message from AdminService
+        res.render('error', { error: error.message || 'Failed to delete user.' });
       }
     });
-    
+
     // Admin: Manage Admins
     app.get('/admin/admins', requireAdmin, async (req, res) => {
       console.log('=== /admin/admins route hit ===');
@@ -1438,46 +1471,26 @@ async function startServer() {
     // Export functionality
     app.get('/api/export/orders', async (req, res) => {
       try {
-        const userId = req.session.userId;
+        const { userId, business_id, status, search, format = 'csv' } = req.query;
+        
         if (!userId) {
-          return res.status(401).json({ error: 'Unauthorized' });
+          return res.status(400).json({ error: 'User ID is required' });
         }
 
-        const { 
-          business_id, 
-          status, 
-          start_date, 
-          end_date, 
-          format = 'csv' 
-        } = req.query;
-
-        // Get user's business IDs to ensure they can only export their orders
+        // Get user's business IDs
         const userBusinesses = await db.query('groups')
           .select('business_id')
           .where('user_id', userId)
           .groupBy('business_id');
         
         const businessIds = userBusinesses.map(b => b.business_id);
-
+        
         if (businessIds.length === 0) {
-          return res.status(404).json({ error: 'No businesses found' });
+          return res.status(400).json({ error: 'No businesses found for this user' });
         }
 
         // Build query
         let query = db.query('orders as o')
-          .select(
-            'o.order_id',
-            'o.customer_name',
-            'o.customer_phone',
-            'o.address',
-            'o.items',
-            'o.status',
-            'o.notes',
-            'o.delivery_date',
-            'o.created_at',
-            'o.updated_at',
-            'g.business_name'
-          )
           .join('groups as g', 'o.business_id', 'g.business_id')
           .whereIn('o.business_id', businessIds);
 
@@ -1485,30 +1498,30 @@ async function startServer() {
         if (business_id) {
           query = query.where('o.business_id', business_id);
         }
-
+        
         if (status) {
           query = query.where('o.status', status);
         }
-
-        if (start_date) {
-          query = query.where('o.created_at', '>=', new Date(start_date));
-        }
-
-        if (end_date) {
-          query = query.where('o.created_at', '<=', new Date(end_date + ' 23:59:59'));
+        
+        if (search) {
+          query = query.where(function() {
+            this.where('o.customer_name', 'like', `%${search}%`)
+              .orWhere('o.order_id', 'like', `%${search}%`);
+          });
         }
 
         const orders = await query.orderBy('o.created_at', 'desc');
 
-        if (format === 'csv') {
-          // Generate CSV
-          const csv = generateOrdersCSV(orders);
-          
-          res.setHeader('Content-Type', 'text/csv');
-          res.setHeader('Content-Disposition', `attachment; filename="orders_${new Date().toISOString().split('T')[0]}.csv"`);
-          res.send(csv);
+        if (format === 'json') {
+          res.setHeader('Content-Type', 'application/json');
+          res.setHeader('Content-Disposition', 'attachment; filename="orders.json"');
+          res.json(orders);
         } else {
-          res.json({ orders });
+          // CSV format
+          const csv = generateOrdersCSV(orders);
+          res.setHeader('Content-Type', 'text/csv');
+          res.setHeader('Content-Disposition', 'attachment; filename="orders.csv"');
+          res.send(csv);
         }
       } catch (error) {
         logger.error('Export orders error:', error);
@@ -1516,56 +1529,45 @@ async function startServer() {
       }
     });
 
-    // Helper function to generate CSV
-    function generateOrdersCSV(orders) {
-      const headers = [
-        'Order ID',
-        'Business',
-        'Customer Name',
-        'Customer Phone',
-        'Address',
-        'Items',
-        'Status',
-        'Notes',
-        'Delivery Date',
-        'Created Date',
-        'Updated Date'
-      ];
-
-      const csvRows = [headers.join(',')];
-
-      orders.forEach(order => {
-        // Parse items if it's JSON
-        let items = '';
-        try {
-          if (order.items) {
-            const parsedItems = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
-            items = Array.isArray(parsedItems) 
-              ? parsedItems.map(item => `${item.name || item} (${item.quantity || 1})`).join('; ')
-              : order.items;
-          }
-        } catch (e) {
-          items = order.items || '';
+    // WhatsApp bot management endpoints
+    app.post('/api/whatsapp/change-number', async (req, res) => {
+      try {
+        const { userId } = req.body;
+        
+        if (!userId) {
+          return res.status(400).json({ error: 'User ID is required' });
         }
 
-        const row = [
-          `"${order.order_id || ''}"`,
-          `"${order.business_name || ''}"`,
-          `"${order.customer_name || ''}"`,
-          `"${order.customer_phone || ''}"`,
-          `"${(order.address || '').replace(/"/g, '""')}"`,
-          `"${items.replace(/"/g, '""')}"`,
-          `"${order.status || ''}"`,
-          `"${(order.notes || '').replace(/"/g, '""')}"`,
-          `"${order.delivery_date ? new Date(order.delivery_date).toLocaleDateString() : ''}"`,
-          `"${new Date(order.created_at).toLocaleString()}"`,
-          `"${order.updated_at ? new Date(order.updated_at).toLocaleString() : ''}"`
-        ];
+        // Check if user is admin (you can modify this logic)
+        const user = await db.query('users')
+          .where('id', userId)
+          .first();
+        
+        if (!user) {
+          return res.status(404).json({ error: 'User not found' });
+        }
 
-        csvRows.push(row.join(','));
-      });
+        // Import WhatsAppService
+        const WhatsAppService = require('./services/WhatsAppService');
+        const whatsappService = new WhatsAppService();
 
-      return csvRows.join('\n');
+        // Call the changeNumber method
+        await whatsappService.changeNumber();
+        
+        res.json({ 
+          success: true, 
+          message: 'WhatsApp number change initiated. Please restart the bot to complete the process.' 
+        });
+      } catch (error) {
+        logger.error('Change WhatsApp number error:', error);
+        res.status(500).json({ error: 'Failed to change WhatsApp number' });
+      }
+    });
+
+    // Start memory monitoring in production
+    if (process.env.NODE_ENV === 'production') {
+      memoryMonitor.start();
+      logger.info('Memory monitoring started');
     }
 
     // Start the server

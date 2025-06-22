@@ -1,5 +1,6 @@
 const database = require('../config/database');
 const logger = require('../utils/logger');
+const cacheService = require('./CacheService');
 const { v4: uuidv4 } = require('uuid');
 
 class OrderService {
@@ -9,13 +10,21 @@ class OrderService {
       const [order] = await database.query('orders')
         .insert({
           id: orderId,
+          order_id: orderId,
           customer_name: orderData.customer_name,
+          customer_phone: orderData.customer_phone,
+          address: orderData.address,
           items: orderData.items,
-          total_amount: orderData.total_amount,
+          delivery_date: orderData.delivery_date,
+          notes: orderData.notes,
           status: 'pending',
-          business_id: orderData.business_id
+          business_id: businessId || orderData.business_id
         })
         .returning('*');
+
+      // Invalidate cache for this business
+      await cacheService.invalidateBusinessOrders(businessId || orderData.business_id);
+      
       return order;
     } catch (error) {
       logger.error('Error creating order:', error);
@@ -23,26 +32,32 @@ class OrderService {
     }
   }
 
-  async getOrderById(orderId) {
+  async getOrderById(orderId, businessId) {
     try {
-      const result = await database.query.query(
-        'SELECT * FROM orders WHERE order_id = $1 AND business_id = $2',
-        [orderId, businessId]
-      );
-      return result.rows[0];
+      const order = await database.query('orders')
+        .where('order_id', orderId)
+        .where('business_id', businessId)
+        .first();
+      return order;
     } catch (error) {
       logger.error('Error getting order:', error);
       throw error;
     }
   }
 
-  async updateOrderStatus(orderId, status, deliveryPerson = null) {
+  async updateOrderStatus(orderId, status, deliveryPerson, businessId) {
     try {
-      const result = await database.query.query(
-        'UPDATE orders SET status = $1, updated_by = $2, updated_at = NOW() WHERE order_id = $3 AND business_id = $4 RETURNING *',
-        [status, updatedBy, orderId, businessId]
-      );
-      return result.rows[0];
+      const result = await database.query('orders')
+        .where('order_id', orderId)
+        .where('business_id', businessId)
+        .update({ 
+          status: status,
+          delivery_person: deliveryPerson,
+          updated_by: deliveryPerson,
+          updated_at: database.query.fn.now()
+        })
+        .returning('*');
+      return result[0];
     } catch (error) {
       logger.error('Error updating order status:', error);
       throw error;
@@ -51,11 +66,11 @@ class OrderService {
 
   async getPendingOrders(businessId) {
     try {
-      const result = await database.query.query(
-        'SELECT * FROM orders WHERE business_id = $1 AND status = $2 ORDER BY created_at DESC',
-        [businessId, 'pending']
-      );
-      return result.rows;
+      const orders = await database.query('orders')
+        .where('business_id', businessId)
+        .where('status', 'pending')
+        .orderBy('created_at', 'desc');
+      return orders;
     } catch (error) {
       logger.error('Error getting pending orders:', error);
       throw error;
@@ -64,18 +79,17 @@ class OrderService {
 
   async getDailyReport(businessId) {
     try {
-      const result = await database.query.query(
-        `SELECT 
-          COUNT(*) as total_orders,
-          SUM(CASE WHEN status = 'delivered' THEN 1 ELSE 0 END) as delivered_orders,
-          SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_orders,
-          SUM(CASE WHEN status = 'delivered' THEN total_amount ELSE 0 END) as total_revenue
-        FROM orders 
-        WHERE business_id = $1 
-        AND created_at >= NOW() - INTERVAL '1 day'`,
-        [businessId]
-      );
-      return result.rows[0];
+      const report = await database.query('orders')
+        .select(
+          database.query.raw('COUNT(*) as total_orders'),
+          database.query.raw('SUM(CASE WHEN status = \'delivered\' THEN 1 ELSE 0 END) as delivered_orders'),
+          database.query.raw('SUM(CASE WHEN status = \'cancelled\' THEN 1 ELSE 0 END) as cancelled_orders'),
+          database.query.raw('SUM(CASE WHEN status = \'pending\' THEN 1 ELSE 0 END) as scheduled_deliveries')
+        )
+        .where('business_id', businessId)
+        .where('created_at', '>=', database.query.raw('NOW() - INTERVAL \'1 day\''))
+        .first();
+      return report;
     } catch (error) {
       logger.error('Error getting daily report:', error);
       throw error;
@@ -84,18 +98,17 @@ class OrderService {
 
   async getWeeklyReport(businessId) {
     try {
-      const result = await database.query.query(
-        `SELECT 
-          COUNT(*) as total_orders,
-          SUM(CASE WHEN status = 'delivered' THEN 1 ELSE 0 END) as delivered_orders,
-          SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_orders,
-          SUM(CASE WHEN status = 'delivered' THEN total_amount ELSE 0 END) as total_revenue
-        FROM orders 
-        WHERE business_id = $1 
-        AND created_at >= NOW() - INTERVAL '7 days'`,
-        [businessId]
-      );
-      return result.rows[0];
+      const report = await database.query('orders')
+        .select(
+          database.query.raw('COUNT(*) as total_orders'),
+          database.query.raw('SUM(CASE WHEN status = \'delivered\' THEN 1 ELSE 0 END) as delivered_orders'),
+          database.query.raw('SUM(CASE WHEN status = \'cancelled\' THEN 1 ELSE 0 END) as cancelled_orders'),
+          database.query.raw('SUM(CASE WHEN status = \'pending\' THEN 1 ELSE 0 END) as scheduled_deliveries')
+        )
+        .where('business_id', businessId)
+        .where('created_at', '>=', database.query.raw('NOW() - INTERVAL \'7 days\''))
+        .first();
+      return report;
     } catch (error) {
       logger.error('Error getting weekly report:', error);
       throw error;
@@ -104,18 +117,17 @@ class OrderService {
 
   async getMonthlyReport(businessId) {
     try {
-      const result = await database.query.query(
-        `SELECT 
-          COUNT(*) as total_orders,
-          SUM(CASE WHEN status = 'delivered' THEN 1 ELSE 0 END) as delivered_orders,
-          SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_orders,
-          SUM(CASE WHEN status = 'delivered' THEN total_amount ELSE 0 END) as total_revenue
-        FROM orders 
-        WHERE business_id = $1 
-        AND created_at >= NOW() - INTERVAL '30 days'`,
-        [businessId]
-      );
-      return result.rows[0];
+      const report = await database.query('orders')
+        .select(
+          database.query.raw('COUNT(*) as total_orders'),
+          database.query.raw('SUM(CASE WHEN status = \'delivered\' THEN 1 ELSE 0 END) as delivered_orders'),
+          database.query.raw('SUM(CASE WHEN status = \'cancelled\' THEN 1 ELSE 0 END) as cancelled_orders'),
+          database.query.raw('SUM(CASE WHEN status = \'pending\' THEN 1 ELSE 0 END) as scheduled_deliveries')
+        )
+        .where('business_id', businessId)
+        .where('created_at', '>=', database.query.raw('NOW() - INTERVAL \'30 days\''))
+        .first();
+      return report;
     } catch (error) {
       logger.error('Error getting monthly report:', error);
       throw error;
@@ -124,6 +136,18 @@ class OrderService {
 
   async getUserOrderStats(userId) {
     try {
+      // Try to get from cache first (with graceful fallback)
+      let cachedStats = null;
+      try {
+        cachedStats = await cacheService.getOrderStats(userId);
+      } catch (cacheError) {
+        logger.warn('Cache get failed, proceeding without cache:', cacheError.message);
+      }
+      
+      if (cachedStats) {
+        return cachedStats;
+      }
+
       // Get all business IDs for the user
       const userBusinesses = await database.query('groups')
         .select('business_id')
@@ -133,11 +157,18 @@ class OrderService {
       const businessIds = userBusinesses.map(b => b.business_id);
 
       if (businessIds.length === 0) {
-        return {
+        const emptyStats = {
           totalOrders: 0,
           activeOrders: 0,
           completedOrders: 0
         };
+        // Try to cache empty stats (with graceful fallback)
+        try {
+          await cacheService.setOrderStats(userId, emptyStats, 300);
+        } catch (cacheError) {
+          logger.warn('Cache set failed for empty stats:', cacheError.message);
+        }
+        return emptyStats;
       }
 
       // Get order statistics across all user's businesses
@@ -150,11 +181,20 @@ class OrderService {
         .whereIn('business_id', businessIds)
         .first();
 
-      return {
+      const result = {
         totalOrders: parseInt(stats.total_orders) || 0,
         activeOrders: parseInt(stats.active_orders) || 0,
         completedOrders: parseInt(stats.completed_orders) || 0
       };
+
+      // Try to cache the result (with graceful fallback)
+      try {
+        await cacheService.setOrderStats(userId, result, 600);
+      } catch (cacheError) {
+        logger.warn('Cache set failed for user stats:', cacheError.message);
+      }
+      
+      return result;
     } catch (error) {
       logger.error('Error getting user order stats:', error);
       return {
@@ -199,34 +239,91 @@ class OrderService {
 
   async getBusinessOrders(businessId, filters = {}) {
     try {
-      let query = database.query('orders as o')
-        .select(
-          'o.*',
-          'g.business_name'
-        )
-        .join('groups as g', 'o.business_id', 'g.business_id')
-        .where('o.business_id', businessId);
-
-      // Apply filters
-      if (filters.status) {
-        query = query.where('o.status', filters.status);
+      // Try to get from cache first (with graceful fallback)
+      let cachedOrders = null;
+      try {
+        cachedOrders = await cacheService.getBusinessOrders(businessId, filters);
+      } catch (cacheError) {
+        logger.warn('Cache get failed for business orders, proceeding without cache:', cacheError.message);
+      }
+      
+      if (cachedOrders) {
+        return cachedOrders;
       }
 
-      if (filters.search) {
+      const {
+        status,
+        search,
+        page = 1,
+        pageSize = 20,
+        startDate,
+        endDate
+      } = filters;
+
+      let query = database.query('orders')
+        .where('business_id', businessId);
+
+      // Apply filters
+      if (status) {
+        query = query.where('status', status);
+      }
+
+      if (search) {
         query = query.where(function() {
-          this.where('o.customer_name', 'ilike', `%${filters.search}%`)
-            .orWhere('o.order_id', 'ilike', `%${filters.search}%`);
+          this.where('customer_name', 'ilike', `%${search}%`)
+            .orWhere('order_id', 'ilike', `%${search}%`)
+            .orWhere('customer_phone', 'ilike', `%${search}%`);
         });
       }
 
-      const orders = await query
-        .orderBy('o.created_at', 'desc')
-        .limit(filters.limit || 50);
+      if (startDate) {
+        query = query.where('created_at', '>=', startDate);
+      }
 
-      return orders;
+      if (endDate) {
+        query = query.where('created_at', '<=', endDate);
+      }
+
+      // Get total count for pagination
+      const countQuery = query.clone();
+      const totalOrders = await countQuery.count('* as count').first();
+
+      // Apply pagination
+      const offset = (page - 1) * pageSize;
+      const orders = await query
+        .orderBy('created_at', 'desc')
+        .limit(pageSize)
+        .offset(offset);
+
+      const result = {
+        orders,
+        pagination: {
+          page: parseInt(page),
+          pageSize: parseInt(pageSize),
+          totalOrders: parseInt(totalOrders.count),
+          totalPages: Math.ceil(totalOrders.count / pageSize)
+        }
+      };
+
+      // Try to cache the result (with graceful fallback)
+      try {
+        await cacheService.setBusinessOrders(businessId, result, filters, 300);
+      } catch (cacheError) {
+        logger.warn('Cache set failed for business orders:', cacheError.message);
+      }
+      
+      return result;
     } catch (error) {
       logger.error('Error getting business orders:', error);
-      return [];
+      return {
+        orders: [],
+        pagination: {
+          page: 1,
+          pageSize: 20,
+          totalOrders: 0,
+          totalPages: 0
+        }
+      };
     }
   }
 }
