@@ -558,16 +558,6 @@ app.get('/admin/businesses', requireAdmin, async (req, res) => {
     }
   });
   
-  app.post('/admin/users/:userId/toggle', requireAdmin, async (req, res) => {
-    try {
-      await AdminService.toggleUserActive(req.params.userId);
-      res.redirect('/admin/users');
-    } catch (error) {
-      logger.error('Toggle user active error:', error);
-      res.render('error', { error: 'Failed to update user status.' });
-    }
-  });
-  
   app.post('/admin/users/:userId/delete', requireAdmin, async (req, res) => {
     try {
       await AdminService.deleteUser(req.params.userId);

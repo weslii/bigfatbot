@@ -1,4 +1,33 @@
-<div class="container mt-5 pastel-blue-bg"> 
-  <div class="card pastel-blue-card text-dark">
+<%- include('../layout', { title: user ? 'Edit User' : 'Add User' }) %>
+
+<div class="container mt-5 pastel-blue-bg">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card pastel-blue-card text-dark">
+        <div class="card-header">
+          <h4 class="mb-0"><%= user ? 'Edit User' : 'Add User' %></h4>
+        </div>
+        <div class="card-body">
+          <form method="POST" action="<%= user ? `/admin/users/${user.id}/edit` : '/admin/users/add' %>">
+            <div class="mb-3">
+              <label for="full_name" class="form-label">Full Name</label>
+              <input type="text" class="form-control" id="full_name" name="full_name" value="<%= user ? user.full_name : '' %>" required>
+            </div>
+            <div class="mb-3">
+              <label for="email" class="form-label">Email</label>
+              <input type="email" class="form-control" id="email" name="email" value="<%= user ? user.email : '' %>" required>
+            </div>
+            <div class="mb-3">
+              <label for="phone_number" class="form-label">Phone Number</label>
+              <input type="tel" class="form-control" id="phone_number" name="phone_number" value="<%= user ? user.phone_number : '' %>" required>
+            </div>
+            <div class="d-flex justify-content-between">
+              <a href="/admin/users" class="btn btn-secondary">Cancel</a>
+              <button type="submit" class="btn btn-primary"><%= user ? 'Update User' : 'Add User' %></button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
 </div> 
