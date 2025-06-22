@@ -45,7 +45,7 @@ console.log('- Current working directory:', process.cwd());
 if (process.env.DATABASE_URL) {
   console.log('\n🔍 Testing DATABASE_URL parsing...');
   const url = process.env.DATABASE_URL;
-  const matches = url.match(/postgres:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/);
+  const matches = url.match(/postgres(?:ql)?:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/);
   if (matches) {
     console.log('✅ DATABASE_URL parsed successfully:');
     console.log('- Host:', matches[3]);
@@ -54,5 +54,6 @@ if (process.env.DATABASE_URL) {
     console.log('- Database:', matches[5]);
   } else {
     console.log('❌ Failed to parse DATABASE_URL');
+    console.log('🔍 URL format should be: postgresql://user:password@host:port/database');
   }
 } 

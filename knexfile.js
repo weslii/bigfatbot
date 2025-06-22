@@ -3,11 +3,13 @@ require('dotenv').config();
 // Parse the DATABASE_URL if it exists
 const parseDbUrl = (url) => {
   if (!url) return null;
-  console.log('🔍 Parsing DATABASE_URL:', url.substring(0, 20) + '...');
+  console.log('🔍 Parsing DATABASE_URL:', url.substring(0, 30) + '...');
   
-  const matches = url.match(/postgres:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/);
+  // Handle both postgres:// and postgresql:// protocols
+  const matches = url.match(/postgres(?:ql)?:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/);
   if (!matches) {
     console.log('❌ Failed to parse DATABASE_URL');
+    console.log('🔍 URL format should be: postgresql://user:password@host:port/database');
     return null;
   }
   
