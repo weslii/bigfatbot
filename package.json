@@ -9,7 +9,7 @@
     "dev": "concurrently \"nodemon src/index.js\" \"nodemon src/server.js\"",
     "dev:bot": "nodemon src/index.js",
     "dev:web": "nodemon src/server.js",
-    "migrate": "knex migrate:latest",
+    "migrate": "knex migrate:latest && echo 'Migrations completed successfully' || echo 'Migration failed'",
     "migrate:rollback": "knex migrate:rollback",
     "migrate:make": "knex migrate:make",
     "build": "npm install",
