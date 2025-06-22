@@ -36,9 +36,15 @@ const parseDbUrl = (url) => {
 const getConnection = () => {
   console.log('🔍 Getting database connection...');
   
-  // Check for Railway's individual environment variables first (preferred)
+  // Use DATABASE_URL directly if available (Railway recommended approach)
+  if (process.env.DATABASE_URL) {
+    console.log('📡 Using DATABASE_URL directly (Railway recommended)');
+    return process.env.DATABASE_URL;
+  }
+  
+  // Check for Railway's individual environment variables
   if (process.env.POSTGRES_HOST || process.env.POSTGRES_DB || process.env.PGHOST || process.env.PGDATABASE) {
-    console.log('📡 Using Railway POSTGRES_* or PG* variables (preferred)');
+    console.log('📡 Using Railway POSTGRES_* or PG* variables (fallback)');
     const connection = {
       host: process.env.POSTGRES_HOST || process.env.PGHOST || 'localhost',
       port: process.env.POSTGRES_PORT || process.env.PGPORT || 5432,
@@ -56,12 +62,6 @@ const getConnection = () => {
     });
     
     return connection;
-  }
-  
-  // Fallback to DATABASE_URL if no individual variables
-  if (process.env.DATABASE_URL) {
-    console.log('📡 Using DATABASE_URL (fallback)');
-    return parseDbUrl(process.env.DATABASE_URL);
   }
   
   // Fallback to traditional DB_* variables
