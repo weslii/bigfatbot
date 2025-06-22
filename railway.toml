@@ -3,22 +3,21 @@ builder = "nixpacks"
 buildCommand = "npm run build"
 
 [deploy]
-startCommand = "node scripts/railway-start.js"
+startCommand = "npm run start:prod"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
 
 [services]
 [[services.web]]
 name = "web"
-command = "node scripts/railway-start.js"
+command = "npm run start:prod"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
 memoryLimit = "512M"
 
 [[services.workers]]
 name = "whatsapp-bot"
-command = "node scripts/simple-bot-start.js"
+command = "npm start"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
-memoryLimit = "512M"
-port = "3001" 
+memoryLimit = "512M" 
