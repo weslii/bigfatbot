@@ -207,8 +207,23 @@ app.get('/admin/debug-session', async (req, res) => {
   });
 });
 
+// Debug route to test session without authentication
+app.get('/admin/test-session', (req, res) => {
+  console.log('=== /admin/test-session route hit ===');
+  console.log('Session ID:', req.sessionID);
+  console.log('Session data:', req.session);
+  res.json({
+    message: 'Session test route hit',
+    sessionId: req.sessionID,
+    hasSession: !!req.session,
+    hasAdminId: !!(req.session && req.session.adminId),
+    hasIsAuthenticated: !!(req.session && req.session.isAuthenticated)
+  });
+});
+
 // Admin: Manage Businesses
 app.get('/admin/businesses', requireAdmin, async (req, res) => {
+  console.log('=== /admin/businesses route hit ===');
   try {
     const businesses = await AdminService.getAllBusinessesWithOwners();
     res.render('admin/businesses', { admin: req.admin, businesses });
@@ -274,6 +289,7 @@ app.post('/admin/businesses/:businessId/delete', requireAdmin, async (req, res) 
 
 // Admin: Manage Users
 app.get('/admin/users', requireAdmin, async (req, res) => {
+  console.log('=== /admin/users route hit ===');
   try {
     const users = await AdminService.getAllUsers();
     res.render('admin/users', { admin: req.admin, users });
@@ -339,6 +355,7 @@ app.post('/admin/users/:userId/delete', requireAdmin, async (req, res) => {
 
 // Admin: Manage Admins
 app.get('/admin/admins', requireAdmin, async (req, res) => {
+  console.log('=== /admin/admins route hit ===');
   try {
     const admins = await AdminService.getAllAdmins();
     res.render('admin/admins', { admin: req.admin, admins });
