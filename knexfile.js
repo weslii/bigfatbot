@@ -36,9 +36,22 @@ const parseDbUrl = (url) => {
 const getConnection = () => {
   console.log('🔍 Getting database connection...');
   
-  // Use DATABASE_URL directly if available (Railway recommended approach)
+  // For Railway, always use the external hostname
+  if (process.env.NODE_ENV === 'production') {
+    console.log('📡 Using Railway external hostname (production)');
+    return {
+      host: 'caboose.proxy.rlwy.net',
+      port: 50551,
+      database: 'railway',
+      user: 'postgres',
+      password: 'ehLqJYUypSJDpRhJBTMQbnBKJVlMeJYm',
+      ssl: { rejectUnauthorized: false }
+    };
+  }
+  
+  // Use DATABASE_URL directly if available (for other environments)
   if (process.env.DATABASE_URL) {
-    console.log('📡 Using DATABASE_URL directly (Railway recommended)');
+    console.log('📡 Using DATABASE_URL directly');
     return process.env.DATABASE_URL;
   }
   
@@ -105,10 +118,7 @@ module.exports = {
 
   production: {
     client: 'postgresql',
-    connection: {
-      ...getConnection(),
-      ssl: { rejectUnauthorized: false }
-    },
+    connection: getConnection(),
     pool: {
       min: 2,
       max: 10,
