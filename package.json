@@ -4,7 +4,7 @@
   "description": "WhatsApp Bot for Business",
   "main": "src/index.js",
   "scripts": {
-    "start": "node --max-old-space-size=512 src/index.js",
+    "start": "npm run wait-for-db && npm run migrate && node --max-old-space-size=512 src/index.js",
     "start:web": "node --max-old-space-size=512 src/server.js",
     "dev": "concurrently \"nodemon src/index.js\" \"nodemon src/server.js\"",
     "dev:bot": "nodemon src/index.js",
@@ -13,7 +13,6 @@
     "migrate:rollback": "knex migrate:rollback",
     "migrate:make": "knex migrate:make",
     "build": "npm install",
-    "postbuild": "echo 'Skipping migrations during build'",
     "wait-for-db": "node scripts/wait-for-db.js",
     "start:prod": "npm run wait-for-db && npm run migrate && npm run start:web"
   },
