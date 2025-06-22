@@ -289,11 +289,17 @@ async function startServer() {
       try {
         const { userId, businessName } = req.body;
         const result = await RegistrationService.createBusiness(userId, businessName);
+        
+        // Check if we have a short code or need to use the business ID
+        const setupCommand = result.setupIdentifier.includes('-') 
+          ? `/setup ${result.setupIdentifier}` 
+          : `/setup ${result.businessId}`;
+        
         res.render('group-setup', { 
           userId,
           businessName,
           businessId: result.businessId,
-          setupCommand: `/setup ${result.setupIdentifier}`
+          setupCommand
         });
       } catch (error) {
         logger.error('Business setup error:', error);
