@@ -44,4 +44,6 @@ const database = {
   }
 };
 
+// Export both the database object and the knex instance directly
 module.exports = database;
+module.exports.db = db;
