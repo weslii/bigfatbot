@@ -429,9 +429,17 @@ class WhatsAppService {
       }
 
       const setupIdentifier = parts[1];
+      let business = null;
 
-      // Find business by setup identifier
-      const business = await ShortCodeGenerator.findBusinessBySetupIdentifier(setupIdentifier);
+      // First try to find by setup identifier (new format)
+      business = await ShortCodeGenerator.findBusinessBySetupIdentifier(setupIdentifier);
+
+      // If not found, try to find by business ID (old format)
+      if (!business) {
+        business = await database.query('groups')
+          .where('business_id', setupIdentifier)
+          .first();
+      }
 
       if (!business) {
         await this.client.sendMessage(chat.id._serialized, '❌ Business not found. Please check your setup code.\n\nMake sure you\'re using the correct format: /setup businessname-CODE');
@@ -478,17 +486,22 @@ class WhatsAppService {
       }
 
       // Register the group
-      await database.query('groups')
-        .insert({
-          user_id: business.user_id,
-          business_id: business.business_id,
-          business_name: business.business_name,
-          group_name: chat.name,
-          group_id: chat.id._serialized,
-          group_type: groupType,
-          short_code: business.short_code,
-          setup_identifier: business.setup_identifier
-        });
+      const insertData = {
+        user_id: business.user_id,
+        business_id: business.business_id,
+        business_name: business.business_name,
+        group_name: chat.name,
+        group_id: chat.id._serialized,
+        group_type: groupType
+      };
+
+      // Add short code data if available
+      if (business.short_code && business.setup_identifier) {
+        insertData.short_code = business.short_code;
+        insertData.setup_identifier = business.setup_identifier;
+      }
+
+      await database.query('groups').insert(insertData);
 
       // Send confirmation
       await this.client.sendMessage(chat.id._serialized, 
