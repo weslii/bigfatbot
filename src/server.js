@@ -288,12 +288,12 @@ async function startServer() {
     app.post('/setup-business', async (req, res) => {
       try {
         const { userId, businessName } = req.body;
-        const businessId = await RegistrationService.createBusiness(userId, businessName);
+        const result = await RegistrationService.createBusiness(userId, businessName);
         res.render('group-setup', { 
           userId,
           businessName,
-          businessId,
-          setupCommand: `/setup ${businessId}`
+          businessId: result.businessId,
+          setupCommand: `/setup ${result.setupIdentifier}`
         });
       } catch (error) {
         logger.error('Business setup error:', error);
@@ -332,7 +332,7 @@ async function startServer() {
     app.post('/add-business', async (req, res) => {
       try {
         const { userId, businessName } = req.body;
-        const businessId = await RegistrationService.addBusinessToUser(userId, businessName);
+        const result = await RegistrationService.addBusinessToUser(userId, businessName);
         res.redirect(`/dashboard?userId=${userId}`);
       } catch (error) {
         logger.error('Add business error:', error);
@@ -1443,7 +1443,7 @@ async function startServer() {
 
         // Get business details
         const business = await db.query('groups')
-          .select('business_id', 'business_name')
+          .select('business_id', 'business_name', 'setup_identifier')
           .where('business_id', businessId)
           .where('user_id', userId)
           .first();
