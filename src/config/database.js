@@ -16,34 +16,5 @@ if (process.env.DATABASE_URL) {
 // Create the database connection
 const db = knex(knexConfig[environment]);
 
-// Database module with connection management
-const database = {
-  // Get the Knex instance
-  query: db,
-  
-  // Connect to the database
-  async connect() {
-    try {
-      await db.raw('SELECT 1');
-      logger.info('Database connection established successfully');
-    } catch (error) {
-      logger.error('Database connection failed:', error);
-      throw error;
-    }
-  },
-  
-  // Close the database connection
-  async close() {
-    try {
-      await db.destroy();
-      logger.info('Database connection closed successfully');
-    } catch (error) {
-      logger.error('Error closing database connection:', error);
-      throw error;
-    }
-  }
-};
-
-// Export both the database object and the knex instance directly
-module.exports = database;
-module.exports.db = db;
+// Export the knex instance directly
+module.exports = db;
