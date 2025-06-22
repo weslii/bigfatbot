@@ -131,6 +131,71 @@ class RegistrationService {
       throw error;
     }
   }
+
+  static async createBusiness(userId, businessName) {
+    try {
+      // Generate a unique business ID
+      const businessId = uuidv4();
+
+      // Create a default group entry for the business
+      const [group] = await database.query('groups')
+        .insert({
+          user_id: userId,
+          business_id: businessId,
+          business_name: businessName,
+          group_name: `${businessName} - Main Group`,
+          group_id: `default_${businessId}`,
+          group_type: 'main'
+        })
+        .returning('*');
+
+      logger.info('Business created successfully', { businessId, userId });
+      return businessId;
+    } catch (error) {
+      logger.error('Error creating business:', error);
+      throw error;
+    }
+  }
+
+  static async addBusinessToUser(userId, businessName) {
+    try {
+      // Generate a unique business ID
+      const businessId = uuidv4();
+
+      // Create a default group entry for the business
+      const [group] = await database.query('groups')
+        .insert({
+          user_id: userId,
+          business_id: businessId,
+          business_name: businessName,
+          group_name: `${businessName} - Main Group`,
+          group_id: `default_${businessId}`,
+          group_type: 'main'
+        })
+        .returning('*');
+
+      logger.info('Business added to user successfully', { businessId, userId });
+      return businessId;
+    } catch (error) {
+      logger.error('Error adding business to user:', error);
+      throw error;
+    }
+  }
+
+  static async getUserBusinesses(userId) {
+    try {
+      const businesses = await database.query('groups')
+        .select('business_id', 'business_name')
+        .where('user_id', userId)
+        .groupBy('business_id', 'business_name')
+        .orderBy('business_name');
+
+      return businesses;
+    } catch (error) {
+      logger.error('Error getting user businesses:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = RegistrationService; 
