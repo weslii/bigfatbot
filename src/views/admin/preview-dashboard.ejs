@@ -341,6 +341,12 @@
                             <a href="/admin/settings" class="quick-action-btn">
                                 <i class="fas fa-cog"></i> System Settings
                             </a>
+                            <a href="/admin/users/add" class="quick-action-btn">
+                                <i class="fas fa-user-plus"></i> Add User
+                            </a>
+                            <a href="/admin/admins/add" class="quick-action-btn">
+                                <i class="fas fa-user-shield"></i> Add Admin
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -387,5 +393,18 @@
         </div>
     </main>
     <script src="/js/admin-dashboard.js"></script>
+    <script>
+    // Tab switching logic for preview
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            tabBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            tabContents.forEach(tab => tab.style.display = 'none');
+            document.getElementById(btn.dataset.tab + '-tab').style.display = '';
+        });
+    });
+    </script>
 </body>
 </html> 
