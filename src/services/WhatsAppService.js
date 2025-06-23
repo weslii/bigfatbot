@@ -164,10 +164,47 @@ class WhatsAppService {
       logger.info('Reinitializing WhatsApp client with saved authentication...');
       await this.client.initialize();
       
+      // Check authentication status after restart
+      const authStatus = await this.checkAuthenticationStatus();
+      
       logger.info('WhatsApp service restarted successfully');
+      return authStatus;
     } catch (error) {
       logger.error('Failed to restart WhatsApp service:', error);
       throw error;
+    }
+  }
+
+  async checkAuthenticationStatus() {
+    try {
+      // Check if client is authenticated
+      if (this.client.info && this.client.info.wid) {
+        this.isAuthenticated = true;
+        this.latestQrDataUrl = null;
+        return {
+          success: true,
+          authenticated: true,
+          message: 'WhatsApp bot restarted successfully with existing authentication.',
+          phoneNumber: this.client.info.wid.user
+        };
+      } else {
+        this.isAuthenticated = false;
+        return {
+          success: true,
+          authenticated: false,
+          message: 'WhatsApp bot restarted but requires authentication. Please use the QR code to authenticate.',
+          needsQrCode: true
+        };
+      }
+    } catch (error) {
+      logger.error('Error checking authentication status:', error);
+      this.isAuthenticated = false;
+      return {
+        success: false,
+        authenticated: false,
+        message: 'Failed to check authentication status. Please try again.',
+        needsQrCode: true
+      };
     }
   }
 

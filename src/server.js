@@ -1716,14 +1716,23 @@ async function startServer() {
         // Import WhatsAppService
         const whatsappService = WhatsAppService.getInstance();
         // Call the restart method
-        await whatsappService.restart();
+        const authStatus = await whatsappService.restart();
+        
         res.json({ 
-          success: true, 
-          message: 'WhatsApp bot restarted successfully. Authentication will be reused if available.' 
+          success: authStatus.success, 
+          authenticated: authStatus.authenticated,
+          message: authStatus.message,
+          needsQrCode: authStatus.needsQrCode || false,
+          phoneNumber: authStatus.phoneNumber
         });
       } catch (error) {
         logger.error('Restart WhatsApp bot error:', error);
-        res.status(500).json({ error: 'Failed to restart WhatsApp bot' });
+        res.status(500).json({ 
+          success: false,
+          authenticated: false,
+          message: 'Failed to restart WhatsApp bot',
+          needsQrCode: true
+        });
       }
     });
 

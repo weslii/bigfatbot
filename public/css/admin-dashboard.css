@@ -1103,4 +1103,54 @@ body {
   .qr-modal-body {
     padding: 1rem;
   }
+}
+
+/* Notification Styles */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 15px 20px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 400px;
+  animation: slideIn 0.3s ease-out;
+}
+
+.notification-success {
+  background: var(--success);
+  color: white;
+}
+
+.notification-error {
+  background: var(--danger);
+  color: white;
+}
+
+.notification-warning {
+  background: var(--warning);
+  color: white;
+}
+
+.notification-info {
+  background: var(--secondary-color);
+  color: white;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 1.2rem;
+  cursor: pointer;
+  margin-left: auto;
+  opacity: 0.8;
+}
+
+.notification-close:hover {
+  opacity: 1;
 } 

@@ -696,15 +696,29 @@ async function handleRestartClick(event) {
     const result = await response.json();
     
     if (result.success) {
-      // Show success message
-      showNotification('WhatsApp bot restarted successfully! Authentication will be reused if available.', 'success');
-      
-      // Refresh bot status after a short delay
-      setTimeout(() => {
-        refreshBotStatus();
-      }, 3000);
+      if (result.authenticated) {
+        // Bot is authenticated
+        showNotification(result.message, 'success');
+        
+        // Refresh bot status after a short delay
+        setTimeout(() => {
+          refreshBotStatus();
+        }, 3000);
+      } else {
+        // Bot needs authentication
+        showNotification(result.message + ' Use the "Show QR" button to authenticate.', 'warning');
+        
+        // Highlight the QR button to draw attention
+        const qrButton = document.querySelector('.secondary-btn:has(i.fa-qrcode)');
+        if (qrButton) {
+          qrButton.style.animation = 'pulse 2s infinite';
+          setTimeout(() => {
+            qrButton.style.animation = '';
+          }, 4000);
+        }
+      }
     } else {
-      showNotification('Error: ' + (result.error || 'Failed to restart WhatsApp bot'), 'error');
+      showNotification('Error: ' + (result.message || 'Failed to restart WhatsApp bot'), 'error');
     }
   } catch (error) {
     console.error('Restart error:', error);
