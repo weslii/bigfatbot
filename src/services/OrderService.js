@@ -6,7 +6,22 @@ const { v4: uuidv4 } = require('uuid');
 class OrderService {
   async createOrder(businessId, orderData) {
     try {
-      const orderId = uuidv4();
+      // Generate simple order ID: YYYYMMDD-XXX format
+      const today = new Date();
+      const dateStr = today.getFullYear().toString() + 
+                     (today.getMonth() + 1).toString().padStart(2, '0') + 
+                     today.getDate().toString().padStart(2, '0');
+      
+      // Get today's order count for this business to generate serial number
+      const todayOrders = await database.query('orders')
+        .where('business_id', businessId)
+        .where('created_at', '>=', database.query.raw('DATE(NOW())'))
+        .count('* as count')
+        .first();
+      
+      const serialNumber = (parseInt(todayOrders.count) + 1).toString().padStart(3, '0');
+      const orderId = `${dateStr}-${serialNumber}`;
+      
       const [order] = await database.query('orders')
         .insert({
           id: orderId,

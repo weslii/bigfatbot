@@ -17,8 +17,11 @@ class MessageService {
       }
       
       if (order.notes) {
-        message += `\n*Notes:* ${order.notes}`;
+        message += `\n*Notes:* ${order.notes}\n`;
       }
+      
+      message += `\n💡 *To mark as delivered:* Reply "done" to this message or type "done #${order.order_id}"`;
+      message += `\n💡 *To cancel order:* Reply "cancel" to this message or type "cancel #${order.order_id}"`;
       
       return message;
     } catch (error) {
@@ -41,8 +44,10 @@ class MessageService {
       }
       
       if (order.notes) {
-        message += `\n*Notes:* ${order.notes}`;
+        message += `\n*Notes:* ${order.notes}\n`;
       }
+      
+      message += `\n💡 *To cancel order:* Reply "cancel" to this message or type "cancel #${order.order_id}"`;
       
       return message;
     } catch (error) {
@@ -90,7 +95,7 @@ class MessageService {
       message += `*Total Orders:* ${report.total_orders}\n`;
       message += `*Delivered:* ${report.delivered_orders}\n`;
       message += `*Cancelled:* ${report.cancelled_orders}\n`;
-      message += `*Scheduled Deliveries:* ${report.scheduled_deliveries}\n`;
+      message += `*Pending Deliveries:* ${report.scheduled_deliveries}\n`;
       return message;
     } catch (error) {
       logger.error('Error formatting daily report:', error);
@@ -104,7 +109,7 @@ class MessageService {
       message += `*Total Orders:* ${report.total_orders}\n`;
       message += `*Delivered:* ${report.delivered_orders}\n`;
       message += `*Cancelled:* ${report.cancelled_orders}\n`;
-      message += `*Scheduled Deliveries:* ${report.scheduled_deliveries}\n`;
+      message += `*Pending Deliveries:* ${report.scheduled_deliveries}\n`;
       return message;
     } catch (error) {
       logger.error('Error formatting weekly report:', error);
@@ -118,7 +123,7 @@ class MessageService {
       message += `*Total Orders:* ${report.total_orders}\n`;
       message += `*Delivered:* ${report.delivered_orders}\n`;
       message += `*Cancelled:* ${report.cancelled_orders}\n`;
-      message += `*Scheduled Deliveries:* ${report.scheduled_deliveries}\n`;
+      message += `*Pending Deliveries:* ${report.scheduled_deliveries}\n`;
       return message;
     } catch (error) {
       logger.error('Error formatting monthly report:', error);
@@ -129,9 +134,11 @@ class MessageService {
   static formatHelpMessage() {
     return `*Available Commands:*\n\n` +
            `*Order Management:*\n` +
-           `• /orders - View pending orders\n` +
-           `• /deliver <order_id> - Mark order as delivered\n` +
-           `• /cancel <order_id> - Cancel an order\n\n` +
+           `• /pending - View pending orders\n` +
+           `• done #<order_id> - Mark order as delivered\n` +
+           `• cancel #<order_id> - Cancel an order\n` +
+           `• Reply "done" to an order message - Mark as delivered\n` +
+           `• Reply "cancel" to an order message - Cancel order\n\n` +
            `*Reports:*\n` +
            `• /daily - View today's report\n` +
            `• /weekly - View weekly report\n` +

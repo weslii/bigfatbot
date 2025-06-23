@@ -174,6 +174,46 @@ class WhatsAppService {
       // Skip if message is from bot itself
       if (contact.isMe) return;
 
+      const messageBody = message.body.toLowerCase().trim();
+      const senderName = contact.name || contact.number;
+
+      // Handle commands in sales group
+      if (messageBody.startsWith('/')) {
+        // Handle report commands
+        if (messageBody === '/daily') {
+          await this.sendDailyReport(groupInfo);
+          return;
+        }
+        else if (messageBody === '/pending') {
+          await this.sendPendingOrders(groupInfo);
+          return;
+        }
+        else if (messageBody === '/weekly') {
+          await this.sendWeeklyReport(groupInfo);
+          return;
+        }
+        else if (messageBody === '/monthly') {
+          await this.sendMonthlyReport(groupInfo);
+          return;
+        }
+        else if (messageBody === '/help') {
+          await this.sendHelpMessage(groupInfo);
+          return;
+        }
+        // Handle order cancellation in sales group
+        else if (messageBody.startsWith('cancel #')) {
+          const orderId = messageBody.replace('cancel #', '').trim();
+          await this.cancelOrder(orderId, senderName, groupInfo);
+          return;
+        }
+        // Handle reply-based cancellation in sales group
+        else if (message.hasQuotedMsg && messageBody === 'cancel') {
+          await this.handleReplyCancellation(message, senderName, groupInfo);
+          return;
+        }
+      }
+
+      // Handle regular order parsing
       const orderData = OrderParser.parseOrder(message.body, contact.name || contact.number);
       
       if (orderData) {
@@ -872,6 +912,27 @@ For help, type /help in the delivery group.
         name: 'WhatsApp Bot',
         status: 'error'
       };
+    }
+  }
+
+  extractOrderIdFromMessage(messageText) {
+    try {
+      // Look for order ID pattern: YYYYMMDD-XXX
+      const orderIdMatch = messageText.match(/(\d{8}-\d{3})/);
+      if (orderIdMatch) {
+        return orderIdMatch[1];
+      }
+      
+      // Also look for "Order ID:" pattern
+      const orderIdPattern = messageText.match(/Order ID:\s*([^\n]+)/);
+      if (orderIdPattern) {
+        return orderIdPattern[1].trim();
+      }
+      
+      return null;
+    } catch (error) {
+      logger.error('Error extracting order ID from message:', error);
+      return null;
     }
   }
 }
