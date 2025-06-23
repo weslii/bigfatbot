@@ -1666,6 +1666,35 @@ async function startServer() {
       logger.info('Memory monitoring started');
     }
 
+    // Paginated API for businesses
+    app.get('/admin/api/businesses', requireAdmin, async (req, res) => {
+      try {
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = parseInt(req.query.pageSize) || 10;
+        const offset = (page - 1) * pageSize;
+        const { businesses, total } = await AdminService.getAllBusinessesWithOwners(pageSize, offset);
+        res.json({ businesses, total });
+      } catch (error) {
+        logger.error('API businesses error:', error);
+        res.status(500).json({ error: 'Failed to load businesses.' });
+      }
+    });
+
+    // Paginated API for orders
+    app.get('/admin/api/orders', requireAdmin, async (req, res) => {
+      try {
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = parseInt(req.query.pageSize) || 10;
+        const offset = (page - 1) * pageSize;
+        const { status, business, search } = req.query;
+        const { orders, total } = await AdminService.getAllOrdersWithDetails({ status, business, search, limit: pageSize, offset });
+        res.json({ orders, total });
+      } catch (error) {
+        logger.error('API orders error:', error);
+        res.status(500).json({ error: 'Failed to load orders.' });
+      }
+    });
+
     // Start the server
     app.listen(port, () => {
       console.log(`Server is running on port ${port}`);
