@@ -35,4 +35,46 @@ window.addEventListener('DOMContentLoaded', function() {
       dropdown.classList.remove('active');
     });
   });
+
+  // Theme toggle logic
+  const themeToggle = document.getElementById('themeToggle');
+  const body = document.body;
+  if (themeToggle) {
+    // Set initial theme from localStorage
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      body.classList.add('dark-theme');
+      themeToggle.querySelector('i').className = 'fas fa-sun';
+    } else {
+      body.classList.remove('dark-theme');
+      themeToggle.querySelector('i').className = 'fas fa-moon';
+    }
+    themeToggle.addEventListener('click', function() {
+      body.classList.toggle('dark-theme');
+      const isDark = body.classList.contains('dark-theme');
+      themeToggle.querySelector('i').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+  }
+
+  // Notification button logic
+  const notificationBtn = document.getElementById('notificationBtn');
+  if (notificationBtn) {
+    notificationBtn.addEventListener('click', function() {
+      alert('Notifications feature coming soon!');
+    });
+  }
+
+  // Profile dropdown logic
+  const profileDropdown = document.getElementById('profileDropdown');
+  const profileMenu = document.getElementById('profileMenu');
+  if (profileDropdown && profileMenu) {
+    profileDropdown.addEventListener('click', function(e) {
+      e.stopPropagation();
+      profileMenu.parentElement.classList.toggle('active');
+    });
+    document.addEventListener('click', function() {
+      profileMenu.parentElement.classList.remove('active');
+    });
+  }
 }); 
