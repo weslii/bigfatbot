@@ -385,24 +385,5 @@
         </div>
     </main>
     <script src="/js/admin-dashboard.js"></script>
-    <script>
-    // Tab switching logic for preview (fix: always show tab content)
-    document.addEventListener('DOMContentLoaded', function() {
-        const tabBtns = document.querySelectorAll('.tab-btn');
-        const tabContents = document.querySelectorAll('.tab-content');
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                tabBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                tabContents.forEach(tab => tab.style.display = 'none');
-                const tabId = btn.dataset.tab + '-tab';
-                const tabToShow = document.getElementById(tabId);
-                if (tabToShow) tabToShow.style.display = 'block';
-            });
-        });
-        // Show the first tab by default
-        if (tabContents.length) tabContents[0].style.display = 'block';
-    });
-    </script>
 </body>
 </html> 
