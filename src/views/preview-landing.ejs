@@ -1,87 +1,1066 @@
-<%- include('layout', { title: 'WhatsApp Delivery Bot - Preview Landing' }) %>
-<link rel="stylesheet" href="/css/theme.css">
-<div class="container py-5" style="min-height: 90vh;">
-  <div class="text-center mb-5 fade-in" style="animation-delay:0.1s;">
-    <span class="badge bg-success mb-3" style="font-size: 1rem;">Streamline Your Delivery Business</span>
-    <h1 class="fw-bold" style="color: var(--secondary); font-size: 2.8rem;">WhatsApp Delivery Bot</h1>
-    <p class="lead text-muted" style="max-width: 600px; margin: 0 auto;">Streamline your delivery business with our intelligent WhatsApp bot. Manage orders, track deliveries, and keep your customers informed with automated updates.</p>
-    <div class="d-flex justify-content-center gap-3 mt-4 flex-wrap">
-      <a href="/register" class="btn btn-gradient btn-lg mb-2">Get Started Free</a>
-      <a href="#" class="btn btn-outline-light btn-lg mb-2" style="border-color: var(--secondary); color: var(--secondary);">Watch Demo</a>
-    </div>
-  </div>
-  <div class="row justify-content-center mb-5 fade-in" style="animation-delay:0.2s;">
-    <div class="col-md-5 mb-3">
-      <div class="glass-card h-100 text-center p-4">
-        <div class="mb-3">
-          <i class="bi bi-briefcase-fill" style="font-size: 2.5rem; color: var(--primary);"></i>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Delivery Bot - Streamline Your Delivery Business</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/theme.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #10b981;
+            --secondary: #3b82f6;
+            --accent: #8b5cf6;
+            --background: #f8fafc;
+            --foreground: #1e293b;
+            --muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        [data-theme="dark"] {
+            --background: #020617;
+            --foreground: #f8fafc;
+            --muted: #94a3b8;
+            --border: #1e293b;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 50%, #ecfdf5 100%);
+            color: var(--foreground);
+            margin: 0;
+            padding: 0;
+        }
+
+        [data-theme="dark"] body {
+            background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #064e3b 100%);
+        }
+
+        /* Header */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+        }
+
+        [data-theme="dark"] .header {
+            background: rgba(2, 6, 23, 0.8);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            height: 4rem;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            display: flex;
+            height: 2.5rem;
+            width: 2.5rem;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.75rem;
+            background: linear-gradient(135deg, #10b981, #14b8a6);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .logo-text {
+            font-size: 1.125rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #10b981, #14b8a6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav {
+            display: none;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .nav {
+                display: flex;
+            }
+        }
+
+        .nav-link {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--muted);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--foreground);
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            background: var(--border);
+            color: var(--foreground);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1rem;
+            border-radius: 0.75rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981, #14b8a6);
+            color: white;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #059669, #0d9488);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--foreground);
+            border: 1px solid var(--border);
+        }
+
+        .btn-outline:hover {
+            background: var(--border);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--muted);
+        }
+
+        .btn-ghost:hover {
+            color: var(--foreground);
+            background: var(--border);
+        }
+
+        .btn-lg {
+            padding: 0.75rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            padding: 5rem 0;
+            text-align: center;
+        }
+
+        @media (min-width: 1024px) {
+            .hero {
+                padding: 8rem 0;
+            }
+        }
+
+        .hero-content {
+            max-width: 64rem;
+            margin: 0 auto;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+        }
+
+        [data-theme="dark"] .badge {
+            background: linear-gradient(135deg, #064e3b, #065f46);
+            color: #a7f3d0;
+            border-color: #047857;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #1e293b, #334155, #065f46);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.1;
+        }
+
+        [data-theme="dark"] .hero h1 {
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0, #a7f3d0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        @media (min-width: 1024px) {
+            .hero h1 {
+                font-size: 4rem;
+            }
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--muted);
+            margin-bottom: 2rem;
+            max-width: 42rem;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+
+        .hero-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            justify-content: center;
+            align-items: center;
+        }
+
+        @media (min-width: 640px) {
+            .hero-buttons {
+                flex-direction: row;
+            }
+        }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, #10b981, #14b8a6);
+            color: white;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-gradient:hover {
+            background: linear-gradient(135deg, #059669, #0d9488);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-outline-light {
+            background: transparent;
+            color: var(--foreground);
+            border: 1px solid var(--border);
+        }
+
+        .btn-outline-light:hover {
+            background: var(--border);
+        }
+
+        /* Background decoration */
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 25%;
+            left: 25%;
+            width: 18rem;
+            height: 18rem;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 50%;
+            filter: blur(3rem);
+            z-index: -1;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: 25%;
+            right: 25%;
+            width: 24rem;
+            height: 24rem;
+            background: rgba(20, 184, 166, 0.1);
+            border-radius: 50%;
+            filter: blur(3rem);
+            z-index: -1;
+        }
+
+        /* Action Cards Section */
+        .action-cards {
+            padding: 4rem 0;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-header h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #1e293b, #475569);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        [data-theme="dark"] .section-header h2 {
+            background: linear-gradient(135deg, #f8fafc, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-header p {
+            font-size: 1.125rem;
+            color: var(--muted);
+            max-width: 42rem;
+            margin: 0 auto;
+        }
+
+        .cards-grid {
+            display: grid;
+            gap: 2rem;
+            max-width: 64rem;
+            margin: 0 auto;
+        }
+
+        @media (min-width: 768px) {
+            .cards-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .card {
+            border: none;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(236, 253, 245, 0.5));
+            backdrop-filter: blur(12px);
+            transition: all 0.5s ease;
+            overflow: hidden;
+        }
+
+        [data-theme="dark"] .card {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(6, 78, 59, 0.2));
+        }
+
+        .card:hover {
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            transform: translateY(-4px);
+        }
+
+        .card-header {
+            text-align: center;
+            padding: 2rem 2rem 1rem;
+        }
+
+        .card-icon {
+            width: 4rem;
+            height: 4rem;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover .card-icon {
+            transform: scale(1.1);
+        }
+
+        .card-icon.primary {
+            background: linear-gradient(135deg, #10b981, #14b8a6);
+        }
+
+        .card-icon.secondary {
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+        }
+
+        .card-icon i {
+            font-size: 2rem;
+            color: white;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-title.primary {
+            background: linear-gradient(135deg, #10b981, #14b8a6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .card-title.secondary {
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .card-description {
+            color: var(--muted);
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .card-content {
+            padding: 0 2rem 2rem;
+            text-align: center;
+        }
+
+        .benefits-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .benefit-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.875rem;
+            color: var(--muted);
+        }
+
+        .benefit-item i {
+            color: #10b981;
+            flex-shrink: 0;
+        }
+
+        .benefit-item.secondary i {
+            color: #3b82f6;
+        }
+
+        .card-btn {
+            width: 100%;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-btn:hover {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 5rem 0;
+            background: linear-gradient(135deg, rgba(248, 250, 252, 0.3), rgba(248, 250, 252, 0.1));
+        }
+
+        [data-theme="dark"] .features {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.3), rgba(15, 23, 42, 0.1));
+        }
+
+        .features-grid {
+            display: grid;
+            gap: 2rem;
+            margin-top: 4rem;
+        }
+
+        @media (min-width: 768px) {
+            .features-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .feature-card {
+            border: none;
+            border-radius: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        [data-theme="dark"] .feature-card {
+            background: rgba(15, 23, 42, 0.7);
+        }
+
+        .feature-card:hover {
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .feature-icon {
+            width: 3.5rem;
+            height: 3.5rem;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: scale(1.1);
+        }
+
+        .feature-icon.primary {
+            background: linear-gradient(135deg, #10b981, #14b8a6);
+        }
+
+        .feature-icon.secondary {
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+        }
+
+        .feature-icon.accent {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+        }
+
+        .feature-icon i {
+            font-size: 1.75rem;
+            color: white;
+        }
+
+        .feature-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-description {
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        /* Stats Section */
+        .stats {
+            padding: 4rem 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            gap: 2rem;
+            text-align: center;
+        }
+
+        @media (min-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .stat-number.primary {
+            background: linear-gradient(135deg, #10b981, #14b8a6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-number.secondary {
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-number.accent {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-number.warning {
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--muted);
+        }
+
+        /* CTA Section */
+        .cta {
+            padding: 5rem 0;
+            background: linear-gradient(135deg, #10b981, #14b8a6);
+            text-align: center;
+        }
+
+        .cta h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        @media (min-width: 1024px) {
+            .cta h2 {
+                font-size: 2.5rem;
+            }
+        }
+
+        .cta p {
+            font-size: 1.25rem;
+            color: #a7f3d0;
+            margin-bottom: 2rem;
+            max-width: 42rem;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            justify-content: center;
+            align-items: center;
+        }
+
+        @media (min-width: 640px) {
+            .cta-buttons {
+                flex-direction: row;
+            }
+        }
+
+        .btn-white {
+            background: white;
+            color: #10b981;
+        }
+
+        .btn-white:hover {
+            background: #f0fdf4;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline-white {
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-outline-white:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Footer */
+        .footer {
+            padding: 3rem 0;
+            border-top: 1px solid var(--border);
+            background: rgba(248, 250, 252, 0.3);
+        }
+
+        [data-theme="dark"] .footer {
+            background: rgba(15, 23, 42, 0.3);
+        }
+
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .footer-content {
+                flex-direction: row;
+            }
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .footer-logo-icon {
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.5rem;
+            background: linear-gradient(135deg, #10b981, #14b8a6);
+        }
+
+        .footer-logo-text {
+            font-weight: 600;
+            background: linear-gradient(135deg, #10b981, #14b8a6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .footer-links {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--muted);
+        }
+
+        .footer-link {
+            color: var(--muted);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-link:hover {
+            color: var(--foreground);
+        }
+
+        .footer-bottom {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 0.875rem;
+            color: var(--muted);
+        }
+
+        /* Animations */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animated {
+            animation-delay: 0.1s;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <div class="logo-text">WhatsApp Delivery Bot</div>
+            </div>
+
+            <nav class="nav">
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#pricing" class="nav-link">Pricing</a>
+                <a href="#contact" class="nav-link">Contact</a>
+                <button class="theme-toggle" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <a href="/login" class="btn btn-outline">Business Login</a>
+                <a href="/admin/dashboard" class="btn btn-ghost">Admin</a>
+            </nav>
         </div>
-        <h4 class="fw-bold">For Businesses</h4>
-        <p class="text-muted">Register your business and start managing deliveries efficiently with our powerful automation tools.</p>
-        <ul class="list-unstyled text-start mx-auto" style="max-width: 250px;">
-          <li>Seamless WhatsApp integration</li>
-          <li>Real-time order tracking</li>
-          <li>Automated customer notifications</li>
-        </ul>
-        <a href="/register" class="btn btn-success mt-3">Register Business</a>
-      </div>
-    </div>
-    <div class="col-md-5 mb-3">
-      <div class="glass-card h-100 text-center p-4">
-        <div class="mb-3">
-          <i class="bi bi-shield-lock-fill" style="font-size: 2.5rem; color: var(--secondary);"></i>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="badge fade-in">
+                    <i class="fas fa-bolt"></i>
+                    Streamline Your Delivery Business
+                </div>
+
+                <h1 class="fade-in">WhatsApp Delivery Bot</h1>
+
+                <p class="fade-in">
+                    Streamline your delivery business with our intelligent WhatsApp bot. Manage orders, track deliveries, and
+                    keep your customers informed with automated updates.
+                </p>
+
+                <div class="hero-buttons fade-in">
+                    <a href="/register" class="btn btn-gradient btn-lg">
+                        Start Your Free Trial
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                    <a href="#" class="btn btn-outline-light btn-lg">
+                        Watch Demo
+                    </a>
+                </div>
+            </div>
         </div>
-        <h4 class="fw-bold">For Administrators</h4>
-        <p class="text-muted">Access the comprehensive admin dashboard to manage all businesses and monitor platform performance.</p>
-        <ul class="list-unstyled text-start mx-auto" style="max-width: 250px;">
-          <li>Multi-business management</li>
-          <li>Advanced analytics dashboard</li>
-          <li>24/7 customer support</li>
-        </ul>
-        <a href="/admin/dashboard" class="btn btn-primary mt-3">Admin Dashboard</a>
-      </div>
-    </div>
-  </div>
-  <div class="text-center mb-4 fade-in" style="animation-delay:0.3s;">
-    <span class="badge bg-secondary mb-2">Everything You Need</span>
-    <h2 class="fw-bold mb-4">Powerful features designed to streamline your delivery operations and enhance customer experience.</h2>
-  </div>
-  <div class="row justify-content-center fade-in" style="animation-delay:0.4s;">
-    <div class="col-md-3 mb-3">
-      <div class="glass-card h-100 text-center p-4">
-        <div class="mb-3">
-          <i class="bi bi-list-check" style="font-size: 2rem; color: var(--primary);"></i>
+    </section>
+
+    <!-- Action Cards Section -->
+    <section class="action-cards">
+        <div class="container">
+            <div class="section-header fade-in">
+                <h2>Get Started Today</h2>
+                <p>Join hundreds of businesses already using our platform to streamline their delivery operations.</p>
+            </div>
+
+            <div class="cards-grid">
+                <!-- New Business Registration -->
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="card-icon primary">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <h3 class="card-title primary">New Business?</h3>
+                        <p class="card-description">
+                            Register your business and start managing deliveries efficiently with our powerful automation tools.
+                        </p>
+                    </div>
+                    <div class="card-content">
+                        <div class="benefits-list">
+                            <div class="benefit-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Seamless WhatsApp integration</span>
+                            </div>
+                            <div class="benefit-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Real-time order tracking</span>
+                            </div>
+                            <div class="benefit-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Automated customer notifications</span>
+                            </div>
+                        </div>
+                        <a href="/register" class="btn btn-gradient card-btn">
+                            Register Your Business
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Returning Customer Login -->
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <div class="card-icon secondary">
+                            <i class="fas fa-sign-in-alt"></i>
+                        </div>
+                        <h3 class="card-title secondary">Returning Customer?</h3>
+                        <p class="card-description">
+                            Access your business dashboard to manage orders, track deliveries, and monitor your performance.
+                        </p>
+                    </div>
+                    <div class="card-content">
+                        <div class="benefits-list">
+                            <div class="benefit-item secondary">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Multi-business management</span>
+                            </div>
+                            <div class="benefit-item secondary">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Advanced analytics dashboard</span>
+                            </div>
+                            <div class="benefit-item secondary">
+                                <i class="fas fa-check-circle"></i>
+                                <span>24/7 customer support</span>
+                            </div>
+                        </div>
+                        <a href="/login" class="btn btn-primary card-btn" style="background: linear-gradient(135deg, #3b82f6, #6366f1);">
+                            Login to Dashboard
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
-        <h5 class="fw-bold">Order Management</h5>
-        <p class="text-muted">Track and manage all your delivery orders with automated workflows.</p>
-      </div>
-    </div>
-    <div class="col-md-3 mb-3">
-      <div class="glass-card h-100 text-center p-4">
-        <div class="mb-3">
-          <i class="bi bi-bell-fill" style="font-size: 2rem; color: var(--secondary);"></i>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-header fade-in">
+                <div class="badge" style="background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1e40af; border-color: #93c5fd;">
+                    Features
+                </div>
+                <h2>Everything You Need</h2>
+                <p>Powerful features designed to streamline your delivery operations and enhance customer experience.</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card fade-in">
+                    <div class="feature-icon primary">
+                        <i class="fas fa-box"></i>
+                    </div>
+                    <h3 class="feature-title">Order Management</h3>
+                    <p class="feature-description">
+                        Track and manage all your delivery orders efficiently with real-time updates and automated workflows.
+                    </p>
+                </div>
+
+                <div class="feature-card fade-in">
+                    <div class="feature-icon secondary">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <h3 class="feature-title">Automated Updates</h3>
+                    <p class="feature-description">
+                        Keep customers informed with automated WhatsApp notifications about order status and delivery updates.
+                    </p>
+                </div>
+
+                <div class="feature-card fade-in">
+                    <div class="feature-icon accent">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h3 class="feature-title">Business Analytics</h3>
+                    <p class="feature-description">
+                        Get insights into your delivery performance with comprehensive analytics and reporting tools.
+                    </p>
+                </div>
+            </div>
         </div>
-        <h5 class="fw-bold">Automated Updates</h5>
-        <p class="text-muted">Keep customers informed with real-time WhatsApp notifications about order status and delivery updates.</p>
-      </div>
-    </div>
-    <div class="col-md-3 mb-3">
-      <div class="glass-card h-100 text-center p-4">
-        <div class="mb-3">
-          <i class="bi bi-bar-chart-fill" style="font-size: 2rem; color: var(--accent);"></i>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item fade-in">
+                    <div class="stat-number primary">500+</div>
+                    <div class="stat-label">Active Businesses</div>
+                </div>
+                <div class="stat-item fade-in">
+                    <div class="stat-number secondary">10K+</div>
+                    <div class="stat-label">Orders Processed</div>
+                </div>
+                <div class="stat-item fade-in">
+                    <div class="stat-number accent">50K+</div>
+                    <div class="stat-label">Happy Customers</div>
+                </div>
+                <div class="stat-item fade-in">
+                    <div class="stat-number warning">99.9%</div>
+                    <div class="stat-label">Uptime</div>
+                </div>
+            </div>
         </div>
-        <h5 class="fw-bold">Business Analytics</h5>
-        <p class="text-muted">Analyze your delivery performance with comprehensive analytics and reporting tools.</p>
-      </div>
-    </div>
-  </div>
-</div>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-<script>
-window.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('.fade-in').forEach((el, i) => {
-    el.style.animationDelay = (0.1 + i * 0.1) + 's';
-    el.classList.add('animated');
-  });
-});
-</script> 
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <h2 class="fade-in">Ready to Transform Your Delivery Business?</h2>
+            <p class="fade-in">
+                Join hundreds of businesses already using our WhatsApp delivery bot to streamline their operations.
+            </p>
+            <div class="cta-buttons fade-in">
+                <a href="/register" class="btn btn-white btn-lg">
+                    Start Free Trial
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="#" class="btn btn-outline-white btn-lg">
+                    Contact Sales
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <div class="footer-logo-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="footer-logo-text">WhatsApp Delivery Bot</div>
+                </div>
+                <div class="footer-links">
+                    <a href="#" class="footer-link">Privacy Policy</a>
+                    <a href="#" class="footer-link">Terms of Service</a>
+                    <a href="#" class="footer-link">Support</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                © 2025 WhatsApp Delivery Bot. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        
+        // Check for saved theme preference or default to light
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+        
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+        
+        function updateThemeIcon(theme) {
+            const icon = themeToggle.querySelector('i');
+            icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+        
+        // Fade in animations
+        window.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.fade-in').forEach((el, i) => {
+                el.style.animationDelay = (0.1 + i * 0.1) + 's';
+                el.classList.add('animated');
+            });
+        });
+    </script>
+</body>
+</html> 
