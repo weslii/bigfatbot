@@ -256,6 +256,7 @@ class AdminService {
           'g.user_id',
           'g.short_code',
           'g.setup_identifier',
+          'g.is_active',
           'u.full_name as owner_name',
           'u.email as owner_email'
         )
@@ -537,6 +538,21 @@ class AdminService {
       await database.query('admins').where('id', adminId).del();
     } catch (error) {
       logger.error('Error deleting admin:', error);
+      throw error;
+    }
+  }
+
+  static async toggleBusinessActive(businessId) {
+    try {
+      const business = await database.query('groups')
+        .where('business_id', businessId)
+        .first();
+      if (!business) throw new Error('Business not found');
+      await database.query('groups')
+        .where('business_id', businessId)
+        .update({ is_active: !business.is_active });
+    } catch (error) {
+      logger.error('Error toggling business active:', error);
       throw error;
     }
   }
