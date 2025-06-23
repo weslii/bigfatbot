@@ -143,7 +143,7 @@ class AdminService {
     }
   }
 
-  static async getAllOrdersWithDetails({ status, business, search } = {}) {
+  static async getAllOrdersWithDetails({ status, business, search, limit = 10, offset = 0 } = {}) {
     try {
       const query = database.query('orders as o')
         .select(
@@ -157,8 +157,9 @@ class AdminService {
           'g.business_id'
         )
         .leftJoin('groups as g', 'o.business_id', 'g.business_id')
-        .orderBy('o.created_at', 'desc');
-
+        .orderBy('o.created_at', 'desc')
+        .limit(limit)
+        .offset(offset);
       if (status) {
         query.where('o.status', status);
       }
@@ -171,7 +172,20 @@ class AdminService {
               .orWhere('o.id', 'ilike', `%${search}%`);
         });
       }
-      return await query;
+      const orders = await query;
+      // Get total count for pagination
+      const countQuery = database.query('orders as o')
+        .leftJoin('groups as g', 'o.business_id', 'g.business_id');
+      if (status) countQuery.where('o.status', status);
+      if (business) countQuery.where('g.business_id', business);
+      if (search) {
+        countQuery.where(function() {
+          this.where('o.customer_name', 'ilike', `%${search}%`)
+              .orWhere('o.id', 'ilike', `%${search}%`);
+        });
+      }
+      const [{ count }] = await countQuery.count('o.id as count');
+      return { orders, total: parseInt(count) };
     } catch (error) {
       logger.error('Error getting all orders with details:', error);
       throw error;
@@ -233,9 +247,9 @@ class AdminService {
     }
   }
 
-  static async getAllBusinessesWithOwners() {
+  static async getAllBusinessesWithOwners(limit = 10, offset = 0) {
     try {
-      return await database.query('groups as g')
+      const query = database.query('groups as g')
         .select(
           'g.business_id',
           'g.business_name',
@@ -246,7 +260,12 @@ class AdminService {
           'u.email as owner_email'
         )
         .leftJoin('users as u', 'g.user_id', 'u.id')
-        .orderBy('g.business_name');
+        .orderBy('g.business_name')
+        .limit(limit)
+        .offset(offset);
+      const businesses = await query;
+      const [{ count }] = await database.query('groups').countDistinct('business_id as count');
+      return { businesses, total: parseInt(count) };
     } catch (error) {
       logger.error('Error getting all businesses with owners:', error);
       throw error;
