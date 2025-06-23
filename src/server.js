@@ -241,6 +241,46 @@ app.get('/admin/test-session', (req, res) => {
   });
 });
 
+// Add user login routes
+app.get('/login', (req, res) => {
+  if (req.session.userId) {
+    return res.redirect(`/dashboard?userId=${req.session.userId}`);
+  }
+  res.render('login');
+});
+
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.render('login', { error: 'Email and password are required' });
+  }
+  try {
+    // Find user by email
+    const user = await db.query('users').where('email', email).first();
+    if (!user) {
+      return res.render('login', { error: 'Invalid email or password' });
+    }
+    // Check password (assume password is stored as hash, if not, compare plain text)
+    const bcrypt = require('bcryptjs');
+    const isValid = user.password_hash
+      ? await bcrypt.compare(password, user.password_hash)
+      : password === user.password;
+    if (!isValid) {
+      return res.render('login', { error: 'Invalid email or password' });
+    }
+    req.session.userId = user.id;
+    res.redirect(`/dashboard?userId=${user.id}`);
+  } catch (error) {
+    logger.error('User login error:', error);
+    res.render('login', { error: 'Login failed. Please try again.' });
+  }
+});
+
+// Update landing page to pass userId from session
+app.get('/', (req, res) => {
+  res.render('index', { userId: req.session.userId });
+});
+
 // Start server
 async function startServer() {
   try {
@@ -262,7 +302,7 @@ async function startServer() {
     // Define routes after session middleware is initialized
     // Public routes
     app.get('/', (req, res) => {
-      res.render('index');
+      res.render('index', { userId: req.session.userId });
     });
 
     app.get('/register', (req, res) => {
@@ -271,8 +311,8 @@ async function startServer() {
 
     app.post('/register', async (req, res) => {
       try {
-        const { name, email, phoneNumber } = req.body;
-        const user = await RegistrationService.registerUser(name, email, phoneNumber);
+        const { name, email, phoneNumber, password } = req.body;
+        const user = await RegistrationService.registerUser(name, email, phoneNumber, password);
         res.redirect(`/setup-business?userId=${user.id}`);
       } catch (error) {
         logger.error('Registration error:', error);
