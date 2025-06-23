@@ -152,11 +152,6 @@ class WhatsAppService {
         return;
       }
 
-      // Get delivery group info
-      const deliveryGroup = await database.query('delivery_groups')
-        .where('group_id', group.delivery_group_id)
-        .first();
-
       // Get group info from database
       const groupInfo = group;
       
@@ -852,6 +847,31 @@ For help, type /help in the delivery group.
     } catch (error) {
       logger.error('Error handling setup reply:', error);
       return false;
+    }
+  }
+
+  async getBotInfo() {
+    try {
+      if (!this.client.info) {
+        return {
+          number: 'Not connected',
+          name: 'Bot not ready',
+          status: 'disconnected'
+        };
+      }
+
+      return {
+        number: this.client.info.wid.user,
+        name: this.client.info.pushname || 'WhatsApp Bot',
+        status: 'connected'
+      };
+    } catch (error) {
+      logger.error('Error getting bot info:', error);
+      return {
+        number: 'Error getting number',
+        name: 'WhatsApp Bot',
+        status: 'error'
+      };
     }
   }
 }

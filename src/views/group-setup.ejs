@@ -13,30 +13,41 @@
                         <p>Your business "<%= businessName %>" has been registered. Now let's set up your WhatsApp groups.</p>
                     </div>
 
-                    <div class="mb-4">
-                        <h5>Setup Instructions</h5>
-                        <ol>
-                            <li class="mb-3">
-                                <strong>Add the Bot to Your Groups</strong>
-                                <p class="mb-0">Add our WhatsApp bot to your existing groups:</p>
-                                <ul>
-                                    <li>Sales group (where customers place orders)</li>
-                                    <li>Delivery group (where delivery personnel manage orders)</li>
-                                </ul>
-                            </li>
-                            
-                            <li class="mb-3">
-                                <strong>Use the Setup Command</strong>
-                                <p>In each group, type the following command:</p>
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-exclamation-triangle"></i> Setup Instructions</h6>
+                        <ol class="mb-0">
+                            <li class="mb-2">
+                                <strong>Step 1: Add Our Bot to Your Group</strong>
+                                <p class="mb-1">Add this WhatsApp number to your group as an admin:</p>
                                 <div class="alert alert-light border">
-                                    <code class="user-select-all"><%= setupCommand %></code>
-                                    <button class="btn btn-sm btn-outline-primary float-end" onclick="copyCommand()">Copy</button>
+                                    <strong>Bot Number:</strong> <code id="botNumber">Loading...</code>
+                                    <button class="btn btn-sm btn-outline-primary float-end" onclick="copyBotNumber()">Copy</button>
+                                </div>
+                                <small class="text-muted">Make sure to give the bot admin permissions for full functionality</small>
+                            </li>
+                            <li class="mb-2">
+                                <strong>Step 2: Run the Setup Command</strong>
+                                <p class="mb-1">In your WhatsApp group, type this exact command:</p>
+                                <div class="alert alert-light border">
+                                    <code class="user-select-all"><%= business.setup_identifier || business.business_id %></code>
+                                    <button class="btn btn-sm btn-outline-primary float-end" onclick="copySetupCommand()">Copy</button>
                                 </div>
                             </li>
-
+                            <li class="mb-2">
+                                <strong>Step 3: Choose Group Type</strong>
+                                <p class="mb-1">The bot will ask if this is a "sales" or "delivery" group. Reply with:</p>
+                                <ul class="mb-1">
+                                    <li><strong>"sales"</strong> - For receiving customer orders</li>
+                                    <li><strong>"delivery"</strong> - For managing deliveries and tracking orders</li>
+                                </ul>
+                            </li>
+                            <li class="mb-2">
+                                <strong>Step 4: Get Group ID</strong>
+                                <p class="mb-1">After setup, the bot will provide a Group ID. Copy it and enter it above.</p>
+                            </li>
                             <li>
-                                <strong>Verify Setup</strong>
-                                <p class="mb-0">The bot will automatically detect the group type and configure it accordingly. You'll receive a confirmation message in each group.</p>
+                                <strong>Step 5: Save and Repeat</strong>
+                                <p class="mb-0">Save this group, then repeat the process for your second group (if you haven't already).</p>
                             </li>
                         </ol>
                     </div>
@@ -60,10 +71,42 @@
 </div>
 
 <script>
-function copyCommand() {
+// Load bot number when page loads
+document.addEventListener('DOMContentLoaded', async function() {
+  try {
+    const response = await fetch('/api/whatsapp/bot-info');
+    const botInfo = await response.json();
+    
+    if (botInfo.success) {
+      document.getElementById('botNumber').textContent = botInfo.number;
+    } else {
+      document.getElementById('botNumber').textContent = 'Not available';
+    }
+  } catch (error) {
+    console.error('Error loading bot info:', error);
+    document.getElementById('botNumber').textContent = 'Error loading';
+  }
+});
+
+function copyBotNumber() {
+    const botNumber = document.querySelector('#botNumber').textContent;
+    if (botNumber === 'Loading...' || botNumber === 'Not available' || botNumber === 'Error loading') {
+        alert('Bot number not available yet. Please try again in a moment.');
+        return;
+    }
+    navigator.clipboard.writeText(botNumber).then(() => {
+        const button = event.target;
+        button.textContent = 'Copied!';
+        setTimeout(() => {
+            button.textContent = 'Copy';
+        }, 2000);
+    });
+}
+
+function copySetupCommand() {
     const command = document.querySelector('code').textContent;
     navigator.clipboard.writeText(command).then(() => {
-        const button = document.querySelector('button');
+        const button = event.target;
         button.textContent = 'Copied!';
         setTimeout(() => {
             button.textContent = 'Copy';
