@@ -52,6 +52,9 @@ class WhatsAppService {
       },
     });
 
+    // Track pending setup requests
+    this.pendingSetups = new Map();
+
     this.client.on('qr', async (qr) => {
       try {
         // Convert QR code to data URL
@@ -131,6 +134,11 @@ class WhatsAppService {
       // Handle setup command FIRST (before checking if group is registered)
       if (message.body.startsWith('/setup')) {
         await this.handleSetupCommand(message, chat, contact);
+        return;
+      }
+
+      // Handle sales/delivery replies for pending setups
+      if (await this.handleSetupReply(message, chat, contact)) {
         return;
       }
 
@@ -486,10 +494,25 @@ class WhatsAppService {
 
       let groupType;
       if (existingGroups.length === 0) {
-        // First group - ask user which type
+        // First group - ask user which type and store pending setup
         await this.client.sendMessage(chatId, 
           `🤖 *Business Setup*\n\nBusiness: ${business.business_name}\n\nIs this a sales group or delivery group?\n\nReply with "sales" or "delivery"`
         );
+        
+        // Store pending setup for this chat
+        this.pendingSetups.set(chatId, {
+          business: business,
+          timestamp: Date.now()
+        });
+        
+        // Clean up old pending setups (older than 10 minutes)
+        const tenMinutesAgo = Date.now() - (10 * 60 * 1000);
+        for (const [key, setup] of this.pendingSetups.entries()) {
+          if (setup.timestamp < tenMinutesAgo) {
+            this.pendingSetups.delete(key);
+          }
+        }
+        
         return;
       } else {
         // Second group - automatically determine type
@@ -728,6 +751,108 @@ For help, type /help in the delivery group.
     }
 
     return { status: 'not_found' };
+  }
+
+  async handleSetupReply(message, chat, contact) {
+    try {
+      const chatId = chat.id._serialized;
+      const messageBody = message.body.toLowerCase().trim();
+      
+      // Check if this is a sales or delivery reply
+      if (messageBody !== 'sales' && messageBody !== 'delivery') {
+        return false; // Not a setup reply
+      }
+
+      // Find pending setup for this chat
+      const pendingSetup = this.pendingSetups.get(chatId);
+      if (!pendingSetup) {
+        return false; // No pending setup for this chat
+      }
+
+      const groupType = messageBody; // 'sales' or 'delivery'
+      
+      // Register the group
+      let attempts = 0;
+      const maxAttempts = 3;
+      
+      while (attempts < maxAttempts) {
+        try {
+          const insertData = {
+            user_id: pendingSetup.business.user_id,
+            business_id: pendingSetup.business.business_id,
+            business_name: pendingSetup.business.business_name,
+            group_name: chat.name,
+            group_id: chatId,
+            group_type: groupType
+          };
+
+          // Only add short code data to the FIRST group
+          if (pendingSetup.business.setup_identifier) {
+            // Extract short_code from setup_identifier (format: businessname-CODE)
+            const shortCode = pendingSetup.business.setup_identifier.split('-').pop();
+            insertData.short_code = shortCode;
+          }
+
+          await database.query('groups').insert(insertData);
+
+          // Send confirmation
+          await this.client.sendMessage(chatId, 
+            `✅ *${groupType === 'sales' ? 'Sales' : 'Delivery'} Group Registered!*\n\n` +
+            `*Business:* ${pendingSetup.business.business_name}\n` +
+            `*Group:* ${chat.name}\n` +
+            `*Type:* ${groupType}\n\n` +
+            (groupType === 'sales' ? 
+              '🛍️ Customers can now place orders in this group.' :
+              '🚚 Delivery staff can manage orders in this group.')
+          );
+
+          logger.info('Group registered successfully via reply', {
+            groupId: chatId,
+            groupName: chat.name,
+            businessId: pendingSetup.business.business_id,
+            businessName: pendingSetup.business.business_name,
+            groupType
+          });
+
+          // Remove pending setup
+          this.pendingSetups.delete(chatId);
+          return true; // Handled the reply
+          
+        } catch (error) {
+          attempts++;
+          
+          // If it's a duplicate short code error and we haven't exceeded max attempts, try again with new short code
+          if (error.code === '23505' && error.constraint === 'groups_short_code_unique' && attempts < maxAttempts) {
+            logger.warn(`Duplicate short code detected in setup reply, generating new code... (attempt ${attempts}/${maxAttempts})`);
+            
+            // Generate new short code and setup identifier
+            const { shortCode, setupIdentifier } = await ShortCodeGenerator.generateBusinessSetupCode(pendingSetup.business.business_name);
+            
+            // Update the business record with new short code
+            await database.query('groups')
+              .where('business_id', pendingSetup.business.business_id)
+              .update({
+                short_code: shortCode,
+                setup_identifier: setupIdentifier
+              });
+            
+            // Update the business object for next attempt
+            pendingSetup.business.short_code = shortCode;
+            pendingSetup.business.setup_identifier = setupIdentifier;
+            
+            continue;
+          }
+          
+          // For any other error or if we've exceeded attempts, throw the error
+          throw error;
+        }
+      }
+      
+      return true; // Handled the reply
+    } catch (error) {
+      logger.error('Error handling setup reply:', error);
+      return false;
+    }
   }
 }
 
