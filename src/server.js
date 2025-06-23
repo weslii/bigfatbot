@@ -292,12 +292,33 @@ app.get('/preview-landing', (req, res) => {
 });
 
 // Preview admin dashboard route
-app.get('/admin/preview-dashboard', (req, res) => {
-  // Provide mock data for preview
-  res.render('admin/preview-dashboard', {
-    admin: { username: 'admin', email: 'admin@example.com' },
-    stats: { totalRevenue: '45,231.89', totalBusinesses: 2350, totalOrders: 12234 }
-  });
+app.get('/admin/preview-dashboard', async (req, res) => {
+  try {
+    // Get real analytics data
+    const analytics = await AdminService.getAnalytics();
+    // Calculate uptime
+    const now = Date.now();
+    const uptimeMs = now - botStartTime;
+    const uptimeHours = uptimeMs / (1000 * 60 * 60);
+    
+    res.render('admin/preview-dashboard', {
+      admin: { username: 'admin', email: 'admin@example.com' },
+      stats: {
+        totalRevenue: '45,231.89', // Keep static as requested
+        totalBusinesses: analytics.totalBusinesses,
+        totalOrders: analytics.totalOrders,
+        botUptime: '100.0',
+        botUptimeHours: uptimeHours.toFixed(2)
+      }
+    });
+  } catch (error) {
+    logger.error('Preview dashboard error:', error);
+    // Fallback to mock data if real data fails
+    res.render('admin/preview-dashboard', {
+      admin: { username: 'admin', email: 'admin@example.com' },
+      stats: { totalRevenue: '45,231.89', totalBusinesses: 0, totalOrders: 0, botUptime: '100.0' }
+    });
+  }
 });
 
 // Track bot start time

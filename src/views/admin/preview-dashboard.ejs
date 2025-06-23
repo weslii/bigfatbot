@@ -89,7 +89,7 @@
                         <i class="fas fa-bolt"></i>
                     </div>
                 </div>
-                <div class="stat-value">99.9%</div>
+                <div class="stat-value"><%= stats && stats.botUptime ? stats.botUptime + '%' : '100.0%' %></div>
                 <div class="stat-change positive">+0.1% from last month</div>
             </div>
         </section>
