@@ -1672,7 +1672,8 @@ async function startServer() {
         const page = parseInt(req.query.page) || 1;
         const pageSize = parseInt(req.query.pageSize) || 10;
         const offset = (page - 1) * pageSize;
-        const { businesses, total } = await AdminService.getAllBusinessesWithOwners(pageSize, offset);
+        const search = req.query.search || '';
+        const { businesses, total } = await AdminService.getAllBusinessesWithOwners(pageSize, offset, search);
         res.json({ businesses, total });
       } catch (error) {
         logger.error('API businesses error:', error);

@@ -87,19 +87,48 @@ window.addEventListener('DOMContentLoaded', function() {
   });
   // Initial load
   fetchAndRenderBusinesses(1);
+
+  // Businesses filter
+  const businessesForm = document.getElementById('businesses-filter-form');
+  if (businessesForm) {
+    businessesForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      businessesFilter.search = document.getElementById('businesses-search').value.trim();
+      fetchAndRenderBusinesses(1);
+    });
+  }
+  // Orders filter
+  const ordersForm = document.getElementById('orders-filter-form');
+  if (ordersForm) {
+    ordersForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      ordersFilter.status = document.getElementById('orders-status').value;
+      ordersFilter.business = document.getElementById('orders-business').value.trim();
+      ordersFilter.search = document.getElementById('orders-search').value.trim();
+      fetchAndRenderOrders(1);
+    });
+  }
 });
 
 // --- AJAX Pagination for Businesses and Orders Tabs ---
+let businessesFilter = { search: '' };
+let ordersFilter = { status: '', business: '', search: '' };
+
 async function fetchAndRenderBusinesses(page = 1, pageSize = 10) {
   const tableBody = document.querySelector('#businesses-tab .data-table tbody');
   const pagination = document.getElementById('businesses-pagination');
   if (!tableBody) return;
-  tableBody.innerHTML = '<tr><td colspan="7">Loading...</td></tr>';
+  tableBody.innerHTML = '<tr><td colspan="5">Loading...</td></tr>';
   try {
-    const res = await fetch(`/admin/api/businesses?page=${page}&pageSize=${pageSize}`);
+    const params = new URLSearchParams({
+      page,
+      pageSize,
+      search: businessesFilter.search || ''
+    });
+    const res = await fetch(`/admin/api/businesses?${params}`);
     const data = await res.json();
     if (!data.businesses || data.businesses.length === 0) {
-      tableBody.innerHTML = '<tr><td colspan="7">No businesses found.</td></tr>';
+      tableBody.innerHTML = '<tr><td colspan="5">No businesses found.</td></tr>';
       if (pagination) pagination.innerHTML = '';
       return;
     }
@@ -122,8 +151,6 @@ async function fetchAndRenderBusinesses(page = 1, pageSize = 10) {
         </td>
         <td><span class="status-badge active">Active</span></td>
         <td>-</td>
-        <td class="revenue">-</td>
-        <td>-</td>
         <td>
           <div class="dropdown">
             <button class="action-menu-btn"><i class="fas fa-ellipsis-h"></i></button>
@@ -143,7 +170,7 @@ async function fetchAndRenderBusinesses(page = 1, pageSize = 10) {
       let html = '';
       html += `<button ${page === 1 ? 'disabled' : ''} data-page="${page-1}">Prev</button>`;
       for (let i = 1; i <= totalPages; i++) {
-        html += `<button ${i === page ? 'class="active"' : ''} data-page="${i}">${i}</button>`;
+        html += `<button ${i === page ? 'class=\"active\"' : ''} data-page="${i}">${i}</button>`;
       }
       html += `<button ${page === totalPages ? 'disabled' : ''} data-page="${page+1}">Next</button>`;
       pagination.innerHTML = html;
@@ -156,7 +183,7 @@ async function fetchAndRenderBusinesses(page = 1, pageSize = 10) {
     // Re-attach dropdown logic
     attachDropdownLogic();
   } catch (err) {
-    tableBody.innerHTML = '<tr><td colspan="7">Failed to load businesses.</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="5">Failed to load businesses.</td></tr>';
     if (pagination) pagination.innerHTML = '';
   }
 }
@@ -167,7 +194,14 @@ async function fetchAndRenderOrders(page = 1, pageSize = 10) {
   if (!tableBody) return;
   tableBody.innerHTML = '<tr><td colspan="6">Loading...</td></tr>';
   try {
-    const res = await fetch(`/admin/api/orders?page=${page}&pageSize=${pageSize}`);
+    const params = new URLSearchParams({
+      page,
+      pageSize,
+      status: ordersFilter.status || '',
+      business: ordersFilter.business || '',
+      search: ordersFilter.search || ''
+    });
+    const res = await fetch(`/admin/api/orders?${params}`);
     const data = await res.json();
     if (!data.orders || data.orders.length === 0) {
       tableBody.innerHTML = '<tr><td colspan="6">No orders found.</td></tr>';
@@ -200,7 +234,7 @@ async function fetchAndRenderOrders(page = 1, pageSize = 10) {
       let html = '';
       html += `<button ${page === 1 ? 'disabled' : ''} data-page="${page-1}">Prev</button>`;
       for (let i = 1; i <= totalPages; i++) {
-        html += `<button ${i === page ? 'class="active"' : ''} data-page="${i}">${i}</button>`;
+        html += `<button ${i === page ? 'class=\"active\"' : ''} data-page="${i}">${i}</button>`;
       }
       html += `<button ${page === totalPages ? 'disabled' : ''} data-page="${page+1}">Next</button>`;
       pagination.innerHTML = html;
