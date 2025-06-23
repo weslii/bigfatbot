@@ -448,15 +448,8 @@ class WhatsAppService {
       const setupIdentifier = parts[1];
       let business = null;
 
-      // First try to find by setup identifier (new format)
+      // Find business by setup identifier
       business = await ShortCodeGenerator.findBusinessBySetupIdentifier(setupIdentifier);
-
-      // If not found, try to find by business ID (old format)
-      if (!business) {
-        business = await database.query('groups')
-          .where('business_id', setupIdentifier)
-        .first();
-      }
 
       if (!business) {
         await this.client.sendMessage(chatId, '❌ Business not found. Please check your setup code.\n\nMake sure you\'re using the correct format: /setup businessname-CODE');
@@ -519,9 +512,11 @@ class WhatsAppService {
 
           // Only add short code data to the FIRST group (sales OR delivery)
           // This prevents duplicate short codes across groups of the same business
-          if (business.short_code && business.setup_identifier && existingGroups.length === 0) {
-            insertData.short_code = business.short_code;
-            insertData.setup_identifier = business.setup_identifier;
+          if (business.setup_identifier && existingGroups.length === 0) {
+            // Extract short_code from setup_identifier (format: businessname-CODE)
+            const shortCode = business.setup_identifier.split('-').pop();
+            insertData.short_code = shortCode;
+            // Don't store setup_identifier here - it's already in the main group
           }
 
           await database.query('groups').insert(insertData);
