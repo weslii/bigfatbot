@@ -2,6 +2,7 @@ const database = require('../config/database');
 const logger = require('../utils/logger');
 const bcrypt = require('bcryptjs');
 const ShortCodeGenerator = require('../utils/shortCodeGenerator');
+const WhatsAppService = require('./WhatsAppService');
 
 class AdminService {
   static async createAdmin(username, email, password, role = 'admin') {
@@ -553,6 +554,73 @@ class AdminService {
         .update({ is_active: !business.is_active });
     } catch (error) {
       logger.error('Error toggling business active:', error);
+      throw error;
+    }
+  }
+
+  static async getPercentageChange(table, column = '*') {
+    // Get this month and last month counts
+    const now = new Date();
+    const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+    const thisMonth = await database.query(table)
+      .where(column === '*' ? {} : { [column]: true })
+      .where('created_at', '>=', startOfThisMonth)
+      .count('* as count').first();
+    const lastMonth = await database.query(table)
+      .where(column === '*' ? {} : { [column]: true })
+      .where('created_at', '>=', startOfLastMonth)
+      .where('created_at', '<', startOfThisMonth)
+      .count('* as count').first();
+    const thisVal = parseInt(thisMonth.count);
+    const lastVal = parseInt(lastMonth.count);
+    const percent = lastVal === 0 ? 100 : ((thisVal - lastVal) / lastVal) * 100;
+    return percent;
+  }
+
+  static async getBotManagementMetrics() {
+    const botService = require('./WhatsAppService');
+    const info = await botService.getBotInfo();
+    const metrics = botService.getBotMetrics();
+    return { ...info, ...metrics };
+  }
+
+  static async getAnalytics() {
+    try {
+      const [userCount, businessCount, orderCount, activeOrderCount, revenueResult, statusCounts] = await Promise.all([
+        database.query('users').count('* as count').first(),
+        database.query('groups').where('is_active', true).countDistinct('business_id as count').first(),
+        database.query('orders').count('* as count').first(),
+        database.query('orders').whereIn('status', ['pending', 'processing']).count('* as count').first(),
+        database.query('orders').sum('total_amount as revenue').first(),
+        database.query('orders')
+          .select('status')
+          .count('* as count')
+          .groupBy('status')
+      ]);
+      const orderStatusCounts = {};
+      statusCounts.forEach(row => {
+        orderStatusCounts[row.status] = parseInt(row.count);
+      });
+      // Percentage changes
+      const businessChange = await this.getPercentageChange('groups', 'is_active');
+      const orderChange = await this.getPercentageChange('orders');
+      // Bot management metrics
+      const botMetrics = await this.getBotManagementMetrics();
+      return {
+        totalRevenue: parseFloat(revenueResult.revenue || 0).toFixed(2),
+        totalBusinesses: parseInt(businessCount.count),
+        totalOrders: parseInt(orderCount.count),
+        totalUsers: parseInt(userCount.count),
+        activeOrders: parseInt(activeOrderCount.count),
+        orderStatusCounts,
+        businessChange,
+        orderChange,
+        ...botMetrics
+      };
+    } catch (error) {
+      logger.error('Error getting analytics:', error);
       throw error;
     }
   }

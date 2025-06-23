@@ -70,7 +70,7 @@
                     </div>
                 </div>
                 <div class="stat-value"><%= stats && stats.totalBusinesses ? stats.totalBusinesses : 0 %></div>
-                <div class="stat-change positive">+180.1% from last month</div>
+                <div class="stat-change positive"><%= stats && typeof stats.businessChange !== 'undefined' ? (stats.businessChange > 0 ? '+' : '') + stats.businessChange.toFixed(1) + '%' : '+0%' %> from last month</div>
             </div>
             <div class="stat-card orders">
                 <div class="stat-header">
@@ -80,7 +80,7 @@
                     </div>
                 </div>
                 <div class="stat-value"><%= stats && stats.totalOrders ? stats.totalOrders : 0 %></div>
-                <div class="stat-change positive">+19% from last month</div>
+                <div class="stat-change positive"><%= stats && typeof stats.orderChange !== 'undefined' ? (stats.orderChange > 0 ? '+' : '') + stats.orderChange.toFixed(1) + '%' : '+0%' %> from last month</div>
             </div>
             <div class="stat-card uptime">
                 <div class="stat-header">
@@ -166,15 +166,15 @@
                                 <div class="card-content">
                                     <div class="status-item">
                                         <span>Connection Status</span>
-                                        <span class="status-badge active">Connected</span>
+                                        <span class="status-badge <%= stats && stats.connectionStatus === 'connected' ? 'active' : 'inactive' %>"><%= stats && stats.connectionStatus ? stats.connectionStatus.charAt(0).toUpperCase() + stats.connectionStatus.slice(1) : 'Unknown' %></span>
                                     </div>
                                     <div class="status-item">
                                         <span>Phone Number</span>
-                                        <span class="status-value">+1 (555) 123-4567</span>
+                                        <span class="status-value"><%= stats && stats.phoneNumber ? stats.phoneNumber : 'N/A' %></span>
                                     </div>
                                     <div class="status-item">
                                         <span>Last Activity</span>
-                                        <span class="status-value">2 minutes ago</span>
+                                        <span class="status-value"><%= stats && stats.lastActivity ? new Date(stats.lastActivity).toLocaleString() : 'N/A' %></span>
                                     </div>
                                     <hr>
                                     <div class="bot-actions">
@@ -196,28 +196,28 @@
                                     <div class="metric-item">
                                         <div class="metric-header">
                                             <span>Message Success Rate</span>
-                                            <span class="metric-value">98.5%</span>
+                                            <span class="metric-value"><%= stats && typeof stats.messageSuccessRate !== 'undefined' ? stats.messageSuccessRate.toFixed(1) + '%' : 'N/A' %></span>
                                         </div>
                                         <div class="progress-bar">
-                                            <div class="progress-fill" style="width: 98.5%"></div>
+                                            <div class="progress-fill" style="width: <%= stats && typeof stats.messageSuccessRate !== 'undefined' ? stats.messageSuccessRate.toFixed(1) : 0 %>%;"></div>
                                         </div>
                                     </div>
                                     <div class="metric-item">
                                         <div class="metric-header">
                                             <span>Response Time</span>
-                                            <span class="metric-value">1.2s avg</span>
+                                            <span class="metric-value"><%= stats && typeof stats.avgResponseTime !== 'undefined' ? (stats.avgResponseTime / 1000).toFixed(2) + 's avg' : 'N/A' %></span>
                                         </div>
                                         <div class="progress-bar">
-                                            <div class="progress-fill" style="width: 85%"></div>
+                                            <div class="progress-fill" style="width: <%= stats && typeof stats.avgResponseTime !== 'undefined' ? Math.min((stats.avgResponseTime / 2000) * 100, 100).toFixed(1) : 0 %>%;"></div>
                                         </div>
                                     </div>
                                     <div class="metric-item">
                                         <div class="metric-header">
                                             <span>Daily Messages</span>
-                                            <span class="metric-value">2,847</span>
+                                            <span class="metric-value"><%= stats && typeof stats.dailyMessages !== 'undefined' ? Math.round(stats.dailyMessages) : 'N/A' %></span>
                                         </div>
                                         <div class="progress-bar">
-                                            <div class="progress-fill" style="width: 75%"></div>
+                                            <div class="progress-fill" style="width: <%= stats && typeof stats.dailyMessages !== 'undefined' ? Math.min(stats.dailyMessages, 100).toFixed(1) : 0 %>%;"></div>
                                         </div>
                                     </div>
                                 </div>
