@@ -10,6 +10,15 @@ const OrderParser = require('./OrderParser');
 const ShortCodeGenerator = require('../utils/shortCodeGenerator');
 
 class WhatsAppService {
+  static instance = null;
+
+  static getInstance() {
+    if (!WhatsAppService.instance) {
+      WhatsAppService.instance = new WhatsAppService();
+    }
+    return WhatsAppService.instance;
+  }
+
   constructor() {
     this.client = new Client({
       authStrategy: new LocalAuth(),
@@ -93,15 +102,6 @@ class WhatsAppService {
     });
 
     this.client.on('message', this.handleMessage.bind(this));
-
-    this.lastActivity = null;
-    this.messageStats = {
-      total: 0,
-      successful: 0,
-      failed: 0,
-      responseTimes: [],
-      dailyCounts: {}, // { 'YYYY-MM-DD': count }
-    };
   }
 
   async start() {
@@ -135,12 +135,47 @@ class WhatsAppService {
     }
   }
 
+  async loadMetrics() {
+    try {
+      let metrics = await database.query('bot_metrics').first();
+      if (!metrics) {
+        // Create initial metrics record
+        metrics = await database.query('bot_metrics').insert({
+          total_messages: 0,
+          successful_messages: 0,
+          failed_messages: 0,
+          response_times: [],
+          daily_counts: {},
+          last_activity: null
+        }).returning('*').first();
+      }
+      return metrics;
+    } catch (error) {
+      logger.error('Error loading bot metrics:', error);
+      return null;
+    }
+  }
+
+  async saveMetrics(metrics) {
+    try {
+      await database.query('bot_metrics')
+        .where('id', metrics.id)
+        .update({
+          total_messages: metrics.total_messages,
+          successful_messages: metrics.successful_messages,
+          failed_messages: metrics.failed_messages,
+          response_times: metrics.response_times,
+          daily_counts: metrics.daily_counts,
+          last_activity: metrics.last_activity,
+          updated_at: new Date()
+        });
+    } catch (error) {
+      logger.error('Error saving bot metrics:', error);
+    }
+  }
+
   async handleMessage(message) {
     const start = Date.now();
-    this.lastActivity = new Date();
-    const today = this.lastActivity.toISOString().slice(0, 10);
-    this.messageStats.total++;
-    this.messageStats.dailyCounts[today] = (this.messageStats.dailyCounts[today] || 0) + 1;
     let success = false;
     try {
       const chat = await message.getChat();
@@ -149,11 +184,13 @@ class WhatsAppService {
       // Handle setup command FIRST (before checking if group is registered)
       if (message.body.startsWith('/setup')) {
         await this.handleSetupCommand(message, chat, contact);
+        success = true;
         return;
       }
 
       // Handle sales/delivery replies for pending setups
       if (await this.handleSetupReply(message, chat, contact)) {
+        success = true;
         return;
       }
 
@@ -184,10 +221,82 @@ class WhatsAppService {
     } catch (error) {
       logger.error('Error handling message:', error);
     } finally {
-      if (success) this.messageStats.successful++;
-      else this.messageStats.failed++;
-      this.messageStats.responseTimes.push(Date.now() - start);
-      if (this.messageStats.responseTimes.length > 100) this.messageStats.responseTimes.shift();
+      // Update metrics in database
+      await this.updateMetrics(success, Date.now() - start);
+    }
+  }
+
+  async updateMetrics(success, responseTime) {
+    try {
+      const metrics = await this.loadMetrics();
+      if (!metrics) return;
+
+      const today = new Date().toISOString().slice(0, 10);
+      const dailyCounts = metrics.daily_counts || {};
+      dailyCounts[today] = (dailyCounts[today] || 0) + 1;
+
+      const responseTimes = metrics.response_times || [];
+      responseTimes.push(responseTime);
+      if (responseTimes.length > 100) responseTimes.shift();
+
+      const updatedMetrics = {
+        ...metrics,
+        total_messages: metrics.total_messages + 1,
+        successful_messages: metrics.successful_messages + (success ? 1 : 0),
+        failed_messages: metrics.failed_messages + (success ? 0 : 1),
+        response_times: responseTimes,
+        daily_counts: dailyCounts,
+        last_activity: new Date()
+      };
+
+      await this.saveMetrics(updatedMetrics);
+    } catch (error) {
+      logger.error('Error updating metrics:', error);
+    }
+  }
+
+  async getBotMetrics() {
+    try {
+      const metrics = await this.loadMetrics();
+      if (!metrics) {
+        return {
+          lastActivity: null,
+          messageSuccessRate: 100,
+          avgResponseTime: 0,
+          dailyMessages: 0
+        };
+      }
+
+      // Calculate success rate
+      const total = metrics.total_messages;
+      const successful = metrics.successful_messages;
+      const successRate = total > 0 ? (successful / total) * 100 : 100;
+
+      // Average response time (ms)
+      const responseTimes = metrics.response_times || [];
+      const avgResponse = responseTimes.length > 0 ? 
+        responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length : 0;
+
+      // Daily messages (average over last 7 days)
+      const dailyCounts = metrics.daily_counts || {};
+      const days = Object.keys(dailyCounts).sort().slice(-7);
+      const dailyAvg = days.length > 0 ? 
+        days.map(d => dailyCounts[d]).reduce((a, b) => a + b, 0) / days.length : 0;
+
+      return {
+        lastActivity: metrics.last_activity,
+        messageSuccessRate: successRate,
+        avgResponseTime: avgResponse,
+        dailyMessages: dailyAvg
+      };
+    } catch (error) {
+      logger.error('Error getting bot metrics:', error);
+      return {
+        lastActivity: null,
+        messageSuccessRate: 100,
+        avgResponseTime: 0,
+        dailyMessages: 0
+      };
     }
   }
 
@@ -1033,23 +1142,6 @@ For help, type /help in the delivery group.
       logger.error('Error in fallback order ID extraction:', error);
       return null;
     }
-  }
-
-  getBotMetrics() {
-    // Calculate success rate
-    const { total, successful, responseTimes, dailyCounts } = this.messageStats;
-    const successRate = total > 0 ? (successful / total) * 100 : 100;
-    // Average response time (ms)
-    const avgResponse = responseTimes.length > 0 ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length : 0;
-    // Daily messages (average over last 7 days)
-    const days = Object.keys(dailyCounts).sort().slice(-7);
-    const dailyAvg = days.length > 0 ? days.map(d => dailyCounts[d]).reduce((a, b) => a + b, 0) / days.length : 0;
-    return {
-      lastActivity: this.lastActivity,
-      messageSuccessRate: successRate,
-      avgResponseTime: avgResponse,
-      dailyMessages: dailyAvg
-    };
   }
 }
 

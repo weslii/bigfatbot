@@ -29,7 +29,7 @@ healthApp.get('/health', (req, res) => {
 
 class DeliveryBot {
   constructor() {
-    this.whatsappService = new WhatsAppService();
+    this.whatsappService = WhatsAppService.getInstance();
     this.schedulerService = new SchedulerService(this.whatsappService);
     this.isShuttingDown = false;
   }
