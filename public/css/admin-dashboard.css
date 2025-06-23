@@ -48,7 +48,7 @@ body {
 }
 
 [data-theme="dark"] body {
-  background: linear-gradient(135deg, #020617 0%, #0f172a 25%, #1e293b 50%, #0f172a 75%, #020617 100%);
+  background: linear-gradient(135deg, #020617 0%, #0f172a 25%, #0f172a 50%, #0f172a 75%, #020617 100%);
   background-attachment: fixed;
 }
 
@@ -64,7 +64,7 @@ body {
 }
 
 [data-theme="dark"] .header {
-  background: rgba(2, 6, 23, 0.9);
+  background: rgba(2, 6, 23, 0.85);
   backdrop-filter: blur(16px);
 }
 
