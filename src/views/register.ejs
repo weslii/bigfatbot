@@ -127,21 +127,21 @@
         }
         .register-card {
             background: rgba(16, 25, 43, 0.97);
-            border-radius: 1.1rem;
-            box-shadow: 0 4px 24px 0 rgba(0,0,0,0.13);
-            padding: 2rem 1.5rem 1.5rem 1.5rem;
-            max-width: 380px;
+            border-radius: 1.25rem;
+            box-shadow: 0 8px 40px 0 rgba(16, 185, 129, 0.10), 0 2px 16px 0 rgba(0,0,0,0.18);
+            padding: 2.75rem 2.25rem 2.25rem 2.25rem;
+            max-width: 440px;
             width: 100%;
             color: #fff;
             display: flex;
             flex-direction: column;
-            gap: 1.2rem;
+            gap: 2rem;
             border: 1px solid var(--border);
-            transition: box-shadow 0.22s, transform 0.22s;
+            animation: fadeInUp 0.7s cubic-bezier(.39,.575,.565,1) both;
         }
-        .register-card:hover {
-            box-shadow: 0 8px 32px 0 rgba(0,0,0,0.18);
-            transform: translateY(-2px) scale(1.012);
+        [data-theme="light"] .register-card {
+            background: #f8fafc;
+            color: #1e293b;
         }
         .register-title {
             font-size: 1.5rem;
@@ -160,29 +160,34 @@
             color: #64748b;
         }
         .form-group {
-            margin-bottom: 1.1rem;
+            margin-bottom: 1.75rem;
         }
         .form-label {
             display: block;
             font-weight: 500;
-            margin-bottom: 0.35rem;
-            font-size: 1rem;
+            margin-bottom: 0.4rem;
         }
         .form-control {
             width: 100%;
-            padding: 0.7rem 0.9rem;
-            border-radius: 0.65rem;
+            padding: 0.95rem 1.15rem;
+            border-radius: 0.75rem;
             border: 1px solid var(--border);
             background: rgba(255,255,255,0.08);
             color: inherit;
             font-size: 1rem;
-            transition: border-color 0.18s;
-            box-shadow: none;
+            transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
         }
-        .form-control:focus, .form-control:hover {
+        .form-control:focus {
             outline: none;
             border-color: #10b981;
-            background: rgba(255,255,255,0.13);
+            background: rgba(255,255,255,0.15);
+            box-shadow: 0 0 0 2px rgba(16,185,129,0.10);
+        }
+        .form-control:hover {
+            border-color: #14b8a6;
+            background: rgba(20,184,166,0.10);
+            box-shadow: 0 2px 8px 0 rgba(16,185,129,0.08);
         }
         .form-text {
             font-size: 0.85rem;
@@ -204,10 +209,10 @@
         }
         .register-btn {
             width: 100%;
-            padding: 0.9rem 0;
+            padding: 0.95rem 0;
             font-weight: 600;
-            font-size: 1.05rem;
-            border-radius: 0.7rem;
+            font-size: 1.08rem;
+            border-radius: 0.75rem;
             text-decoration: none;
             display: flex;
             align-items: center;
@@ -217,13 +222,11 @@
             cursor: pointer;
             background: #10b981;
             color: #fff;
-            box-shadow: 0 2px 8px 0 rgba(0,0,0,0.10);
-            transition: background 0.18s, box-shadow 0.18s, transform 0.18s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: background 0.2s;
         }
-        .register-btn:hover, .register-btn:focus {
+        .register-btn:hover {
             background: #059669;
-            box-shadow: 0 4px 16px 0 rgba(0,0,0,0.16);
-            transform: translateY(-1px) scale(1.01);
         }
         @keyframes fadeInUp {
             0% { opacity: 0; transform: translateY(40px); }
@@ -256,30 +259,30 @@
             <div>
                 <div class="register-title">Register Your Business</div>
                 <div class="register-desc">Create your account to start managing deliveries with WhatsApp Delivery Bot.</div>
-                <% if (typeof error !== 'undefined') { %>
+          <% if (typeof error !== 'undefined') { %>
                     <div class="alert"><%= error %></div>
                 <% } %>
             </div>
             <div class="form-group">
-                <label for="name" class="form-label">Full Name</label>
-                <input type="text" class="form-control" id="name" name="name" required>
+              <label for="name" class="form-label">Full Name</label>
+              <input type="text" class="form-control" id="name" name="name" required>
             </div>
             <div class="form-group">
-                <label for="email" class="form-label">Email Address</label>
-                <input type="email" class="form-control" id="email" name="email" required>
+              <label for="email" class="form-label">Email Address</label>
+              <input type="email" class="form-control" id="email" name="email" required>
             </div>
             <div class="form-group">
-                <label for="phoneNumber" class="form-label">Phone Number</label>
+              <label for="phoneNumber" class="form-label">Phone Number</label>
                 <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" pattern="[0-9]{10,15}" placeholder="e.g., 1234567890" required>
-                <div class="form-text">Enter your WhatsApp number with country code (e.g., 1234567890)</div>
+              <div class="form-text">Enter your WhatsApp number with country code (e.g., 1234567890)</div>
             </div>
             <div class="form-group">
-                <label for="password" class="form-label">Password</label>
-                <input type="password" class="form-control" id="password" name="password" required minlength="6">
-                <div class="form-text">Choose a password (at least 6 characters)</div>
+              <label for="password" class="form-label">Password</label>
+              <input type="password" class="form-control" id="password" name="password" required minlength="6">
+              <div class="form-text">Choose a password (at least 6 characters)</div>
             </div>
             <button type="submit" class="register-btn">Continue to Business Setup <i class="fas fa-arrow-right"></i></button>
-        </form>
+          </form>
     </section>
     <script>
         // Theme toggle functionality
