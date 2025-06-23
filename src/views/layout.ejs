@@ -4,21 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= typeof title !== 'undefined' ? title : 'WhatsApp Delivery Bot' %></title>
-    
     <!-- Tailwind CSS -->
     <link href="/css/theme.css" rel="stylesheet">
 </head>
 <body class="bg-gradient-to-br from-slate-50 via-white to-emerald-50/30 min-h-screen flex flex-col">
-    <!-- Main Content -->
-    <main class="flex-1">
-        <%- body %>
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-white border-t mt-8 py-4 shadow-inner">
-        <div class="container mx-auto text-center text-gray-500 text-sm">
-            &copy; <%= new Date().getFullYear() %> WhatsApp Delivery Bot. All rights reserved.
-        </div>
-    </footer>
+    <%- typeof content !== 'undefined' ? content : '' %>
 </body>
 </html> 
