@@ -281,6 +281,11 @@ app.get('/', (req, res) => {
   res.render('index', { userId: req.session ? req.session.userId : null });
 });
 
+// Add preview landing page route
+app.get('/landing-preview', (req, res) => {
+  res.render('landing-preview');
+});
+
 // Start server
 async function startServer() {
   try {
