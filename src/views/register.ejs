@@ -126,16 +126,16 @@
             padding: 3rem 0 2rem 0;
         }
         .register-card {
-            background: rgba(16, 25, 43, 0.97);
-            border-radius: 1.25rem;
-            box-shadow: 0 8px 40px 0 rgba(16, 185, 129, 0.10), 0 2px 16px 0 rgba(0,0,0,0.18);
-            padding: 2.75rem 2.25rem 2.25rem 2.25rem;
-            max-width: 440px;
+            background: rgba(16, 25, 43, 0.98);
+            border-radius: 1rem;
+            box-shadow: 0 4px 24px 0 rgba(16, 185, 129, 0.08), 0 1px 8px 0 rgba(0,0,0,0.10);
+            padding: 2rem 1.25rem 1.5rem 1.25rem;
+            max-width: 360px;
             width: 100%;
             color: #fff;
             display: flex;
             flex-direction: column;
-            gap: 2rem;
+            gap: 1.2rem;
             border: 1px solid var(--border);
             animation: fadeInUp 0.7s cubic-bezier(.39,.575,.565,1) both;
         }
@@ -144,55 +144,73 @@
             color: #1e293b;
         }
         .register-title {
-            font-size: 1.5rem;
+            font-size: 1.15rem;
             font-weight: 700;
             text-align: center;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.2rem;
             color: #10b981;
         }
         .register-desc {
             text-align: center;
             color: #cbd5e1;
-            font-size: 1.05rem;
-            margin-bottom: 1.5rem;
+            font-size: 0.93rem;
+            margin-bottom: 1rem;
         }
         [data-theme="light"] .register-desc {
             color: #64748b;
         }
+        .register-fields-row {
+            display: flex;
+            gap: 0.75rem;
+        }
+        .register-fields-row .form-group {
+            flex: 1 1 0;
+            margin-bottom: 0;
+        }
+        @media (max-width: 600px) {
+            .register-fields-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            .register-fields-row .form-group {
+                margin-bottom: 1rem;
+            }
+        }
         .form-group {
-            margin-bottom: 1.75rem;
+            margin-bottom: 1.1rem;
         }
         .form-label {
             display: block;
             font-weight: 500;
-            margin-bottom: 0.4rem;
+            margin-bottom: 0.25rem;
+            font-size: 0.97rem;
         }
         .form-control {
             width: 100%;
-            padding: 0.95rem 1.15rem;
-            border-radius: 0.75rem;
+            padding: 0.6rem 0.85rem;
+            border-radius: 0.6rem;
             border: 1px solid var(--border);
-            background: rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.07);
             color: inherit;
-            font-size: 1rem;
+            font-size: 0.97rem;
             transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
             box-sizing: border-box;
         }
         .form-control:focus {
             outline: none;
             border-color: #10b981;
-            background: rgba(255,255,255,0.15);
-            box-shadow: 0 0 0 2px rgba(16,185,129,0.10);
+            background: rgba(255,255,255,0.13);
+            box-shadow: 0 0 0 2px rgba(16,185,129,0.08);
         }
         .form-control:hover {
             border-color: #14b8a6;
-            background: rgba(20,184,166,0.10);
-            box-shadow: 0 2px 8px 0 rgba(16,185,129,0.08);
+            background: rgba(20,184,166,0.08);
+            box-shadow: 0 1px 4px 0 rgba(16,185,129,0.05);
         }
         .form-text {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: #94a3b8;
-            margin-top: 0.25rem;
+            margin-top: 0.18rem;
         }
         [data-theme="light"] .form-text {
             color: #64748b;
@@ -209,10 +227,10 @@
         }
         .register-btn {
             width: 100%;
-            padding: 0.95rem 0;
+            padding: 0.7rem 0;
             font-weight: 600;
-            font-size: 1.08rem;
-            border-radius: 0.75rem;
+            font-size: 0.99rem;
+            border-radius: 0.6rem;
             text-decoration: none;
             display: flex;
             align-items: center;
@@ -222,32 +240,33 @@
             cursor: pointer;
             background: #10b981;
             color: #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
             transition: background 0.2s;
+            margin-top: 0.2rem;
         }
         .register-btn:hover {
             background: #059669;
         }
+        .register-bottom {
+            margin-top: 1.2rem;
+            text-align: center;
+            font-size: 0.93rem;
+            color: #94a3b8;
+        }
+        .register-bottom a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+            margin-left: 0.25rem;
+            transition: color 0.2s;
+        }
+        .register-bottom a:hover {
+            color: #2563eb;
+            text-decoration: underline;
+        }
         @keyframes fadeInUp {
             0% { opacity: 0; transform: translateY(40px); }
             100% { opacity: 1; transform: translateY(0); }
-        }
-        .register-fields-row {
-            display: flex;
-            gap: 1.25rem;
-        }
-        .register-fields-row .form-group {
-            flex: 1 1 0;
-            margin-bottom: 0;
-        }
-        @media (max-width: 600px) {
-            .register-fields-row {
-                flex-direction: column;
-                gap: 0;
-            }
-            .register-fields-row .form-group {
-                margin-bottom: 1.25rem;
-            }
         }
     </style>
 </head>
@@ -302,7 +321,19 @@
                     <div class="form-text">Choose a password (at least 6 characters)</div>
                 </div>
             </div>
+            <div class="register-fields-row">
+                <div class="form-group" style="flex:1;">
+                    <label for="confirmPassword" class="form-label">Confirm Password</label>
+                    <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required minlength="6">
+                    <div class="form-text" id="confirmPasswordError" style="display:none;color:#b91c1c;"></div>
+                </div>
+                <div style="flex:1;"></div>
+            </div>
             <button type="submit" class="register-btn">Continue to Business Setup <i class="fas fa-arrow-right"></i></button>
+            <div class="register-bottom">
+                Already have an account?
+                <a href="/login">Sign in</a>
+            </div>
           </form>
     </section>
     <script>
@@ -324,6 +355,31 @@
             const icon = themeToggle.querySelector('i');
             icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
         }
+
+        // Confirm password validation
+        const form = document.querySelector('.register-card');
+        const password = document.getElementById('password');
+        const confirmPassword = document.getElementById('confirmPassword');
+        const confirmPasswordError = document.getElementById('confirmPasswordError');
+        form.addEventListener('submit', function(e) {
+            if (password.value !== confirmPassword.value) {
+                confirmPasswordError.textContent = 'Passwords do not match.';
+                confirmPasswordError.style.display = 'block';
+                confirmPassword.classList.add('is-invalid');
+                e.preventDefault();
+            } else {
+                confirmPasswordError.textContent = '';
+                confirmPasswordError.style.display = 'none';
+                confirmPassword.classList.remove('is-invalid');
+            }
+        });
+        confirmPassword.addEventListener('input', function() {
+            if (password.value === confirmPassword.value) {
+                confirmPasswordError.textContent = '';
+                confirmPasswordError.style.display = 'none';
+                confirmPassword.classList.remove('is-invalid');
+            }
+        });
     </script>
 </body>
 </html> 
