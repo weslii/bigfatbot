@@ -112,12 +112,6 @@
                             <button class="tab-btn" data-tab="bot">
                                 <i class="fas fa-robot"></i> Bot Management
                             </button>
-                            <button class="tab-btn" data-tab="users">
-                                <i class="fas fa-user"></i> Users
-                            </button>
-                            <button class="tab-btn" data-tab="admins">
-                                <i class="fas fa-user-shield"></i> Admins
-                            </button>
                         </div>
                         <div class="tabs-actions">
                             <button class="action-btn">
@@ -129,18 +123,20 @@
                         </div>
                     </div>
                     <!-- Businesses Tab -->
-                    <div class="tab-content active" id="businesses-tab">
+                    <div class="tab-content active" id="businesses">
                         <div class="content-card">
-                            <div class="card-header d-flex justify-content-between align-items-center">
+                            <div class="card-header">
                                 <div class="header-info">
                                     <h2>Business Management</h2>
                                     <p>Manage all registered businesses and their status</p>
                                 </div>
-                                <a href="/admin/businesses/add" class="primary-btn"><i class="fas fa-plus"></i> Add Business</a>
+                                <a href="/admin/businesses/add" class="primary-btn">
+                                    <i class="fas fa-plus"></i> Add Business
+                                </a>
                             </div>
                             <div class="card-content">
                                 <div class="table-container">
-                                    <table>
+                                    <table class="data-table">
                                         <thead>
                                             <tr>
                                                 <th>Business</th>
@@ -169,13 +165,24 @@
                                                         <div class="owner-phone">+1 (555) 111-2222</div>
                                                     </div>
                                                 </td>
-                                                <td><span class="status-badge active">Active</span></td>
+                                                <td>
+                                                    <span class="status-badge active">Active</span>
+                                                </td>
                                                 <td>1,234</td>
                                                 <td class="revenue">$12,345</td>
                                                 <td>2023-01-15</td>
                                                 <td>
-                                                    <a href="/admin/businesses/biz-001/edit" class="btn btn-sm btn-warning">Edit</a>
-                                                    <a href="/admin/businesses/biz-001" class="btn btn-sm btn-info">View Details</a>
+                                                    <div class="dropdown">
+                                                        <button class="action-menu-btn">
+                                                            <i class="fas fa-ellipsis-h"></i>
+                                                        </button>
+                                                        <div class="dropdown-content">
+                                                            <a href="/admin/businesses/biz-001">View Details</a>
+                                                            <a href="/admin/businesses/biz-001/edit">Edit</a>
+                                                            <hr>
+                                                            <a href="#" class="danger">Suspend Business</a>
+                                                        </div>
+                                                    </div>
                                                 </td>
                                             </tr>
                                             <tr>
@@ -194,13 +201,24 @@
                                                         <div class="owner-phone">+1 (555) 333-4444</div>
                                                     </div>
                                                 </td>
-                                                <td><span class="status-badge pending">Pending</span></td>
+                                                <td>
+                                                    <span class="status-badge pending">Pending</span>
+                                                </td>
                                                 <td>987</td>
                                                 <td class="revenue">$8,765</td>
                                                 <td>2023-02-10</td>
                                                 <td>
-                                                    <a href="/admin/businesses/biz-002/edit" class="btn btn-sm btn-warning">Edit</a>
-                                                    <a href="/admin/businesses/biz-002" class="btn btn-sm btn-info">View Details</a>
+                                                    <div class="dropdown">
+                                                        <button class="action-menu-btn">
+                                                            <i class="fas fa-ellipsis-h"></i>
+                                                        </button>
+                                                        <div class="dropdown-content">
+                                                            <a href="/admin/businesses/biz-002">View Details</a>
+                                                            <a href="/admin/businesses/biz-002/edit">Edit</a>
+                                                            <hr>
+                                                            <a href="#" class="danger">Suspend Business</a>
+                                                        </div>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -279,54 +297,16 @@
                         </div>
                     </div>
                     <!-- Other tabs content (orders, analytics) can be added similarly -->
-                    <div class="tab-content" id="orders-tab" style="display:none;">
+                    <div class="tab-content" id="orders">
                         <div class="content-card">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <div class="header-info">
-                                    <h2>Order Management</h2>
-                                    <p>Monitor and manage all orders</p>
-                                </div>
-                                <a href="#" class="primary-btn disabled" tabindex="-1"><i class="fas fa-plus"></i> Add Order</a>
+                            <div class="card-header">
+                                <h2>Order Management</h2>
+                                <p>Monitor and manage all orders across the platform</p>
                             </div>
                             <div class="card-content">
-                                <div class="table-container">
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th>Order ID</th>
-                                                <th>Business</th>
-                                                <th>Customer</th>
-                                                <th>Status</th>
-                                                <th>Date</th>
-                                                <th>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>1001</td>
-                                                <td>Pizza Palace</td>
-                                                <td>Jane Doe</td>
-                                                <td><span class="status-badge active">Delivered</span></td>
-                                                <td>2024-06-01</td>
-                                                <td>
-                                                    <a href="/admin/orders/1001" class="btn btn-sm btn-info">View Details</a>
-                                                    <a href="/admin/orders/1001/edit" class="btn btn-sm btn-warning">Edit</a>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>1002</td>
-                                                <td>Burger Bros</td>
-                                                <td>John Smith</td>
-                                                <td><span class="status-badge pending">Pending</span></td>
-                                                <td>2024-06-01</td>
-                                                <td>
-                                                    <a href="/admin/orders/1002" class="btn btn-sm btn-info">View Details</a>
-                                                    <a href="/admin/orders/1002/edit" class="btn btn-sm btn-warning">Edit</a>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                <a href="/admin/orders" class="primary-btn">
+                                    <i class="fas fa-list"></i> Go to Orders
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -337,104 +317,9 @@
                                 <p>Comprehensive analytics and reporting</p>
                             </div>
                             <div class="card-content">
-                                <p class="coming-soon">Analytics dashboard coming soon...</p>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Users Tab -->
-                    <div class="tab-content" id="users-tab" style="display:none;">
-                        <div class="content-card">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <div class="header-info">
-                                    <h2>User Management</h2>
-                                    <p>Manage all registered users</p>
-                                </div>
-                                <a href="/admin/users/add" class="primary-btn"><i class="fas fa-plus"></i> Add User</a>
-                            </div>
-                            <div class="card-content">
-                                <div class="table-container">
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th>Name</th>
-                                                <th>Email</th>
-                                                <th>Phone</th>
-                                                <th>Created</th>
-                                                <th>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>Jane Doe</td>
-                                                <td>jane@example.com</td>
-                                                <td>+1 (555) 111-2222</td>
-                                                <td>2023-11-20</td>
-                                                <td>
-                                                    <a href="/admin/users/1/edit" class="btn btn-sm btn-warning">Edit</a>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>John Smith</td>
-                                                <td>john@example.com</td>
-                                                <td>+1 (555) 333-4444</td>
-                                                <td>2024-01-10</td>
-                                                <td>
-                                                    <a href="/admin/users/2/edit" class="btn btn-sm btn-warning">Edit</a>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Admins Tab -->
-                    <div class="tab-content" id="admins-tab" style="display:none;">
-                        <div class="content-card">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <div class="header-info">
-                                    <h2>Admin Management</h2>
-                                    <p>Manage all admin users</p>
-                                </div>
-                                <a href="/admin/admins/add" class="primary-btn"><i class="fas fa-plus"></i> Add Admin</a>
-                            </div>
-                            <div class="card-content">
-                                <div class="table-container">
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th>Username</th>
-                                                <th>Email</th>
-                                                <th>Role</th>
-                                                <th>Status</th>
-                                                <th>Last Login</th>
-                                                <th>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>admin</td>
-                                                <td>admin@example.com</td>
-                                                <td>Super Admin</td>
-                                                <td><span class="status-badge active">Active</span></td>
-                                                <td>2024-06-01 10:00</td>
-                                                <td>
-                                                    <a href="/admin/admins/1/edit" class="btn btn-sm btn-warning">Edit</a>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>backup</td>
-                                                <td>backup@example.com</td>
-                                                <td>Admin</td>
-                                                <td><span class="status-badge inactive">Inactive</span></td>
-                                                <td>2024-05-30 15:30</td>
-                                                <td>
-                                                    <a href="/admin/admins/2/edit" class="btn btn-sm btn-warning">Edit</a>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                <a href="/admin/reports" class="primary-btn">
+                                    <i class="fas fa-chart-bar"></i> Go to Reports
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -448,10 +333,10 @@
                     </div>
                     <div class="card-content">
                         <div class="quick-actions">
-                            <a href="/admin/businesses" class="quick-action-btn"><i class="fas fa-users"></i> Businesses</a>
-                            <a href="/admin/orders" class="quick-action-btn"><i class="fas fa-box"></i> Orders</a>
-                            <a href="/admin/users" class="quick-action-btn"><i class="fas fa-user"></i> Users</a>
-                            <a href="/admin/admins" class="quick-action-btn"><i class="fas fa-user-shield"></i> Admins</a>
+                            <a href="/admin/businesses" class="quick-action-btn"><i class="fas fa-users"></i> View All Businesses</a>
+                            <a href="/admin/orders" class="quick-action-btn"><i class="fas fa-box"></i> View Orders</a>
+                            <a href="/admin/users" class="quick-action-btn"><i class="fas fa-user"></i> View All Users</a>
+                            <a href="/admin/admins" class="quick-action-btn"><i class="fas fa-user-shield"></i> View All Admins</a>
                             <a href="/admin/reports" class="quick-action-btn"><i class="fas fa-chart-bar"></i> Reports</a>
                             <a href="/admin/settings" class="quick-action-btn"><i class="fas fa-cog"></i> System Settings</a>
                         </div>
