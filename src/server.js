@@ -300,6 +300,9 @@ app.get('/admin/preview-dashboard', (req, res) => {
   });
 });
 
+// Track bot start time
+const botStartTime = Date.now();
+
 // Start server
 async function startServer() {
   try {
@@ -1693,6 +1696,24 @@ async function startServer() {
       } catch (error) {
         logger.error('API orders error:', error);
         res.status(500).json({ error: 'Failed to load orders.' });
+      }
+    });
+
+    // Analytics API endpoint
+    app.get('/admin/api/analytics', requireAdmin, async (req, res) => {
+      try {
+        const analytics = await AdminService.getAnalytics();
+        // Calculate uptime (100% since last start)
+        const now = Date.now();
+        const uptimeMs = now - botStartTime;
+        const uptimeHours = uptimeMs / (1000 * 60 * 60);
+        // For now, always 100% since last start
+        analytics.botUptime = '100.0';
+        analytics.botUptimeHours = uptimeHours.toFixed(2);
+        res.json(analytics);
+      } catch (error) {
+        logger.error('Analytics API error:', error);
+        res.status(500).json({ error: 'Failed to fetch analytics' });
       }
     });
 

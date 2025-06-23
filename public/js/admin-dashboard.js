@@ -112,10 +112,7 @@ window.addEventListener('DOMContentLoaded', function() {
   if (filterBtn) {
     filterBtn.addEventListener('click', function() {
       const activeTab = document.querySelector('.tab-btn.active');
-      if (activeTab && activeTab.dataset.tab === 'orders-tab') {
-        // Show filter modal or form for orders
-        alert('Filter functionality for orders - implement as needed');
-      }
+      if (activeTab) showFilterModal(activeTab.dataset.tab);
     });
   }
   
@@ -131,11 +128,14 @@ window.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
+
+  // --- Real Analytics Fetch ---
+  fetchAndRenderAnalytics();
 });
 
 // --- AJAX Pagination for Businesses and Orders Tabs ---
-let businessesFilter = { search: '' };
-let ordersFilter = { status: '', business: '', search: '' };
+let businessesFilter = { search: '', status: '' };
+let ordersFilter = { status: '', business: '', search: '', date_from: '', date_to: '' };
 
 async function fetchAndRenderBusinesses(page = 1, pageSize = 10) {
   const tableBody = document.querySelector('#businesses-tab .data-table tbody');
@@ -146,7 +146,8 @@ async function fetchAndRenderBusinesses(page = 1, pageSize = 10) {
     const params = new URLSearchParams({
       page,
       pageSize,
-      search: businessesFilter.search || ''
+      search: businessesFilter.search || '',
+      status: businessesFilter.status || ''
     });
     const res = await fetch(`/admin/api/businesses?${params}`);
     const data = await res.json();
@@ -225,7 +226,9 @@ async function fetchAndRenderOrders(page = 1, pageSize = 10) {
       pageSize,
       status: ordersFilter.status || '',
       business: ordersFilter.business || '',
-      search: ordersFilter.search || ''
+      search: ordersFilter.search || '',
+      date_from: ordersFilter.date_from || '',
+      date_to: ordersFilter.date_to || ''
     });
     const res = await fetch(`/admin/api/orders?${params}`);
     const data = await res.json();
@@ -323,4 +326,64 @@ function attachToggleHandlers() {
       }
     });
   });
+}
+
+// Modal logic
+function showFilterModal(tab) {
+  document.getElementById('filter-modal').style.display = 'flex';
+  document.getElementById('filter-modal-businesses').style.display = tab === 'businesses-tab' ? 'block' : 'none';
+  document.getElementById('filter-modal-orders').style.display = tab === 'orders-tab' ? 'block' : 'none';
+}
+function closeFilterModal() {
+  document.getElementById('filter-modal').style.display = 'none';
+}
+document.getElementById('close-filter-modal').onclick = closeFilterModal;
+document.getElementById('filter-modal').onclick = function(e) {
+  if (e.target === this) closeFilterModal();
+};
+
+// Businesses filter form
+const businessesFilterForm = document.getElementById('businesses-filter-modal-form');
+if (businessesFilterForm) {
+  businessesFilterForm.onsubmit = function(e) {
+    e.preventDefault();
+    const status = this.status.value;
+    businessesFilter.status = status;
+    closeFilterModal();
+    fetchAndRenderBusinesses(1);
+  };
+}
+// Orders filter form
+const ordersFilterForm = document.getElementById('orders-filter-modal-form');
+if (ordersFilterForm) {
+  ordersFilterForm.onsubmit = function(e) {
+    e.preventDefault();
+    ordersFilter.status = this.status.value;
+    ordersFilter.business = this.business.value;
+    ordersFilter.date_from = this.date_from.value;
+    ordersFilter.date_to = this.date_to.value;
+    closeFilterModal();
+    fetchAndRenderOrders(1);
+  };
+}
+
+// --- Real Analytics Fetch ---
+async function fetchAndRenderAnalytics() {
+  try {
+    const res = await fetch('/admin/api/analytics');
+    if (!res.ok) throw new Error('Not logged in or API error');
+    const data = await res.json();
+    // Update cards
+    document.querySelector('.stat-card.revenue .stat-value').textContent = `$${data.totalRevenue}`;
+    document.querySelector('.stat-card.businesses .stat-value').textContent = data.totalBusinesses;
+    document.querySelector('.stat-card.orders .stat-value').textContent = data.totalOrders;
+    // Update bot uptime
+    const uptimeCard = document.querySelector('.stat-card.uptime .stat-value');
+    if (uptimeCard && data.botUptime) {
+      uptimeCard.textContent = `${parseFloat(data.botUptime).toFixed(1)}%`;
+      uptimeCard.title = `Uptime since last start: ${data.botUptimeHours} hours`;
+    }
+  } catch (err) {
+    // fallback: do nothing, keep mock data
+  }
 } 
