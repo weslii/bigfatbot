@@ -286,9 +286,18 @@ app.get('/landing-preview', (req, res) => {
   res.render('landing-preview');
 });
 
-// Add WhatsApp Delivery Dashboard route
-app.get('/whatsapp-delivery-dashboard', (req, res) => {
-  res.render('whatsapp-delivery-dashboard');
+// Preview landing page route
+app.get('/preview-landing', (req, res) => {
+  res.render('preview-landing');
+});
+
+// Preview admin dashboard route
+app.get('/admin/preview-dashboard', (req, res) => {
+  // Provide mock data for preview
+  res.render('admin/preview-dashboard', {
+    admin: { username: 'admin', email: 'admin@example.com' },
+    stats: { totalRevenue: '45,231.89', totalBusinesses: 2350, totalOrders: 12234 }
+  });
 });
 
 // Start server

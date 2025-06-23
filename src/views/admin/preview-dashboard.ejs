@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard Preview - WhatsApp Delivery Bot</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/admin-dashboard.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <i class="fab fa-whatsapp"></i>
+                </div>
+                <div class="logo-text">
+                    <span class="main-title">Admin Dashboard</span>
+                    <span class="sub-title">WhatsApp Delivery Bot</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" placeholder="Search businesses..." class="search-input" id="searchInput">
+                </div>
+                <button class="icon-btn" id="notificationBtn">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge">3</span>
+                </button>
+                <button class="icon-btn" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div class="dropdown">
+                    <button class="profile-btn" id="profileDropdown">
+                        <i class="fas fa-shield-alt"></i>
+                    </button>
+                    <div class="dropdown-content" id="profileMenu">
+                        <div class="profile-info">
+                            <div class="profile-name"><%= admin ? admin.username : 'Admin User' %></div>
+                            <div class="profile-email"><%= admin ? admin.email : 'admin@whatsappbot.com' %></div>
+                        </div>
+                        <hr>
+                        <a href="#"><i class="fas fa-cog"></i> Settings</a>
+                        <a href="/admin/logout"><i class="fas fa-sign-out-alt"></i> Log out</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <main class="main-content">
+        <!-- Stats Overview -->
+        <section class="stats-grid">
+            <div class="stat-card revenue">
+                <div class="stat-header">
+                    <span class="stat-title">Total Revenue</span>
+                    <div class="stat-icon">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                </div>
+                <div class="stat-value">$<%= stats && stats.totalRevenue ? stats.totalRevenue : '0.00' %></div>
+                <div class="stat-change positive">+20.1% from last month</div>
+            </div>
+            <div class="stat-card businesses">
+                <div class="stat-header">
+                    <span class="stat-title">Active Businesses</span>
+                    <div class="stat-icon">
+                        <i class="fas fa-building"></i>
+                    </div>
+                </div>
+                <div class="stat-value"><%= stats && stats.totalBusinesses ? stats.totalBusinesses : 0 %></div>
+                <div class="stat-change positive">+180.1% from last month</div>
+            </div>
+            <div class="stat-card orders">
+                <div class="stat-header">
+                    <span class="stat-title">Total Orders</span>
+                    <div class="stat-icon">
+                        <i class="fas fa-box"></i>
+                    </div>
+                </div>
+                <div class="stat-value"><%= stats && stats.totalOrders ? stats.totalOrders : 0 %></div>
+                <div class="stat-change positive">+19% from last month</div>
+            </div>
+            <div class="stat-card uptime">
+                <div class="stat-header">
+                    <span class="stat-title">Bot Uptime</span>
+                    <div class="stat-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                </div>
+                <div class="stat-value">99.9%</div>
+                <div class="stat-change positive">+0.1% from last month</div>
+            </div>
+        </section>
+        <!-- The rest of the dashboard content (tabs, tables, etc.) should be updated to use your app's data and routes as needed. -->
+    </main>
+</body>
+</html> 
