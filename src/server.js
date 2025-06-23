@@ -281,10 +281,10 @@ app.get('/', (req, res) => {
   res.render('index', { userId: req.session ? req.session.userId : null });
 });
 
-// Serve React admin dashboard static build (Next.js app directory)
-app.use('/admin/dashboard', express.static(path.join(__dirname, '..', 'admin-dashboard', '.next', 'server', 'app')));
+// Serve static React admin dashboard
+app.use('/admin/dashboard', express.static(path.join(__dirname, '..', 'public', 'admin-dashboard')));
 app.get('/admin/dashboard/*', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'admin-dashboard', '.next', 'server', 'app', 'index.html'));
+  res.sendFile(path.join(__dirname, '..', 'public', 'admin-dashboard', 'index.html'));
 });
 
 // Start server
