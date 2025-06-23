@@ -93,6 +93,15 @@ class WhatsAppService {
     });
 
     this.client.on('message', this.handleMessage.bind(this));
+
+    this.lastActivity = null;
+    this.messageStats = {
+      total: 0,
+      successful: 0,
+      failed: 0,
+      responseTimes: [],
+      dailyCounts: {}, // { 'YYYY-MM-DD': count }
+    };
   }
 
   async start() {
@@ -127,6 +136,12 @@ class WhatsAppService {
   }
 
   async handleMessage(message) {
+    const start = Date.now();
+    this.lastActivity = new Date();
+    const today = this.lastActivity.toISOString().slice(0, 10);
+    this.messageStats.total++;
+    this.messageStats.dailyCounts[today] = (this.messageStats.dailyCounts[today] || 0) + 1;
+    let success = false;
     try {
       const chat = await message.getChat();
       const contact = await message.getContact();
@@ -164,8 +179,15 @@ class WhatsAppService {
       else if (groupInfo.group_type === 'delivery') {
         await this.handleDeliveryGroupMessage(message, contact, groupInfo);
       }
+
+      success = true;
     } catch (error) {
       logger.error('Error handling message:', error);
+    } finally {
+      if (success) this.messageStats.successful++;
+      else this.messageStats.failed++;
+      this.messageStats.responseTimes.push(Date.now() - start);
+      if (this.messageStats.responseTimes.length > 100) this.messageStats.responseTimes.shift();
     }
   }
 
@@ -1011,6 +1033,23 @@ For help, type /help in the delivery group.
       logger.error('Error in fallback order ID extraction:', error);
       return null;
     }
+  }
+
+  getBotMetrics() {
+    // Calculate success rate
+    const { total, successful, responseTimes, dailyCounts } = this.messageStats;
+    const successRate = total > 0 ? (successful / total) * 100 : 100;
+    // Average response time (ms)
+    const avgResponse = responseTimes.length > 0 ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length : 0;
+    // Daily messages (average over last 7 days)
+    const days = Object.keys(dailyCounts).sort().slice(-7);
+    const dailyAvg = days.length > 0 ? days.map(d => dailyCounts[d]).reduce((a, b) => a + b, 0) / days.length : 0;
+    return {
+      lastActivity: this.lastActivity,
+      messageSuccessRate: successRate,
+      avgResponseTime: avgResponse,
+      dailyMessages: dailyAvg
+    };
   }
 }
 

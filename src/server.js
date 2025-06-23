@@ -300,7 +300,6 @@ app.get('/admin/preview-dashboard', async (req, res) => {
     const now = Date.now();
     const uptimeMs = now - botStartTime;
     const uptimeHours = uptimeMs / (1000 * 60 * 60);
-    
     res.render('admin/preview-dashboard', {
       admin: { username: 'admin', email: 'admin@example.com' },
       stats: {
@@ -308,7 +307,15 @@ app.get('/admin/preview-dashboard', async (req, res) => {
         totalBusinesses: analytics.totalBusinesses,
         totalOrders: analytics.totalOrders,
         botUptime: '100.0',
-        botUptimeHours: uptimeHours.toFixed(2)
+        botUptimeHours: uptimeHours.toFixed(2),
+        businessChange: analytics.businessChange,
+        orderChange: analytics.orderChange,
+        connectionStatus: analytics.status,
+        phoneNumber: analytics.number,
+        lastActivity: analytics.lastActivity,
+        messageSuccessRate: analytics.messageSuccessRate,
+        avgResponseTime: analytics.avgResponseTime,
+        dailyMessages: analytics.dailyMessages
       }
     });
   } catch (error) {
