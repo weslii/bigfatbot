@@ -469,6 +469,7 @@ class WhatsAppService {
       // Check if this business already has both groups
       const groupCount = await database.query('groups')
         .where('business_id', business.business_id)
+        .whereNot('group_type', 'main')  // Exclude main groups from count
         .count('* as count')
         .first();
 
@@ -480,6 +481,7 @@ class WhatsAppService {
       // Determine group type based on existing groups
       const existingGroups = await database.query('groups')
         .where('business_id', business.business_id)
+        .whereNot('group_type', 'main')  // Exclude main groups from existing groups check
         .select('group_type');
 
       let groupType;
