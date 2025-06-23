@@ -10,7 +10,7 @@ class RegistrationService {
       const [user] = await database.query('users')
         .where('email', email)
         .first();
-//hi
+
       if (user) {
         throw new Error('User already exists');
       }
