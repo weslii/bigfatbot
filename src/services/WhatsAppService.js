@@ -415,16 +415,33 @@ class WhatsAppService {
 
   async handleSetupCommand(message, chat, contact) {
     try {
+      // Validate chat object
+      if (!chat) {
+        logger.error('Chat object is undefined in handleSetupCommand');
+        return;
+      }
+
+      // Validate chat.id and _serialized property
+      if (!chat.id || !chat.id._serialized) {
+        logger.error('Chat ID or _serialized property is undefined', { 
+          chatId: chat.id,
+          hasSerialized: chat.id ? !!chat.id._serialized : false
+        });
+        return;
+      }
+
+      const chatId = chat.id._serialized;
+
       // Only allow setup in groups
       if (!chat.isGroup) {
-        await this.client.sendMessage(chat.id._serialized, '❌ Setup can only be done in WhatsApp groups.');
+        await this.client.sendMessage(chatId, '❌ Setup can only be done in WhatsApp groups.');
         return;
       }
 
       // Parse setup identifier from command
       const parts = message.body.split(' ');
       if (parts.length !== 2) {
-        await this.client.sendMessage(chat.id._serialized, '❌ Invalid setup command. Use: /setup <businessname-CODE>\n\nExample: /setup cakeshop-ABC123');
+        await this.client.sendMessage(chatId, '❌ Invalid setup command. Use: /setup <businessname-CODE>\n\nExample: /setup cakeshop-ABC123');
         return;
       }
 
@@ -442,17 +459,17 @@ class WhatsAppService {
       }
 
       if (!business) {
-        await this.client.sendMessage(chat.id._serialized, '❌ Business not found. Please check your setup code.\n\nMake sure you\'re using the correct format: /setup businessname-CODE');
+        await this.client.sendMessage(chatId, '❌ Business not found. Please check your setup code.\n\nMake sure you\'re using the correct format: /setup businessname-CODE');
         return;
       }
 
       // Check if this group is already registered
       const existingGroup = await database.query('groups')
-        .where('group_id', chat.id._serialized)
+        .where('group_id', chatId)
         .first();
 
       if (existingGroup) {
-        await this.client.sendMessage(chat.id._serialized, '❌ This group is already registered.');
+        await this.client.sendMessage(chatId, '❌ This group is already registered.');
         return;
       }
 
@@ -463,7 +480,7 @@ class WhatsAppService {
         .first();
 
       if (groupCount.count >= 2) {
-        await this.client.sendMessage(chat.id._serialized, '❌ This business already has both groups registered.');
+        await this.client.sendMessage(chatId, '❌ This business already has both groups registered.');
         return;
       }
 
@@ -475,7 +492,7 @@ class WhatsAppService {
       let groupType;
       if (existingGroups.length === 0) {
         // First group - ask user which type
-        await this.client.sendMessage(chat.id._serialized, 
+        await this.client.sendMessage(chatId, 
           `🤖 *Business Setup*\n\nBusiness: ${business.business_name}\n\nIs this a sales group or delivery group?\n\nReply with "sales" or "delivery"`
         );
         return;
@@ -491,7 +508,7 @@ class WhatsAppService {
         business_id: business.business_id,
           business_name: business.business_name,
           group_name: chat.name,
-          group_id: chat.id._serialized,
+          group_id: chatId,
           group_type: groupType
       };
 
@@ -504,7 +521,7 @@ class WhatsAppService {
       await database.query('groups').insert(insertData);
 
       // Send confirmation
-      await this.client.sendMessage(chat.id._serialized, 
+      await this.client.sendMessage(chatId, 
         `✅ *${groupType === 'sales' ? 'Sales' : 'Delivery'} Group Registered!*\n\n` +
         `*Business:* ${business.business_name}\n` +
         `*Group:* ${chat.name}\n` +
@@ -515,7 +532,7 @@ class WhatsAppService {
       );
 
       logger.info('Group registered successfully', {
-        groupId: chat.id._serialized,
+        groupId: chatId,
         groupName: chat.name,
         businessId: business.business_id,
         businessName: business.business_name,
@@ -523,7 +540,15 @@ class WhatsAppService {
       });
     } catch (error) {
       logger.error('Error handling setup command:', error);
-      await this.client.sendMessage(chat.id._serialized, '❌ Error during setup. Please try again.');
+      
+      // Try to send error message if we have a valid chat ID
+      try {
+        if (chat && chat.id && chat.id._serialized) {
+          await this.client.sendMessage(chat.id._serialized, '❌ Error during setup. Please try again.');
+        }
+      } catch (sendError) {
+        logger.error('Failed to send error message:', sendError);
+      }
     }
   }
 
