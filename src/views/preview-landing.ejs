@@ -25,11 +25,14 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: linear-gradient(135deg, #f8fafc 0%, #ffffff 50%, #ecfdf5 100%);
-            color: var(--foreground);
             margin: 0;
             padding: 0;
+            padding-top: 4rem;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background);
+            color: var(--foreground);
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         [data-theme="dark"] body {
@@ -38,26 +41,28 @@
 
         /* Header */
         .header {
-            position: sticky;
+            position: fixed;
             top: 0;
-            z-index: 50;
-            border-bottom: 1px solid var(--border);
+            left: 0;
+            right: 0;
+            z-index: 1000;
             background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s ease;
         }
 
         [data-theme="dark"] .header {
-            background: rgba(2, 6, 23, 0.8);
+            background: rgba(15, 23, 42, 0.8);
         }
 
         .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0 1.5rem;
-            display: flex;
-            height: 4rem;
-            align-items: center;
-            justify-content: space-between;
         }
 
         .logo {
@@ -67,9 +72,9 @@
         }
 
         .logo-icon {
-            display: flex;
-            height: 2.5rem;
             width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 0.75rem;
@@ -77,9 +82,14 @@
             box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
 
+        .logo-icon i {
+            font-size: 1.25rem;
+            color: white;
+        }
+
         .logo-text {
-            font-size: 1.125rem;
             font-weight: 700;
+            font-size: 1.125rem;
             background: linear-gradient(135deg, #10b981, #14b8a6);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -87,42 +97,40 @@
         }
 
         .nav {
-            display: none;
+            display: flex;
             align-items: center;
-            gap: 2rem;
-        }
-
-        @media (min-width: 768px) {
-            .nav {
-                display: flex;
-            }
+            gap: 1.5rem;
         }
 
         .nav-link {
-            font-size: 0.875rem;
-            font-weight: 500;
             color: var(--muted);
             text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
             transition: color 0.3s ease;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
         }
 
         .nav-link:hover {
             color: var(--foreground);
+            background: var(--border);
         }
 
         .theme-toggle {
-            background: none;
+            background: transparent;
             border: none;
             color: var(--muted);
             cursor: pointer;
             padding: 0.5rem;
             border-radius: 0.5rem;
+            font-size: 0.875rem;
             transition: all 0.3s ease;
         }
 
         .theme-toggle:hover {
-            background: var(--border);
             color: var(--foreground);
+            background: var(--border);
         }
 
         .btn {
@@ -865,7 +873,7 @@
         <div class="header-content">
             <div class="logo">
                 <div class="logo-icon">
-                    <i class="fas fa-comments"></i>
+                    <i class="fab fa-whatsapp"></i>
                 </div>
                 <div class="logo-text">WhatsApp Delivery Bot</div>
             </div>
@@ -1084,7 +1092,7 @@
             <div class="footer-content">
                 <div class="footer-logo">
                     <div class="footer-logo-icon">
-                        <i class="fas fa-comments"></i>
+                        <i class="fab fa-whatsapp"></i>
                     </div>
                     <div class="footer-logo-text">WhatsApp Delivery Bot</div>
                 </div>
