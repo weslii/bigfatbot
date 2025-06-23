@@ -161,11 +161,8 @@ class RegistrationService {
           group_type: 'main'
         };
 
-        // Only add short code columns if they exist
-        if (columnExists.rows.length > 0) {
-          insertData.short_code = shortCode;
-          insertData.setup_identifier = setupIdentifier;
-        }
+        // Don't add short code to main group - it's just a placeholder
+        // Short codes will be added to actual groups during setup
 
         // Create a default group entry for the business
         const [group] = await database.query('groups')
@@ -221,11 +218,8 @@ class RegistrationService {
           group_type: 'main'
         };
 
-        // Only add short code columns if they exist
-        if (columnExists.rows.length > 0) {
-          insertData.short_code = shortCode;
-          insertData.setup_identifier = setupIdentifier;
-        }
+        // Don't add short code to main group - it's just a placeholder
+        // Short codes will be added to actual groups during setup
 
         // Create a default group entry for the business
         const [group] = await database.query('groups')
