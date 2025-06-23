@@ -129,8 +129,8 @@
             background: rgba(16, 25, 43, 0.98);
             border-radius: 1rem;
             box-shadow: 0 4px 24px 0 rgba(16, 185, 129, 0.08), 0 1px 8px 0 rgba(0,0,0,0.10);
-            padding: 2rem 1.25rem 1.5rem 1.25rem;
-            max-width: 360px;
+            padding: 2rem 2.5rem 1.5rem 2.5rem;
+            max-width: 600px;
             width: 100%;
             color: #fff;
             display: flex;
@@ -144,7 +144,7 @@
             color: #1e293b;
         }
         .register-title {
-            font-size: 1.15rem;
+            font-size: 1.25rem;
             font-weight: 700;
             text-align: center;
             margin-bottom: 0.2rem;
@@ -161,19 +161,33 @@
         }
         .register-fields-row {
             display: flex;
-            gap: 0.75rem;
+            gap: 1.25rem;
         }
         .register-fields-row .form-group {
             flex: 1 1 0;
             margin-bottom: 0;
         }
-        @media (max-width: 600px) {
+        .register-fields-row .register-btn {
+            align-self: flex-end;
+            margin-top: 0;
+            min-width: 210px;
+        }
+        @media (max-width: 800px) {
+            .register-card {
+                max-width: 98vw;
+                padding: 1.2rem 0.5rem;
+            }
             .register-fields-row {
                 flex-direction: column;
                 gap: 0;
             }
             .register-fields-row .form-group {
                 margin-bottom: 1rem;
+            }
+            .register-fields-row .register-btn {
+                width: 100%;
+                min-width: 0;
+                margin-top: 0.5rem;
             }
         }
         .form-group {
@@ -293,9 +307,9 @@
     <section class="register-section">
         <form class="register-card" action="/register" method="POST">
             <div>
-                <div class="register-title">Register Your Business</div>
+                <div class="register-title">Create Your Account</div>
                 <div class="register-desc">Create your account to start managing deliveries with WhatsApp Delivery Bot.</div>
-          <% if (typeof error !== 'undefined') { %>
+                <% if (typeof error !== 'undefined') { %>
                     <div class="alert"><%= error %></div>
                 <% } %>
             </div>
@@ -327,9 +341,8 @@
                     <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required minlength="6">
                     <div class="form-text" id="confirmPasswordError" style="display:none;color:#b91c1c;"></div>
                 </div>
-                <div style="flex:1;"></div>
+                <button type="submit" class="register-btn">Continue to Business Setup <i class="fas fa-arrow-right"></i></button>
             </div>
-            <button type="submit" class="register-btn">Continue to Business Setup <i class="fas fa-arrow-right"></i></button>
             <div class="register-bottom">
                 Already have an account?
                 <a href="/login">Sign in</a>
