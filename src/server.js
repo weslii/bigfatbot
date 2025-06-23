@@ -1635,10 +1635,7 @@ async function startServer() {
     // WhatsApp bot management endpoints
     app.get('/api/whatsapp/bot-info', async (req, res) => {
       try {
-        // Import WhatsAppService
-        const WhatsAppService = require('./services/WhatsAppService');
-        const whatsappService = new WhatsAppService();
-        
+        const whatsappService = WhatsAppService.getInstance();
         const botInfo = await whatsappService.getBotInfo();
         
         res.json({ 
@@ -1675,8 +1672,7 @@ async function startServer() {
         }
 
         // Import WhatsAppService
-        const WhatsAppService = require('./services/WhatsAppService');
-        const whatsappService = new WhatsAppService();
+        const whatsappService = WhatsAppService.getInstance();
 
         // Call the changeNumber method
         await whatsappService.changeNumber();

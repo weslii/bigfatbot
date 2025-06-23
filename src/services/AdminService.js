@@ -580,9 +580,9 @@ class AdminService {
   }
 
   static async getBotManagementMetrics() {
-    const botService = require('./WhatsAppService');
+    const botService = WhatsAppService.getInstance();
     const info = await botService.getBotInfo();
-    const metrics = botService.getBotMetrics();
+    const metrics = await botService.getBotMetrics();
     return { ...info, ...metrics };
   }
 
