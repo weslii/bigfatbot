@@ -373,7 +373,7 @@
             border: 1px solid var(--border);
             border-radius: 1.25rem;
             box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-            background: #10192b;
+            background: #10192b !important;
             color: #fff;
             padding: 1.5rem 1.25rem 1.25rem 1.25rem;
             display: flex;
@@ -383,12 +383,14 @@
             margin: 0 auto;
         }
         [data-theme="light"] .card {
-            background: #f8fafc;
+            background: #f8fafc !important;
             color: #1e293b;
         }
         .card-header {
             text-align: center;
             margin-bottom: 1rem;
+            background: none !important;
+            box-shadow: none !important;
         }
         .card-icon {
             width: 3rem;
@@ -768,9 +770,9 @@
             <div class="logo">
                 <div class="logo-icon">
                     <i class="fab fa-whatsapp"></i>
-                </div>
+    </div>
                 <div class="logo-text">WhatsApp Delivery Bot</div>
-            </div>
+  </div>
 
             <nav class="nav">
                 <a href="#features" class="nav-link">Features</a>
@@ -809,8 +811,8 @@
                     <a href="#" class="btn btn-outline-light btn-lg">
                         Watch Demo
                     </a>
-                </div>
-            </div>
+      </div>
+    </div>
         </div>
     </section>
 
@@ -886,9 +888,9 @@
                             Login to Dashboard
                             <i class="fas fa-arrow-right"></i>
                         </a>
-                    </div>
-                </div>
-            </div>
+      </div>
+    </div>
+  </div>
         </div>
     </section>
 
@@ -932,8 +934,8 @@
                     <p class="feature-description">
                         Get insights into your delivery performance with comprehensive analytics and reporting tools.
                     </p>
-                </div>
-            </div>
+      </div>
+    </div>
         </div>
     </section>
 
@@ -957,8 +959,8 @@
                     <div class="stat-number warning">99.9%</div>
                     <div class="stat-label">Uptime</div>
                 </div>
-            </div>
-        </div>
+      </div>
+    </div>
     </section>
 
     <!-- CTA Section -->
@@ -994,15 +996,15 @@
                     <a href="#" class="footer-link">Privacy Policy</a>
                     <a href="#" class="footer-link">Terms of Service</a>
                     <a href="#" class="footer-link">Support</a>
-                </div>
-            </div>
+      </div>
+    </div>
             <div class="footer-bottom">
                 © 2025 WhatsApp Delivery Bot. All rights reserved.
-            </div>
-        </div>
+  </div>
+</div>
     </footer>
 
-    <script>
+<script>
         // Theme toggle functionality
         const themeToggle = document.getElementById('themeToggle');
         const html = document.documentElement;
@@ -1027,12 +1029,12 @@
         }
         
         // Fade in animations
-        window.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.fade-in').forEach((el, i) => {
-                el.style.animationDelay = (0.1 + i * 0.1) + 's';
-                el.classList.add('animated');
-            });
-        });
-    </script>
+window.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.fade-in').forEach((el, i) => {
+    el.style.animationDelay = (0.1 + i * 0.1) + 's';
+    el.classList.add('animated');
+  });
+});
+</script> 
 </body>
 </html> 
