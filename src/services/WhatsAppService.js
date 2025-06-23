@@ -369,26 +369,6 @@ class WhatsAppService {
       // Send delivery confirmation to the group where delivery was marked
       await this.client.sendMessage(groupInfo.group_id, `✅ Order #${orderId} marked as delivered by ${deliveryPerson}.`);
       
-      // Get both sales and delivery groups for this business
-      const businessGroups = await database.query('groups')
-        .where('business_id', groupInfo.business_id)
-        .whereIn('group_type', ['sales', 'delivery'])
-        .select('group_id', 'group_type');
-      
-      // Send notification to the other group (not the one where delivery was marked)
-      for (const group of businessGroups) {
-        if (group.group_id !== groupInfo.group_id) {
-          const groupType = group.group_type === 'sales' ? 'Sales' : 'Delivery';
-          await this.client.sendMessage(group.group_id, 
-            `✅ *Order Delivered*\n\n` +
-            `*Order ID:* ${orderId}\n` +
-            `*Customer:* ${order.customer_name}\n` +
-            `*Delivered by:* ${deliveryPerson} (${groupType} Team)\n` +
-            `*Items:* ${order.items}`
-          );
-        }
-      }
-      
       logger.info('Order marked as delivered', { orderId, deliveryPerson, businessId: groupInfo.business_id });
     } catch (error) {
       logger.error('Error marking order as delivered:', error);
