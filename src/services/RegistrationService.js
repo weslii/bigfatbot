@@ -4,7 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const ShortCodeGenerator = require('../utils/shortCodeGenerator');
 
 class RegistrationService {
-  static async registerUser(name, email, phoneNumber) {
+  static async registerUser(name, email, phoneNumber, password) {
     try {
       // Check if user already exists
       const [user] = await database.query('users')
@@ -15,12 +15,17 @@ class RegistrationService {
         throw new Error('User already exists');
       }
 
+      // Hash the password
+      const bcrypt = require('bcryptjs');
+      const passwordHash = await bcrypt.hash(password, 10);
+
       // Create user
       const [newUser] = await database.query('users')
         .insert({
           full_name: name,
           email: email,
-          phone_number: phoneNumber
+          phone_number: phoneNumber,
+          password_hash: passwordHash
         })
         .returning('*');
 

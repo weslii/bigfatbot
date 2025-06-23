@@ -435,11 +435,9 @@ class OrderParser {
 
   static assignRemainingFieldsWithContext(blocks) {
     const result = {};
-    
     // First, check for dates in any block
     let dateFound = false;
     let dateBlockIndex = -1;
-    
     for (let i = 0; i < blocks.length; i++) {
       const blockText = blocks[i].join(' ');
       if (this.isDateString(blockText)) {
@@ -449,102 +447,42 @@ class OrderParser {
         break;
       }
     }
-    
-    // Score each block based on its content and position (excluding date block)
-    const blockScores = blocks.map((block, index) => {
-      const blockText = block.join(' ');
-      
-      // Skip scoring if this is the date block
-      if (dateFound && index === dateBlockIndex) {
-        return {
-          block,
-          index,
-          nameScore: 0,
-          addressScore: 0,
-          itemScore: 0,
-          positionScore: { name: 0, address: 0, items: 0 },
-          isDateBlock: true
-        };
-      }
-      
-      return {
-        block,
-        index,
-        nameScore: this.calculatePatternScore(blockText, this.namePatterns),
-        addressScore: this.calculatePatternScore(blockText, this.addressPatterns),
-        itemScore: this.calculatePatternScore(blockText, this.itemPatterns),
-        // Position-based scoring
-        positionScore: {
-          name: index === 0 ? 2 : 0, // First block likely to be name
-          address: index > 0 && index < blocks.length - 1 ? 1 : 0, // Middle blocks likely to be address
-          items: index === blocks.length - 1 ? 2 : 0 // Last block likely to be items
-        },
-        isDateBlock: false
-      };
-    });
-
-    // Calculate final scores with position weighting
-    const finalScores = blockScores.map(score => ({
-      ...score,
-      finalNameScore: score.nameScore + score.positionScore.name,
-      finalAddressScore: score.addressScore + score.positionScore.address,
-      finalItemScore: score.itemScore + score.positionScore.items
-    }));
-
-    // Assign fields based on best matches (excluding date block)
-    const usedBlockIndexes = new Set();
-    if (dateFound) {
-      usedBlockIndexes.add(dateBlockIndex);
-    }
-    
-    const assigned = { name: false, address: false, items: false };
-    
-    // Sort by confidence and assign
-    const sortedByConfidence = finalScores
-      .filter(score => !score.isDateBlock) // Exclude date block from assignment
-      .map(score => ({
-        ...score,
-        maxScore: Math.max(score.finalNameScore, score.finalAddressScore, score.finalItemScore),
-        bestType: score.finalNameScore >= score.finalAddressScore && score.finalNameScore >= score.finalItemScore ? 'name' :
-                  score.finalAddressScore >= score.finalItemScore ? 'address' : 'items'
-      }))
-      .sort((a, b) => b.maxScore - a.maxScore);
-
-    // Assign fields based on best matches
-    for (const item of sortedByConfidence) {
-      if (item.bestType === 'name' && !assigned.name && !usedBlockIndexes.has(item.index)) {
-        result.customerName = item.block.join(' ').trim();
-        assigned.name = true;
-        usedBlockIndexes.add(item.index);
-      } else if (item.bestType === 'address' && !assigned.address && !usedBlockIndexes.has(item.index)) {
-        result.address = item.block.join(' ').trim();
-        assigned.address = true;
-        usedBlockIndexes.add(item.index);
-      } else if (item.bestType === 'items' && !assigned.items && !usedBlockIndexes.has(item.index)) {
-        result.items = item.block.join(' ').trim();
-        assigned.items = true;
-        usedBlockIndexes.add(item.index);
+    // Remove date block from further assignment
+    const filteredBlocks = blocks.filter((_, idx) => idx !== dateBlockIndex);
+    // Assign address: look for block matching address pattern or city/area
+    let addressBlockIndex = -1;
+    for (let i = 0; i < filteredBlocks.length; i++) {
+      const blockText = filteredBlocks[i].join(' ');
+      if (this.calculatePatternScore(blockText, this.addressPatterns) > 0) {
+        result.address = blockText;
+        addressBlockIndex = i;
+        break;
       }
     }
-
-    // Fill any remaining unassigned fields in order, only using unused blocks
-    const unassignedBlocks = blocks.filter((block, idx) =>
-      !usedBlockIndexes.has(idx)
-    );
-
-    let unassignedIndex = 0;
-    if (!assigned.name && unassignedIndex < unassignedBlocks.length) {
-      result.customerName = unassignedBlocks[unassignedIndex].join(' ').trim();
-      unassignedIndex++;
+    // Remove address block from further assignment
+    const filteredBlocks2 = filteredBlocks.filter((_, idx) => idx !== addressBlockIndex);
+    // Assign name: first block if not already assigned
+    if (filteredBlocks2.length > 0) {
+      result.customerName = filteredBlocks2[0].join(' ');
     }
-    if (!assigned.address && unassignedIndex < unassignedBlocks.length) {
-      result.address = unassignedBlocks[unassignedIndex].join(' ').trim();
-      unassignedIndex++;
+    // Assign items: any remaining block that is not empty and not already assigned
+    for (let i = 1; i < filteredBlocks2.length; i++) {
+      const blockText = filteredBlocks2[i].join(' ');
+      if (blockText && !result.items) {
+        result.items = blockText;
+      }
     }
-    if (!assigned.items && unassignedIndex < unassignedBlocks.length) {
-      result.items = unassignedBlocks[unassignedIndex].join(' ').trim();
+    // Fallback: if only one block left and not assigned as address or name, assign as items
+    if (!result.items && filteredBlocks2.length === 2) {
+      result.items = filteredBlocks2[1].join(' ');
     }
-
+    // Accept single-word items like 'Anniversary' if not assigned elsewhere
+    if (!result.items && filteredBlocks2.length === 1) {
+      const blockText = filteredBlocks2[0].join(' ');
+      if (blockText && !result.address && !result.customerName) {
+        result.items = blockText;
+      }
+    }
     return result;
   }
 
