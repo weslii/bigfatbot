@@ -127,15 +127,15 @@
         }
         .register-card {
             background: rgba(16, 25, 43, 0.98);
-            border-radius: 0.85rem;
-            box-shadow: 0 2px 16px 0 rgba(16, 185, 129, 0.07), 0 1px 6px 0 rgba(0,0,0,0.08);
-            padding: 1.5rem 1.2rem 1.1rem 1.2rem;
-            max-width: 520px;
+            border-radius: 1rem;
+            box-shadow: 0 4px 24px 0 rgba(16, 185, 129, 0.08), 0 1px 8px 0 rgba(0,0,0,0.10);
+            padding: 2rem 2.5rem 1.5rem 2.5rem;
+            max-width: 600px;
             width: 100%;
             color: #fff;
             display: flex;
             flex-direction: column;
-            gap: 0.9rem;
+            gap: 1.2rem;
             border: 1px solid var(--border);
             animation: fadeInUp 0.7s cubic-bezier(.39,.575,.565,1) both;
         }
@@ -154,15 +154,15 @@
         .register-desc {
             text-align: center;
             color: #cbd5e1;
-            font-size: 0.87rem;
-            margin-bottom: 0.7rem;
+            font-size: 0.93rem;
+            margin-bottom: 1rem;
         }
         [data-theme="light"] .register-desc {
             color: #64748b;
         }
         .register-fields-row {
             display: flex;
-            gap: 0.7rem;
+            gap: 1.25rem;
         }
         .register-fields-row .form-group {
             flex: 1 1 0;
@@ -175,61 +175,71 @@
             flex: 0 0 55%;
             min-width: 0;
             max-width: none;
-            padding: 0.48rem 0;
-            font-size: 0.89rem;
+            padding: 0.6rem 0;
+            font-size: 0.99rem;
+            height: 2.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         @media (max-width: 800px) {
             .register-card {
                 max-width: 98vw;
-                padding: 0.8rem 0.3rem;
+                padding: 1.2rem 0.5rem;
             }
             .register-fields-row {
                 flex-direction: column;
                 gap: 0;
             }
             .register-fields-row .form-group {
-                margin-bottom: 0.7rem;
+                margin-bottom: 1rem;
             }
             .register-fields-row.confirm-row .register-btn {
                 width: 100%;
-                margin-top: 0.4rem;
+                margin-top: 0.5rem;
+                height: auto;
             }
         }
         .form-group {
-            margin-bottom: 0.7rem;
+            margin-bottom: 1.1rem;
         }
         .form-label {
             display: block;
             font-weight: 500;
-            margin-bottom: 0.18rem;
-            font-size: 0.89rem;
+            margin-bottom: 0.25rem;
+            font-size: 0.97rem;
         }
         .form-control {
             width: 100%;
-            padding: 0.48rem 0.7rem;
-            border-radius: 0.5rem;
+            padding: 0.6rem 0.85rem;
+            border-radius: 0.6rem;
             border: 1px solid var(--border);
-            background: rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.07);
             color: inherit;
-            font-size: 0.91rem;
+            font-size: 0.97rem;
             transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
             box-sizing: border-box;
         }
         .form-control:focus {
             outline: none;
             border-color: #10b981;
-            background: rgba(255,255,255,0.11);
-            box-shadow: 0 0 0 2px rgba(16,185,129,0.06);
+            background: rgba(255,255,255,0.13);
+            box-shadow: 0 0 0 2px rgba(16,185,129,0.08);
         }
         .form-control:hover {
             border-color: #14b8a6;
-            background: rgba(20,184,166,0.06);
-            box-shadow: 0 1px 2px 0 rgba(16,185,129,0.03);
+            background: rgba(20,184,166,0.08);
+            box-shadow: 0 1px 4px 0 rgba(16,185,129,0.05);
+        }
+        .form-control::placeholder {
+            color: #b6c2cf;
+            font-size: 0.89em;
+            opacity: 1;
         }
         .form-text {
-            font-size: 0.74rem;
+            font-size: 0.8rem;
             color: #94a3b8;
-            margin-top: 0.13rem;
+            margin-top: 0.18rem;
         }
         [data-theme="light"] .form-text {
             color: #64748b;
@@ -246,10 +256,10 @@
         }
         .register-btn {
             width: 100%;
-            padding: 0.48rem 0;
+            padding: 0.6rem 0;
             font-weight: 600;
-            font-size: 0.89rem;
-            border-radius: 0.5rem;
+            font-size: 0.99rem;
+            border-radius: 0.6rem;
             text-decoration: none;
             display: flex;
             align-items: center;
@@ -259,24 +269,25 @@
             cursor: pointer;
             background: #10b981;
             color: #fff;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
             transition: background 0.2s;
-            margin-top: 0.1rem;
+            margin-top: 0.2rem;
+            height: 2.6rem;
         }
         .register-btn:hover {
             background: #059669;
         }
         .register-bottom {
-            margin-top: 0.8rem;
+            margin-top: 1.2rem;
             text-align: center;
-            font-size: 0.87rem;
+            font-size: 0.93rem;
             color: #94a3b8;
         }
         .register-bottom a {
             color: #3b82f6;
             text-decoration: none;
             font-weight: 500;
-            margin-left: 0.18rem;
+            margin-left: 0.25rem;
             transition: color 0.2s;
         }
         .register-bottom a:hover {
