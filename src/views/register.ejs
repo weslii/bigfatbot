@@ -127,15 +127,15 @@
         }
         .register-card {
             background: rgba(16, 25, 43, 0.98);
-            border-radius: 1rem;
-            box-shadow: 0 4px 24px 0 rgba(16, 185, 129, 0.08), 0 1px 8px 0 rgba(0,0,0,0.10);
-            padding: 2rem 2.5rem 1.5rem 2.5rem;
-            max-width: 600px;
+            border-radius: 0.85rem;
+            box-shadow: 0 2px 16px 0 rgba(16, 185, 129, 0.07), 0 1px 6px 0 rgba(0,0,0,0.08);
+            padding: 1.5rem 1.2rem 1.1rem 1.2rem;
+            max-width: 520px;
             width: 100%;
             color: #fff;
             display: flex;
             flex-direction: column;
-            gap: 1.2rem;
+            gap: 0.9rem;
             border: 1px solid var(--border);
             animation: fadeInUp 0.7s cubic-bezier(.39,.575,.565,1) both;
         }
@@ -144,87 +144,92 @@
             color: #1e293b;
         }
         .register-title {
-            font-size: 1.25rem;
-            font-weight: 700;
+            font-size: 1.45rem;
+            font-weight: 800;
             text-align: center;
-            margin-bottom: 0.2rem;
+            margin-bottom: 0.18rem;
             color: #10b981;
+            letter-spacing: -0.5px;
         }
         .register-desc {
             text-align: center;
             color: #cbd5e1;
-            font-size: 0.93rem;
-            margin-bottom: 1rem;
+            font-size: 0.87rem;
+            margin-bottom: 0.7rem;
         }
         [data-theme="light"] .register-desc {
             color: #64748b;
         }
         .register-fields-row {
             display: flex;
-            gap: 1.25rem;
+            gap: 0.7rem;
         }
         .register-fields-row .form-group {
             flex: 1 1 0;
             margin-bottom: 0;
         }
-        .register-fields-row .register-btn {
-            align-self: flex-end;
-            margin-top: 0;
-            min-width: 210px;
+        .register-fields-row.confirm-row .form-group {
+            flex: 0 0 45%;
+        }
+        .register-fields-row.confirm-row .register-btn {
+            flex: 0 0 55%;
+            min-width: 0;
+            max-width: none;
+            padding: 0.48rem 0;
+            font-size: 0.89rem;
         }
         @media (max-width: 800px) {
             .register-card {
                 max-width: 98vw;
-                padding: 1.2rem 0.5rem;
+                padding: 0.8rem 0.3rem;
             }
             .register-fields-row {
                 flex-direction: column;
                 gap: 0;
             }
             .register-fields-row .form-group {
-                margin-bottom: 1rem;
+                margin-bottom: 0.7rem;
             }
-            .register-fields-row .register-btn {
+            .register-fields-row.confirm-row .register-btn {
                 width: 100%;
-                min-width: 0;
-                margin-top: 0.5rem;
+                margin-top: 0.4rem;
             }
         }
         .form-group {
-            margin-bottom: 1.1rem;
+            margin-bottom: 0.7rem;
         }
         .form-label {
             display: block;
             font-weight: 500;
-            margin-bottom: 0.25rem;
-            font-size: 0.97rem;
+            margin-bottom: 0.18rem;
+            font-size: 0.89rem;
         }
         .form-control {
             width: 100%;
-            padding: 0.6rem 0.85rem;
-            border-radius: 0.6rem;
+            padding: 0.48rem 0.7rem;
+            border-radius: 0.5rem;
             border: 1px solid var(--border);
-            background: rgba(255,255,255,0.07);
+            background: rgba(255,255,255,0.06);
             color: inherit;
-            font-size: 0.97rem;
+            font-size: 0.91rem;
             transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
             box-sizing: border-box;
         }
         .form-control:focus {
             outline: none;
             border-color: #10b981;
-            background: rgba(255,255,255,0.13);
-            box-shadow: 0 0 0 2px rgba(16,185,129,0.08);
+            background: rgba(255,255,255,0.11);
+            box-shadow: 0 0 0 2px rgba(16,185,129,0.06);
         }
         .form-control:hover {
             border-color: #14b8a6;
-            background: rgba(20,184,166,0.08);
-            box-shadow: 0 1px 4px 0 rgba(16,185,129,0.05);
+            background: rgba(20,184,166,0.06);
+            box-shadow: 0 1px 2px 0 rgba(16,185,129,0.03);
         }
         .form-text {
-            font-size: 0.8rem;
+            font-size: 0.74rem;
             color: #94a3b8;
-            margin-top: 0.18rem;
+            margin-top: 0.13rem;
         }
         [data-theme="light"] .form-text {
             color: #64748b;
@@ -241,10 +246,10 @@
         }
         .register-btn {
             width: 100%;
-            padding: 0.7rem 0;
+            padding: 0.48rem 0;
             font-weight: 600;
-            font-size: 0.99rem;
-            border-radius: 0.6rem;
+            font-size: 0.89rem;
+            border-radius: 0.5rem;
             text-decoration: none;
             display: flex;
             align-items: center;
@@ -254,24 +259,24 @@
             cursor: pointer;
             background: #10b981;
             color: #fff;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
             transition: background 0.2s;
-            margin-top: 0.2rem;
+            margin-top: 0.1rem;
         }
         .register-btn:hover {
             background: #059669;
         }
         .register-bottom {
-            margin-top: 1.2rem;
+            margin-top: 0.8rem;
             text-align: center;
-            font-size: 0.93rem;
+            font-size: 0.87rem;
             color: #94a3b8;
         }
         .register-bottom a {
             color: #3b82f6;
             text-decoration: none;
             font-weight: 500;
-            margin-left: 0.25rem;
+            margin-left: 0.18rem;
             transition: color 0.2s;
         }
         .register-bottom a:hover {
@@ -281,34 +286,6 @@
         @keyframes fadeInUp {
             0% { opacity: 0; transform: translateY(40px); }
             100% { opacity: 1; transform: translateY(0); }
-        }
-        .register-fields-row.confirm-row {
-            display: flex;
-            gap: 1.25rem;
-            align-items: flex-end;
-        }
-        .register-fields-row.confirm-row .form-group {
-            flex: 2 1 0;
-            margin-bottom: 0;
-        }
-        .register-fields-row.confirm-row .register-btn {
-            flex: 1 1 0;
-            min-width: 0;
-            max-width: 180px;
-            padding: 0.6rem 0;
-            font-size: 0.93rem;
-        }
-        @media (max-width: 800px) {
-            .register-fields-row.confirm-row {
-                flex-direction: column;
-                gap: 0;
-                align-items: stretch;
-            }
-            .register-fields-row.confirm-row .register-btn {
-                width: 100%;
-                max-width: none;
-                margin-top: 0.5rem;
-            }
         }
     </style>
 </head>
@@ -344,23 +321,21 @@
             <div class="register-fields-row">
                 <div class="form-group">
                     <label for="name" class="form-label">Full Name</label>
-                    <input type="text" class="form-control" id="name" name="name" required>
+                    <input type="text" class="form-control" id="name" name="name" required placeholder="e.g., John Doe">
                 </div>
                 <div class="form-group">
                     <label for="email" class="form-label">Email Address</label>
-                    <input type="email" class="form-control" id="email" name="email" required>
+                    <input type="email" class="form-control" id="email" name="email" required placeholder="e.g., user@email.com">
                 </div>
             </div>
             <div class="register-fields-row">
                 <div class="form-group">
                     <label for="phoneNumber" class="form-label">Phone Number</label>
-                    <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" pattern="[0-9]{10,15}" placeholder="e.g., 1234567890" required>
-                    <div class="form-text">Enter your WhatsApp number with country code (e.g., 1234567890)</div>
+                    <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" pattern="[0-9]{10,15}" placeholder="e.g., 08012233344" required>
                 </div>
                 <div class="form-group">
                     <label for="password" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="password" name="password" required minlength="6">
-                    <div class="form-text">Choose a password (at least 6 characters)</div>
+                    <input type="password" class="form-control" id="password" name="password" required minlength="6" placeholder="Choose a password (at least 6 characters)">
                 </div>
             </div>
             <div class="register-fields-row confirm-row">
