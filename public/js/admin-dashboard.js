@@ -6,13 +6,14 @@ window.addEventListener('DOMContentLoaded', function() {
     btn.addEventListener('click', () => {
       tabBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      tabContents.forEach(tab => tab.style.display = 'none');
-      const tabId = btn.dataset.tab + '-tab';
+      tabContents.forEach(tab => tab.classList.remove('active'));
+      const tabId = btn.dataset.tab;
       const tabToShow = document.getElementById(tabId);
-      if (tabToShow) tabToShow.style.display = 'block';
+      if (tabToShow) tabToShow.classList.add('active');
     });
   });
-  if (tabContents.length) tabContents[0].style.display = 'block';
+  // Show the first tab by default
+  if (tabContents.length) tabContents[0].classList.add('active');
 
   // 3-dot action menu logic
   const actionMenuBtns = document.querySelectorAll('.action-menu-btn');
@@ -38,22 +39,21 @@ window.addEventListener('DOMContentLoaded', function() {
 
   // Theme toggle logic
   const themeToggle = document.getElementById('themeToggle');
-  const body = document.body;
   if (themeToggle) {
     // Set initial theme from localStorage
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
-      body.classList.add('dark-theme');
+      document.documentElement.setAttribute('data-theme', 'dark');
       themeToggle.querySelector('i').className = 'fas fa-sun';
     } else {
-      body.classList.remove('dark-theme');
+      document.documentElement.setAttribute('data-theme', 'light');
       themeToggle.querySelector('i').className = 'fas fa-moon';
     }
     themeToggle.addEventListener('click', function() {
-      body.classList.toggle('dark-theme');
-      const isDark = body.classList.contains('dark-theme');
-      themeToggle.querySelector('i').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
-      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+      themeToggle.querySelector('i').className = isDark ? 'fas fa-moon' : 'fas fa-sun';
+      localStorage.setItem('theme', isDark ? 'light' : 'dark');
     });
   }
 
