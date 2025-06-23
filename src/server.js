@@ -281,6 +281,12 @@ app.get('/', (req, res) => {
   res.render('index', { userId: req.session ? req.session.userId : null });
 });
 
+// Serve React admin dashboard static build (Next.js app directory)
+app.use('/admin/dashboard', express.static(path.join(__dirname, '..', 'admin-dashboard', '.next', 'server', 'app')));
+app.get('/admin/dashboard/*', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'admin-dashboard', '.next', 'server', 'app', 'index.html'));
+});
+
 // Start server
 async function startServer() {
   try {
@@ -1025,28 +1031,6 @@ async function startServer() {
       } catch (error) {
         logger.error('Admin login error:', error);
         res.render('admin/login', { error: 'Login failed' });
-      }
-    });
-
-    app.get('/admin/dashboard', requireAdmin, async (req, res) => {
-      try {
-        console.log('GET /admin/dashboard - Session ID:', req.sessionID);
-        console.log('GET /admin/dashboard - Session data:', req.session);
-        const [stats, businesses, orders] = await Promise.all([
-          AdminService.getSystemStats(),
-          AdminService.getActiveBusinesses(),
-          AdminService.getRecentOrders()
-        ]);
-
-        res.render('admin/dashboard', {
-          admin: req.admin,
-          stats,
-          businesses,
-          orders
-        });
-      } catch (error) {
-        logger.error('Admin dashboard error:', error);
-        res.render('error', { error: 'Failed to load admin dashboard' });
       }
     });
 
