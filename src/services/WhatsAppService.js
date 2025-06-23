@@ -64,16 +64,18 @@ class WhatsAppService {
     // Track pending setup requests
     this.pendingSetups = new Map();
 
+    this.latestQrDataUrl = null;
+    this.isAuthenticated = false;
+
     this.client.on('qr', async (qr) => {
       try {
-        // Convert QR code to data URL
         const qrDataUrl = await qrcode.toDataURL(qr, {
           errorCorrectionLevel: 'H',
           margin: 4,
           scale: 8
         });
-        
-        // Log the QR code as a data URL that can be viewed in a browser
+        this.latestQrDataUrl = qrDataUrl;
+        this.isAuthenticated = false;
         logger.info('=== NEW QR CODE GENERATED ===');
         logger.info('Please scan this QR code using WhatsApp mobile app.');
         logger.info('You have 30 seconds to scan before a new code is generated.');
@@ -86,18 +88,25 @@ class WhatsAppService {
     });
 
     this.client.on('ready', () => {
+      this.isAuthenticated = true;
+      this.latestQrDataUrl = null;
       logger.info('WhatsApp client is ready');
     });
 
     this.client.on('authenticated', () => {
+      this.isAuthenticated = true;
+      this.latestQrDataUrl = null;
       logger.info('WhatsApp client is authenticated');
     });
 
     this.client.on('auth_failure', (error) => {
+      this.isAuthenticated = false;
       logger.error('WhatsApp authentication failed:', error);
     });
 
     this.client.on('disconnected', (reason) => {
+      this.isAuthenticated = false;
+      this.latestQrDataUrl = null;
       logger.warn('WhatsApp client disconnected:', reason);
     });
 
@@ -1169,6 +1178,13 @@ For help, type /help in the delivery group.
       logger.error('Error in fallback order ID extraction:', error);
       return null;
     }
+  }
+
+  getLatestQrStatus() {
+    return {
+      qr: this.latestQrDataUrl,
+      authenticated: this.isAuthenticated
+    };
   }
 }
 

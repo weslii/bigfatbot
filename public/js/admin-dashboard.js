@@ -395,10 +395,18 @@ document.addEventListener('DOMContentLoaded', function() {
     if (button.textContent.includes('Restart')) {
       button.addEventListener('click', handleRestartClick);
     }
+    if (button.textContent.includes('Show QR')) {
+      button.addEventListener('click', handleShowQrClick);
+    }
   });
 });
 
-async function handleRestartClick(event) {
+// QR Code Modal Variables
+let qrPollingInterval = null;
+let qrModalOpen = false;
+
+// Handle Show QR button click
+async function handleShowQrClick(event) {
   event.preventDefault();
   
   const button = event.currentTarget;
@@ -407,12 +415,13 @@ async function handleRestartClick(event) {
   try {
     // Show loading state
     button.disabled = true;
-    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Restarting...';
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
     
-    // Get admin user ID from the page (you may need to adjust this based on your setup)
-    const adminId = getAdminId(); // You'll need to implement this function
+    // Get admin user ID from the page
+    const adminId = getAdminId();
     
-    const response = await fetch('/api/whatsapp/restart', {
+    // First, restart the bot to trigger QR code generation
+    const restartResponse = await fetch('/api/whatsapp/restart', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -422,28 +431,147 @@ async function handleRestartClick(event) {
       })
     });
     
-    const result = await response.json();
+    const restartResult = await restartResponse.json();
     
-    if (result.success) {
+    if (restartResult.success) {
       // Show success message
-      showNotification('WhatsApp bot restarted successfully! Authentication will be reused if available.', 'success');
+      showNotification('WhatsApp bot restarted successfully! Generating QR code...', 'success');
       
-      // Refresh bot status after a short delay
-      setTimeout(() => {
-        refreshBotStatus();
-      }, 3000);
+      // Open QR modal and start polling
+      openQrModal();
     } else {
-      showNotification('Error: ' + (result.error || 'Failed to restart WhatsApp bot'), 'error');
+      showNotification('Error: ' + (restartResult.error || 'Failed to restart WhatsApp bot'), 'error');
     }
   } catch (error) {
-    console.error('Restart error:', error);
-    showNotification('Error: Failed to restart WhatsApp bot', 'error');
+    console.error('Show QR error:', error);
+    showNotification('Error: Failed to generate QR code', 'error');
   } finally {
     // Restore button state
     button.disabled = false;
     button.innerHTML = originalText;
   }
 }
+
+// Open QR Modal
+function openQrModal() {
+  const modal = document.getElementById('qr-modal');
+  modal.style.display = 'flex';
+  qrModalOpen = true;
+  
+  // Show loading state
+  document.getElementById('qr-loading').style.display = 'flex';
+  document.getElementById('qr-content').style.display = 'none';
+  document.getElementById('qr-error').style.display = 'none';
+  document.getElementById('qr-status-text').textContent = 'Generating QR code...';
+  
+  // Start polling for QR code
+  startQrPolling();
+}
+
+// Close QR Modal
+function closeQrModal() {
+  const modal = document.getElementById('qr-modal');
+  modal.style.display = 'none';
+  qrModalOpen = false;
+  
+  // Stop polling
+  stopQrPolling();
+}
+
+// Start polling for QR code updates
+function startQrPolling() {
+  // Poll every 2 seconds
+  qrPollingInterval = setInterval(async () => {
+    if (!qrModalOpen) return;
+    
+    try {
+      const response = await fetch('/api/whatsapp/qr');
+      
+      if (response.status === 403) {
+        // Superadmin access required
+        showNotification('Error: Superadmin access required to view QR code', 'error');
+        closeQrModal();
+        return;
+      }
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch QR code');
+      }
+      
+      const qrStatus = await response.json();
+      
+      if (qrStatus.authenticated) {
+        // Bot is authenticated, close modal
+        showNotification('WhatsApp bot authenticated successfully!', 'success');
+        closeQrModal();
+        return;
+      }
+      
+      if (qrStatus.qr) {
+        // Show QR code
+        document.getElementById('qr-loading').style.display = 'none';
+        document.getElementById('qr-content').style.display = 'flex';
+        document.getElementById('qr-error').style.display = 'none';
+        
+        const qrImage = document.getElementById('qr-image');
+        qrImage.src = qrStatus.qr;
+        document.getElementById('qr-status-text').textContent = 'QR code ready - scan with WhatsApp';
+      } else {
+        // Still waiting for QR code
+        document.getElementById('qr-status-text').textContent = 'Waiting for QR code...';
+      }
+    } catch (error) {
+      console.error('QR polling error:', error);
+      document.getElementById('qr-loading').style.display = 'none';
+      document.getElementById('qr-content').style.display = 'none';
+      document.getElementById('qr-error').style.display = 'flex';
+      document.getElementById('qr-status-text').textContent = 'Error loading QR code';
+    }
+  }, 2000);
+}
+
+// Stop polling
+function stopQrPolling() {
+  if (qrPollingInterval) {
+    clearInterval(qrPollingInterval);
+    qrPollingInterval = null;
+  }
+}
+
+// Retry QR code generation
+async function retryQrCode() {
+  try {
+    // Show loading state
+    document.getElementById('qr-loading').style.display = 'flex';
+    document.getElementById('qr-content').style.display = 'none';
+    document.getElementById('qr-error').style.display = 'none';
+    document.getElementById('qr-status-text').textContent = 'Retrying...';
+    
+    // Restart polling
+    startQrPolling();
+  } catch (error) {
+    console.error('Retry QR error:', error);
+    showNotification('Error: Failed to retry QR code generation', 'error');
+  }
+}
+
+// Close QR modal when clicking outside or on close button
+document.addEventListener('DOMContentLoaded', function() {
+  const qrModal = document.getElementById('qr-modal');
+  const closeQrModalBtn = document.getElementById('close-qr-modal');
+  
+  if (qrModal) {
+    qrModal.addEventListener('click', function(e) {
+      if (e.target === qrModal) {
+        closeQrModal();
+      }
+    });
+  }
+  
+  if (closeQrModalBtn) {
+    closeQrModalBtn.addEventListener('click', closeQrModal);
+  }
+});
 
 function getAdminId() {
   // Try to get admin ID from various sources
@@ -539,6 +667,53 @@ function showNotification(message, type = 'info') {
       }, 300);
     }
   }, 5000);
+}
+
+async function handleRestartClick(event) {
+  event.preventDefault();
+  
+  const button = event.currentTarget;
+  const originalText = button.innerHTML;
+  
+  try {
+    // Show loading state
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Restarting...';
+    
+    // Get admin user ID from the page (you may need to adjust this based on your setup)
+    const adminId = getAdminId(); // You'll need to implement this function
+    
+    const response = await fetch('/api/whatsapp/restart', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId: adminId
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      // Show success message
+      showNotification('WhatsApp bot restarted successfully! Authentication will be reused if available.', 'success');
+      
+      // Refresh bot status after a short delay
+      setTimeout(() => {
+        refreshBotStatus();
+      }, 3000);
+    } else {
+      showNotification('Error: ' + (result.error || 'Failed to restart WhatsApp bot'), 'error');
+    }
+  } catch (error) {
+    console.error('Restart error:', error);
+    showNotification('Error: Failed to restart WhatsApp bot', 'error');
+  } finally {
+    // Restore button state
+    button.disabled = false;
+    button.innerHTML = originalText;
+  }
 }
 
 async function refreshBotStatus() {

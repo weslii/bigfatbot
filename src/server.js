@@ -173,6 +173,24 @@ const requireAdmin = async (req, res, next) => {
   }
 };
 
+// Superadmin authentication middleware
+const requireSuperAdmin = async (req, res, next) => {
+  if (!req.session || !req.session.adminId || !req.session.isAuthenticated) {
+    return res.status(403).json({ error: 'Superadmin access required' });
+  }
+  try {
+    const admin = await AdminService.getAdminById(req.session.adminId);
+    if (!admin || !admin.is_active || admin.role !== 'super_admin') {
+      return res.status(403).json({ error: 'Superadmin access required' });
+    }
+    req.admin = admin;
+    next();
+  } catch (error) {
+    logger.error('Superadmin auth error:', error);
+    res.status(403).json({ error: 'Superadmin access required' });
+  }
+};
+
 // Health check endpoint
 app.get('/health', async (req, res) => {
   try {
@@ -1687,29 +1705,18 @@ async function startServer() {
       }
     });
 
-    app.post('/api/whatsapp/restart', async (req, res) => {
+    // WhatsApp bot restart endpoint (admin required)
+    app.post('/api/whatsapp/restart', requireAdmin, async (req, res) => {
       try {
         const { userId } = req.body;
-        
+        // Keep userId validation if present, but do not require admin session
         if (!userId) {
           return res.status(400).json({ error: 'User ID is required' });
         }
-
-        // Check if user is admin
-        const user = await db.query('users')
-          .where('id', userId)
-          .first();
-        
-        if (!user) {
-          return res.status(404).json({ error: 'User not found' });
-        }
-
         // Import WhatsAppService
         const whatsappService = WhatsAppService.getInstance();
-
         // Call the restart method
         await whatsappService.restart();
-        
         res.json({ 
           success: true, 
           message: 'WhatsApp bot restarted successfully. Authentication will be reused if available.' 
@@ -1717,6 +1724,18 @@ async function startServer() {
       } catch (error) {
         logger.error('Restart WhatsApp bot error:', error);
         res.status(500).json({ error: 'Failed to restart WhatsApp bot' });
+      }
+    });
+
+    // WhatsApp QR code API endpoint (superadmin only)
+    app.get('/api/whatsapp/qr', requireSuperAdmin, async (req, res) => {
+      try {
+        const whatsappService = WhatsAppService.getInstance();
+        const qrStatus = whatsappService.getLatestQrStatus();
+        res.json(qrStatus);
+      } catch (error) {
+        logger.error('Get WhatsApp QR code error:', error);
+        res.status(500).json({ error: 'Failed to get WhatsApp QR code' });
       }
     });
 
