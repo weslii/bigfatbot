@@ -281,12 +281,6 @@ app.get('/', (req, res) => {
   res.render('index', { userId: req.session ? req.session.userId : null });
 });
 
-// Serve static React admin dashboard
-app.use('/admin/dashboard', express.static(path.join(__dirname, '..', 'public', 'admin-dashboard')));
-app.get('/admin/dashboard/*', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'admin-dashboard', 'index.html'));
-});
-
 // Start server
 async function startServer() {
   try {
@@ -1034,36 +1028,25 @@ async function startServer() {
       }
     });
 
-    // === NEW: Admin dashboard JSON API endpoints for React dashboard ===
-    app.get('/api/admin/stats', requireAdmin, async (req, res) => {
+    app.get('/admin/dashboard', requireAdmin, async (req, res) => {
       try {
-        const stats = await AdminService.getSystemStats();
-        res.json(stats);
-      } catch (error) {
-        logger.error('Admin stats API error:', error);
-        res.status(500).json({ error: 'Failed to load admin stats' });
-      }
-    });
+        console.log('GET /admin/dashboard - Session ID:', req.sessionID);
+        console.log('GET /admin/dashboard - Session data:', req.session);
+        const [stats, businesses, orders] = await Promise.all([
+          AdminService.getSystemStats(),
+          AdminService.getActiveBusinesses(),
+          AdminService.getRecentOrders()
+        ]);
 
-    app.get('/api/admin/orders', requireAdmin, async (req, res) => {
-      try {
-        // Optional: limit param for recent orders
-        const limit = parseInt(req.query.limit) || 10;
-        const orders = await AdminService.getRecentOrders(limit);
-        res.json(orders);
+        res.render('admin/dashboard', {
+          admin: req.admin,
+          stats,
+          businesses,
+          orders
+        });
       } catch (error) {
-        logger.error('Admin orders API error:', error);
-        res.status(500).json({ error: 'Failed to load admin orders' });
-      }
-    });
-
-    app.get('/api/admin/businesses', requireAdmin, async (req, res) => {
-      try {
-        const businesses = await AdminService.getActiveBusinesses();
-        res.json(businesses);
-      } catch (error) {
-        logger.error('Admin businesses API error:', error);
-        res.status(500).json({ error: 'Failed to load admin businesses' });
+        logger.error('Admin dashboard error:', error);
+        res.render('error', { error: 'Failed to load admin dashboard' });
       }
     });
 
