@@ -23,7 +23,7 @@ console.log('Redis URL:', redisUrl ? 'Set' : 'Not set');
 // Basic middleware setup (must be before routes)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // Set view engine
 app.set('view engine', 'ejs');
@@ -278,7 +278,7 @@ app.post('/login', async (req, res) => {
 
 // Update landing page to pass userId from session
 app.get('/', (req, res) => {
-  res.render('index', { userId: req.session.userId });
+  res.render('index', { userId: req.session ? req.session.userId : null });
 });
 
 // Start server
@@ -302,7 +302,7 @@ async function startServer() {
     // Define routes after session middleware is initialized
     // Public routes
     app.get('/', (req, res) => {
-      res.render('index', { userId: req.session.userId });
+      res.render('index', { userId: req.session ? req.session.userId : null });
     });
 
     app.get('/register', (req, res) => {
@@ -352,7 +352,10 @@ async function startServer() {
 
     app.get('/dashboard', async (req, res) => {
       try {
-        const { userId } = req.query;
+        const userId = req.session ? req.session.userId : req.query.userId;
+        if (!userId) {
+          return res.redirect('/login');
+        }
         const [groups, businesses, orderStats, recentOrders] = await Promise.all([
           RegistrationService.getUserGroups(userId),
           RegistrationService.getUserBusinesses(userId),
@@ -368,7 +371,7 @@ async function startServer() {
 
     // Add new business for existing users
     app.get('/add-business', (req, res) => {
-      const { userId } = req.query;
+      const userId = req.session ? req.session.userId : req.query.userId;
       if (!userId) {
         return res.redirect('/register');
       }
@@ -392,7 +395,11 @@ async function startServer() {
     // Orders page for users
     app.get('/orders', async (req, res) => {
       try {
-        const { userId, business, status, search, page = 1, pageSize = 25 } = req.query;
+        const userId = req.session ? req.session.userId : req.query.userId;
+        if (!userId) {
+          return res.redirect('/login');
+        }
+        const { business, status, search, page = 1, pageSize = 25 } = req.query;
         
         // Get user's businesses for the filter dropdown
         const businesses = await RegistrationService.getUserBusinesses(userId);
@@ -657,7 +664,7 @@ async function startServer() {
     // Groups page route
     app.get('/groups', async (req, res) => {
       try {
-        const userId = req.session.userId;
+        const userId = req.session ? req.session.userId : null;
         if (!userId) {
           return res.redirect('/login');
         }
@@ -790,7 +797,7 @@ async function startServer() {
     // Settings page route
     app.get('/settings', async (req, res) => {
       try {
-        const userId = req.session.userId;
+        const userId = req.session ? req.session.userId : null;
         if (!userId) {
           return res.redirect('/login');
         }
@@ -1308,7 +1315,7 @@ async function startServer() {
     // Business management routes
     app.get('/business/:businessId', async (req, res) => {
       try {
-        const userId = req.session.userId;
+        const userId = req.session ? req.session.userId : null;
         if (!userId) {
           return res.redirect('/login');
         }
@@ -1363,7 +1370,7 @@ async function startServer() {
 
     app.get('/business/add', async (req, res) => {
       try {
-        const userId = req.session.userId;
+        const userId = req.session ? req.session.userId : null;
         if (!userId) {
           return res.redirect('/login');
         }
@@ -1477,7 +1484,7 @@ async function startServer() {
     // Setup group route
     app.get('/setup-group', async (req, res) => {
       try {
-        const userId = req.session.userId;
+        const userId = req.session ? req.session.userId : null;
         if (!userId) {
           return res.redirect('/login');
         }
