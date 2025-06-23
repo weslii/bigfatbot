@@ -281,7 +281,6 @@
                             <a href="/admin/users" class="quick-action-btn"><i class="fas fa-user"></i> Users</a>
                             <a href="/admin/admins" class="quick-action-btn"><i class="fas fa-user-shield"></i> Manage Admins</a>
                             <a href="/admin/reports" class="quick-action-btn"><i class="fas fa-chart-bar"></i> Generate Reports</a>
-                            <a href="/admin/settings" class="quick-action-btn"><i class="fas fa-cog"></i> System Settings</a>
                         </div>
                     </div>
                 </div>
@@ -327,6 +326,46 @@
             </div>
         </div>
     </main>
+    <!-- Filter Modal -->
+    <div id="filter-modal" class="modal-overlay" style="display:none;">
+      <div class="modal-content">
+        <button class="close-modal" id="close-filter-modal">&times;</button>
+        <div id="filter-modal-businesses" style="display:none;">
+          <h3>Filter Businesses</h3>
+          <form id="businesses-filter-modal-form">
+            <label>Status
+              <select name="status">
+                <option value="">All</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </label>
+            <button type="submit" class="primary-btn">Apply Filter</button>
+          </form>
+        </div>
+        <div id="filter-modal-orders" style="display:none;">
+          <h3>Filter Orders</h3>
+          <form id="orders-filter-modal-form">
+            <label>Status
+              <select name="status">
+                <option value="">All</option>
+                <option value="pending">Pending</option>
+                <option value="processing">Processing</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </label>
+            <label>Business
+              <input type="text" name="business" placeholder="Business Name or ID">
+            </label>
+            <label>Date Range
+              <input type="date" name="date_from"> to <input type="date" name="date_to">
+            </label>
+            <button type="submit" class="primary-btn">Apply Filter</button>
+          </form>
+        </div>
+      </div>
+    </div>
     <script src="/js/admin-dashboard.js"></script>
 </body>
 </html> 

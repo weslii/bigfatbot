@@ -373,8 +373,7 @@ async function fetchAndRenderAnalytics() {
     const res = await fetch('/admin/api/analytics');
     if (!res.ok) throw new Error('Not logged in or API error');
     const data = await res.json();
-    // Update cards
-    document.querySelector('.stat-card.revenue .stat-value').textContent = `$${data.totalRevenue}`;
+    // Update cards with real data (keep revenue static)
     document.querySelector('.stat-card.businesses .stat-value').textContent = data.totalBusinesses;
     document.querySelector('.stat-card.orders .stat-value').textContent = data.totalOrders;
     // Update bot uptime
