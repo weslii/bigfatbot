@@ -310,7 +310,7 @@ app.get('/preview-landing', (req, res) => {
 });
 
 // Preview admin dashboard route
-app.get('/admin/preview-dashboard', async (req, res) => {
+app.get('/admin/preview-dashboard', requireAdmin, async (req, res) => {
   try {
     // Get real analytics data
     const analytics = await AdminService.getAnalytics();
@@ -319,7 +319,7 @@ app.get('/admin/preview-dashboard', async (req, res) => {
     const uptimeMs = now - botStartTime;
     const uptimeHours = uptimeMs / (1000 * 60 * 60);
     res.render('admin/preview-dashboard', {
-      admin: { id: 1, username: 'admin', email: 'admin@example.com' },
+      admin: req.admin,
       stats: {
         totalRevenue: '45,231.89', // Keep static as requested
         totalBusinesses: analytics.totalBusinesses,
@@ -340,7 +340,7 @@ app.get('/admin/preview-dashboard', async (req, res) => {
     logger.error('Preview dashboard error:', error);
     // Fallback to mock data if real data fails
     res.render('admin/preview-dashboard', {
-      admin: { id: 1, username: 'admin', email: 'admin@example.com' },
+      admin: req.admin,
       stats: { totalRevenue: '45,231.89', totalBusinesses: 0, totalOrders: 0, botUptime: '100.0' }
     });
   }
@@ -1100,21 +1100,39 @@ async function startServer() {
       try {
         console.log('GET /admin/dashboard - Session ID:', req.sessionID);
         console.log('GET /admin/dashboard - Session data:', req.session);
-        const [stats, businesses, orders] = await Promise.all([
-          AdminService.getSystemStats(),
-          AdminService.getActiveBusinesses(),
-          AdminService.getRecentOrders()
-        ]);
-
-        res.render('admin/dashboard', {
+        
+        // Get real analytics data
+        const analytics = await AdminService.getAnalytics();
+        // Calculate uptime
+        const now = Date.now();
+        const uptimeMs = now - botStartTime;
+        const uptimeHours = uptimeMs / (1000 * 60 * 60);
+        
+        res.render('admin/preview-dashboard', {
           admin: req.admin,
-          stats,
-          businesses,
-          orders
+          stats: {
+            totalRevenue: '45,231.89', // Keep static as requested
+            totalBusinesses: analytics.totalBusinesses,
+            totalOrders: analytics.totalOrders,
+            botUptime: '100.0',
+            botUptimeHours: uptimeHours.toFixed(2),
+            businessChange: analytics.businessChange,
+            orderChange: analytics.orderChange,
+            connectionStatus: analytics.status,
+            phoneNumber: analytics.number,
+            lastActivity: analytics.lastActivity,
+            messageSuccessRate: analytics.messageSuccessRate,
+            avgResponseTime: analytics.avgResponseTime,
+            dailyMessages: analytics.dailyMessages
+          }
         });
       } catch (error) {
         logger.error('Admin dashboard error:', error);
-        res.render('error', { error: 'Failed to load admin dashboard' });
+        // Fallback to mock data if real data fails
+        res.render('admin/preview-dashboard', {
+          admin: req.admin,
+          stats: { totalRevenue: '45,231.89', totalBusinesses: 0, totalOrders: 0, botUptime: '100.0' }
+        });
       }
     });
 
