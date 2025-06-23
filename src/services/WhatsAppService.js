@@ -322,26 +322,58 @@ class WhatsAppService {
   async handleReplyCompletion(message, senderName, groupInfo) {
     try {
       const quotedMessage = await message.getQuotedMessage();
-      const orderId = this.extractOrderIdFromMessage(quotedMessage.body);
+      
+      // Extract order ID using fallback method if the main method fails
+      let orderId = null;
+      try {
+        if (typeof this.extractOrderIdFromMessage === 'function') {
+          orderId = this.extractOrderIdFromMessage(quotedMessage.body);
+        } else {
+          // Fallback extraction method
+          orderId = this.fallbackExtractOrderId(quotedMessage.body);
+        }
+      } catch (extractError) {
+        logger.error('Error extracting order ID:', extractError);
+        orderId = this.fallbackExtractOrderId(quotedMessage.body);
+      }
       
       if (orderId) {
         await this.markOrderAsDelivered(orderId, senderName, groupInfo);
+      } else {
+        await this.client.sendMessage(groupInfo.group_id, '❌ Could not find order ID in the quoted message. Please try using: done #<order_id>');
       }
     } catch (error) {
       logger.error('Error handling reply completion:', error);
+      await this.client.sendMessage(groupInfo.group_id, '❌ Error processing reply. Please try using: done #<order_id>');
     }
   }
 
   async handleReplyCancellation(message, senderName, groupInfo) {
     try {
       const quotedMessage = await message.getQuotedMessage();
-      const orderId = this.extractOrderIdFromMessage(quotedMessage.body);
+      
+      // Extract order ID using fallback method if the main method fails
+      let orderId = null;
+      try {
+        if (typeof this.extractOrderIdFromMessage === 'function') {
+          orderId = this.extractOrderIdFromMessage(quotedMessage.body);
+        } else {
+          // Fallback extraction method
+          orderId = this.fallbackExtractOrderId(quotedMessage.body);
+        }
+      } catch (extractError) {
+        logger.error('Error extracting order ID:', extractError);
+        orderId = this.fallbackExtractOrderId(quotedMessage.body);
+      }
       
       if (orderId) {
         await this.cancelOrder(orderId, senderName, groupInfo);
+      } else {
+        await this.client.sendMessage(groupInfo.group_id, '❌ Could not find order ID in the quoted message. Please try using: cancel #<order_id>');
       }
     } catch (error) {
       logger.error('Error handling reply cancellation:', error);
+      await this.client.sendMessage(groupInfo.group_id, '❌ Error processing reply. Please try using: cancel #<order_id>');
     }
   }
 
@@ -956,6 +988,27 @@ For help, type /help in the delivery group.
       return null;
     } catch (error) {
       logger.error('Error extracting order ID from message:', error);
+      return null;
+    }
+  }
+
+  fallbackExtractOrderId(messageText) {
+    try {
+      // Look for order ID pattern: YYYYMMDD-XXX
+      const orderIdMatch = messageText.match(/(\d{8}-\d{3})/);
+      if (orderIdMatch) {
+        return orderIdMatch[1];
+      }
+      
+      // Also look for "Order ID:" pattern
+      const orderIdPattern = messageText.match(/Order ID:\s*([^\n]+)/);
+      if (orderIdPattern) {
+        return orderIdPattern[1].trim();
+      }
+      
+      return null;
+    } catch (error) {
+      logger.error('Error in fallback order ID extraction:', error);
       return null;
     }
   }
