@@ -126,17 +126,17 @@
             padding: 3rem 0 2rem 0;
         }
         .register-card {
-            background: rgba(16, 25, 43, 0.95);
-            border-radius: 1.25rem;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-            padding: 2.5rem 2rem 2rem 2rem;
-            max-width: 420px;
+            background: rgba(16, 25, 43, 0.97);
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 32px 0 rgba(16,185,129,0.10), 0 0 24px 0 rgba(16,185,129,0.18);
+            padding: 3rem 2.5rem 2.5rem 2.5rem;
+            max-width: 480px;
             width: 100%;
             color: #fff;
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
-            border: 1px solid var(--border);
+            gap: 2rem;
+            border: 1.5px solid var(--border);
             animation: fadeInUp 0.7s cubic-bezier(.39,.575,.565,1) both;
         }
         [data-theme="light"] .register-card {
@@ -160,27 +160,30 @@
             color: #64748b;
         }
         .form-group {
-            margin-bottom: 1.25rem;
+            margin-bottom: 2rem;
         }
         .form-label {
             display: block;
             font-weight: 500;
-            margin-bottom: 0.4rem;
+            margin-bottom: 0.6rem;
+            font-size: 1.04rem;
         }
         .form-control {
             width: 100%;
-            padding: 0.75rem 1rem;
-            border-radius: 0.75rem;
-            border: 1px solid var(--border);
-            background: rgba(255,255,255,0.08);
+            padding: 1rem 1.1rem;
+            border-radius: 0.85rem;
+            border: 1.5px solid var(--border);
+            background: rgba(255,255,255,0.10);
             color: inherit;
-            font-size: 1rem;
-            transition: border-color 0.2s;
+            font-size: 1.08rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 0 0 0 rgba(16,185,129,0.15);
         }
         .form-control:focus {
             outline: none;
             border-color: #10b981;
-            background: rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.18);
+            box-shadow: 0 0 0 3px rgba(16,185,129,0.18);
         }
         .form-text {
             font-size: 0.85rem;
@@ -202,10 +205,10 @@
         }
         .register-btn {
             width: 100%;
-            padding: 0.95rem 0;
+            padding: 1.1rem 0;
             font-weight: 600;
-            font-size: 1.08rem;
-            border-radius: 0.75rem;
+            font-size: 1.13rem;
+            border-radius: 0.85rem;
             text-decoration: none;
             display: flex;
             align-items: center;
@@ -215,11 +218,12 @@
             cursor: pointer;
             background: #10b981;
             color: #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            transition: background 0.2s;
+            box-shadow: 0 2px 16px 0 rgba(16,185,129,0.18), 0 0 8px 0 rgba(16,185,129,0.10);
+            transition: background 0.2s, box-shadow 0.2s;
         }
-        .register-btn:hover {
+        .register-btn:hover, .register-btn:focus {
             background: #059669;
+            box-shadow: 0 4px 24px 0 rgba(16,185,129,0.22), 0 0 16px 0 rgba(16,185,129,0.18);
         }
         @keyframes fadeInUp {
             0% { opacity: 0; transform: translateY(40px); }
