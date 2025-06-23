@@ -409,6 +409,11 @@ let qrModalOpen = false;
 async function handleShowQrClick(event) {
   event.preventDefault();
   
+  // Add confirmation dialog
+  if (!confirm('Are you sure you want to generate a new QR code? This will restart the WhatsApp bot and require authentication.')) {
+    return;
+  }
+  
   const button = event.currentTarget;
   const originalText = button.innerHTML;
   
@@ -470,6 +475,14 @@ function openQrModal() {
 
 // Close QR Modal
 function closeQrModal() {
+  // Add confirmation if QR code is being displayed
+  const qrContent = document.getElementById('qr-content');
+  if (qrContent && qrContent.style.display !== 'none') {
+    if (!confirm('Are you sure you want to close the QR code? You may need to generate a new one if authentication is still required.')) {
+      return;
+    }
+  }
+  
   const modal = document.getElementById('qr-modal');
   modal.style.display = 'none';
   qrModalOpen = false;
@@ -671,6 +684,11 @@ function showNotification(message, type = 'info') {
 
 async function handleRestartClick(event) {
   event.preventDefault();
+  
+  // Add confirmation dialog
+  if (!confirm('Are you sure you want to restart the WhatsApp bot? This will temporarily disconnect the bot.')) {
+    return;
+  }
   
   const button = event.currentTarget;
   const originalText = button.innerHTML;
