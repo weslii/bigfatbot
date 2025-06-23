@@ -267,18 +267,18 @@ async function startServer() {
 
     app.get('/register', (req, res) => {
       res.render('register');
-});
+    });
 
     app.post('/register', async (req, res) => {
-  try {
+      try {
         const { name, email, phoneNumber } = req.body;
         const user = await RegistrationService.registerUser(name, email, phoneNumber);
         res.redirect(`/setup-business?userId=${user.id}`);
-  } catch (error) {
+      } catch (error) {
         logger.error('Registration error:', error);
         res.render('register', { error: 'Registration failed. Please try again.' });
-  }
-});
+      }
+    });
 
     app.get('/setup-business', (req, res) => {
       const { userId } = req.query;
@@ -286,7 +286,7 @@ async function startServer() {
     });
 
     app.post('/setup-business', async (req, res) => {
-  try {
+      try {
         const { userId, businessName } = req.body;
         const result = await RegistrationService.createBusiness(userId, businessName);
         
@@ -301,17 +301,17 @@ async function startServer() {
           businessId: result.businessId,
           setupCommand
         });
-  } catch (error) {
+      } catch (error) {
         logger.error('Business setup error:', error);
         res.render('setup-business', { 
           error: 'Setup failed. Please try again.',
           userId: req.body.userId
         });
-  }
-});
+      }
+    });
 
     app.get('/dashboard', async (req, res) => {
-  try {
+      try {
         const { userId } = req.query;
         const [groups, businesses, orderStats, recentOrders] = await Promise.all([
           RegistrationService.getUserGroups(userId),
@@ -320,11 +320,11 @@ async function startServer() {
           OrderService.getUserRecentOrders(userId, 5)
         ]);
         res.render('dashboard', { groups, businesses, userId, orderStats, recentOrders });
-  } catch (error) {
+      } catch (error) {
         logger.error('Dashboard error:', error);
         res.render('error', { error: 'Failed to load dashboard.' });
-  }
-});
+      }
+    });
 
     // Add new business for existing users
     app.get('/add-business', (req, res) => {
@@ -333,25 +333,25 @@ async function startServer() {
         return res.redirect('/register');
       }
       res.render('add-business', { userId });
-});
+    });
 
     app.post('/add-business', async (req, res) => {
-  try {
+      try {
         const { userId, businessName } = req.body;
         const result = await RegistrationService.addBusinessToUser(userId, businessName);
         res.redirect(`/dashboard?userId=${userId}`);
-  } catch (error) {
+      } catch (error) {
         logger.error('Add business error:', error);
         res.render('add-business', { 
           error: 'Failed to add business. Please try again.',
           userId: req.body.userId
         });
-  }
-});
+      }
+    });
 
     // Orders page for users
     app.get('/orders', async (req, res) => {
-  try {
+      try {
         const { userId, business, status, search, page = 1, pageSize = 25 } = req.query;
         
         // Get user's businesses for the filter dropdown
@@ -378,7 +378,7 @@ async function startServer() {
             totalPages: 0,
             totalOrders: 0
           });
-  }
+        }
 
         // Build query based on filters
         let query = db.query('orders as o')
@@ -404,7 +404,7 @@ async function startServer() {
           query = query.where(function() {
             this.where('o.customer_name', 'ilike', `%${search}%`)
               .orWhere('o.order_id', 'ilike', `%${search}%`);
-});
+          });
         }
 
         // Get total count for pagination
@@ -432,11 +432,11 @@ async function startServer() {
           totalPages,
           totalOrders
         });
-  } catch (error) {
+      } catch (error) {
         logger.error('Orders page error:', error);
         res.render('error', { error: 'Failed to load orders.' });
-  }
-});
+      }
+    });
 
     // Order management API endpoints
     app.get('/api/orders/:orderId', async (req, res) => {
@@ -477,14 +477,14 @@ async function startServer() {
         }
         
         res.json(order);
-  } catch (error) {
+      } catch (error) {
         logger.error('Get order details error:', error);
         res.status(500).json({ error: 'Failed to get order details' });
-  }
-});
+      }
+    });
 
     app.post('/api/orders/:orderId/status', async (req, res) => {
-  try {
+      try {
         const { orderId } = req.params;
         const { status, userId } = req.body;
         
@@ -502,7 +502,7 @@ async function startServer() {
         const validStatuses = ['pending', 'processing', 'delivered', 'cancelled'];
         if (!validStatuses.includes(status)) {
           return res.status(400).json({ error: 'Invalid status value' });
-  }
+        }
         
         // Get user's business IDs to ensure they can only update their orders
         const userBusinesses = await db.query('groups')
@@ -525,14 +525,14 @@ async function startServer() {
         }
         
         res.json({ success: true, message: 'Order status updated' });
-  } catch (error) {
+      } catch (error) {
         logger.error('Update order status error:', error);
         res.status(500).json({ error: 'Failed to update order status' });
-  }
-});
+      }
+    });
 
     app.put('/api/orders/:orderId', async (req, res) => {
-  try {
+      try {
         const { orderId } = req.params;
         const { userId, ...updateData } = req.body;
         
@@ -557,15 +557,15 @@ async function startServer() {
         }
         
         res.json({ success: true, message: 'Order updated' });
-  } catch (error) {
+      } catch (error) {
         logger.error('Update order error:', error);
         res.status(500).json({ error: 'Failed to update order' });
-  }
-});
+      }
+    });
 
     // Order count API endpoint for real-time updates
     app.get('/api/orders/count', async (req, res) => {
-  try {
+      try {
         const { userId, business_id, status, search, count_only } = req.query;
         
         if (!userId) {
@@ -608,11 +608,11 @@ async function startServer() {
         const count = await query.count('o.id as count').first();
         
         res.json({ count: parseInt(count.count) });
-  } catch (error) {
+      } catch (error) {
         logger.error('Order count error:', error);
         res.status(500).json({ error: 'Failed to get order count' });
-  }
-});
+      }
+    });
 
     // Groups page route
     app.get('/groups', async (req, res) => {
@@ -638,11 +638,11 @@ async function startServer() {
           businesses,
           groups
         });
-  } catch (error) {
+      } catch (error) {
         logger.error('Groups page error:', error);
         res.status(500).render('error', { error: 'Failed to load groups page' });
-  }
-});
+      }
+    });
 
     // Groups API endpoints
     app.post('/api/groups', async (req, res) => {
@@ -699,14 +699,14 @@ async function startServer() {
         });
 
         res.json({ success: true, message: 'Group added successfully' });
-  } catch (error) {
+      } catch (error) {
         logger.error('Add group error:', error);
         res.status(500).json({ error: 'Failed to add group' });
-  }
-});
+      }
+    });
 
     app.get('/api/groups/:groupId', async (req, res) => {
-  try {
+      try {
         const { groupId } = req.params;
         const { userId } = req.query;
         
@@ -720,14 +720,14 @@ async function startServer() {
         }
         
         res.json(group);
-  } catch (error) {
+      } catch (error) {
         logger.error('Get group error:', error);
         res.status(500).json({ error: 'Failed to get group' });
-  }
-});
+      }
+    });
 
     app.delete('/api/groups/:groupId', async (req, res) => {
-  try {
+      try {
         const { groupId } = req.params;
         const { userId } = req.query;
         
@@ -741,11 +741,11 @@ async function startServer() {
         }
         
         res.json({ success: true, message: 'Group removed successfully' });
-  } catch (error) {
+      } catch (error) {
         logger.error('Remove group error:', error);
         res.status(500).json({ error: 'Failed to remove group' });
-  }
-});
+      }
+    });
 
     // Settings page route
     app.get('/settings', async (req, res) => {
@@ -787,21 +787,21 @@ async function startServer() {
           groups,
           orders
         });
-  } catch (error) {
+      } catch (error) {
         logger.error('Settings page error:', error);
         res.status(500).render('error', { error: 'Failed to load settings page' });
-  }
-});
+      }
+    });
 
     // Settings API endpoints
     app.put('/api/settings/profile', async (req, res) => {
-  try {
+      try {
         const { full_name, email, phone, timezone, address, user_id } = req.body;
         
         // Validate user owns this profile
         if (user_id !== req.session.userId) {
           return res.status(403).json({ error: 'Unauthorized' });
-    }
+        }
 
         // Check if email is already taken by another user
         const existingUser = await db.query('users')
@@ -1536,6 +1536,30 @@ async function startServer() {
     });
 
     // WhatsApp bot management endpoints
+    app.get('/api/whatsapp/bot-info', async (req, res) => {
+      try {
+        // Import WhatsAppService
+        const WhatsAppService = require('./services/WhatsAppService');
+        const whatsappService = new WhatsAppService();
+        
+        const botInfo = await whatsappService.getBotInfo();
+        
+        res.json({ 
+          success: true, 
+          ...botInfo
+        });
+      } catch (error) {
+        logger.error('Get bot info error:', error);
+        res.status(500).json({ 
+          success: false,
+          error: 'Failed to get bot info',
+          number: 'Not available',
+          name: 'WhatsApp Bot',
+          status: 'error'
+        });
+      }
+    });
+
     app.post('/api/whatsapp/change-number', async (req, res) => {
       try {
         const { userId } = req.body;
