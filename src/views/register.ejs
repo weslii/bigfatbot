@@ -1,49 +1,301 @@
-<%- include('header', { title: 'Register Business' }) %>
-
-<div class="container mt-5">
-  <div class="row justify-content-center">
-    <div class="col-md-6">
-      <div class="card">
-        <div class="card-header">
-          <h4 class="mb-0">Register Your Business</h4>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Your Business - WhatsApp Delivery Bot</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/theme.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #10b981;
+            --secondary: #3b82f6;
+            --accent: #8b5cf6;
+            --background: #f8fafc;
+            --foreground: #1e293b;
+            --muted: #64748b;
+            --border: #e2e8f0;
+        }
+        [data-theme="dark"] {
+            --background: #020617;
+            --foreground: #f8fafc;
+            --muted: #94a3b8;
+            --border: #1e293b;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background);
+            color: var(--foreground);
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        [data-theme="dark"] body {
+            background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #064e3b 100%);
+        }
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+        [data-theme="dark"] .header {
+            background: rgba(15, 23, 42, 0.8);
+        }
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .logo-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.75rem;
+            background: linear-gradient(135deg, #10b981, #14b8a6);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        .logo-icon i {
+            font-size: 1.25rem;
+            color: white;
+        }
+        .logo-text {
+            font-weight: 700;
+            font-size: 1.125rem;
+            background: linear-gradient(135deg, #10b981, #14b8a6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        .nav-link {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+        }
+        .nav-link:hover {
+            color: var(--foreground);
+            background: var(--border);
+        }
+        .theme-toggle {
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+        .theme-toggle:hover {
+            color: var(--foreground);
+            background: var(--border);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+        .register-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 0 2rem 0;
+        }
+        .register-card {
+            background: rgba(16, 25, 43, 0.95);
+            border-radius: 1.25rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            padding: 2.5rem 2rem 2rem 2rem;
+            max-width: 420px;
+            width: 100%;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            border: 1px solid var(--border);
+            animation: fadeInUp 0.7s cubic-bezier(.39,.575,.565,1) both;
+        }
+        [data-theme="light"] .register-card {
+            background: #f8fafc;
+            color: #1e293b;
+        }
+        .register-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            color: #10b981;
+        }
+        .register-desc {
+            text-align: center;
+            color: #cbd5e1;
+            font-size: 1.05rem;
+            margin-bottom: 1.5rem;
+        }
+        [data-theme="light"] .register-desc {
+            color: #64748b;
+        }
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        .form-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.4rem;
+        }
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.08);
+            color: inherit;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #10b981;
+            background: rgba(255,255,255,0.15);
+        }
+        .form-text {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-top: 0.25rem;
+        }
+        [data-theme="light"] .form-text {
+            color: #64748b;
+        }
+        .alert {
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            background: #fee2e2;
+            color: #b91c1c;
+            font-size: 0.98rem;
+            margin-bottom: 1rem;
+            border: 1px solid #fecaca;
+            text-align: center;
+        }
+        .register-btn {
+            width: 100%;
+            padding: 0.95rem 0;
+            font-weight: 600;
+            font-size: 1.08rem;
+            border-radius: 0.75rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            border: none;
+            cursor: pointer;
+            background: #10b981;
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: background 0.2s;
+        }
+        .register-btn:hover {
+            background: #059669;
+        }
+        @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(40px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fab fa-whatsapp"></i>
+                </div>
+                <div class="logo-text">WhatsApp Delivery Bot</div>
+            </div>
+            <nav class="nav">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/login" class="nav-link">Business Login</a>
+                <a href="/admin/dashboard" class="nav-link">Admin</a>
+                <button class="theme-toggle" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </nav>
         </div>
-        <div class="card-body">
-          <% if (typeof error !== 'undefined') { %>
-            <div class="alert alert-danger" role="alert">
-              <%= error %>
+    </header>
+    <section class="register-section">
+        <form class="register-card" action="/register" method="POST">
+            <div>
+                <div class="register-title">Register Your Business</div>
+                <div class="register-desc">Create your account to start managing deliveries with WhatsApp Delivery Bot.</div>
+                <% if (typeof error !== 'undefined') { %>
+                    <div class="alert"><%= error %></div>
+                <% } %>
             </div>
-          <% } %>
-
-          <form action="/register" method="POST">
-            <div class="mb-3">
-              <label for="name" class="form-label">Full Name</label>
-              <input type="text" class="form-control" id="name" name="name" required>
+            <div class="form-group">
+                <label for="name" class="form-label">Full Name</label>
+                <input type="text" class="form-control" id="name" name="name" required>
             </div>
-
-            <div class="mb-3">
-              <label for="email" class="form-label">Email Address</label>
-              <input type="email" class="form-control" id="email" name="email" required>
+            <div class="form-group">
+                <label for="email" class="form-label">Email Address</label>
+                <input type="email" class="form-control" id="email" name="email" required>
             </div>
-
-            <div class="mb-3">
-              <label for="phoneNumber" class="form-label">Phone Number</label>
-              <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" 
-                     pattern="[0-9]{10,15}" placeholder="e.g., 1234567890" required>
-              <div class="form-text">Enter your WhatsApp number with country code (e.g., 1234567890)</div>
+            <div class="form-group">
+                <label for="phoneNumber" class="form-label">Phone Number</label>
+                <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" pattern="[0-9]{10,15}" placeholder="e.g., 1234567890" required>
+                <div class="form-text">Enter your WhatsApp number with country code (e.g., 1234567890)</div>
             </div>
-
-            <div class="mb-3">
-              <label for="password" class="form-label">Password</label>
-              <input type="password" class="form-control" id="password" name="password" required minlength="6">
-              <div class="form-text">Choose a password (at least 6 characters)</div>
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="password" name="password" required minlength="6">
+                <div class="form-text">Choose a password (at least 6 characters)</div>
             </div>
-
-            <button type="submit" class="btn btn-primary">Continue to Business Setup</button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<%- include('footer') %> 
+            <button type="submit" class="register-btn">Continue to Business Setup <i class="fas fa-arrow-right"></i></button>
+        </form>
+    </section>
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        // Check for saved theme preference or default to light
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+        function updateThemeIcon(theme) {
+            const icon = themeToggle.querySelector('i');
+            icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+    </script>
+</body>
+</html> 
