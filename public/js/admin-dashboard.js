@@ -385,4 +385,179 @@ async function fetchAndRenderAnalytics() {
   } catch (err) {
     // fallback: do nothing, keep mock data
   }
+}
+
+// --- WhatsApp Bot Restart Functionality ---
+document.addEventListener('DOMContentLoaded', function() {
+  // Handle restart button clicks
+  const restartButtons = document.querySelectorAll('.secondary-btn');
+  restartButtons.forEach(button => {
+    if (button.textContent.includes('Restart')) {
+      button.addEventListener('click', handleRestartClick);
+    }
+  });
+});
+
+async function handleRestartClick(event) {
+  event.preventDefault();
+  
+  const button = event.currentTarget;
+  const originalText = button.innerHTML;
+  
+  try {
+    // Show loading state
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Restarting...';
+    
+    // Get admin user ID from the page (you may need to adjust this based on your setup)
+    const adminId = getAdminId(); // You'll need to implement this function
+    
+    const response = await fetch('/api/whatsapp/restart', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId: adminId
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      // Show success message
+      showNotification('WhatsApp bot restarted successfully! Authentication will be reused if available.', 'success');
+      
+      // Refresh bot status after a short delay
+      setTimeout(() => {
+        refreshBotStatus();
+      }, 3000);
+    } else {
+      showNotification('Error: ' + (result.error || 'Failed to restart WhatsApp bot'), 'error');
+    }
+  } catch (error) {
+    console.error('Restart error:', error);
+    showNotification('Error: Failed to restart WhatsApp bot', 'error');
+  } finally {
+    // Restore button state
+    button.disabled = false;
+    button.innerHTML = originalText;
+  }
+}
+
+function getAdminId() {
+  // Try to get admin ID from various sources
+  // You may need to adjust this based on how you pass admin data to the template
+  
+  // Method 1: From data attribute
+  const adminElement = document.querySelector('[data-admin-id]');
+  if (adminElement) {
+    return adminElement.getAttribute('data-admin-id');
+  }
+  
+  // Method 2: From global variable (if set in template)
+  if (typeof window.adminId !== 'undefined') {
+    return window.adminId;
+  }
+  
+  // Method 3: From URL parameter
+  const urlParams = new URLSearchParams(window.location.search);
+  const adminId = urlParams.get('adminId');
+  if (adminId) {
+    return adminId;
+  }
+  
+  // Fallback: You might need to implement a way to get the current admin ID
+  // For now, return a default or throw an error
+  throw new Error('Admin ID not found. Please implement getAdminId() function.');
+}
+
+function showNotification(message, type = 'info') {
+  // Create notification element
+  const notification = document.createElement('div');
+  notification.className = `notification notification-${type}`;
+  notification.innerHTML = `
+    <div class="notification-content">
+      <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+      <span>${message}</span>
+    </div>
+    <button class="notification-close">&times;</button>
+  `;
+  
+  // Add styles
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: ${type === 'success' ? '#4caf50' : type === 'error' ? '#f44336' : '#2196f3'};
+    color: white;
+    padding: 15px 20px;
+    border-radius: 5px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 400px;
+    animation: slideIn 0.3s ease-out;
+  `;
+  
+  // Add animation styles
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(100%); opacity: 0; }
+    }
+  `;
+  document.head.appendChild(style);
+  
+  // Add to page
+  document.body.appendChild(notification);
+  
+  // Handle close button
+  const closeBtn = notification.querySelector('.notification-close');
+  closeBtn.addEventListener('click', () => {
+    notification.style.animation = 'slideOut 0.3s ease-out';
+    setTimeout(() => {
+      document.body.removeChild(notification);
+    }, 300);
+  });
+  
+  // Auto remove after 5 seconds
+  setTimeout(() => {
+    if (document.body.contains(notification)) {
+      notification.style.animation = 'slideOut 0.3s ease-out';
+      setTimeout(() => {
+        if (document.body.contains(notification)) {
+          document.body.removeChild(notification);
+        }
+      }, 300);
+    }
+  }, 5000);
+}
+
+async function refreshBotStatus() {
+  try {
+    const response = await fetch('/api/whatsapp/bot-info');
+    const result = await response.json();
+    
+    if (result.success) {
+      // Update bot status display if available
+      const statusElement = document.querySelector('#botStatus');
+      if (statusElement) {
+        statusElement.innerHTML = `
+          <i class="fas fa-check-circle"></i> 
+          Bot is running (${result.number || 'Unknown number'})
+        `;
+        statusElement.className = 'alert alert-success';
+      }
+    }
+  } catch (error) {
+    console.error('Failed to refresh bot status:', error);
+  }
 } 

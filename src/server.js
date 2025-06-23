@@ -301,7 +301,7 @@ app.get('/admin/preview-dashboard', async (req, res) => {
     const uptimeMs = now - botStartTime;
     const uptimeHours = uptimeMs / (1000 * 60 * 60);
     res.render('admin/preview-dashboard', {
-      admin: { username: 'admin', email: 'admin@example.com' },
+      admin: { id: 1, username: 'admin', email: 'admin@example.com' },
       stats: {
         totalRevenue: '45,231.89', // Keep static as requested
         totalBusinesses: analytics.totalBusinesses,
@@ -322,7 +322,7 @@ app.get('/admin/preview-dashboard', async (req, res) => {
     logger.error('Preview dashboard error:', error);
     // Fallback to mock data if real data fails
     res.render('admin/preview-dashboard', {
-      admin: { username: 'admin', email: 'admin@example.com' },
+      admin: { id: 1, username: 'admin', email: 'admin@example.com' },
       stats: { totalRevenue: '45,231.89', totalBusinesses: 0, totalOrders: 0, botUptime: '100.0' }
     });
   }
@@ -1684,6 +1684,39 @@ async function startServer() {
       } catch (error) {
         logger.error('Change WhatsApp number error:', error);
         res.status(500).json({ error: 'Failed to change WhatsApp number' });
+      }
+    });
+
+    app.post('/api/whatsapp/restart', async (req, res) => {
+      try {
+        const { userId } = req.body;
+        
+        if (!userId) {
+          return res.status(400).json({ error: 'User ID is required' });
+        }
+
+        // Check if user is admin
+        const user = await db.query('users')
+          .where('id', userId)
+          .first();
+        
+        if (!user) {
+          return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Import WhatsAppService
+        const whatsappService = WhatsAppService.getInstance();
+
+        // Call the restart method
+        await whatsappService.restart();
+        
+        res.json({ 
+          success: true, 
+          message: 'WhatsApp bot restarted successfully. Authentication will be reused if available.' 
+        });
+      } catch (error) {
+        logger.error('Restart WhatsApp bot error:', error);
+        res.status(500).json({ error: 'Failed to restart WhatsApp bot' });
       }
     });
 

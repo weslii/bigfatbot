@@ -135,6 +135,33 @@ class WhatsAppService {
     }
   }
 
+  async restart() {
+    try {
+      logger.info('Restarting WhatsApp service...');
+      
+      // Check if client is already running
+      const isRunning = this.client.pupPage && !this.client.pupPage.isClosed();
+      
+      if (isRunning) {
+        logger.info('Stopping current WhatsApp client...');
+        await this.client.destroy();
+        logger.info('WhatsApp client stopped successfully');
+      }
+      
+      // Wait a moment for cleanup
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Reinitialize the client (LocalAuth will automatically reuse saved session)
+      logger.info('Reinitializing WhatsApp client with saved authentication...');
+      await this.client.initialize();
+      
+      logger.info('WhatsApp service restarted successfully');
+    } catch (error) {
+      logger.error('Failed to restart WhatsApp service:', error);
+      throw error;
+    }
+  }
+
   async loadMetrics() {
     try {
       let metrics = await database.query('bot_metrics').first();
