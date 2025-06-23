@@ -243,7 +243,7 @@ app.get('/admin/test-session', (req, res) => {
 
 // Add user login routes
 app.get('/login', (req, res) => {
-  if (req.session.userId) {
+  if (req.session && req.session.userId) {
     return res.redirect(`/dashboard?userId=${req.session.userId}`);
   }
   res.render('login');
