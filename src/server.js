@@ -1182,16 +1182,16 @@ async function startServer() {
       }
     });
     
-    // Note: Groups table doesn't have is_active column, so toggle route is removed
-    // app.post('/admin/businesses/:businessId/toggle', requireAdmin, async (req, res) => {
-    //   try {
-    //     await AdminService.toggleBusinessActive(req.params.businessId);
-    //     res.redirect('/admin/businesses');
-    //   } catch (error) {
-    //     logger.error('Toggle business active error:', error);
-    //     res.render('error', { error: 'Failed to update business status.' });
-    //   }
-    // });
+    // Toggle business active status
+    app.post('/admin/api/businesses/:businessId/toggle', requireAdmin, async (req, res) => {
+      try {
+        await AdminService.toggleBusinessActive(req.params.businessId);
+        res.json({ success: true });
+      } catch (error) {
+        logger.error('Toggle business active error:', error);
+        res.status(500).json({ error: 'Failed to toggle business status.' });
+      }
+    });
     
     app.post('/admin/businesses/:businessId/delete', requireAdmin, async (req, res) => {
       try {

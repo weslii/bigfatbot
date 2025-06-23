@@ -88,24 +88,47 @@ window.addEventListener('DOMContentLoaded', function() {
   // Initial load
   fetchAndRenderBusinesses(1);
 
-  // Businesses filter
-  const businessesForm = document.getElementById('businesses-filter-form');
-  if (businessesForm) {
-    businessesForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      businessesFilter.search = document.getElementById('businesses-search').value.trim();
-      fetchAndRenderBusinesses(1);
+  // Header search for businesses
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      const searchTerm = this.value.trim();
+      businessesFilter.search = searchTerm;
+      // Debounce search
+      clearTimeout(this.searchTimeout);
+      this.searchTimeout = setTimeout(() => {
+        const activeTab = document.querySelector('.tab-btn.active');
+        if (activeTab && activeTab.dataset.tab === 'businesses-tab') {
+          fetchAndRenderBusinesses(1);
+        }
+      }, 300);
     });
   }
-  // Orders filter
-  const ordersForm = document.getElementById('orders-filter-form');
-  if (ordersForm) {
-    ordersForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      ordersFilter.status = document.getElementById('orders-status').value;
-      ordersFilter.business = document.getElementById('orders-business').value.trim();
-      ordersFilter.search = document.getElementById('orders-search').value.trim();
-      fetchAndRenderOrders(1);
+  
+  // Tabs filter/export buttons
+  const filterBtn = document.querySelector('.tabs-actions .action-btn:first-child');
+  const exportBtn = document.querySelector('.tabs-actions .action-btn:last-child');
+  
+  if (filterBtn) {
+    filterBtn.addEventListener('click', function() {
+      const activeTab = document.querySelector('.tab-btn.active');
+      if (activeTab && activeTab.dataset.tab === 'orders-tab') {
+        // Show filter modal or form for orders
+        alert('Filter functionality for orders - implement as needed');
+      }
+    });
+  }
+  
+  if (exportBtn) {
+    exportBtn.addEventListener('click', function() {
+      const activeTab = document.querySelector('.tab-btn.active');
+      if (activeTab && activeTab.dataset.tab === 'businesses-tab') {
+        // Export businesses
+        window.open('/admin/api/businesses?export=true', '_blank');
+      } else if (activeTab && activeTab.dataset.tab === 'orders-tab') {
+        // Export orders
+        window.open('/admin/api/orders?export=true', '_blank');
+      }
     });
   }
 });
@@ -149,7 +172,7 @@ async function fetchAndRenderBusinesses(page = 1, pageSize = 10) {
             <div class="owner-email">${biz.owner_email || ''}</div>
           </div>
         </td>
-        <td><span class="status-badge active">Active</span></td>
+        <td><span class="status-badge ${biz.is_active ? 'active' : 'inactive'}">${biz.is_active ? 'Active' : 'Inactive'}</span></td>
         <td>-</td>
         <td>
           <div class="dropdown">
@@ -158,7 +181,9 @@ async function fetchAndRenderBusinesses(page = 1, pageSize = 10) {
               <a href="/admin/businesses/${biz.business_id}">View Details</a>
               <a href="/admin/businesses/${biz.business_id}/edit">Edit</a>
               <hr>
-              <a href="#" class="danger">Suspend Business</a>
+              <a href="#" class="toggle-status" data-business-id="${biz.business_id}" data-current-status="${biz.is_active}">
+                ${biz.is_active ? 'Deactivate' : 'Activate'} Business
+              </a>
             </div>
           </div>
         </td>
@@ -180,8 +205,9 @@ async function fetchAndRenderBusinesses(page = 1, pageSize = 10) {
         });
       });
     }
-    // Re-attach dropdown logic
+    // Re-attach dropdown logic and toggle handlers
     attachDropdownLogic();
+    attachToggleHandlers();
   } catch (err) {
     tableBody.innerHTML = '<tr><td colspan="5">Failed to load businesses.</td></tr>';
     if (pagination) pagination.innerHTML = '';
@@ -213,7 +239,7 @@ async function fetchAndRenderOrders(page = 1, pageSize = 10) {
         <td>${order.order_id}</td>
         <td>${order.business_name || ''}</td>
         <td>${order.customer_name || ''}</td>
-        <td>${order.status || ''}</td>
+        <td><span class="status-badge ${order.status}">${order.status || ''}</span></td>
         <td>${order.created_at ? new Date(order.created_at).toLocaleString() : ''}</td>
         <td>
           <div class="dropdown">
@@ -271,4 +297,30 @@ function attachDropdownLogic() {
       dropdown.classList.remove('active');
     });
   }, { once: true });
+}
+
+function attachToggleHandlers() {
+  document.querySelectorAll('.toggle-status').forEach(btn => {
+    btn.addEventListener('click', async function(e) {
+      e.preventDefault();
+      const businessId = this.getAttribute('data-business-id');
+      const currentStatus = this.getAttribute('data-current-status') === 'true';
+      try {
+        const res = await fetch(`/admin/api/businesses/${businessId}/toggle`, {
+          method: 'POST'
+        });
+        if (res.ok) {
+          // Refresh the current page to show updated status
+          const activeTab = document.querySelector('.tab-btn.active');
+          if (activeTab && activeTab.dataset.tab === 'businesses-tab') {
+            fetchAndRenderBusinesses(1);
+          }
+        } else {
+          alert('Failed to toggle business status');
+        }
+      } catch (err) {
+        alert('Error toggling business status');
+      }
+    });
+  });
 } 

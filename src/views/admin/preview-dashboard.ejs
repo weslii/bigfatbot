@@ -135,13 +135,6 @@
                                 </a>
                             </div>
                             <div class="card-content">
-                                <form id="businesses-filter-form" class="filter-form" onsubmit="return false;" style="margin-bottom: 1rem; display: flex; gap: 1rem; align-items: flex-end;">
-                                    <div>
-                                        <label for="businesses-search">Search</label>
-                                        <input type="text" id="businesses-search" name="search" placeholder="Business or Owner" class="form-control">
-                                    </div>
-                                    <button type="submit" class="action-btn"><i class="fas fa-search"></i> Search</button>
-                                </form>
                                 <div class="table-container">
                                     <table class="data-table">
                                         <thead>
@@ -231,7 +224,7 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Other tabs content (orders, analytics) can be added similarly -->
+                    <!-- Orders Tab -->
                     <div class="tab-content" id="orders-tab">
                         <div class="content-card">
                             <div class="card-header">
@@ -239,27 +232,6 @@
                                 <p>Monitor and manage all orders across the platform</p>
                             </div>
                             <div class="card-content">
-                                <form id="orders-filter-form" class="filter-form" onsubmit="return false;" style="margin-bottom: 1rem; display: flex; gap: 1rem; align-items: flex-end;">
-                                    <div>
-                                        <label for="orders-status">Status</label>
-                                        <select id="orders-status" name="status" class="form-control">
-                                            <option value="">All</option>
-                                            <option value="pending">Pending</option>
-                                            <option value="processing">Processing</option>
-                                            <option value="delivered">Delivered</option>
-                                            <option value="cancelled">Cancelled</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label for="orders-business">Business</label>
-                                        <input type="text" id="orders-business" name="business" placeholder="Business Name or ID" class="form-control">
-                                    </div>
-                                    <div>
-                                        <label for="orders-search">Search</label>
-                                        <input type="text" id="orders-search" name="search" placeholder="Customer or Order ID" class="form-control">
-                                    </div>
-                                    <button type="submit" class="action-btn"><i class="fas fa-search"></i> Filter/Search</button>
-                                </form>
                                 <div class="table-container">
                                     <table class="data-table">
                                         <thead>
