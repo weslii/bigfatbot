@@ -232,6 +232,23 @@
             0% { opacity: 0; transform: translateY(40px); }
             100% { opacity: 1; transform: translateY(0); }
         }
+        .register-fields-row {
+            display: flex;
+            gap: 1.25rem;
+        }
+        .register-fields-row .form-group {
+            flex: 1 1 0;
+            margin-bottom: 0;
+        }
+        @media (max-width: 600px) {
+            .register-fields-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            .register-fields-row .form-group {
+                margin-bottom: 1.25rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -263,23 +280,27 @@
                     <div class="alert"><%= error %></div>
                 <% } %>
             </div>
-            <div class="form-group">
-              <label for="name" class="form-label">Full Name</label>
-              <input type="text" class="form-control" id="name" name="name" required>
+            <div class="register-fields-row">
+                <div class="form-group">
+                    <label for="name" class="form-label">Full Name</label>
+                    <input type="text" class="form-control" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
+                </div>
             </div>
-            <div class="form-group">
-              <label for="email" class="form-label">Email Address</label>
-              <input type="email" class="form-control" id="email" name="email" required>
-            </div>
-            <div class="form-group">
-              <label for="phoneNumber" class="form-label">Phone Number</label>
-                <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" pattern="[0-9]{10,15}" placeholder="e.g., 1234567890" required>
-              <div class="form-text">Enter your WhatsApp number with country code (e.g., 1234567890)</div>
-            </div>
-            <div class="form-group">
-              <label for="password" class="form-label">Password</label>
-              <input type="password" class="form-control" id="password" name="password" required minlength="6">
-              <div class="form-text">Choose a password (at least 6 characters)</div>
+            <div class="register-fields-row">
+                <div class="form-group">
+                    <label for="phoneNumber" class="form-label">Phone Number</label>
+                    <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" pattern="[0-9]{10,15}" placeholder="e.g., 1234567890" required>
+                    <div class="form-text">Enter your WhatsApp number with country code (e.g., 1234567890)</div>
+                </div>
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" required minlength="6">
+                    <div class="form-text">Choose a password (at least 6 characters)</div>
+                </div>
             </div>
             <button type="submit" class="register-btn">Continue to Business Setup <i class="fas fa-arrow-right"></i></button>
           </form>
