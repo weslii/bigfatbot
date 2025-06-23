@@ -355,38 +355,65 @@
         .cards-grid {
             display: grid;
             gap: 2rem;
-            max-width: 64rem;
-            margin: 0 auto;
+            margin-top: 3rem;
         }
 
         @media (min-width: 768px) {
             .cards-grid {
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns: repeat(2, 1fr);
             }
         }
 
         .card {
             border: none;
-            border-radius: 1rem;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(236, 253, 245, 0.5));
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(12px);
-            transition: all 0.5s ease;
+            transition: all 0.3s ease;
             overflow: hidden;
+            position: relative;
         }
 
         [data-theme="dark"] .card {
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(6, 78, 59, 0.2));
+            background: rgba(15, 23, 42, 0.8);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
 
         .card:hover {
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
             transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        [data-theme="dark"] .card:hover {
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Card background gradients with color tints */
+        .card.primary-card {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(20, 184, 166, 0.05));
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        [data-theme="dark"] .card.primary-card {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(20, 184, 166, 0.1));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .card.secondary-card {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(99, 102, 241, 0.05));
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        [data-theme="dark"] .card.secondary-card {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(99, 102, 241, 0.1));
+            border: 1px solid rgba(59, 130, 246, 0.3);
         }
 
         .card-header {
-            text-align: center;
             padding: 2rem 2rem 1rem;
+            text-align: center;
+            position: relative;
         }
 
         .card-icon {
@@ -476,13 +503,43 @@
 
         .card-btn {
             width: 100%;
-            padding: 0.75rem 1.5rem;
+            padding: 0.875rem 1.5rem;
             font-weight: 600;
+            font-size: 1rem;
+            border-radius: 0.75rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border: none;
+            cursor: pointer;
         }
 
         .card-btn:hover {
+            transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+            text-decoration: none;
+        }
+
+        .card-btn.btn-gradient {
+            background: linear-gradient(135deg, #10b981, #14b8a6);
+            color: white;
+        }
+
+        .card-btn.btn-gradient:hover {
+            background: linear-gradient(135deg, #059669, #0d9488);
+        }
+
+        .card-btn.btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            color: white;
+        }
+
+        .card-btn.btn-primary:hover {
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
         }
 
         /* Features Section */
@@ -852,7 +909,7 @@
 
             <div class="cards-grid">
                 <!-- New Business Registration -->
-                <div class="card fade-in">
+                <div class="card primary-card fade-in">
                     <div class="card-header">
                         <div class="card-icon primary">
                             <i class="fas fa-building"></i>
@@ -877,7 +934,7 @@
                                 <span>Automated customer notifications</span>
                             </div>
                         </div>
-                        <a href="/register" class="btn btn-gradient card-btn">
+                        <a href="/register" class="card-btn btn-gradient">
                             Register Your Business
                             <i class="fas fa-arrow-right"></i>
                         </a>
@@ -885,7 +942,7 @@
                 </div>
 
                 <!-- Returning Customer Login -->
-                <div class="card fade-in">
+                <div class="card secondary-card fade-in">
                     <div class="card-header">
                         <div class="card-icon secondary">
                             <i class="fas fa-sign-in-alt"></i>
@@ -910,7 +967,7 @@
                                 <span>24/7 customer support</span>
                             </div>
                         </div>
-                        <a href="/login" class="btn btn-primary card-btn" style="background: linear-gradient(135deg, #3b82f6, #6366f1);">
+                        <a href="/login" class="card-btn btn-primary">
                             Login to Dashboard
                             <i class="fas fa-arrow-right"></i>
                         </a>
