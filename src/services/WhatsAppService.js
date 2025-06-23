@@ -503,41 +503,79 @@ class WhatsAppService {
       }
 
       // Register the group
-      const insertData = {
-          user_id: business.user_id,
-        business_id: business.business_id,
-          business_name: business.business_name,
-          group_name: chat.name,
-          group_id: chatId,
-          group_type: groupType
-      };
+      let attempts = 0;
+      const maxAttempts = 3;
+      
+      while (attempts < maxAttempts) {
+        try {
+          const insertData = {
+              user_id: business.user_id,
+            business_id: business.business_id,
+              business_name: business.business_name,
+              group_name: chat.name,
+              group_id: chatId,
+              group_type: groupType
+          };
 
-      // Add short code data if available
-      if (business.short_code && business.setup_identifier) {
-        insertData.short_code = business.short_code;
-        insertData.setup_identifier = business.setup_identifier;
+          // Only add short code data to the FIRST group (sales OR delivery)
+          // This prevents duplicate short codes across groups of the same business
+          if (business.short_code && business.setup_identifier && existingGroups.length === 0) {
+            insertData.short_code = business.short_code;
+            insertData.setup_identifier = business.setup_identifier;
+          }
+
+          await database.query('groups').insert(insertData);
+
+          // Send confirmation
+          await this.client.sendMessage(chatId, 
+            `✅ *${groupType === 'sales' ? 'Sales' : 'Delivery'} Group Registered!*\n\n` +
+            `*Business:* ${business.business_name}\n` +
+            `*Group:* ${chat.name}\n` +
+            `*Type:* ${groupType}\n\n` +
+            (groupType === 'sales' ? 
+              '🛍️ Customers can now place orders in this group.' :
+              '🚚 Delivery staff can manage orders in this group.')
+          );
+
+          logger.info('Group registered successfully', {
+            groupId: chatId,
+            groupName: chat.name,
+            businessId: business.business_id,
+            businessName: business.business_name,
+            groupType
+          });
+          
+          return; // Success, exit the retry loop
+          
+        } catch (error) {
+          attempts++;
+          
+          // If it's a duplicate short code error and we haven't exceeded max attempts, try again with new short code
+          if (error.code === '23505' && error.constraint === 'groups_short_code_unique' && attempts < maxAttempts) {
+            logger.warn(`Duplicate short code detected in setup, generating new code... (attempt ${attempts}/${maxAttempts})`);
+            
+            // Generate new short code and setup identifier
+            const { shortCode, setupIdentifier } = await ShortCodeGenerator.generateBusinessSetupCode(business.business_name);
+            
+            // Update the business record with new short code
+            await database.query('groups')
+              .where('business_id', business.business_id)
+              .update({
+                short_code: shortCode,
+                setup_identifier: setupIdentifier
+              });
+            
+            // Update the business object for next attempt
+            business.short_code = shortCode;
+            business.setup_identifier = setupIdentifier;
+            
+            continue;
+          }
+          
+          // For any other error or if we've exceeded attempts, throw the error
+          throw error;
+        }
       }
-
-      await database.query('groups').insert(insertData);
-
-      // Send confirmation
-      await this.client.sendMessage(chatId, 
-        `✅ *${groupType === 'sales' ? 'Sales' : 'Delivery'} Group Registered!*\n\n` +
-        `*Business:* ${business.business_name}\n` +
-        `*Group:* ${chat.name}\n` +
-        `*Type:* ${groupType}\n\n` +
-        (groupType === 'sales' ? 
-          '🛍️ Customers can now place orders in this group.' :
-          '🚚 Delivery staff can manage orders in this group.')
-      );
-
-      logger.info('Group registered successfully', {
-        groupId: chatId,
-        groupName: chat.name,
-        businessId: business.business_id,
-        businessName: business.business_name,
-        groupType
-      });
     } catch (error) {
       logger.error('Error handling setup command:', error);
       
