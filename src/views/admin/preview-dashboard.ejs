@@ -149,80 +149,10 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr>
-                                                <td>
-                                                    <div class="business-info">
-                                                        <div class="business-avatar">P</div>
-                                                        <div class="business-details">
-                                                            <div class="business-name">Pizza Palace</div>
-                                                            <div class="business-id">biz-001</div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <div class="owner-info">
-                                                        <div class="owner-name">Jane Doe</div>
-                                                        <div class="owner-phone">+1 (555) 111-2222</div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span class="status-badge active">Active</span>
-                                                </td>
-                                                <td>1,234</td>
-                                                <td class="revenue">$12,345</td>
-                                                <td>2023-01-15</td>
-                                                <td>
-                                                    <div class="dropdown">
-                                                        <button class="action-menu-btn">
-                                                            <i class="fas fa-ellipsis-h"></i>
-                                                        </button>
-                                                        <div class="dropdown-content">
-                                                            <a href="/admin/businesses/biz-001">View Details</a>
-                                                            <a href="/admin/businesses/biz-001/edit">Edit</a>
-                                                            <hr>
-                                                            <a href="#" class="danger">Suspend Business</a>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>
-                                                    <div class="business-info">
-                                                        <div class="business-avatar">B</div>
-                                                        <div class="business-details">
-                                                            <div class="business-name">Burger Bros</div>
-                                                            <div class="business-id">biz-002</div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <div class="owner-info">
-                                                        <div class="owner-name">John Smith</div>
-                                                        <div class="owner-phone">+1 (555) 333-4444</div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span class="status-badge pending">Pending</span>
-                                                </td>
-                                                <td>987</td>
-                                                <td class="revenue">$8,765</td>
-                                                <td>2023-02-10</td>
-                                                <td>
-                                                    <div class="dropdown">
-                                                        <button class="action-menu-btn">
-                                                            <i class="fas fa-ellipsis-h"></i>
-                                                        </button>
-                                                        <div class="dropdown-content">
-                                                            <a href="/admin/businesses/biz-002">View Details</a>
-                                                            <a href="/admin/businesses/biz-002/edit">Edit</a>
-                                                            <hr>
-                                                            <a href="#" class="danger">Suspend Business</a>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
+                                            <!-- Data will be rendered by JS -->
                                         </tbody>
                                     </table>
+                                    <div id="businesses-pagination" class="pagination"></div>
                                 </div>
                             </div>
                         </div>
@@ -304,9 +234,24 @@
                                 <p>Monitor and manage all orders across the platform</p>
                             </div>
                             <div class="card-content">
-                                <a href="/admin/orders" class="primary-btn">
-                                    <i class="fas fa-list"></i> Go to Orders
-                                </a>
+                                <div class="table-container">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Order ID</th>
+                                                <th>Business</th>
+                                                <th>Customer</th>
+                                                <th>Status</th>
+                                                <th>Date</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Data will be rendered by JS -->
+                                        </tbody>
+                                    </table>
+                                    <div id="orders-pagination" class="pagination"></div>
+                                </div>
                             </div>
                         </div>
                     </div>

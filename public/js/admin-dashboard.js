@@ -77,4 +77,164 @@ window.addEventListener('DOMContentLoaded', function() {
       profileMenu.parentElement.classList.remove('active');
     });
   }
-}); 
+
+  // Fetch businesses and orders on tab switch
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      if (btn.dataset.tab === 'businesses-tab') fetchAndRenderBusinesses(1);
+      if (btn.dataset.tab === 'orders-tab') fetchAndRenderOrders(1);
+    });
+  });
+  // Initial load
+  fetchAndRenderBusinesses(1);
+});
+
+// --- AJAX Pagination for Businesses and Orders Tabs ---
+async function fetchAndRenderBusinesses(page = 1, pageSize = 10) {
+  const tableBody = document.querySelector('#businesses-tab .data-table tbody');
+  const pagination = document.getElementById('businesses-pagination');
+  if (!tableBody) return;
+  tableBody.innerHTML = '<tr><td colspan="7">Loading...</td></tr>';
+  try {
+    const res = await fetch(`/admin/api/businesses?page=${page}&pageSize=${pageSize}`);
+    const data = await res.json();
+    if (!data.businesses || data.businesses.length === 0) {
+      tableBody.innerHTML = '<tr><td colspan="7">No businesses found.</td></tr>';
+      if (pagination) pagination.innerHTML = '';
+      return;
+    }
+    tableBody.innerHTML = data.businesses.map(biz => `
+      <tr>
+        <td>
+          <div class="business-info">
+            <div class="business-avatar">${biz.business_name ? biz.business_name[0] : '?'}</div>
+            <div class="business-details">
+              <div class="business-name">${biz.business_name || ''}</div>
+              <div class="business-id">${biz.business_id || ''}</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="owner-info">
+            <div class="owner-name">${biz.owner_name || ''}</div>
+            <div class="owner-email">${biz.owner_email || ''}</div>
+          </div>
+        </td>
+        <td><span class="status-badge active">Active</span></td>
+        <td>-</td>
+        <td class="revenue">-</td>
+        <td>-</td>
+        <td>
+          <div class="dropdown">
+            <button class="action-menu-btn"><i class="fas fa-ellipsis-h"></i></button>
+            <div class="dropdown-content">
+              <a href="/admin/businesses/${biz.business_id}">View Details</a>
+              <a href="/admin/businesses/${biz.business_id}/edit">Edit</a>
+              <hr>
+              <a href="#" class="danger">Suspend Business</a>
+            </div>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+    // Render pagination
+    if (pagination) {
+      const totalPages = Math.ceil(data.total / pageSize);
+      let html = '';
+      html += `<button ${page === 1 ? 'disabled' : ''} data-page="${page-1}">Prev</button>`;
+      for (let i = 1; i <= totalPages; i++) {
+        html += `<button ${i === page ? 'class="active"' : ''} data-page="${i}">${i}</button>`;
+      }
+      html += `<button ${page === totalPages ? 'disabled' : ''} data-page="${page+1}">Next</button>`;
+      pagination.innerHTML = html;
+      pagination.querySelectorAll('button[data-page]').forEach(btn => {
+        btn.addEventListener('click', e => {
+          fetchAndRenderBusinesses(parseInt(btn.getAttribute('data-page')), pageSize);
+        });
+      });
+    }
+    // Re-attach dropdown logic
+    attachDropdownLogic();
+  } catch (err) {
+    tableBody.innerHTML = '<tr><td colspan="7">Failed to load businesses.</td></tr>';
+    if (pagination) pagination.innerHTML = '';
+  }
+}
+
+async function fetchAndRenderOrders(page = 1, pageSize = 10) {
+  const tableBody = document.querySelector('#orders-tab .data-table tbody');
+  const pagination = document.getElementById('orders-pagination');
+  if (!tableBody) return;
+  tableBody.innerHTML = '<tr><td colspan="6">Loading...</td></tr>';
+  try {
+    const res = await fetch(`/admin/api/orders?page=${page}&pageSize=${pageSize}`);
+    const data = await res.json();
+    if (!data.orders || data.orders.length === 0) {
+      tableBody.innerHTML = '<tr><td colspan="6">No orders found.</td></tr>';
+      if (pagination) pagination.innerHTML = '';
+      return;
+    }
+    tableBody.innerHTML = data.orders.map(order => `
+      <tr>
+        <td>${order.order_id}</td>
+        <td>${order.business_name || ''}</td>
+        <td>${order.customer_name || ''}</td>
+        <td>${order.status || ''}</td>
+        <td>${order.created_at ? new Date(order.created_at).toLocaleString() : ''}</td>
+        <td>
+          <div class="dropdown">
+            <button class="action-menu-btn"><i class="fas fa-ellipsis-h"></i></button>
+            <div class="dropdown-content">
+              <a href="/admin/orders/${order.order_id}">View Details</a>
+              <a href="/admin/orders/${order.order_id}/edit">Edit</a>
+              <hr>
+              <a href="#" class="danger">Delete Order</a>
+            </div>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+    // Render pagination
+    if (pagination) {
+      const totalPages = Math.ceil(data.total / pageSize);
+      let html = '';
+      html += `<button ${page === 1 ? 'disabled' : ''} data-page="${page-1}">Prev</button>`;
+      for (let i = 1; i <= totalPages; i++) {
+        html += `<button ${i === page ? 'class="active"' : ''} data-page="${i}">${i}</button>`;
+      }
+      html += `<button ${page === totalPages ? 'disabled' : ''} data-page="${page+1}">Next</button>`;
+      pagination.innerHTML = html;
+      pagination.querySelectorAll('button[data-page]').forEach(btn => {
+        btn.addEventListener('click', e => {
+          fetchAndRenderOrders(parseInt(btn.getAttribute('data-page')), pageSize);
+        });
+      });
+    }
+    // Re-attach dropdown logic
+    attachDropdownLogic();
+  } catch (err) {
+    tableBody.innerHTML = '<tr><td colspan="6">Failed to load orders.</td></tr>';
+    if (pagination) pagination.innerHTML = '';
+  }
+}
+
+function attachDropdownLogic() {
+  // Re-attach 3-dot dropdown logic after table update
+  const actionMenuBtns = document.querySelectorAll('.action-menu-btn');
+  actionMenuBtns.forEach(btn => {
+    btn.onclick = function(e) {
+      e.stopPropagation();
+      document.querySelectorAll('.dropdown.active').forEach(dropdown => {
+        if (dropdown !== this.parentElement) {
+          dropdown.classList.remove('active');
+        }
+      });
+      this.parentElement.classList.toggle('active');
+    };
+  });
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.dropdown.active').forEach(dropdown => {
+      dropdown.classList.remove('active');
+    });
+  }, { once: true });
+} 
