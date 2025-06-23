@@ -286,6 +286,11 @@ app.get('/landing-preview', (req, res) => {
   res.render('landing-preview');
 });
 
+// Add WhatsApp Delivery Dashboard route
+app.get('/whatsapp-delivery-dashboard', (req, res) => {
+  res.render('whatsapp-delivery-dashboard');
+});
+
 // Start server
 async function startServer() {
   try {
