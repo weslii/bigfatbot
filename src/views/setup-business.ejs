@@ -1,44 +1,359 @@
-<%- include('header', { title: 'Setup Business' }) %>
-
-<div class="container mt-5">
-  <div class="row justify-content-center">
-    <div class="col-md-6">
-      <div class="card">
-        <div class="card-header">
-          <h4 class="mb-0">Setup Your Business</h4>
-        </div>
-        <div class="card-body">
-          <% if (typeof error !== 'undefined') { %>
-            <div class="alert alert-danger" role="alert">
-              <%= error %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup Your Business - WhatsApp Delivery Bot</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/theme.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #10b981;
+            --secondary: #3b82f6;
+            --accent: #8b5cf6;
+            --background: #f8fafc;
+            --foreground: #1e293b;
+            --muted: #64748b;
+            --border: #e2e8f0;
+        }
+        [data-theme="dark"] {
+            --background: #020617;
+            --foreground: #f8fafc;
+            --muted: #94a3b8;
+            --border: #1e293b;
+        }
+        html, body {
+            min-height: 100vh;
+            height: 100vh;
+            width: 100vw;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%);
+        }
+        [data-theme="dark"] html, [data-theme="dark"] body {
+            background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #064e3b 100%) !important;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--foreground);
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+        [data-theme="dark"] .header {
+            background: rgba(15, 23, 42, 0.8);
+        }
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .logo-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.75rem;
+            background: linear-gradient(135deg, #10b981, #14b8a6);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        .logo-icon i {
+            font-size: 1.25rem;
+            color: white;
+        }
+        .logo-text {
+            font-weight: 700;
+            font-size: 1.125rem;
+            background: linear-gradient(135deg, #10b981, #14b8a6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        .nav-link {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+        }
+        .nav-link:hover {
+            color: var(--foreground);
+            background: var(--border);
+        }
+        .theme-toggle {
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+        .theme-toggle:hover {
+            color: var(--foreground);
+            background: var(--border);
+        }
+        .setup-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 0 2rem 0;
+        }
+        .setup-card {
+            background: rgba(16, 25, 43, 0.98);
+            border-radius: 1rem;
+            box-shadow: 0 4px 24px 0 rgba(16, 185, 129, 0.08), 0 1px 8px 0 rgba(0,0,0,0.10);
+            padding: 2rem 2.5rem 1.5rem 2.5rem;
+            max-width: 480px;
+            width: 100%;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            border: 1px solid var(--border);
+            animation: fadeInUp 0.7s cubic-bezier(.39,.575,.565,1) both;
+        }
+        [data-theme="light"] .setup-card {
+            background: #f8fafc;
+            color: #1e293b;
+        }
+        .setup-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 0.18rem;
+            color: #10b981;
+            letter-spacing: -0.5px;
+        }
+        .setup-desc {
+            text-align: center;
+            color: #cbd5e1;
+            font-size: 0.93rem;
+            margin-bottom: 1rem;
+        }
+        [data-theme="light"] .setup-desc {
+            color: #64748b;
+        }
+        .form-group {
+            margin-bottom: 1.1rem;
+        }
+        .form-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            font-size: 0.97rem;
+        }
+        .form-control {
+            width: 100%;
+            padding: 0.6rem 0.85rem;
+            border-radius: 0.6rem;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.07);
+            color: inherit;
+            font-size: 0.97rem;
+            transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+        }
+        .setup-card body[data-theme='dark'] input.form-control,
+        .setup-card body[data-theme='dark'] input,
+        body[data-theme='dark'] .setup-card input.form-control,
+        body[data-theme='dark'] .setup-card input {
+            background: rgba(16,25,43,0.18) !important;
+            color: #e5e7eb !important;
+            backdrop-filter: blur(4px) !important;
+            box-shadow: none !important;
+            border: 1px solid #334155 !important;
+        }
+        body[data-theme='dark'] .setup-card input.form-control:focus,
+        body[data-theme='dark'] .setup-card input:focus {
+            background: rgba(16,25,43,0.28) !important;
+        }
+        body[data-theme='dark'] .setup-card input.form-control:hover,
+        body[data-theme='dark'] .setup-card input:hover {
+            background: rgba(16,25,43,0.32) !important;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #10b981;
+            background: rgba(255,255,255,0.13);
+            box-shadow: 0 0 0 2px rgba(16,185,129,0.08);
+        }
+        body[data-theme="dark"] .form-control:focus {
+            background: rgba(16,25,43,0.28) !important;
+        }
+        .form-control:hover {
+            border-color: #14b8a6;
+            background: rgba(20,184,166,0.08);
+            box-shadow: 0 1px 4px 0 rgba(16,185,129,0.05);
+        }
+        body[data-theme="dark"] .form-control:hover {
+            background: rgba(16,25,43,0.32) !important;
+        }
+        .form-control::placeholder {
+            color: #64748b;
+            font-size: 0.89em;
+            opacity: 1;
+        }
+        .form-text {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-top: 0.18rem;
+        }
+        [data-theme="light"] .form-text {
+            color: #64748b;
+        }
+        .alert {
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            background: #fee2e2;
+            color: #b91c1c;
+            font-size: 0.98rem;
+            margin-bottom: 1rem;
+            border: 1px solid #fecaca;
+            text-align: center;
+        }
+        .alert-info {
+            background: #e0f2fe;
+            color: #0369a1;
+            border: 1px solid #bae6fd;
+        }
+        [data-theme="dark"] .alert-info {
+            background: #0f172a;
+            color: #bae6fd;
+            border-color: #0369a1;
+        }
+        .setup-btn {
+            width: 100%;
+            padding: 0.6rem 0;
+            font-weight: 600;
+            font-size: 0.99rem;
+            border-radius: 0.6rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            border: none;
+            cursor: pointer;
+            background: #10b981;
+            color: #fff;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            transition: background 0.2s;
+            margin-top: 0.2rem;
+            height: 2.6rem;
+        }
+        .setup-btn:hover {
+            background: #059669;
+        }
+        @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(40px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 600px) {
+            html, body {
+                height: auto;
+                min-height: 100vh;
+                overflow: auto;
+            }
+            .setup-section {
+                min-height: 100vh;
+                padding: 1.5rem 0 1.5rem 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fab fa-whatsapp"></i>
+                </div>
+                <div class="logo-text">WhatsApp Delivery Bot</div>
             </div>
-          <% } %>
-
-          <form action="/setup-business" method="POST">
+            <nav class="nav">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/login" class="nav-link">Business Login</a>
+                <a href="/admin/dashboard" class="nav-link">Admin</a>
+                <button class="theme-toggle" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </nav>
+        </div>
+    </header>
+    <section class="setup-section">
+        <form class="setup-card" action="/setup-business" method="POST">
             <input type="hidden" name="userId" value="<%= userId %>">
-            
-            <div class="mb-3">
-              <label for="businessName" class="form-label">Business Name</label>
-              <input type="text" class="form-control" id="businessName" name="businessName" required>
-              <div class="form-text">This will be used to identify your business in the system</div>
+            <div>
+                <div class="setup-title">Setup Your Business</div>
+                <div class="setup-desc">Enter your business name to get started with WhatsApp Delivery Bot.</div>
+                <% if (typeof error !== 'undefined') { %>
+                    <div class="alert"><%= error %></div>
+                <% } %>
             </div>
-
-            <div class="alert alert-info" role="alert">
-              <h5 class="alert-heading">Next Steps</h5>
-              <p>After setting up your business, you'll need to:</p>
-              <ol class="mb-0">
-                <li>Add our bot to your WhatsApp groups</li>
-                <li>Type the setup command in each group</li>
-                <li>Start managing your deliveries!</li>
-              </ol>
+            <div class="form-group">
+                <label for="businessName" class="form-label">Business Name</label>
+                <input type="text" class="form-control" id="businessName" name="businessName" required placeholder="e.g., Acme Delivery Services">
+                <div class="form-text">This will be used to identify your business in the system</div>
             </div>
-
-            <button type="submit" class="btn btn-primary">Create Business</button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<%- include('footer') %> 
+            <div class="alert alert-info">
+                <h5 class="alert-heading" style="margin:0 0 0.5rem 0; font-size:1.05rem;">Next Steps</h5>
+                <p style="margin-bottom:0.5rem;">After setting up your business, you'll need to:</p>
+                <ol style="margin:0 0 0.5rem 1.2rem;">
+                    <li>Add our bot to your WhatsApp groups</li>
+                    <li>Type the setup command in each group</li>
+                    <li>Start managing your deliveries!</li>
+                </ol>
+            </div>
+            <button type="submit" class="setup-btn">Create Business <i class="fas fa-arrow-right"></i></button>
+        </form>
+    </section>
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        // Check for saved theme preference or default to light
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+        function updateThemeIcon(theme) {
+            const icon = themeToggle.querySelector('i');
+            icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+    </script>
+</body>
+</html> 
