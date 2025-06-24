@@ -7,7 +7,7 @@ class RegistrationService {
   static async registerUser(name, email, phoneNumber, password) {
     try {
       // Check if user already exists
-      const [user] = await database.query('users')
+      const user = await database.query('users')
         .where('email', email)
         .first();
 
