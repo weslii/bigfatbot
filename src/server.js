@@ -449,13 +449,33 @@ async function startServer() {
         if (!userId) {
           return res.redirect('/login');
         }
-        const [groups, businesses, orderStats, recentOrders] = await Promise.all([
+
+        // Updated query to get businesses with order counts
+        const businessesWithOrders = await db.query('groups as g')
+          .select(
+            'g.business_id', 
+            'g.business_name', 
+            'g.created_at',
+            'g.is_active'
+          )
+          .leftJoin('orders as o', 'g.business_id', 'o.business_id')
+          .count('o.id as order_count')
+          .where('g.user_id', userId)
+          .groupBy('g.business_id', 'g.business_name', 'g.created_at', 'g.is_active');
+        
+        const [groups, orderStats, recentOrders] = await Promise.all([
           RegistrationService.getUserGroups(userId),
-          RegistrationService.getUserBusinesses(userId),
           OrderService.getUserOrderStats(userId),
           OrderService.getUserRecentOrders(userId, 5)
         ]);
-        res.render('dashboard', { groups, businesses, userId, orderStats, recentOrders });
+        
+        res.render('dashboard', { 
+          groups, 
+          businesses: businessesWithOrders, // Pass the new data
+          userId, 
+          orderStats, 
+          recentOrders 
+        });
       } catch (error) {
         logger.error('Dashboard error:', error);
         res.render('error', { error: 'Failed to load dashboard.' });

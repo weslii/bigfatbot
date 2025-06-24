@@ -113,22 +113,31 @@
                                         <table class="data-table">
                                             <thead>
                                                 <tr>
-                                                    <th>Business Name</th>
+                                                    <th>Business</th>
                                                     <th>Status</th>
+                                                    <th>Orders</th>
                                                     <th>Created</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 <% businesses.forEach(function(biz) { %>
                                                     <tr>
-                                                        <td><%= biz.business_name %></td>
+                                                        <td>
+                                                            <div class="business-info">
+                                                                <div class="business-avatar"><i class="fas fa-building"></i></div>
+                                                                <div class="business-details">
+                                                                    <div class="business-name"><%= biz.business_name %></div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
                                                         <td>
                                                             <% if (biz.is_active) { %>
                                                                 <span class="status-badge active">Active</span>
                                                             <% } else { %>
-                                                                <span class="status-badge">Deactivated</span>
+                                                                <span class="status-badge inactive">Deactivated</span>
                                                             <% } %>
                                                         </td>
+                                                        <td><%= biz.order_count %></td>
                                                         <td><%= biz.created_at ? new Date(biz.created_at).toLocaleDateString() : '-' %></td>
                                                     </tr>
                                                 <% }); %>
@@ -215,7 +224,26 @@
                                         </table>
                                     </div>
                                 <% } else { %>
-                                    <div class="empty-placeholder">No recent orders found. <a href="/orders">View all orders</a>.</div>
+                                    <div class="table-container">
+                                        <table class="data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Order ID</th>
+                                                    <th>Customer</th>
+                                                    <th>Status</th>
+                                                    <th>Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>—</td>
+                                                    <td>No recent orders</td>
+                                                    <td>—</td>
+                                                    <td>—</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 <% } %>
                             </div>
                         </div>
@@ -306,6 +334,20 @@
                 });
             });
         });
+        // Profile dropdown functionality
+        const profileBtn = document.getElementById('profileDropdown');
+        const profileMenu = document.getElementById('profileMenu');
+        if (profileBtn) {
+            profileBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                profileMenu.parentElement.classList.toggle('active');
+            });
+            document.addEventListener('click', (e) => {
+                if (!profileMenu.contains(e.target) && !profileBtn.contains(e.target)) {
+                    profileMenu.parentElement.classList.remove('active');
+                }
+            });
+        }
     </script>
 </body>
 </html> 
