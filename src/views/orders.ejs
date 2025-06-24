@@ -5,33 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Orders Management - WhatsApp Delivery Bot</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="/css/admin-dashboard.css" rel="stylesheet">
+    <link href="/css/orders-dashboard.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns"></script>
 </head>
 <body>
     <!-- Header -->
     <header class="header">
         <div class="header-content">
-            <a href="/dashboard" class="logo-section" style="text-decoration: none;">
-                <div class="logo-icon">
-                    <i class="fab fa-whatsapp"></i>
-                </div>
-                <div class="logo-text">
-                    <span class="main-title">Orders Management</span>
-                    <span class="sub-title">WhatsApp Delivery Bot</span>
-                </div>
-            </a>
-            <nav class="header-nav">
-                <a href="/dashboard" class="nav-link">Dashboard</a>
-                <a href="/groups" class="nav-link">Groups</a>
-                <a href="/businesses" class="nav-link">Businesses</a>
-            </nav>
+            <div class="logo-section">
+                <a href="/dashboard" style="text-decoration: none; display: flex; align-items: center; gap: 0.75rem;">
+                    <div class="logo-icon">
+                        <i class="fab fa-whatsapp"></i>
+                    </div>
+                    <div class="logo-text">
+                        <span class="main-title">Delivery Bot</span>
+                    </div>
+                </a>
+                <nav class="header-nav">
+                    <a href="/dashboard">Dashboard</a>
+                    <a href="/orders" class="active">Orders</a>
+                    <a href="/groups">Groups</a>
+                    <a href="/businesses">Businesses</a>
+                </nav>
+            </div>
             <div class="header-actions">
-                <button class="btn btn-secondary" id="themeToggle">
+                <button class="btn" id="themeToggle">
                     <i class="fas fa-moon"></i>
                 </button>
                 <div class="dropdown">
-                    <button class="btn btn-primary" id="profileDropdown">
+                    <button class="btn" id="profileDropdown">
                         <i class="fas fa-user"></i>
                     </button>
                     <div class="dropdown-content" id="profileMenu">
@@ -70,18 +73,18 @@
         <!-- Analytics Charts -->
         <div class="charts-grid">
             <div class="chart-card">
-                <canvas id="statusChart" height="200"></canvas>
+                <canvas id="statusChart"></canvas>
             </div>
             <div class="chart-card">
-                <canvas id="businessChart" height="200"></canvas>
+                <canvas id="businessChart"></canvas>
             </div>
         </div>
-        <div class="content-card">
+        <div class="content-card trend-chart-card">
              <div class="card-content">
-                <canvas id="trendChart" height="250"></canvas>
+                <canvas id="trendChart"></canvas>
             </div>
         </div>
-        
+
         <!-- Filters -->
         <div class="content-card">
             <div class="card-header">
@@ -91,19 +94,19 @@
             </div>
             <div class="card-content">
                 <form class="filters-form" id="filtersForm">
-                    <input type="hidden" name="userId" value="<%= userId %>">
-                    
+            <input type="hidden" name="userId" value="<%= userId %>">
+            
                     <div class="form-group">
                         <label class="form-label" for="businessFilter">Business</label>
                         <select class="form-select" name="business" id="businessFilter">
-                            <option value="">All Businesses</option>
+                <option value="">All Businesses</option>
                             <% businesses.forEach(function(biz) { %>
                                 <option value="<%= biz.business_id %>" <%= selectedBusiness == biz.business_id ? 'selected' : '' %>>
                                     <%= biz.business_name %>
-                                </option>
-                            <% }); %>
-                        </select>
-                    </div>
+                  </option>
+                <% }); %>
+              </select>
+            </div>
 
                     <div class="form-group">
                         <label class="form-label" for="statusFilter">Status</label>
@@ -113,25 +116,25 @@
                             <option value="processing" <%= selectedStatus == 'processing' ? 'selected' : '' %>>Processing</option>
                             <option value="delivered" <%= selectedStatus == 'delivered' ? 'selected' : '' %>>Delivered</option>
                             <option value="cancelled" <%= selectedStatus == 'cancelled' ? 'selected' : '' %>>Cancelled</option>
-                        </select>
-                    </div>
+              </select>
+            </div>
 
                     <div class="form-group">
                         <label class="form-label" for="searchFilter">Search</label>
                         <input type="text" class="form-input" name="search" id="searchFilter"
                                placeholder="Customer name or order ID" value="<%= search || '' %>">
-                    </div>
+            </div>
 
                     <div class="form-group">
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-search"></i> Apply Filters
                         </button>
-                    </div>
-                </form>
             </div>
+          </form>
         </div>
+      </div>
 
-        <!-- Orders Table -->
+      <!-- Orders Table -->
         <div class="content-card">
             <div class="card-header">
                 <h3 class="card-title">
@@ -140,106 +143,106 @@
                 <div class="header-actions-right">
                     <form id="pageSizeForm">
                         <select class="form-select" style="width: auto;" name="pageSize" onchange="document.getElementById('pageSizeForm').submit()">
-                            <option value="10" <%= pageSize == 10 ? 'selected' : '' %>>10 per page</option>
-                            <option value="25" <%= pageSize == 25 ? 'selected' : '' %>>25 per page</option>
-                            <option value="50" <%= pageSize == 50 ? 'selected' : '' %>>50 per page</option>
-                        </select>
+              <option value="10" <%= pageSize == 10 ? 'selected' : '' %>>10 per page</option>
+              <option value="25" <%= pageSize == 25 ? 'selected' : '' %>>25 per page</option>
+              <option value="50" <%= pageSize == 50 ? 'selected' : '' %>>50 per page</option>
+            </select>
                         <% for(let key in query) { %>
                             <% if (key !== 'pageSize') { %>
                                 <input type="hidden" name="<%= key %>" value="<%= query[key] %>">
                             <% } %>
                         <% } %>
                     </form>
-                </div>
-            </div>
+          </div>
+        </div>
             <div class="card-content">
                 <div class="table-container">
                     <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Order ID</th>
+              <thead>
+                <tr>
+                  <th>Order ID</th>
                                 <th>Business</th>
-                                <th>Customer</th>
-                                <th>Status</th>
+                  <th>Customer</th>
+                  <th>Status</th>
                                 <th>Created</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
                             <% if (orders && orders.length) { %>
                                 <% orders.forEach(function(order) { %>
-                                    <tr>
+                    <tr>
                                         <td><strong><%= order.order_id %></strong></td>
                                         <td><span class="business-badge"><%= order.business_name %></span></td>
                                         <td><%= order.customer_name %></td>
-                                        <td>
+                      <td>
                                             <span class="status-badge <%= order.status %>"><%= order.status %></span>
-                                        </td>
+                      </td>
                                         <td><%= new Date(order.created_at).toLocaleString() %></td>
                                         <td>
                                             <div class="btn-group">
                                                 <button class="btn btn-sm btn-outline" onclick="viewOrder('<%= order.id %>')">
                                                     <i class="fas fa-eye"></i> View
-                                                </button>
+                        </button>
                                                 <button class="btn btn-sm btn-outline" onclick="editOrder('<%= order.id %>')">
                                                     <i class="fas fa-edit"></i> Edit
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <% }); %>
-                            <% } else { %>
-                                <tr>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
                                     <td colspan="6" class="no-orders">
                                         <i class="fas fa-box-open"></i>
                                         <p>No orders found matching your criteria.</p>
-                                    </td>
-                                </tr>
-                            <% } %>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                    </td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
         </div>
+      </div>
 
-        <!-- Pagination -->
-        <% if (totalPages > 1) { %>
+      <!-- Pagination -->
+      <% if (totalPages > 1) { %>
             <div class="pagination">
                 <div class="pagination-info">
                     Showing <%= (page - 1) * pageSize + 1 %> to <%= Math.min(page * pageSize, totalOrders) %> of <%= totalOrders %> orders
-                </div>
+          </div>
                 <div class="pagination-nav">
                     <a href="?<%= new URLSearchParams({ ...query, page: page - 1 }).toString() %>" 
                        class="pagination-btn <%= page <= 1 ? 'disabled' : '' %>">
-                        <i class="fas fa-chevron-left"></i> Previous
-                    </a>
+                    <i class="fas fa-chevron-left"></i> Previous
+                  </a>
                     <% for(let i = 1; i <= totalPages; i++) { %>
                         <a href="?<%= new URLSearchParams({ ...query, page: i }).toString() %>" 
                            class="pagination-btn <%= i === page ? 'active' : '' %>"><%= i %></a>
-                    <% } %>
+              <% } %>
                     <a href="?<%= new URLSearchParams({ ...query, page: page + 1 }).toString() %>" 
                        class="pagination-btn <%= page >= totalPages ? 'disabled' : '' %>">
-                        Next <i class="fas fa-chevron-right"></i>
-                    </a>
+                    Next <i class="fas fa-chevron-right"></i>
+                  </a>
                 </div>
-            </div>
-        <% } %>
+        </div>
+      <% } %>
     </main>
 
-    <!-- Order Details Modal -->
+<!-- Order Details Modal -->
     <div id="orderModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
+    <div class="modal-content">
+      <div class="modal-header">
                 <h3 class="modal-title">Order Details</h3>
                 <button class="close-modal" onclick="closeModal('orderModal')">&times;</button>
             </div>
             <div class="modal-body" id="orderModalBody">
                 <!-- Order details will be loaded here -->
-            </div>
-        </div>
     </div>
-    
-    <script>
+  </div>
+</div>
+
+<script>
         // Dropdown functionality
         function setupDropdown(buttonId, menuId) {
             const button = document.getElementById(buttonId);
@@ -279,17 +282,17 @@
         }
         function closeModal(modalId) {
             document.getElementById(modalId).classList.remove('show');
-        }
+  }
 
-        async function viewOrder(orderId) {
+  async function viewOrder(orderId) {
             const modalBody = document.getElementById('orderModalBody');
             modalBody.innerHTML = '<p>Loading order details...</p>';
             openModal('orderModal');
-            try {
+    try {
                 const response = await fetch(`/api/orders/${orderId}?userId=<%= userId %>`);
                 if (!response.ok) throw new Error('Failed to fetch');
-                const order = await response.json();
-                
+      const order = await response.json();
+      
                 let itemsHtml = 'No items listed.';
                 if (order.items && order.items.length) {
                     itemsHtml = `<ul>${order.items.map(item => `<li>${item.name} (x${item.quantity}) - $${item.price}</li>`).join('')}</ul>`;
@@ -307,7 +310,7 @@
                     <p><strong>Total Price:</strong> $${order.total_price}</p>
                     <p><strong>Created:</strong> ${new Date(order.created_at).toLocaleString()}</p>
                 `;
-            } catch (error) {
+    } catch (error) {
                 modalBody.innerHTML = '<p class="text-danger">Failed to load order details.</p>';
             }
         }
@@ -374,17 +377,16 @@
                  const labels = Array.from({length: 7}, (_, i) => {
                     const d = new Date();
                     d.setDate(d.getDate() - i);
-                    return d;
+                    return d.toISOString().split('T')[0];
                 }).reverse();
 
                 const dataMap = new Map(chartData.recentTrends.map(t => [new Date(t.date).toISOString().split('T')[0], t.count]));
-                const data = labels.map(label => dataMap.get(label.toISOString().split('T')[0]) || 0);
-                const formattedLabels = labels.map(d => d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }));
+                const data = labels.map(label => dataMap.get(label) || 0);
 
                 new Chart(trendCtx, {
                     type: 'line',
                     data: {
-                        labels: formattedLabels,
+                        labels: labels.map(l => dateFns.format(new Date(l), 'MMM d')),
                         datasets: [{
                             label: 'Orders',
                             data: data,
@@ -394,8 +396,8 @@
                         }]
                     },
                     options: {
-                        maintainAspectRatio: false,
                         responsive: true,
+                        maintainAspectRatio: false,
                         plugins: {
                             legend: { display: false },
                             title: { display: true, text: 'Orders in Last 7 Days' }
@@ -405,6 +407,6 @@
                 });
             }
         });
-    </script>
+</script>
 </body>
 </html> 
