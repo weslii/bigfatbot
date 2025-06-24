@@ -568,7 +568,7 @@ async function startServer() {
         }
 
         // Get total count for pagination
-        const totalCount = await query.clone().count('o.id as count').first();
+        const totalCount = await query.clone().clearSelect().count('o.id as count').first();
         const totalOrders = parseInt(totalCount.count);
         const totalPages = Math.ceil(totalOrders / parseInt(pageSize));
         const currentPage = Math.max(1, Math.min(parseInt(page), totalPages || 1));
