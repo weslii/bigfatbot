@@ -8,7 +8,7 @@
     --danger-color: #ef4444;
     --info-color: #3b82f6;
     --background-color: #f1f5f9;
-    --surface-color: rgba(255, 255, 255, 0.7);
+    --surface-color: rgba(255, 255, 255, 0.55);
     --border-color: #e2e8f0;
     --text-primary: #1e293b;
     --text-secondary: #475569;
@@ -16,23 +16,24 @@
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
     --radius: 8px;
     --radius-lg: 16px;
-    --background-start: #f8fafc;
-    --background-end: #e2e8f0;
+    --background-start: #eef2ff;
+    --background-end: #f1f5f9;
 }
 
 [data-theme="dark"] {
     --primary-color: #10b981;
     --primary-hover: #34d399;
     --background-color: #020617;
-    --surface-color: rgba(15, 23, 42, 0.7);
-    --border-color: #1e293b;
+    --surface-color: rgba(30, 41, 59, 0.6);
+    --border-color: transparent;
     --text-primary: #f8fafc;
     --text-secondary: #cbd5e1;
     --text-muted: #94a3b8;
-    --background-start: #020617;
-    --background-end: #0f172a;
+    --background-start: #0f172a;
+    --background-end: #020617;
 }
 
 * {
@@ -53,9 +54,9 @@ body {
 
 /* Header */
 .header {
-    background: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--border-color);
     padding: 1rem 0;
     position: sticky;
@@ -65,7 +66,7 @@ body {
 }
 
 [data-theme="dark"] .header {
-    background: rgba(2, 6, 23, 0.6);
+    background: rgba(2, 6, 23, 0.5);
 }
 
 .header-content {
@@ -195,7 +196,8 @@ body {
     border-radius: var(--radius-lg);
     margin-bottom: 1.5rem;
     box-shadow: var(--shadow-sm);
-    transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 [data-theme="dark"] .content-card {
@@ -204,12 +206,13 @@ body {
 
 .content-card:hover {
     transform: translateY(-5px) scale(1.02);
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow-xl);
 }
 
 [data-theme="dark"] .content-card:hover {
-    background: #1e293b;
-    border-color: rgba(16, 185, 129, 0.5);
+    background: var(--surface-color);
+    box-shadow: 0 0 25px rgba(16, 185, 129, 0.3);
+    border-color: rgba(16, 185, 129, 0.7);
 }
 
 .card-header {
