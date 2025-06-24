@@ -286,6 +286,10 @@ app.post('/login', async (req, res) => {
     if (!isValid) {
       return res.render('login', { error: 'Invalid email or password' });
     }
+    if (!req.session) {
+      logger.error('Session is undefined during login');
+      return res.render('login', { error: 'Session error. Please try again or contact support.' });
+    }
     req.session.userId = user.id;
     res.redirect(`/dashboard?userId=${user.id}`);
   } catch (error) {
