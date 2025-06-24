@@ -157,7 +157,7 @@
         }
         .setup-cards {
             width: 100%;
-            max-width: 480px;
+            max-width: 620px;
             display: flex;
             flex-direction: column;
             gap: 1.3rem;
@@ -190,7 +190,7 @@
         }
         .step-card, .info-card, .dashboard-card {
             width: 100%;
-            max-width: 420px;
+            max-width: 540px;
             margin: 0 auto;
         }
         .step-card {
@@ -261,41 +261,40 @@
         .copy-card {
             display: flex;
             align-items: center;
-            background: linear-gradient(90deg, #f1f5f9 60%, #e0f2fe 100%);
+            justify-content: space-between;
+            background: linear-gradient(90deg, #232e3b 0%, #10b981 100%);
             border-radius: 0.7rem;
-            border: 1px solid #e2e8f0;
-            padding: 0.18rem 0.5rem 0.18rem 0.8rem;
+            border: none;
+            padding: 0.18rem 0.18rem 0.18rem 1.1rem;
             margin: 0.25rem 0 0.05rem 0;
             width: 100%;
-            justify-content: space-between;
             box-shadow: 0 1px 4px rgba(59,130,246,0.04);
             overflow: hidden;
         }
-        [data-theme="dark"] .copy-card {
-            background: linear-gradient(90deg, #1e293b 60%, #164e63 100%);
-            border-color: #334155;
+        [data-theme="light"] .copy-card {
+            background: linear-gradient(90deg, #f1f5f9 0%, #10b981 100%);
         }
         .copy-value {
             font-family: 'Fira Mono', 'Consolas', monospace;
-            font-size: 0.89em;
-            color: #334155;
+            font-size: 0.97em;
+            color: #fff;
             letter-spacing: 0.5px;
             word-break: break-all;
             padding-right: 0.5em;
             white-space: pre-wrap;
             overflow-wrap: break-word;
         }
-        [data-theme="dark"] .copy-value {
-            color: #e0e7ef;
+        [data-theme="light"] .copy-value {
+            color: #334155;
         }
         .copy-btn {
             background: #10b981;
             color: #fff;
             font-weight: 600;
-            font-size: 0.89em;
+            font-size: 0.97em;
             border-radius: 0.5em;
             border: none;
-            padding: 0.22em 0.9em;
+            padding: 0.22em 1.3em;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -303,6 +302,7 @@
             transition: background 0.18s, color 0.18s, box-shadow 0.18s;
             box-shadow: 0 1px 4px rgba(16,185,129,0.08);
             white-space: nowrap;
+            margin-left: auto;
         }
         .copy-btn:hover, .copy-btn:focus {
             background: #059669;
@@ -470,7 +470,7 @@
     <section class="setup-section">
         <div class="setup-cards-wrapper">
             <div class="setup-heading">
-                <div class="setup-almost">Almost there</div>
+                <div class="setup-almost">Almost there!!</div>
                 <div class="setup-sub">Now set up your WhatsApp groups</div>
             </div>
             <div class="setup-cards">
