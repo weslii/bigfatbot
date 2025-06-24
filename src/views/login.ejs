@@ -31,6 +31,8 @@
             color: var(--foreground);
             line-height: 1.6;
             transition: background-color 0.3s ease, color 0.3s ease;
+            height: 100vh;
+            overflow: hidden;
         }
         [data-theme="dark"] body {
             background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #064e3b 100%);
@@ -131,7 +133,7 @@
             border-radius: 1rem;
             box-shadow: 0 4px 24px 0 rgba(16, 185, 129, 0.08), 0 1px 8px 0 rgba(0,0,0,0.10);
             padding: 2rem 2.5rem 1.5rem 2.5rem;
-            max-width: 420px;
+            max-width: 340px;
             width: 100%;
             color: #fff;
             display: flex;
@@ -139,6 +141,8 @@
             gap: 1.2rem;
             border: 1px solid var(--border);
             animation: fadeInUp 0.7s cubic-bezier(.39,.575,.565,1) both;
+            max-height: 90vh;
+            margin: 2rem 0;
         }
         [data-theme="light"] .login-card {
             background: #f8fafc;
@@ -274,6 +278,17 @@
         @keyframes fadeInUp {
             0% { opacity: 0; transform: translateY(40px); }
             100% { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 600px) {
+            html, body {
+                height: auto;
+                min-height: 100vh;
+                overflow: auto;
+            }
+            .login-section {
+                min-height: 100vh;
+                padding: 1.5rem 0 1.5rem 0;
+            }
         }
     </style>
 </head>
