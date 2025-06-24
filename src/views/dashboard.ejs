@@ -21,15 +21,18 @@
                 </div>
             </div>
             <div class="header-actions">
-                <a href="/settings" class="icon-btn" title="Settings">
-                    <i class="fas fa-cog"></i>
-                </a>
+                <div class="dropdown">
+                    <button class="profile-btn" id="profileDropdown">
+                        <i class="fas fa-user"></i>
+                    </button>
+                    <div class="dropdown-content" id="profileMenu">
+                        <a href="/settings"><i class="fas fa-cog"></i> Settings</a>
+                        <a href="/logout"><i class="fas fa-sign-out-alt"></i> Log out</a>
+                    </div>
+                </div>
                 <button class="icon-btn" id="themeToggle">
                     <i class="fas fa-moon"></i>
                 </button>
-                <a href="/logout" class="icon-btn" title="Log out">
-                    <i class="fas fa-sign-out-alt"></i>
-                </a>
             </div>
         </div>
     </header>
@@ -72,15 +75,6 @@
                 </div>
                 <div class="stat-value"><%= businesses && businesses.length ? businesses.length : 0 %></div>
             </div>
-            <div class="stat-card groups">
-                <div class="stat-header">
-                    <span class="stat-title">Groups</span>
-                    <div class="stat-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                </div>
-                <div class="stat-value"><%= groups && groups.length ? groups.length : 0 %></div>
-            </div>
         </section>
         <div class="dashboard-layout">
             <!-- Main Content -->
@@ -100,15 +94,7 @@
                             </button>
                         </div>
                         <div class="tabs-actions">
-                            <a href="/add-business" class="action-btn">
-                                <i class="fas fa-plus"></i> Add Business
-                            </a>
-                            <a href="/setup-group" class="action-btn">
-                                <i class="fas fa-plus"></i> Add Group
-                            </a>
-                            <a href="/orders" class="action-btn">
-                                <i class="fas fa-list"></i> View All Orders
-                            </a>
+                            <!-- Removed Add Business, Add Group, and View All Orders buttons from here -->
                         </div>
                     </div>
                     <!-- Businesses Tab -->
@@ -119,6 +105,7 @@
                                     <h2>My Businesses</h2>
                                     <p>All businesses you manage</p>
                                 </div>
+                                <a href="/add-business" class="primary-btn" style="margin-left:auto;"><i class="fas fa-plus"></i> Add Business</a>
                             </div>
                             <div class="card-content">
                                 <% if (businesses && businesses.length) { %>
@@ -127,6 +114,7 @@
                                             <thead>
                                                 <tr>
                                                     <th>Business Name</th>
+                                                    <th>Status</th>
                                                     <th>Created</th>
                                                 </tr>
                                             </thead>
@@ -134,6 +122,13 @@
                                                 <% businesses.forEach(function(biz) { %>
                                                     <tr>
                                                         <td><%= biz.business_name %></td>
+                                                        <td>
+                                                            <% if (biz.is_active) { %>
+                                                                <span class="status-badge active">Active</span>
+                                                            <% } else { %>
+                                                                <span class="status-badge">Deactivated</span>
+                                                            <% } %>
+                                                        </td>
                                                         <td><%= biz.created_at ? new Date(biz.created_at).toLocaleDateString() : '-' %></td>
                                                     </tr>
                                                 <% }); %>
@@ -154,6 +149,7 @@
                                     <h2>My Groups</h2>
                                     <p>All groups you manage</p>
                                 </div>
+                                <a href="/setup-group" class="primary-btn" style="margin-left:auto;"><i class="fas fa-plus"></i> Add Group</a>
                             </div>
                             <div class="card-content">
                                 <% if (groups && groups.length) { %>
@@ -163,6 +159,7 @@
                                                 <tr>
                                                     <th>Group Name</th>
                                                     <th>Type</th>
+                                                    <th>Business</th>
                                                     <th>Created</th>
                                                 </tr>
                                             </thead>
@@ -171,6 +168,7 @@
                                                     <tr>
                                                         <td><%= group.group_name %></td>
                                                         <td><%= group.group_type %></td>
+                                                        <td><%= group.business_name %></td>
                                                         <td><%= group.created_at ? new Date(group.created_at).toLocaleDateString() : '-' %></td>
                                                     </tr>
                                                 <% }); %>
@@ -236,7 +234,6 @@
                             <a href="/orders" class="quick-action-btn"><i class="fas fa-box"></i> Orders</a>
                             <a href="/groups" class="quick-action-btn"><i class="fas fa-users"></i> Groups</a>
                             <a href="/add-business" class="quick-action-btn"><i class="fas fa-building"></i> Businesses</a>
-                            <a href="/settings" class="quick-action-btn"><i class="fas fa-cog"></i> Settings</a>
                         </div>
                     </div>
                 </div>
