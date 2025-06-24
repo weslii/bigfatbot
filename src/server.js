@@ -259,59 +259,7 @@ app.get('/admin/test-session', (req, res) => {
   });
 });
 
-// Add user login routes
-app.get('/login', (req, res) => {
-  if (req.session && req.session.userId) {
-    return res.redirect(`/dashboard?userId=${req.session.userId}`);
-  }
-  res.render('login');
-});
 
-app.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-  logger.info('POST /login - Request received');
-  logger.info('POST /login - Session:', req.session);
-  logger.info('POST /login - Session ID:', req.sessionID);
-  logger.info('POST /login - Cookies:', req.cookies);
-  logger.info('POST /login - Headers:', req.headers);
-  if (!email || !password) {
-    return res.render('login', { error: 'Email and password are required' });
-  }
-  try {
-    // Find user by email
-    const user = await db.query('users').where('email', email).first();
-    if (!user) {
-      return res.render('login', { error: 'Invalid email or password' });
-    }
-    // Check password (assume password is stored as hash, if not, compare plain text)
-    const bcrypt = require('bcryptjs');
-    const isValid = user.password_hash
-      ? await bcrypt.compare(password, user.password_hash)
-      : password === user.password;
-    if (!isValid) {
-      return res.render('login', { error: 'Invalid email or password' });
-    }
-    if (!req.session) {
-      logger.error('Session is undefined during login');
-      logger.error('POST /login - Session:', req.session);
-      logger.error('POST /login - Session ID:', req.sessionID);
-      logger.error('POST /login - Cookies:', req.cookies);
-      logger.error('POST /login - Headers:', req.headers);
-      return res.render('login', { error: 'Session error. Please try again or contact support.' });
-    }
-    req.session.userId = user.id;
-    req.session.save((err) => {
-      if (err) {
-        logger.error('Error saving session:', err);
-        return res.render('login', { error: 'Login failed. Please try again.' });
-      }
-      res.redirect(`/dashboard?userId=${user.id}`);
-    });
-  } catch (error) {
-    logger.error('User login error:', error);
-    res.render('login', { error: 'Login failed. Please try again.' });
-  }
-});
 
 // Update landing page to pass userId from session
 app.get('/', (req, res) => {
@@ -410,6 +358,60 @@ async function startServer() {
     app.get('/setup-business', (req, res) => {
       const { userId } = req.query;
       res.render('setup-business', { userId });
+    });
+
+    // Add user login routes
+    app.get('/login', (req, res) => {
+      if (req.session && req.session.userId) {
+        return res.redirect(`/dashboard?userId=${req.session.userId}`);
+      }
+      res.render('login');
+    });
+
+    app.post('/login', async (req, res) => {
+      const { email, password } = req.body;
+      logger.info('POST /login - Request received');
+      logger.info('POST /login - Session:', req.session);
+      logger.info('POST /login - Session ID:', req.sessionID);
+      logger.info('POST /login - Cookies:', req.cookies);
+      logger.info('POST /login - Headers:', req.headers);
+      if (!email || !password) {
+        return res.render('login', { error: 'Email and password are required' });
+      }
+      try {
+        // Find user by email
+        const user = await db.query('users').where('email', email).first();
+        if (!user) {
+          return res.render('login', { error: 'Invalid email or password' });
+        }
+        // Check password (assume password is stored as hash, if not, compare plain text)
+        const bcrypt = require('bcryptjs');
+        const isValid = user.password_hash
+          ? await bcrypt.compare(password, user.password_hash)
+          : password === user.password;
+        if (!isValid) {
+          return res.render('login', { error: 'Invalid email or password' });
+        }
+        if (!req.session) {
+          logger.error('Session is undefined during login');
+          logger.error('POST /login - Session:', req.session);
+          logger.error('POST /login - Session ID:', req.sessionID);
+          logger.error('POST /login - Cookies:', req.cookies);
+          logger.error('POST /login - Headers:', req.headers);
+          return res.render('login', { error: 'Session error. Please try again or contact support.' });
+        }
+        req.session.userId = user.id;
+        req.session.save((err) => {
+          if (err) {
+            logger.error('Error saving session:', err);
+            return res.render('login', { error: 'Login failed. Please try again.' });
+          }
+          res.redirect(`/dashboard?userId=${user.id}`);
+        });
+      } catch (error) {
+        logger.error('User login error:', error);
+        res.render('login', { error: 'Login failed. Please try again.' });
+      }
     });
 
     app.post('/setup-business', async (req, res) => {
