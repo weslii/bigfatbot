@@ -230,12 +230,23 @@
             transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
             box-sizing: border-box;
         }
-        body[data-theme="dark"] .form-control {
+        .register-card body[data-theme='dark'] input.form-control,
+        .register-card body[data-theme='dark'] input,
+        body[data-theme='dark'] .register-card input.form-control,
+        body[data-theme='dark'] .register-card input {
             background: rgba(16,25,43,0.18) !important;
             color: #e5e7eb !important;
             backdrop-filter: blur(4px) !important;
             box-shadow: none !important;
             border: 1px solid #334155 !important;
+        }
+        body[data-theme='dark'] .register-card input.form-control:focus,
+        body[data-theme='dark'] .register-card input:focus {
+            background: rgba(16,25,43,0.28) !important;
+        }
+        body[data-theme='dark'] .register-card input.form-control:hover,
+        body[data-theme='dark'] .register-card input:hover {
+            background: rgba(16,25,43,0.32) !important;
         }
         .form-control:focus {
             outline: none;
