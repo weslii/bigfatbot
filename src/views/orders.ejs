@@ -21,13 +21,19 @@
                     <span class="logo-text main-title">Delivery Bot</span>
                 </a>
             </div>
-            <div class="header-center">
-                <a href="/dashboard" class="nav-link">Dashboard</a>
-                <a href="/orders" class="nav-link active">Orders</a>
-                <a href="/groups" class="nav-link">Groups</a>
-                <a href="/businesses" class="nav-link">Businesses</a>
-            </div>
+            
             <div class="header-right">
+                 <div class="dropdown">
+                    <button class="btn btn-icon" id="navMenuDropdown">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="dropdown-content" id="navMenu">
+                        <a href="/dashboard" class="dropdown-item">Dashboard</a>
+                        <a href="/orders" class="dropdown-item active">Orders</a>
+                        <a href="/groups" class="dropdown-item">Groups</a>
+                        <a href="/businesses" class="dropdown-item">Businesses</a>
+                    </div>
+                </div>
                 <button class="btn btn-icon" id="themeToggle">
                     <i class="fas fa-moon"></i>
                 </button>
@@ -275,6 +281,7 @@
         }
         setupDropdown('exportDropdown', 'exportMenu');
         setupDropdown('profileDropdown', 'profileMenu');
+        setupDropdown('navMenuDropdown', 'navMenu');
 
         document.addEventListener('click', () => {
             document.querySelectorAll('.dropdown-content.show').forEach(menu => {
@@ -422,30 +429,29 @@
             // 3. Recent Order Trends Chart
             const trendCtx = document.getElementById('trendChart');
             if (trendCtx && chartData.recentTrends) {
-                // Generate labels for the last 7 days
                 const labels = Array.from({ length: 7 }, (_, i) => {
                     const d = new Date();
                     d.setDate(d.getDate() - i);
                     return d;
                 }).reverse();
 
-                const dataMap = new Map(chartData.recentTrends.map(t => [new Date(t.date).toISOString().split('T')[0], t.count]));
+                const dataMap = new Map(chartData.recentTrends.map(t => [new Date(t.date).toISOString().split('T')[0], parseInt(t.count, 10)]));
                 
                 const trendData = labels.map(label => {
                     const dateString = label.toISOString().split('T')[0];
                     return {
-                        x: label,
+                        x: label.getTime(),
                         y: dataMap.get(dateString) || 0
                     };
                 });
-
+                
                 window.charts.trends = new Chart(trendCtx, {
                     type: 'line',
                     data: {
                         datasets: [{
                             label: 'Orders',
                             data: trendData,
-                            borderColor: '#10b981', // Correct green color
+                            borderColor: '#10b981',
                             backgroundColor: 'rgba(16, 185, 129, 0.2)',
                             tension: 0.3,
                             fill: true
