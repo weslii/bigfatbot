@@ -1,37 +1,348 @@
-<%- include('header', { title: 'User Login' }) %>
-
-<div class="container mt-5">
-  <div class="row justify-content-center">
-    <div class="col-md-6">
-      <div class="card">
-        <div class="card-header">
-          <h4 class="mb-0">User Login</h4>
+<!-- MODERN LOGIN EJS: If you see this, the modern login.ejs is being rendered. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Login - WhatsApp Delivery Bot</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/theme.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #10b981;
+            --secondary: #3b82f6;
+            --accent: #8b5cf6;
+            --background: #f8fafc;
+            --foreground: #1e293b;
+            --muted: #64748b;
+            --border: #e2e8f0;
+        }
+        [data-theme="dark"] {
+            --background: #020617;
+            --foreground: #f8fafc;
+            --muted: #94a3b8;
+            --border: #1e293b;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background);
+            color: var(--foreground);
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        [data-theme="dark"] body {
+            background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #064e3b 100%);
+        }
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+        [data-theme="dark"] .header {
+            background: rgba(15, 23, 42, 0.8);
+        }
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .logo-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.75rem;
+            background: linear-gradient(135deg, #10b981, #14b8a6);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        .logo-icon i {
+            font-size: 1.25rem;
+            color: white;
+        }
+        .logo-text {
+            font-weight: 700;
+            font-size: 1.125rem;
+            background: linear-gradient(135deg, #10b981, #14b8a6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        .nav-link {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+        }
+        .nav-link:hover {
+            color: var(--foreground);
+            background: var(--border);
+        }
+        .theme-toggle {
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+        .theme-toggle:hover {
+            color: var(--foreground);
+            background: var(--border);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+        .login-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 0 2rem 0;
+        }
+        .login-card {
+            background: rgba(16, 25, 43, 0.98);
+            border-radius: 1rem;
+            box-shadow: 0 4px 24px 0 rgba(16, 185, 129, 0.08), 0 1px 8px 0 rgba(0,0,0,0.10);
+            padding: 2rem 2.5rem 1.5rem 2.5rem;
+            max-width: 420px;
+            width: 100%;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            border: 1px solid var(--border);
+            animation: fadeInUp 0.7s cubic-bezier(.39,.575,.565,1) both;
+        }
+        [data-theme="light"] .login-card {
+            background: #f8fafc;
+            color: #1e293b;
+        }
+        .login-title {
+            font-size: 1.45rem;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 0.18rem;
+            color: #10b981;
+            letter-spacing: -0.5px;
+        }
+        .login-desc {
+            text-align: center;
+            color: #cbd5e1;
+            font-size: 0.93rem;
+            margin-bottom: 1rem;
+        }
+        [data-theme="light"] .login-desc {
+            color: #64748b;
+        }
+        .form-group {
+            margin-bottom: 1.1rem;
+        }
+        .form-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            font-size: 0.97rem;
+        }
+        .form-control {
+            width: 100%;
+            padding: 0.6rem 0.85rem;
+            border-radius: 0.6rem;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.07);
+            color: inherit;
+            font-size: 0.97rem;
+            transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+        }
+        .login-card body[data-theme='dark'] input.form-control,
+        .login-card body[data-theme='dark'] input,
+        body[data-theme='dark'] .login-card input.form-control,
+        body[data-theme='dark'] .login-card input {
+            background: rgba(16,25,43,0.18) !important;
+            color: #e5e7eb !important;
+            backdrop-filter: blur(4px) !important;
+            box-shadow: none !important;
+            border: 1px solid #334155 !important;
+        }
+        body[data-theme='dark'] .login-card input.form-control:focus,
+        body[data-theme='dark'] .login-card input:focus {
+            background: rgba(16,25,43,0.28) !important;
+        }
+        body[data-theme='dark'] .login-card input.form-control:hover,
+        body[data-theme='dark'] .login-card input:hover {
+            background: rgba(16,25,43,0.32) !important;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #10b981;
+            background: rgba(255,255,255,0.13);
+            box-shadow: 0 0 0 2px rgba(16,185,129,0.08);
+        }
+        body[data-theme="dark"] .form-control:focus {
+            background: rgba(16,25,43,0.28) !important;
+        }
+        .form-control:hover {
+            border-color: #14b8a6;
+            background: rgba(20,184,166,0.08);
+            box-shadow: 0 1px 4px 0 rgba(16,185,129,0.05);
+        }
+        body[data-theme="dark"] .form-control:hover {
+            background: rgba(16,25,43,0.32) !important;
+        }
+        .form-control::placeholder {
+            color: #64748b;
+            font-size: 0.89em;
+            opacity: 1;
+        }
+        .alert {
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            background: #fee2e2;
+            color: #b91c1c;
+            font-size: 0.98rem;
+            margin-bottom: 1rem;
+            border: 1px solid #fecaca;
+            text-align: center;
+        }
+        .login-btn {
+            width: 100%;
+            padding: 0.6rem 0;
+            font-weight: 600;
+            font-size: 0.99rem;
+            border-radius: 0.6rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            border: none;
+            cursor: pointer;
+            background: #10b981;
+            color: #fff;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            transition: background 0.2s;
+            margin-top: 0.2rem;
+            height: 2.6rem;
+        }
+        .login-btn:hover {
+            background: #059669;
+        }
+        .login-bottom {
+            margin-top: 1.2rem;
+            text-align: center;
+            font-size: 0.93rem;
+            color: #94a3b8;
+        }
+        .login-bottom a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+            margin-left: 0.25rem;
+            transition: color 0.2s;
+        }
+        .login-bottom a:hover {
+            color: #2563eb;
+            text-decoration: underline;
+        }
+        @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(40px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fab fa-whatsapp"></i>
+                </div>
+                <div class="logo-text">WhatsApp Delivery Bot</div>
+            </div>
+            <nav class="nav">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/login" class="nav-link">Business Login</a>
+                <a href="/admin/dashboard" class="nav-link">Admin</a>
+                <button class="theme-toggle" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </nav>
         </div>
-        <div class="card-body">
-          <% if (typeof error !== 'undefined') { %>
-            <div class="alert alert-danger" role="alert">
-              <%= error %>
+    </header>
+    <section class="login-section">
+        <form class="login-card" action="/login" method="POST">
+            <div>
+                <div class="login-title">Sign In</div>
+                <div class="login-desc">Access your business dashboard to manage orders and deliveries.</div>
+                <% if (typeof error !== 'undefined') { %>
+                    <div class="alert"><%= error %></div>
+                <% } %>
             </div>
-          <% } %>
-
-          <form action="/login" method="POST">
-            <div class="mb-3">
-              <label for="email" class="form-label">Email Address</label>
-              <input type="email" class="form-control" id="email" name="email" required>
+            <div class="form-group">
+                <label for="email" class="form-label">Email Address</label>
+                <input type="email" class="form-control" id="email" name="email" required placeholder="e.g., user@email.com">
             </div>
-
-            <div class="mb-3">
-              <label for="password" class="form-label">Password</label>
-              <input type="password" class="form-control" id="password" name="password" required>
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="password" name="password" required placeholder="Enter your password">
             </div>
-
-            <button type="submit" class="btn btn-primary">Login</button>
-            <a href="#" class="btn btn-link">Forgot Password?</a>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<%- include('footer') %> 
+            <button type="submit" class="login-btn">Login <i class="fas fa-arrow-right"></i></button>
+            <div style="text-align:right; margin-top:0.5rem;">
+                <a href="#" style="color:#3b82f6; font-size:0.93rem; text-decoration:none;">Forgot Password?</a>
+            </div>
+            <div class="login-bottom">
+                Don't have an account?
+                <a href="/register" style="color:#10b981;">Register</a>
+            </div>
+        </form>
+    </section>
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        // Check for saved theme preference or default to light
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+        function updateThemeIcon(theme) {
+            const icon = themeToggle.querySelector('i');
+            icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+    </script>
+</body>
+</html> 
