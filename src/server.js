@@ -296,7 +296,7 @@ app.post('/login', async (req, res) => {
 
 // Update landing page to pass userId from session
 app.get('/', (req, res) => {
-  res.render('index', { userId: req.session ? req.session.userId : null });
+  res.render('preview-landing');
 });
 
 // Add preview landing page route
@@ -370,7 +370,7 @@ async function startServer() {
     // Define routes after session middleware is initialized
     // Public routes
     app.get('/', (req, res) => {
-      res.render('index', { userId: req.session ? req.session.userId : null });
+      res.render('preview-landing');
     });
 
     app.get('/register', (req, res) => {
