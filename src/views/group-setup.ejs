@@ -1,118 +1,431 @@
-<%- include('header', { title: 'Group Setup' }) %>
-
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="mb-0">Setup Your WhatsApp Groups</h4>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group Setup - WhatsApp Delivery Bot</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/theme.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #10b981;
+            --secondary: #3b82f6;
+            --accent: #8b5cf6;
+            --background: #f8fafc;
+            --foreground: #1e293b;
+            --muted: #64748b;
+            --border: #e2e8f0;
+        }
+        [data-theme="dark"] {
+            --background: #020617;
+            --foreground: #f8fafc;
+            --muted: #94a3b8;
+            --border: #1e293b;
+        }
+        html {
+            min-height: 100vh;
+            height: auto;
+            width: 100vw;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            min-height: 100vh;
+            height: auto;
+            width: 100vw;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--foreground);
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        [data-theme="dark"] body {
+            background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #064e3b 100%) !important;
+        }
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+        [data-theme="dark"] .header {
+            background: rgba(15, 23, 42, 0.8);
+        }
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .logo-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.75rem;
+            background: linear-gradient(135deg, #10b981, #14b8a6);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        .logo-icon i {
+            font-size: 1.25rem;
+            color: white;
+        }
+        .logo-text {
+            font-weight: 700;
+            font-size: 1.125rem;
+            background: linear-gradient(135deg, #10b981, #14b8a6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        .nav-link {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+        }
+        .nav-link:hover {
+            color: var(--foreground);
+            background: var(--border);
+        }
+        .theme-toggle {
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+        .theme-toggle:hover {
+            color: var(--foreground);
+            background: var(--border);
+        }
+        .setup-section {
+            min-height: 100vh;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        .setup-card {
+            background: rgba(16, 25, 43, 0.98);
+            border-radius: 1rem;
+            box-shadow: 0 4px 24px 0 rgba(16, 185, 129, 0.08), 0 1px 8px 0 rgba(0,0,0,0.10);
+            padding: 1.5rem 2rem 1.1rem 2rem;
+            max-width: 600px;
+            width: 100%;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            gap: 1.1rem;
+            border: 1px solid var(--border);
+            animation: fadeInUp 0.7s cubic-bezier(.39,.575,.565,1) both;
+            max-height: 82vh;
+        }
+        [data-theme="light"] .setup-card {
+            background: #f8fafc;
+            color: #1e293b;
+        }
+        .setup-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 0.18rem;
+            color: #10b981;
+            letter-spacing: -0.5px;
+        }
+        .setup-desc {
+            text-align: center;
+            color: #cbd5e1;
+            font-size: 0.93rem;
+            margin-bottom: 1rem;
+        }
+        [data-theme="light"] .setup-desc {
+            color: #64748b;
+        }
+        .alert {
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            font-size: 0.98rem;
+            margin-bottom: 1rem;
+            border: 1px solid #fecaca;
+            text-align: left;
+        }
+        .alert-success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        .alert-warning {
+            background: #fef9c3;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+        .alert-info {
+            background: #e0f2fe;
+            color: #0369a1;
+            border: 1px solid #bae6fd;
+        }
+        [data-theme="dark"] .alert-success {
+            background: #064e3b;
+            color: #bbf7d0;
+            border-color: #166534;
+        }
+        [data-theme="dark"] .alert-warning {
+            background: #78350f;
+            color: #fde68a;
+            border-color: #fbbf24;
+        }
+        [data-theme="dark"] .alert-info {
+            background: #0f172a;
+            color: #bae6fd;
+            border-color: #0369a1;
+        }
+        .step-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1.1rem;
+        }
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        .step-icon {
+            font-size: 1.3rem;
+            margin-top: 0.1rem;
+        }
+        .step-content {
+            flex: 1;
+        }
+        .copy-btn {
+            margin-left: 0.5rem;
+            font-size: 0.95em;
+            padding: 0.2em 0.7em;
+            border-radius: 0.5em;
+            border: 1px solid var(--border);
+            background: #fff;
+            color: #10b981;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .copy-btn:hover {
+            background: #10b981;
+            color: #fff;
+        }
+        .setup-btn {
+            width: 100%;
+            padding: 0.6rem 0;
+            font-weight: 600;
+            font-size: 0.99rem;
+            border-radius: 0.6rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            border: none;
+            cursor: pointer;
+            background: #10b981;
+            color: #fff;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            transition: background 0.2s;
+            margin-top: 0.2rem;
+            height: 2.6rem;
+        }
+        .setup-btn:hover {
+            background: #059669;
+        }
+        .mt-4 {
+            margin-top: 1.5rem;
+        }
+        @media (max-width: 600px) {
+            html, body {
+                height: auto;
+                min-height: 100vh;
+                overflow: auto;
+            }
+            .setup-section {
+                min-height: 100vh;
+                padding: 1.5rem 0 1.5rem 0;
+            }
+            .setup-card {
+                max-width: 98vw;
+                padding: 1.2rem 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fab fa-whatsapp"></i>
                 </div>
-                <div class="card-body">
-                    <div class="alert alert-success" role="alert">
-                        <h5 class="alert-heading">Business Created Successfully!</h5>
-                        <p>Your business "<%= businessName %>" has been registered. Now let's set up your WhatsApp groups.</p>
+                <div class="logo-text">WhatsApp Delivery Bot</div>
+            </div>
+            <nav class="nav">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/login" class="nav-link">Business Login</a>
+                <a href="/admin/dashboard" class="nav-link">Admin</a>
+                <button class="theme-toggle" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </nav>
+        </div>
+    </header>
+    <section class="setup-section">
+        <div class="setup-card">
+            <div class="setup-title">Setup Your WhatsApp Groups</div>
+            <div class="setup-desc">Follow these steps to connect your WhatsApp groups and start managing deliveries.</div>
+            <div class="alert alert-success">
+                <strong><i class="fas fa-check-circle"></i> Business Created!</strong>
+                <div style="margin-top:0.3rem;">Your business "<%= businessName %>" has been registered. Now let's set up your WhatsApp groups.</div>
+            </div>
+            <ul class="step-list">
+                <li class="step-item">
+                    <span class="step-icon"><i class="fab fa-whatsapp" style="color:#25D366;"></i></span>
+                    <div class="step-content">
+                        <strong>Add Our Bot to Your Group</strong>
+                        <div style="margin:0.3rem 0 0.2rem 0;">Add this WhatsApp number to your group as an admin:</div>
+                        <div style="display:flex;align-items:center;gap:0.5rem;">
+                            <code id="botNumber" style="font-size:1.08em;">Loading...</code>
+                            <button class="copy-btn" onclick="copyBotNumber()">Copy</button>
+                        </div>
+                        <small class="text-muted">Make sure to give the bot admin permissions for full functionality</small>
                     </div>
-
-                    <div class="alert alert-warning">
-                        <h6><i class="fas fa-exclamation-triangle"></i> Setup Instructions</h6>
-                        <ol class="mb-0">
-                            <li class="mb-2">
-                                <strong>Step 1: Add Our Bot to Your Group</strong>
-                                <p class="mb-1">Add this WhatsApp number to your group as an admin:</p>
-                                <div class="alert alert-light border">
-                                    <strong>Bot Number:</strong> <code id="botNumber">Loading...</code>
-                                    <button class="btn btn-sm btn-outline-primary float-end" onclick="copyBotNumber()">Copy</button>
-                                </div>
-                                <small class="text-muted">Make sure to give the bot admin permissions for full functionality</small>
-                            </li>
-                            <li class="mb-2">
-                                <strong>Step 2: Run the Setup Command</strong>
-                                <p class="mb-1">In your WhatsApp group, type this exact command:</p>
-                                <div class="alert alert-light border">
-                                    <code class="user-select-all"><%= business.setup_identifier || business.business_id %></code>
-                                    <button class="btn btn-sm btn-outline-primary float-end" onclick="copySetupCommand()">Copy</button>
-                                </div>
-                            </li>
-                            <li class="mb-2">
-                                <strong>Step 3: Choose Group Type</strong>
-                                <p class="mb-1">The bot will ask if this is a "sales" or "delivery" group. Reply with:</p>
-                                <ul class="mb-1">
-                                    <li><strong>"sales"</strong> - For receiving customer orders</li>
-                                    <li><strong>"delivery"</strong> - For managing deliveries and tracking orders</li>
-                                </ul>
-                            </li>
-                            <li class="mb-2">
-                                <strong>Step 4: Get Group ID</strong>
-                                <p class="mb-1">After setup, the bot will provide a Group ID. Copy it and enter it above.</p>
-                            </li>
-                            <li>
-                                <strong>Step 5: Save and Repeat</strong>
-                                <p class="mb-0">Save this group, then repeat the process for your second group (if you haven't already).</p>
-                            </li>
-                        </ol>
+                </li>
+                <li class="step-item">
+                    <span class="step-icon"><i class="fas fa-terminal" style="color:#3b82f6;"></i></span>
+                    <div class="step-content">
+                        <strong>Run the Setup Command</strong>
+                        <div style="margin:0.3rem 0 0.2rem 0;">In your WhatsApp group, type this exact command:</div>
+                        <div style="display:flex;align-items:center;gap:0.5rem;">
+                            <code class="user-select-all" style="font-size:1.08em;"><%= business.setup_identifier || business.business_id %></code>
+                            <button class="copy-btn" onclick="copySetupCommand()">Copy</button>
+                        </div>
                     </div>
-
-                    <div class="alert alert-info" role="alert">
-                        <h5 class="alert-heading">Important Notes</h5>
-                        <ul class="mb-0">
-                            <li>Make sure to add the bot to both groups</li>
-                            <li>The bot will automatically determine which group is for sales and which is for delivery</li>
-                            <li>You can always add more groups later through the dashboard</li>
+                </li>
+                <li class="step-item">
+                    <span class="step-icon"><i class="fas fa-comments" style="color:#8b5cf6;"></i></span>
+                    <div class="step-content">
+                        <strong>Reply with Group Type</strong>
+                        <div style="margin:0.3rem 0 0.2rem 0;">The bot will ask if this is a <b>"sales"</b> or <b>"delivery"</b> group. Reply in the group with:</div>
+                        <ul style="margin:0 0 0.2rem 1.2rem;">
+                            <li><b>"sales"</b> - For receiving customer orders</li>
+                            <li><b>"delivery"</b> - For managing deliveries and tracking orders</li>
                         </ul>
+                        <div style="margin-top:0.2rem;">The bot will confirm when the group is registered.</div>
                     </div>
-
-                    <div class="text-center mt-4">
-                        <a href="/dashboard?userId=<%= userId %>" class="btn btn-primary">Go to Dashboard</a>
+                </li>
+                <li class="step-item">
+                    <span class="step-icon"><i class="fas fa-sync-alt" style="color:#10b981;"></i></span>
+                    <div class="step-content">
+                        <strong>Repeat for Second Group (Optional)</strong>
+                        <div style="margin:0.3rem 0 0.2rem 0;">To add your other group (sales or delivery), repeat these steps in your other WhatsApp group.</div>
                     </div>
-                </div>
+                </li>
+            </ul>
+            <div class="alert alert-info" style="margin-top:1.2rem;">
+                <strong><i class="fas fa-info-circle"></i> Important Notes</strong>
+                <ul style="margin:0.5rem 0 0 1.2rem;">
+                    <li>Make sure to add the bot to both groups</li>
+                    <li>The bot will automatically determine which group is for sales and which is for delivery</li>
+                    <li>You can always add more groups later through the dashboard</li>
+                </ul>
+            </div>
+            <div class="text-center mt-4">
+                <a href="/dashboard?userId=<%= userId %>" class="setup-btn">Go to Dashboard <i class="fas fa-arrow-right"></i></a>
             </div>
         </div>
-    </div>
-</div>
-
-<script>
-// Load bot number when page loads
-document.addEventListener('DOMContentLoaded', async function() {
-  try {
-    const response = await fetch('/api/whatsapp/bot-info');
-    const botInfo = await response.json();
-    
-    if (botInfo.success) {
-      document.getElementById('botNumber').textContent = botInfo.number;
-    } else {
-      document.getElementById('botNumber').textContent = 'Not available';
-    }
-  } catch (error) {
-    console.error('Error loading bot info:', error);
-    document.getElementById('botNumber').textContent = 'Error loading';
-  }
-});
-
-function copyBotNumber() {
-    const botNumber = document.querySelector('#botNumber').textContent;
-    if (botNumber === 'Loading...' || botNumber === 'Not available' || botNumber === 'Error loading') {
-        alert('Bot number not available yet. Please try again in a moment.');
-        return;
-    }
-    navigator.clipboard.writeText(botNumber).then(() => {
-        const button = event.target;
-        button.textContent = 'Copied!';
-        setTimeout(() => {
-            button.textContent = 'Copy';
-        }, 2000);
-    });
-}
-
-function copySetupCommand() {
-    const command = document.querySelector('code').textContent;
-    navigator.clipboard.writeText(command).then(() => {
-        const button = event.target;
-        button.textContent = 'Copied!';
-        setTimeout(() => {
-            button.textContent = 'Copy';
-        }, 2000);
-    });
-}
-</script>
-
-<%- include('footer') %> 
+    </section>
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        // Check for saved theme preference or default to light
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+        function updateThemeIcon(theme) {
+            const icon = themeToggle.querySelector('i');
+            icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+        // Load bot number when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+          try {
+            const response = await fetch('/api/whatsapp/bot-info');
+            const botInfo = await response.json();
+            if (botInfo.success) {
+              document.getElementById('botNumber').textContent = botInfo.number;
+            } else {
+              document.getElementById('botNumber').textContent = 'Not available';
+            }
+          } catch (error) {
+            console.error('Error loading bot info:', error);
+            document.getElementById('botNumber').textContent = 'Error loading';
+          }
+        });
+        function copyBotNumber() {
+            const botNumber = document.querySelector('#botNumber').textContent;
+            if (botNumber === 'Loading...' || botNumber === 'Not available' || botNumber === 'Error loading') {
+                alert('Bot number not available yet. Please try again in a moment.');
+                return;
+            }
+            navigator.clipboard.writeText(botNumber).then(() => {
+                const button = event.target;
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                }, 2000);
+            });
+        }
+        function copySetupCommand() {
+            const command = document.querySelector('.user-select-all').textContent;
+            navigator.clipboard.writeText(command).then(() => {
+                const button = event.target;
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html> 
