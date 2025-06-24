@@ -1,750 +1,267 @@
-<%- include('layout', { title: 'Orders Management' }) %>
-
-<div class="container-fluid mt-4">
-  <div class="row">
-    <!-- Sidebar -->
-    <div class="col-md-3 col-lg-2">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Business Dashboard</h5>
-          <hr>
-          <ul class="nav flex-column">
-            <li class="nav-item">
-              <a class="nav-link" href="/dashboard">Overview</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link active" href="/orders">Orders</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/groups">Groups</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/settings">Settings</a>
-            </li>
-          </ul>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders - WhatsApp Delivery Bot</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/admin-dashboard.css" rel="stylesheet">
+</head>
+<body data-user-id="<%= userId %>">
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <i class="fab fa-whatsapp"></i>
+                </div>
+                <div class="logo-text">
+                    <span class="main-title">Orders</span>
+                    <span class="sub-title">WhatsApp Delivery Bot</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="dropdown">
+                    <button class="profile-btn" id="profileDropdown">
+                        <i class="fas fa-user"></i>
+                    </button>
+                    <div class="dropdown-content" id="profileMenu">
+                        <a href="/settings"><i class="fas fa-cog"></i> Settings</a>
+                        <a href="/logout"><i class="fas fa-sign-out-alt"></i> Log out</a>
+                    </div>
+                </div>
+                <button class="icon-btn" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="col-md-9 col-lg-10">
-      <!-- Page Header -->
-      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">Orders Management</h1>
-        <div class="btn-toolbar mb-2 mb-md-0">
-          <div class="btn-group me-2">
-            <button type="button" class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown">
-              <i class="fas fa-download"></i> Export
-            </button>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="#" onclick="exportOrders('csv')">Export to CSV</a></li>
-              <li><a class="dropdown-item" href="#" onclick="exportOrders('json')">Export to JSON</a></li>
-            </ul>
-          </div>
-          <button type="button" class="btn btn-primary" onclick="showExportModal()">
-            <i class="fas fa-filter"></i> Export with Filters
-          </button>
-        </div>
-      </div>
-
-      <!-- Analytics Section -->
-      <div class="row mb-4">
-        <div class="col-md-6">
-          <div class="card">
-            <div class="card-header">
-              <h6 class="mb-0"><i class="fas fa-chart-pie"></i> Order Status Distribution</h6>
-            </div>
-            <div class="card-body">
-              <canvas id="statusChart" width="400" height="200"></canvas>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="card">
-            <div class="card-header">
-              <h6 class="mb-0"><i class="fas fa-chart-line"></i> Orders by Business</h6>
-            </div>
-            <div class="card-body">
-              <canvas id="businessChart" width="400" height="200"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="row mb-4">
-        <div class="col-md-12">
-          <div class="card">
-            <div class="card-header">
-              <h6 class="mb-0"><i class="fas fa-chart-bar"></i> Recent Order Trends (Last 7 Days)</h6>
-            </div>
-            <div class="card-body">
-              <canvas id="trendChart" width="800" height="200"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Filters -->
-      <div class="card mb-4">
-        <div class="card-body">
-          <form method="GET" action="/orders" class="row g-3">
-            <input type="hidden" name="userId" value="<%= userId %>">
-            
-            <div class="col-md-3">
-              <label for="business" class="form-label">Business</label>
-              <select class="form-select" id="business" name="business">
-                <option value="">All Businesses</option>
-                <% businesses.forEach(business => { %>
-                  <option value="<%= business.business_id %>" <%= selectedBusiness === business.business_id ? 'selected' : '' %>>
-                    <%= business.business_name %>
-                  </option>
-                <% }); %>
-              </select>
-            </div>
-
-            <div class="col-md-3">
-              <label for="status" class="form-label">Status</label>
-              <select class="form-select" id="status" name="status">
-                <option value="">All Status</option>
-                <option value="pending" <%= selectedStatus === 'pending' ? 'selected' : '' %>>Pending</option>
-                <option value="processing" <%= selectedStatus === 'processing' ? 'selected' : '' %>>Processing</option>
-                <option value="delivered" <%= selectedStatus === 'delivered' ? 'selected' : '' %>>Delivered</option>
-                <option value="cancelled" <%= selectedStatus === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
-              </select>
-            </div>
-
-            <div class="col-md-4">
-              <label for="search" class="form-label">Search</label>
-              <input type="text" class="form-control" id="search" name="search" 
-                     placeholder="Search by customer name or order ID" 
-                     value="<%= search || '' %>">
-            </div>
-
-            <div class="col-md-2">
-              <label class="form-label">&nbsp;</label>
-              <div class="d-grid">
-                <button type="submit" class="btn btn-primary">Filter</button>
-              </div>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Orders Table -->
-      <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <h5 class="mb-0">Orders (<%= orders.length %>)</h5>
-          <div class="d-flex gap-2 flex-wrap">
-            <select class="form-select form-select-sm" style="width: auto;" onchange="changePageSize(this.value)">
-              <option value="10" <%= pageSize == 10 ? 'selected' : '' %>>10 per page</option>
-              <option value="25" <%= pageSize == 25 ? 'selected' : '' %>>25 per page</option>
-              <option value="50" <%= pageSize == 50 ? 'selected' : '' %>>50 per page</option>
-            </select>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="table-responsive">
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  <th>Order ID</th>
-                  <th class="d-none d-md-table-cell">Business</th>
-                  <th>Customer</th>
-                  <th class="d-none d-lg-table-cell">Phone</th>
-                  <th class="d-none d-md-table-cell">Items</th>
-                  <th>Status</th>
-                  <th class="d-none d-lg-table-cell">Delivery Date</th>
-                  <th class="d-none d-md-table-cell">Created</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% if (orders && orders.length > 0) { %>
-                  <% orders.forEach(order => { %>
-                    <tr>
-                      <td>
-                        <strong><%= order.order_id %></strong>
-                        <div class="d-md-none small text-muted">
-                          <%= order.business_name %>
+    </header>
+    <main class="main-content">
+        <div class="dashboard-layout">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3>Quick Actions</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="quick-actions">
+                            <a href="/dashboard" class="quick-action-btn"><i class="fas fa-home"></i> Overview</a>
+                            <a href="/orders" class="quick-action-btn active"><i class="fas fa-box"></i> Orders</a>
+                            <a href="/groups" class="quick-action-btn"><i class="fas fa-users"></i> Groups</a>
+                            <a href="/add-business" class="quick-action-btn"><i class="fas fa-building"></i> Businesses</a>
                         </div>
-                      </td>
-                      <td class="d-none d-md-table-cell">
-                        <span class="badge bg-light text-dark"><%= order.business_name %></span>
-                      </td>
-                      <td>
-                        <%= order.customer_name %>
-                        <div class="d-lg-none small text-muted">
-                          <%= order.customer_phone %>
+                    </div>
+                </div>
+            </div>
+            <!-- Main Panel -->
+            <div class="main-panel">
+                <div class="content-card">
+                    <div class="card-header d-flex justify-between align-center flex-wrap gap-2">
+                        <h2>Orders Management</h2>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <div class="dropdown">
+                                <button class="primary-btn" id="exportDropdownBtn">
+                                    <i class="fas fa-download"></i> Export <i class="fas fa-caret-down"></i>
+                                </button>
+                                <div class="dropdown-content" id="exportDropdownMenu" style="min-width: 180px;">
+                                    <a href="#" onclick="exportOrders('csv')">Export to CSV</a>
+                                    <a href="#" onclick="exportOrders('json')">Export to JSON</a>
+                                </div>
+                            </div>
+                            <button class="secondary-btn" onclick="showExportModal()">
+                                <i class="fas fa-filter"></i> Export with Filters
+                            </button>
                         </div>
-                      </td>
-                      <td class="d-none d-lg-table-cell"><%= order.customer_phone %></td>
-                      <td class="d-none d-md-table-cell">
-                        <button class="btn btn-sm btn-outline-info" onclick="viewItems('<%= order.id %>')">
-                          View Items
-                        </button>
-                      </td>
-                      <td>
-                        <span class="badge bg-<%= getStatusColor(order.status) %>">
-                          <%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %>
-                        </span>
-                      </td>
-                      <td class="d-none d-lg-table-cell">
-                        <% if (order.delivery_date) { %>
-                          <%= new Date(order.delivery_date).toLocaleDateString() %>
-                        <% } else { %>
-                          <span class="text-muted">Not set</span>
-                        <% } %>
-                      </td>
-                      <td class="d-none d-md-table-cell"><%= new Date(order.created_at).toLocaleDateString() %></td>
-                      <td>
-                        <div class="btn-group-vertical btn-group-sm d-md-none" role="group">
-                          <button class="btn btn-outline-primary" onclick="viewOrder('<%= order.id %>')">
-                            <i class="fas fa-eye"></i>
-                          </button>
-                          <button class="btn btn-outline-warning" onclick="editOrder('<%= order.id %>')">
-                            <i class="fas fa-edit"></i>
-                          </button>
-                          <button class="btn btn-outline-success" onclick="updateStatus('<%= order.id %>', 'delivered')">
-                            <i class="fas fa-check"></i>
-                          </button>
+                    </div>
+                    <div class="card-content">
+                        <form method="GET" action="/orders" class="filters-form">
+                            <input type="hidden" name="userId" value="<%= userId %>">
+                            <div class="filters-row">
+                                <div class="form-group">
+                                    <label for="business" class="form-label">Business</label>
+                                    <select class="form-control" id="business" name="business">
+                                        <option value="">All Businesses</option>
+                                        <% businesses.forEach(business => { %>
+                                            <option value="<%= business.business_id %>" <%= selectedBusiness === business.business_id ? 'selected' : '' %>>
+                                                <%= business.business_name %>
+                                            </option>
+                                        <% }); %>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="status" class="form-label">Status</label>
+                                    <select class="form-control" id="status" name="status">
+                                        <option value="">All Status</option>
+                                        <option value="pending" <%= selectedStatus === 'pending' ? 'selected' : '' %>>Pending</option>
+                                        <option value="processing" <%= selectedStatus === 'processing' ? 'selected' : '' %>>Processing</option>
+                                        <option value="delivered" <%= selectedStatus === 'delivered' ? 'selected' : '' %>>Delivered</option>
+                                        <option value="cancelled" <%= selectedStatus === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+                                    </select>
+                                </div>
+                                <div class="form-group flex-grow">
+                                    <label for="search" class="form-label">Search</label>
+                                    <input type="text" class="form-control" id="search" name="search" placeholder="Search by customer name or order ID" value="<%= search || '' %>">
+                                </div>
+                                <div class="form-group align-end">
+                                    <button type="submit" class="primary-btn">Filter</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <!-- Orders Table -->
+                <div class="content-card">
+                    <div class="card-header d-flex justify-between align-center flex-wrap gap-2">
+                        <h3>Orders (<%= orders.length %>)</h3>
+                        <select class="form-control" style="width: auto; min-width: 120px;" onchange="changePageSize(this.value)">
+                            <option value="10" <%= pageSize == 10 ? 'selected' : '' %>>10 per page</option>
+                            <option value="25" <%= pageSize == 25 ? 'selected' : '' %>>25 per page</option>
+                            <option value="50" <%= pageSize == 50 ? 'selected' : '' %>>50 per page</option>
+                        </select>
+                    </div>
+                    <div class="card-content">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Business</th>
+                                        <th>Customer</th>
+                                        <th>Phone</th>
+                                        <th>Items</th>
+                                        <th>Status</th>
+                                        <th>Delivery Date</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% if (orders && orders.length > 0) { %>
+                                        <% orders.forEach(order => { %>
+                                            <tr>
+                                                <td><strong><%= order.order_id %></strong></td>
+                                                <td><%= order.business_name %></td>
+                                                <td><%= order.customer_name %></td>
+                                                <td><%= order.customer_phone %></td>
+                                                <td>
+                                                    <button class="secondary-btn" onclick="viewItems('<%= order.id %>')">View Items</button>
+                                                </td>
+                                                <td>
+                                                    <span class="status-badge <%= order.status === 'pending' ? 'pending' : order.status === 'processing' ? 'processing' : order.status === 'delivered' ? 'active' : 'inactive' %>">
+                                                        <%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %>
+                                                    </span>
+                                                </td>
+                                                <td><%= order.delivery_date ? new Date(order.delivery_date).toLocaleDateString() : '<span class="text-muted">Not set</span>' %></td>
+                                                <td><%= new Date(order.created_at).toLocaleDateString() %></td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm" role="group">
+                                                        <button class="secondary-btn" onclick="viewOrder('<%= order.id %>')">View</button>
+                                                        <button class="secondary-btn" onclick="editOrder('<%= order.id %>')">Edit</button>
+                                                        <button class="secondary-btn" onclick="updateStatus('<%= order.id %>', 'delivered')">Mark Delivered</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <% }); %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="9" class="text-center">
+                                                <div class="empty-placeholder">No orders found matching your criteria.</div>
+                                            </td>
+                                        </tr>
+                                    <% } %>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="btn-group btn-group-sm d-none d-md-flex" role="group">
-                          <button class="btn btn-outline-primary" onclick="viewOrder('<%= order.id %>')">
-                            View
-                          </button>
-                          <button class="btn btn-outline-warning" onclick="editOrder('<%= order.id %>')">
-                            Edit
-                          </button>
-                          <button class="btn btn-outline-success" onclick="updateStatus('<%= order.id %>', 'delivered')">
-                            Mark Delivered
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  <% }); %>
-                <% } else { %>
-                  <tr>
-                    <td colspan="9" class="text-center">
-                      <div class="alert alert-info mb-0">
-                        No orders found matching your criteria.
-                      </div>
-                    </td>
-                  </tr>
+                    </div>
+                </div>
+                <!-- Pagination -->
+                <% if (totalPages > 1) { %>
+                <div class="pagination-bar">
+                    <div class="text-muted">
+                        Showing <%= ((page - 1) * pageSize) + 1 %> to <%= Math.min(page * pageSize, totalOrders) %> of <%= totalOrders %> orders
+                    </div>
+                    <nav aria-label="Orders pagination">
+                        <ul class="pagination">
+                            <% if (page > 1) { %>
+                                <li class="page-item"><a class="page-link" href="?page=<%= page - 1 %>&pageSize=<%= pageSize %>&business=<%= selectedBusiness || '' %>&status=<%= selectedStatus || '' %>&search=<%= search || '' %>">Previous</a></li>
+                            <% } %>
+                            <% for (let i = 1; i <= totalPages; i++) { %>
+                                <li class="page-item <%= i === page ? 'active' : '' %>"><a class="page-link" href="?page=<%= i %>&pageSize=<%= pageSize %>&business=<%= selectedBusiness || '' %>&status=<%= selectedStatus || '' %>&search=<%= search || '' %>"><%= i %></a></li>
+                            <% } %>
+                            <% if (page < totalPages) { %>
+                                <li class="page-item"><a class="page-link" href="?page=<%= page + 1 %>&pageSize=<%= pageSize %>&business=<%= selectedBusiness || '' %>&status=<%= selectedStatus || '' %>&search=<%= search || '' %>">Next</a></li>
+                            <% } %>
+                        </ul>
+                    </nav>
+                </div>
                 <% } %>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Pagination -->
-      <% if (totalPages > 1) { %>
-        <div class="d-flex justify-content-between align-items-center mt-4">
-          <div class="text-muted">
-            Showing <%= ((page - 1) * pageSize) + 1 %> to <%= Math.min(page * pageSize, totalOrders) %> of <%= totalOrders %> orders
-          </div>
-          <nav aria-label="Orders pagination">
-            <ul class="pagination mb-0">
-              <!-- Previous page -->
-              <% if (page > 1) { %>
-                <li class="page-item">
-                  <a class="page-link" href="<%= buildPaginationUrl(page - 1) %>">
-                    <i class="fas fa-chevron-left"></i> Previous
-                  </a>
-                </li>
-              <% } else { %>
-                <li class="page-item disabled">
-                  <span class="page-link">
-                    <i class="fas fa-chevron-left"></i> Previous
-                  </span>
-                </li>
-              <% } %>
-
-              <!-- Page numbers -->
-              <% 
-                const startPage = Math.max(1, page - 2);
-                const endPage = Math.min(totalPages, page + 2);
-              %>
-              
-              <% if (startPage > 1) { %>
-                <li class="page-item">
-                  <a class="page-link" href="<%= buildPaginationUrl(1) %>">1</a>
-                </li>
-                <% if (startPage > 2) { %>
-                  <li class="page-item disabled">
-                    <span class="page-link">...</span>
-                  </li>
-                <% } %>
-              <% } %>
-
-              <% for (let i = startPage; i <= endPage; i++) { %>
-                <li class="page-item <%= i === page ? 'active' : '' %>">
-                  <a class="page-link" href="<%= buildPaginationUrl(i) %>"><%= i %></a>
-                </li>
-              <% } %>
-
-              <% if (endPage < totalPages) { %>
-                <% if (endPage < totalPages - 1) { %>
-                  <li class="page-item disabled">
-                    <span class="page-link">...</span>
-                  </li>
-                <% } %>
-                <li class="page-item">
-                  <a class="page-link" href="<%= buildPaginationUrl(totalPages) %>"><%= totalPages %></a>
-                </li>
-              <% } %>
-
-              <!-- Next page -->
-              <% if (page < totalPages) { %>
-                <li class="page-item">
-                  <a class="page-link" href="<%= buildPaginationUrl(page + 1) %>">
-                    Next <i class="fas fa-chevron-right"></i>
-                  </a>
-                </li>
-              <% } else { %>
-                <li class="page-item disabled">
-                  <span class="page-link">
-                    Next <i class="fas fa-chevron-right"></i>
-                  </span>
-                </li>
-              <% } %>
-            </ul>
-          </nav>
-        </div>
-      <% } %>
-    </div>
-  </div>
-</div>
-
-<!-- Order Details Modal -->
-<div class="modal fade" id="orderModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Order Details</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body" id="orderModalContent">
-        Loading...
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Export Modal -->
-<div class="modal fade" id="exportModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Export Orders</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <form id="exportForm">
-          <div class="mb-3">
-            <label for="exportBusiness" class="form-label">Business</label>
-            <select class="form-select" id="exportBusiness" name="business_id">
-              <option value="">All Businesses</option>
-              <% businesses.forEach(business => { %>
-                <option value="<%= business.business_id %>" <%= selectedBusiness === business.business_id ? 'selected' : '' %>>
-                  <%= business.business_name %>
-                </option>
-              <% }); %>
-            </select>
-          </div>
-          
-          <div class="mb-3">
-            <label for="exportStatus" class="form-label">Status</label>
-            <select class="form-select" id="exportStatus" name="status">
-              <option value="">All Statuses</option>
-              <option value="pending">Pending</option>
-              <option value="processing">Processing</option>
-              <option value="delivered">Delivered</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-          </div>
-          
-          <div class="row">
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label for="exportStartDate" class="form-label">Start Date</label>
-                <input type="date" class="form-control" id="exportStartDate" name="start_date">
-              </div>
             </div>
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label for="exportEndDate" class="form-label">End Date</label>
-                <input type="date" class="form-control" id="exportEndDate" name="end_date">
-              </div>
-            </div>
-          </div>
-          
-          <div class="mb-3">
-            <label for="exportFormat" class="form-label">Export Format</label>
-            <select class="form-select" id="exportFormat" name="format">
-              <option value="csv">CSV (Excel compatible)</option>
-              <option value="json">JSON (Data format)</option>
-            </select>
-          </div>
-          
-          <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i>
-            <strong>Export includes:</strong> Order ID, Business, Customer details, Items, Status, Notes, Dates
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-success" onclick="exportWithFilters()">
-          <i class="fas fa-download"></i> Export Orders
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-  // Make chart data available globally for external script
-  window.chartData = {
-    orders: <%- JSON.stringify(orders) %>,
-    userId: '<%= userId %>',
-    pageSize: '<%= pageSize %>',
-    selectedBusiness: '<%= selectedBusiness %>',
-    selectedStatus: '<%= selectedStatus %>',
-    search: '<%= search %>'
-  };
-
-  function getStatusColor(status) {
-    switch(status) {
-      case 'pending': return 'warning';
-      case 'processing': return 'info';
-      case 'delivered': return 'success';
-      case 'cancelled': return 'danger';
-      default: return 'secondary';
-    }
-  }
-
-  function changePageSize(size) {
-    const url = new URL(window.location);
-    url.searchParams.set('pageSize', size);
-    window.location.href = url.toString();
-  }
-
-  async function viewOrder(orderId) {
-    try {
-      const userId = window.chartData.userId;
-      const response = await fetch(`/api/orders/${orderId}?userId=${userId}`);
-      const order = await response.json();
-      
-      if (response.ok) {
-        showOrderModal(order);
-      } else {
-        alert('Failed to load order details: ' + order.error);
-      }
-    } catch (error) {
-      alert('Error loading order details: ' + error.message);
-    }
-  }
-
-  function showOrderModal(order) {
-    const modal = new bootstrap.Modal(document.getElementById('orderModal'));
-    const content = document.getElementById('orderModalContent');
-    
-    // Parse items if it's a JSON string
-    let items = [];
-    try {
-      items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
-    } catch (e) {
-      items = [{ name: order.items, quantity: 1 }];
-    }
-    
-    content.innerHTML = `
-      <div class="row">
-        <div class="col-md-6">
-          <h6>Order Information</h6>
-          <table class="table table-sm">
-            <tr><td><strong>Order ID:</strong></td><td>${order.order_id}</td></tr>
-            <tr><td><strong>Business:</strong></td><td>${order.business_name}</td></tr>
-            <tr><td><strong>Status:</strong></td><td><span class="badge bg-${getStatusColor(order.status)}">${order.status}</span></td></tr>
-            <tr><td><strong>Created:</strong></td><td>${new Date(order.created_at).toLocaleString()}</td></tr>
-            <tr><td><strong>Updated:</strong></td><td>${order.updated_at ? new Date(order.updated_at).toLocaleString() : 'Never'}</td></tr>
-          </table>
         </div>
-        <div class="col-md-6">
-          <h6>Customer Information</h6>
-          <table class="table table-sm">
-            <tr><td><strong>Name:</strong></td><td>${order.customer_name}</td></tr>
-            <tr><td><strong>Phone:</strong></td><td>${order.customer_phone}</td></tr>
-            <tr><td><strong>Address:</strong></td><td>${order.address}</td></tr>
-            <tr><td><strong>Delivery Date:</strong></td><td>${order.delivery_date ? new Date(order.delivery_date).toLocaleDateString() : 'Not set'}</td></tr>
-          </table>
-        </div>
-      </div>
-      <div class="row mt-3">
-        <div class="col-12">
-          <h6>Order Items</h6>
-          <div class="table-responsive">
-            <table class="table table-sm">
-              <thead>
-                <tr>
-                  <th>Item</th>
-                  <th>Quantity</th>
-                  <th>Price</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${items.map(item => `
-                  <tr>
-                    <td>${item.name || item}</td>
-                    <td>${item.quantity || 1}</td>
-                    <td>$${item.price || '0.00'}</td>
-                    <td>$${((item.price || 0) * (item.quantity || 1)).toFixed(2)}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-      ${order.notes ? `
-        <div class="row mt-3">
-          <div class="col-12">
-            <h6>Notes</h6>
-            <p class="text-muted">${order.notes}</p>
-          </div>
-        </div>
-      ` : ''}
-    `;
-    
-    modal.show();
-  }
-
-  async function editOrder(orderId) {
-    try {
-      const userId = window.chartData.userId;
-      const response = await fetch(`/api/orders/${orderId}?userId=${userId}`);
-      const order = await response.json();
-      
-      if (response.ok) {
-        showEditModal(order);
-      } else {
-        alert('Failed to load order for editing: ' + order.error);
-      }
-    } catch (error) {
-      alert('Error loading order for editing: ' + error.message);
-    }
-  }
-
-  function showEditModal(order) {
-    const modal = new bootstrap.Modal(document.getElementById('orderModal'));
-    const content = document.getElementById('orderModalContent');
-    
-    content.innerHTML = `
-      <form id="editOrderForm">
-        <input type="hidden" name="orderId" value="${order.id}">
-        <input type="hidden" name="userId" value="${window.chartData.userId}">
-        
-        <div class="row">
-          <div class="col-md-6">
-            <div class="mb-3">
-              <label class="form-label">Order ID</label>
-              <input type="text" class="form-control" value="${order.order_id}" readonly>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Business</label>
-              <input type="text" class="form-control" value="${order.business_name}" readonly>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Status</label>
-              <select class="form-select" name="status">
-                <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
-                <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processing</option>
-                <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
-                <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
-              </select>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="mb-3">
-              <label class="form-label">Customer Name</label>
-              <input type="text" class="form-control" name="customer_name" value="${order.customer_name}">
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Customer Phone</label>
-              <input type="text" class="form-control" name="customer_phone" value="${order.customer_phone}">
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Delivery Date</label>
-              <input type="date" class="form-control" name="delivery_date" value="${order.delivery_date || ''}">
-            </div>
-          </div>
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Address</label>
-          <textarea class="form-control" name="address" rows="2">${order.address}</textarea>
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Notes</label>
-          <textarea class="form-control" name="notes" rows="3">${order.notes || ''}</textarea>
-        </div>
-        
-        <div class="d-flex justify-content-end gap-2">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save Changes</button>
-        </div>
-      </form>
-    `;
-    
-    // Handle form submission
-    document.getElementById('editOrderForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      await saveOrderChanges(order.id);
-    });
-    
-    modal.show();
-  }
-
-  async function saveOrderChanges(orderId) {
-    try {
-      const form = document.getElementById('editOrderForm');
-      const formData = new FormData(form);
-      const userId = window.chartData.userId;
-      
-      const updateData = {
-        userId: userId,
-        customer_name: formData.get('customer_name'),
-        customer_phone: formData.get('customer_phone'),
-        address: formData.get('address'),
-        delivery_date: formData.get('delivery_date'),
-        notes: formData.get('notes'),
-        status: formData.get('status')
-      };
-      
-      const response = await fetch(`/api/orders/${orderId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(updateData)
-      });
-      
-      const result = await response.json();
-      
-      if (response.ok) {
-        alert('Order updated successfully!');
-        location.reload();
-      } else {
-        alert('Failed to update order: ' + result.error);
-      }
-    } catch (error) {
-      alert('Error updating order: ' + error.message);
-    }
-  }
-
-  async function updateStatus(orderId, status) {
-    if (confirm('Are you sure you want to update this order status?')) {
-      try {
-        const userId = window.chartData.userId;
-        const response = await fetch(`/api/orders/${orderId}/status`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ status, userId })
+    </main>
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
         });
-        
-        const result = await response.json();
-        
-        if (response.ok) {
-          alert('Order status updated successfully!');
-          location.reload();
-        } else {
-          alert('Failed to update order status: ' + result.error);
+        function updateThemeIcon(theme) {
+            const icon = themeToggle.querySelector('i');
+            icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
         }
-      } catch (error) {
-        alert('Error updating order status: ' + error.message);
-      }
-    }
-  }
-
-  function viewItems(orderId) {
-    viewOrder(orderId);
-  }
-
-  function exportOrders(format = 'csv') {
-    const currentFilters = getCurrentFilters();
-    const queryParams = new URLSearchParams({
-      ...currentFilters,
-      format: format
-    });
-    
-    window.open(`/api/export/orders?${queryParams}`, '_blank');
-  }
-
-  function showExportModal() {
-    const modal = new bootstrap.Modal(document.getElementById('exportModal'));
-    
-    const currentFilters = getCurrentFilters();
-    if (currentFilters.business_id) {
-      document.getElementById('exportBusiness').value = currentFilters.business_id;
-    }
-    if (currentFilters.status) {
-      document.getElementById('exportStatus').value = currentFilters.status;
-    }
-    
-    modal.show();
-  }
-
-  function exportWithFilters() {
-    const form = document.getElementById('exportForm');
-    const formData = new FormData(form);
-    const params = new URLSearchParams();
-    
-    for (const [key, value] of formData.entries()) {
-      if (value) {
-        params.append(key, value);
-      }
-    }
-    
-    const modal = bootstrap.Modal.getInstance(document.getElementById('exportModal'));
-    modal.hide();
-    
-    window.open(`/api/export/orders?${params}`, '_blank');
-  }
-
-  function getCurrentFilters() {
-    const filters = {};
-    
-    const businessFilter = document.getElementById('business');
-    if (businessFilter && businessFilter.value) {
-      filters.business_id = businessFilter.value;
-    }
-    
-    const statusFilter = document.getElementById('status');
-    if (statusFilter && statusFilter.value) {
-      filters.status = statusFilter.value;
-    }
-    
-    const searchFilter = document.getElementById('search');
-    if (searchFilter && searchFilter.value) {
-      filters.search = searchFilter.value;
-    }
-    
-    return filters;
-  }
-
-  function buildPaginationUrl(pageNum) {
-    const params = new URLSearchParams();
-    params.set('userId', window.chartData.userId);
-    params.set('page', pageNum);
-    params.set('pageSize', window.chartData.pageSize);
-    if (window.chartData.selectedBusiness) params.set('business', window.chartData.selectedBusiness);
-    if (window.chartData.selectedStatus) params.set('status', window.chartData.selectedStatus);
-    if (window.chartData.search) params.set('search', window.chartData.search);
-    return `/orders?${params.toString()}`;
-  }
-</script>
-
-<!-- Include external charts script -->
-<script src="/js/orders-charts.js"></script> 
+        // Profile dropdown functionality
+        const profileBtn = document.getElementById('profileDropdown');
+        const profileMenu = document.getElementById('profileMenu');
+        if (profileBtn) {
+            profileBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                profileMenu.parentElement.classList.toggle('active');
+            });
+            document.addEventListener('click', (e) => {
+                if (!profileMenu.contains(e.target) && !profileBtn.contains(e.target)) {
+                    profileMenu.parentElement.classList.remove('active');
+                }
+            });
+        }
+        // Export dropdown functionality
+        const exportDropdownBtn = document.getElementById('exportDropdownBtn');
+        const exportDropdownMenu = document.getElementById('exportDropdownMenu');
+        if (exportDropdownBtn) {
+            exportDropdownBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                exportDropdownMenu.parentElement.classList.toggle('active');
+            });
+            document.addEventListener('click', (e) => {
+                if (!exportDropdownMenu.contains(e.target) && !exportDropdownBtn.contains(e.target)) {
+                    exportDropdownMenu.parentElement.classList.remove('active');
+                }
+            });
+        }
+        // Placeholder for viewItems, viewOrder, editOrder, updateStatus
+        function viewItems(orderId) { alert('View items for order: ' + orderId); }
+        function viewOrder(orderId) { alert('View order: ' + orderId); }
+        function editOrder(orderId) { alert('Edit order: ' + orderId); }
+        function updateStatus(orderId, status) { alert('Update order ' + orderId + ' to status: ' + status); }
+        function changePageSize(size) {
+            const params = new URLSearchParams(window.location.search);
+            params.set('pageSize', size);
+            params.set('page', 1);
+            window.location.search = params.toString();
+        }
+        function exportOrders(format) {
+            const params = new URLSearchParams(window.location.search);
+            params.set('format', format);
+            window.location.href = '/api/export/orders?' + params.toString();
+        }
+        function showExportModal() { alert('Show export with filters modal (not implemented)'); }
+    </script>
+</body>
+</html> 
