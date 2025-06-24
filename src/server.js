@@ -515,7 +515,7 @@ async function startServer() {
 
         const { business, status, search, page = 1, pageSize = 10 } = req.query;
 
-        let query = db('orders as o')
+        let query = db.query('orders as o')
           .join('groups as g', 'o.business_id', 'g.business_id')
           .where('g.user_id', userId)
           .select('o.*', 'g.business_name');
@@ -542,10 +542,10 @@ async function startServer() {
           .limit(pageSize)
           .offset((page - 1) * pageSize);
           
-        const businesses = await db('groups').where({ user_id: userId }).distinct('business_id', 'business_name');
+        const businesses = await db.query('groups').where({ user_id: userId }).distinct('business_id', 'business_name');
 
         // Chart Data
-        const baseChartQuery = db('orders as o').join('groups as g', 'o.business_id', 'g.business_id').where('g.user_id', userId);
+        const baseChartQuery = db.query('orders as o').join('groups as g', 'o.business_id', 'g.business_id').where('g.user_id', userId);
         
         const statusCounts = await baseChartQuery.clone().groupBy('o.status').select('o.status', db.raw('count(*) as count'));
         const ordersByBusiness = await baseChartQuery.clone().groupBy('g.business_name').select('g.business_name', db.raw('count(*) as count'));
@@ -579,7 +579,7 @@ async function startServer() {
         });
       } catch (error) {
         logger.error('Orders page error:', error);
-        res.status(500).render('error', { message: 'Failed to load orders page.' });
+        res.status(500).render('error', { error: 'Failed to load orders page. ' + error.message });
       }
     });
 
