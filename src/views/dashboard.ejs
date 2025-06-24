@@ -1,293 +1,314 @@
-<%- include('layout', { title: 'Business Dashboard' }) %>
-
-<div class="container-fluid mt-4">
-  <div class="row">
-    <!-- Sidebar -->
-    <div class="col-md-3 col-lg-2">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Business Dashboard</h5>
-          <hr>
-          <ul class="nav flex-column">
-            <li class="nav-item">
-              <a class="nav-link active" href="/dashboard">Overview</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/orders">Orders</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/groups">Groups</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/settings">Settings</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="col-md-9 col-lg-10">
-      <!-- Business Management -->
-      <div class="card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <h5 class="mb-0">My Businesses</h5>
-          <a href="/add-business" class="btn btn-primary">Add New Business</a>
-        </div>
-        <div class="card-body">
-          <div class="table-responsive">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Business Name</th>
-                  <th>Groups</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% if (businesses && businesses.length > 0) { %>
-                  <% businesses.forEach(business => { %>
-                    <tr>
-                      <td><%= business.business_name %></td>
-                      <td>
-                        <% const businessGroups = groups.filter(g => g.business_id === business.business_id) %>
-                        <span class="badge bg-info"><%= businessGroups.length %> groups</span>
-                      </td>
-                      <td>
-                        <a href="/business/<%= business.business_id %>" class="btn btn-sm btn-outline-primary">Manage</a>
-                        <a href="/setup-group?businessId=<%= business.business_id %>" class="btn btn-sm btn-outline-success">Add Group</a>
-                      </td>
-                    </tr>
-                  <% }); %>
-                <% } else { %>
-                  <tr>
-                    <td colspan="3" class="text-center">
-                      <div class="alert alert-info mb-0">
-                        No businesses yet. <a href="/add-business">Create your first business</a> to get started.
-                      </div>
-                    </td>
-                  </tr>
-                <% } %>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Stats Cards -->
-      <div class="row mb-4">
-        <div class="col-md-4">
-          <div class="card bg-primary text-white">
-            <div class="card-body">
-              <h5 class="card-title">Total Orders</h5>
-              <h2 class="card-text"><%= orderStats ? orderStats.totalOrders : 0 %></h2>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card bg-success text-white">
-            <div class="card-body">
-              <h5 class="card-title">Active Orders</h5>
-              <h2 class="card-text"><%= orderStats ? orderStats.activeOrders : 0 %></h2>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card bg-info text-white">
-            <div class="card-body">
-              <h5 class="card-title">Completed Orders</h5>
-              <h2 class="card-text"><%= orderStats ? orderStats.completedOrders : 0 %></h2>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Groups Status -->
-      <div class="card mb-4">
-        <div class="card-header">
-          <h5 class="mb-0">WhatsApp Groups</h5>
-        </div>
-        <div class="card-body">
-          <div class="table-responsive">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Business</th>
-                  <th>Group Name</th>
-                  <th>Type</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% if (groups && groups.length > 0) { %>
-                  <% groups.forEach(group => { %>
-                    <tr>
-                      <td><%= group.business_name %></td>
-                      <td><%= group.group_name %></td>
-                      <td><%= group.group_type %></td>
-                      <td>
-                        <span class="badge bg-success">Active</span>
-                      </td>
-                      <td>
-                        <button class="btn btn-sm btn-outline-primary">View Details</button>
-                      </td>
-                    </tr>
-                  <% }); %>
-                <% } else { %>
-                  <tr>
-                    <td colspan="5" class="text-center">
-                      <div class="alert alert-info mb-0">
-                        No groups configured yet. Please complete the setup process.
-                      </div>
-                    </td>
-                  </tr>
-                <% } %>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Recent Orders -->
-      <div class="card">
-        <div class="card-header">
-          <h5 class="mb-0">Recent Orders</h5>
-        </div>
-        <div class="card-body">
-          <div class="table-responsive">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Order ID</th>
-                  <th>Business</th>
-                  <th>Customer</th>
-                  <th>Items</th>
-                  <th>Status</th>
-                  <th>Date</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% if (recentOrders && recentOrders.length > 0) { %>
-                  <% recentOrders.forEach(order => { %>
-                    <tr>
-                      <td><%= order.id.substring(0, 8) %>...</td>
-                      <td><%= order.business_name %></td>
-                      <td><%= order.customer_name %></td>
-                      <td><%= order.items ? order.items.length : 0 %> items</td>
-                      <td>
-                        <span class="badge bg-<%= order.status === 'pending' ? 'warning' : (order.status === 'delivered' ? 'success' : 'secondary') %>">
-                          <%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %>
-                        </span>
-                      </td>
-                      <td><%= new Date(order.created_at).toLocaleDateString() %></td>
-                      <td>
-                        <button class="btn btn-sm btn-outline-primary">View Details</button>
-                      </td>
-                    </tr>
-                  <% }); %>
-                <% } else { %>
-                  <tr>
-                    <td colspan="7" class="text-center">
-                    <div class="alert alert-info mb-0">
-                      No orders yet. Orders will appear here when customers place them in your WhatsApp group.
-                    </div>
-                  </td>
-                </tr>
-                <% } %>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Stats Modal -->
-<div class="modal fade" id="statsModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Group Statistics</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div id="statsContent">
-                    Loading statistics...
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard - WhatsApp Delivery Bot</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/admin-dashboard.css" rel="stylesheet">
+</head>
+<body data-user-id="<%= userId %>">
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <i class="fab fa-whatsapp"></i>
+                </div>
+                <div class="logo-text">
+                    <span class="main-title">User Dashboard</span>
+                    <span class="sub-title">WhatsApp Delivery Bot</span>
                 </div>
             </div>
+            <div class="header-actions">
+                <a href="/settings" class="icon-btn" title="Settings">
+                    <i class="fas fa-cog"></i>
+                </a>
+                <button class="icon-btn" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <a href="/logout" class="icon-btn" title="Log out">
+                    <i class="fas fa-sign-out-alt"></i>
+                </a>
+            </div>
         </div>
-    </div>
-</div>
-
-<script>
-    async function showGroupStats(groupId) {
-        const modal = new bootstrap.Modal(document.getElementById('statsModal'));
-        modal.show();
-        
-        try {
-            const response = await fetch(`/api/group-stats?groupId=${groupId}`);
-            const data = await response.json();
-            
-            document.getElementById('statsContent').innerHTML = `
-                <div class="row">
-                    <div class="col-6">
-                        <div class="card bg-light">
-                            <div class="card-body text-center">
-                                <h6>Total Orders</h6>
-                                <h3>${data.totalOrders}</h3>
+    </header>
+    <main class="main-content">
+        <!-- Stats Overview -->
+        <section class="stats-grid">
+            <div class="stat-card orders">
+                <div class="stat-header">
+                    <span class="stat-title">Total Orders</span>
+                    <div class="stat-icon">
+                        <i class="fas fa-box"></i>
+                    </div>
+                </div>
+                <div class="stat-value"><%= orderStats && orderStats.totalOrders ? orderStats.totalOrders : 0 %></div>
+            </div>
+            <div class="stat-card completed">
+                <div class="stat-header">
+                    <span class="stat-title">Completed Orders</span>
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+                <div class="stat-value"><%= orderStats && orderStats.completedOrders ? orderStats.completedOrders : 0 %></div>
+            </div>
+            <div class="stat-card pending">
+                <div class="stat-header">
+                    <span class="stat-title">Pending Orders</span>
+                    <div class="stat-icon">
+                        <i class="fas fa-hourglass-half"></i>
+                    </div>
+                </div>
+                <div class="stat-value"><%= orderStats && orderStats.pendingOrders ? orderStats.pendingOrders : 0 %></div>
+            </div>
+            <div class="stat-card businesses">
+                <div class="stat-header">
+                    <span class="stat-title">Businesses</span>
+                    <div class="stat-icon">
+                        <i class="fas fa-building"></i>
+                    </div>
+                </div>
+                <div class="stat-value"><%= businesses && businesses.length ? businesses.length : 0 %></div>
+            </div>
+            <div class="stat-card groups">
+                <div class="stat-header">
+                    <span class="stat-title">Groups</span>
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+                <div class="stat-value"><%= groups && groups.length ? groups.length : 0 %></div>
+            </div>
+        </section>
+        <div class="dashboard-layout">
+            <!-- Main Content -->
+            <div class="main-panel">
+                <!-- Tabs -->
+                <div class="tabs-container">
+                    <div class="tabs-header">
+                        <div class="tabs-nav">
+                            <button class="tab-btn active" data-tab="businesses-tab">
+                                <i class="fas fa-building"></i> My Businesses
+                            </button>
+                            <button class="tab-btn" data-tab="groups-tab">
+                                <i class="fas fa-users"></i> My Groups
+                            </button>
+                            <button class="tab-btn" data-tab="orders-tab">
+                                <i class="fas fa-box"></i> Recent Orders
+                            </button>
+                        </div>
+                        <div class="tabs-actions">
+                            <a href="/add-business" class="action-btn">
+                                <i class="fas fa-plus"></i> Add Business
+                            </a>
+                            <a href="/setup-group" class="action-btn">
+                                <i class="fas fa-plus"></i> Add Group
+                            </a>
+                            <a href="/orders" class="action-btn">
+                                <i class="fas fa-list"></i> View All Orders
+                            </a>
+                        </div>
+                    </div>
+                    <!-- Businesses Tab -->
+                    <div class="tab-content active" id="businesses-tab">
+                        <div class="content-card">
+                            <div class="card-header">
+                                <div class="header-info">
+                                    <h2>My Businesses</h2>
+                                    <p>All businesses you manage</p>
+                                </div>
+                            </div>
+                            <div class="card-content">
+                                <% if (businesses && businesses.length) { %>
+                                    <div class="table-container">
+                                        <table class="data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Business Name</th>
+                                                    <th>Created</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% businesses.forEach(function(biz) { %>
+                                                    <tr>
+                                                        <td><%= biz.business_name %></td>
+                                                        <td><%= biz.created_at ? new Date(biz.created_at).toLocaleDateString() : '-' %></td>
+                                                    </tr>
+                                                <% }); %>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <% } else { %>
+                                    <div class="empty-placeholder">No businesses found. <a href="/add-business">Add one now</a>.</div>
+                                <% } %>
                             </div>
                         </div>
                     </div>
-                    <div class="col-6">
-                        <div class="card bg-light">
-                            <div class="card-body text-center">
-                                <h6>Pending Orders</h6>
-                                <h3>${data.pendingOrders}</h3>
+                    <!-- Groups Tab -->
+                    <div class="tab-content" id="groups-tab">
+                        <div class="content-card">
+                            <div class="card-header">
+                                <div class="header-info">
+                                    <h2>My Groups</h2>
+                                    <p>All groups you manage</p>
+                                </div>
+                            </div>
+                            <div class="card-content">
+                                <% if (groups && groups.length) { %>
+                                    <div class="table-container">
+                                        <table class="data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Group Name</th>
+                                                    <th>Type</th>
+                                                    <th>Created</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% groups.forEach(function(group) { %>
+                                                    <tr>
+                                                        <td><%= group.group_name %></td>
+                                                        <td><%= group.group_type %></td>
+                                                        <td><%= group.created_at ? new Date(group.created_at).toLocaleDateString() : '-' %></td>
+                                                    </tr>
+                                                <% }); %>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <% } else { %>
+                                    <div class="empty-placeholder">No groups found. <a href="/setup-group">Add one now</a>.</div>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Orders Tab -->
+                    <div class="tab-content" id="orders-tab">
+                        <div class="content-card">
+                            <div class="card-header">
+                                <div class="header-info">
+                                    <h2>Recent Orders</h2>
+                                    <p>Your 5 most recent orders</p>
+                                </div>
+                            </div>
+                            <div class="card-content">
+                                <% if (recentOrders && recentOrders.length) { %>
+                                    <div class="table-container">
+                                        <table class="data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Order ID</th>
+                                                    <th>Customer</th>
+                                                    <th>Status</th>
+                                                    <th>Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% recentOrders.forEach(function(order) { %>
+                                                    <tr>
+                                                        <td><%= order.order_id %></td>
+                                                        <td><%= order.customer_name %></td>
+                                                        <td><%= order.status %></td>
+                                                        <td><%= order.created_at ? new Date(order.created_at).toLocaleDateString() : '-' %></td>
+                                                    </tr>
+                                                <% }); %>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <% } else { %>
+                                    <div class="empty-placeholder">No recent orders found. <a href="/orders">View all orders</a>.</div>
+                                <% } %>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="mt-3">
-                    <h6>Recent Activity</h6>
-                    <ul class="list-group">
-                        ${data.recentActivity.map(activity => `
-                            <li class="list-group-item">
-                                ${activity.description}
-                                <small class="text-muted float-end">${activity.time}</small>
-                            </li>
-                        `).join('')}
-                    </ul>
+            </div>
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3>Quick Actions</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="quick-actions">
+                            <a href="/dashboard" class="quick-action-btn"><i class="fas fa-home"></i> Overview</a>
+                            <a href="/orders" class="quick-action-btn"><i class="fas fa-box"></i> Orders</a>
+                            <a href="/groups" class="quick-action-btn"><i class="fas fa-users"></i> Groups</a>
+                            <a href="/add-business" class="quick-action-btn"><i class="fas fa-building"></i> Businesses</a>
+                            <a href="/settings" class="quick-action-btn"><i class="fas fa-cog"></i> Settings</a>
+                        </div>
+                    </div>
                 </div>
-            `;
-        } catch (error) {
-            document.getElementById('statsContent').innerHTML = `
-                <div class="alert alert-danger">
-                    Failed to load statistics. Please try again.
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3>Recent Activity</h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="activity-feed">
+                            <% if (recentOrders && recentOrders.length) { %>
+                                <% recentOrders.forEach(function(order) { %>
+                                    <div class="activity-item">
+                                        <div class="activity-icon orders">
+                                            <i class="fas fa-box"></i>
+                                        </div>
+                                        <div class="activity-content">
+                                            <div class="activity-title">Order <%= order.order_id %></div>
+                                            <div class="activity-description">Placed by <%= order.customer_name %></div>
+                                            <div class="activity-time"><%= order.created_at ? new Date(order.created_at).toLocaleString() : '-' %></div>
+                                        </div>
+                                    </div>
+                                <% }); %>
+                            <% } else { %>
+                                <div class="activity-item">
+                                    <div class="activity-icon system">
+                                        <i class="fas fa-info-circle"></i>
+                                    </div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">No recent activity</div>
+                                        <div class="activity-description">Your recent orders and group activity will appear here.</div>
+                                        <div class="activity-time">-</div>
+                                    </div>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
                 </div>
-            `;
+            </div>
+        </div>
+    </main>
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+        function updateThemeIcon(theme) {
+            const icon = themeToggle.querySelector('i');
+            icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
         }
-    }
-
-    async function removeGroup(groupId) {
-        if (!confirm('Are you sure you want to remove this group? This action cannot be undone.')) {
-            return;
-        }
-        
-        try {
-            const response = await fetch(`/api/remove-group?groupId=${groupId}`, {
-                method: 'POST'
+        // Tabs functionality
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const tab = btn.getAttribute('data-tab');
+                tabContents.forEach(tc => {
+                    tc.classList.remove('active');
+                    if (tc.id === tab) tc.classList.add('active');
+                });
             });
-            
-            if (response.ok) {
-                location.reload();
-            } else {
-                alert('Failed to remove group. Please try again.');
-            }
-        } catch (error) {
-            alert('An error occurred. Please try again.');
-        }
-    }
-</script> 
+        });
+    </script>
+</body>
+</html> 
