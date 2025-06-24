@@ -207,7 +207,7 @@
         }
         .register-fields-row,
         .form-group {
-            margin-bottom: 0.7rem;
+            margin-bottom: 0.45rem;
         }
         .register-fields-row:last-of-type,
         .form-group:last-of-type {
@@ -230,10 +230,10 @@
             transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
             box-sizing: border-box;
         }
-        [data-theme="dark"] .form-control {
-            background: rgba(16,25,43,0.18);
-            color: #f8fafc;
-            backdrop-filter: blur(4px);
+        body[data-theme="dark"] .form-control {
+            background: rgba(16,25,43,0.18) !important;
+            color: #f8fafc !important;
+            backdrop-filter: blur(4px) !important;
         }
         .form-control:focus {
             outline: none;
@@ -241,16 +241,16 @@
             background: rgba(255,255,255,0.13);
             box-shadow: 0 0 0 2px rgba(16,185,129,0.08);
         }
-        [data-theme="dark"] .form-control:focus {
-            background: rgba(16,25,43,0.28);
+        body[data-theme="dark"] .form-control:focus {
+            background: rgba(16,25,43,0.28) !important;
         }
         .form-control:hover {
             border-color: #14b8a6;
             background: rgba(20,184,166,0.08);
             box-shadow: 0 1px 4px 0 rgba(16,185,129,0.05);
         }
-        [data-theme="dark"] .form-control:hover {
-            background: rgba(16,25,43,0.32);
+        body[data-theme="dark"] .form-control:hover {
+            background: rgba(16,25,43,0.32) !important;
         }
         .form-control::placeholder {
             color: #64748b;
