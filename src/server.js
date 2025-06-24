@@ -508,93 +508,78 @@ async function startServer() {
     // Orders page for users
     app.get('/orders', async (req, res) => {
       try {
-        const userId = req.session ? req.session.userId : req.query.userId;
+        const userId = req.session.userId;
         if (!userId) {
           return res.redirect('/login');
         }
-        const { business, status, search, page = 1, pageSize = 25 } = req.query;
-        
-        // Get user's businesses for the filter dropdown
-        const businesses = await RegistrationService.getUserBusinesses(userId);
-        
-        // Get all business IDs for the user
-        const userBusinesses = await db.query('groups')
-          .select('business_id')
-          .where('user_id', userId)
-          .groupBy('business_id');
-        
-        const businessIds = userBusinesses.map(b => b.business_id);
-        
-        if (businessIds.length === 0) {
-          return res.render('orders', { 
-            orders: [], 
-            businesses: [], 
-            userId,
-            selectedBusiness: business,
-            selectedStatus: status,
-            search,
-            page: parseInt(page),
-            pageSize: parseInt(pageSize),
-            totalPages: 0,
-            totalOrders: 0
-          });
-        }
 
-        // Build query based on filters
-        let query = db.query('orders as o')
-          .select(
-            'o.*',
-            'g.business_name'
-          )
+        const { business, status, search, page = 1, pageSize = 10 } = req.query;
+
+        let query = db('orders as o')
           .join('groups as g', 'o.business_id', 'g.business_id')
-          .whereIn('o.business_id', businessIds);
+          .where('g.user_id', userId)
+          .select('o.*', 'g.business_name');
 
-        // Apply business filter
         if (business) {
-          query = query.where('o.business_id', business);
+          query.where('o.business_id', business);
         }
-
-        // Apply status filter
         if (status) {
-          query = query.where('o.status', status);
+          query.where('o.status', status);
         }
-
-        // Apply search filter
         if (search) {
-          query = query.where(function() {
+          query.where(function() {
             this.where('o.customer_name', 'ilike', `%${search}%`)
               .orWhere('o.order_id', 'ilike', `%${search}%`);
           });
         }
 
-        // Get total count for pagination
-        const totalCount = await query.clone().clearSelect().count('o.id as count').first();
-        const totalOrders = parseInt(totalCount.count);
-        const totalPages = Math.ceil(totalOrders / parseInt(pageSize));
-        const currentPage = Math.max(1, Math.min(parseInt(page), totalPages || 1));
-        const offset = (currentPage - 1) * parseInt(pageSize);
+        const totalCountResult = await query.clone().clearSelect().count('o.id as count').first();
+        const totalOrders = parseInt(totalCountResult.count, 10);
+        const totalPages = Math.ceil(totalOrders / pageSize);
 
-        // Get orders with pagination
-        const orders = await query
+        const orders = await query.clone()
           .orderBy('o.created_at', 'desc')
-          .limit(parseInt(pageSize))
-          .offset(offset);
+          .limit(pageSize)
+          .offset((page - 1) * pageSize);
+          
+        const businesses = await db('groups').where({ user_id: userId }).distinct('business_id', 'business_name');
 
-        res.render('orders', { 
-          orders, 
-          businesses, 
-          userId,
+        // Chart Data
+        const baseChartQuery = db('orders as o').join('groups as g', 'o.business_id', 'g.business_id').where('g.user_id', userId);
+        
+        const statusCounts = await baseChartQuery.clone().groupBy('o.status').select('o.status', db.raw('count(*) as count'));
+        const ordersByBusiness = await baseChartQuery.clone().groupBy('g.business_name').select('g.business_name', db.raw('count(*) as count'));
+        
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const recentTrends = await baseChartQuery.clone()
+          .where('o.created_at', '>=', sevenDaysAgo)
+          .groupByRaw('date(o.created_at)')
+          .orderByRaw('date(o.created_at)')
+          .select(db.raw('date(o.created_at) as date'), db.raw('count(*) as count'));
+
+        res.render('orders', {
+          title: 'Orders Management',
+          orders,
+          businesses,
+          totalOrders,
+          totalPages,
+          page: parseInt(page, 10),
+          pageSize: parseInt(pageSize, 10),
           selectedBusiness: business,
           selectedStatus: status,
           search,
-          page: currentPage,
-          pageSize: parseInt(pageSize),
-          totalPages,
-          totalOrders
+          userId,
+          query: req.query,
+          chartData: {
+            statusCounts,
+            ordersByBusiness,
+            recentTrends
+          }
         });
       } catch (error) {
         logger.error('Orders page error:', error);
-        res.render('error', { error: 'Failed to load orders.' });
+        res.status(500).render('error', { message: 'Failed to load orders page.' });
       }
     });
 
