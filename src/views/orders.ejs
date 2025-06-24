@@ -7,36 +7,32 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="/css/orders-dashboard.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/date-fns"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 </head>
 <body>
     <!-- Header -->
     <header class="header">
         <div class="header-content">
-            <a href="/dashboard" class="logo-section" style="text-decoration: none; display: flex; align-items: center; gap: 0.75rem;">
-                <div class="logo-icon">
-                    <i class="fas fa-rocket"></i>
-                </div>
-                <div class="logo-text">
-                    <span class="main-title">Delivery Bot</span>
-                    <span class="sub-title">Orders Management</span>
-                </div>
-            </a>
-            <div class="header-actions">
-                <!-- Navigation Links -->
+            <div class="header-left">
+                <a href="/dashboard" class="logo-section">
+                    <div class="logo-icon">
+                        <i class="fab fa-whatsapp"></i>
+                    </div>
+                    <span class="logo-text main-title">Delivery Bot</span>
+                </a>
+            </div>
+            <div class="header-center">
                 <a href="/dashboard" class="nav-link">Dashboard</a>
                 <a href="/orders" class="nav-link active">Orders</a>
                 <a href="/groups" class="nav-link">Groups</a>
                 <a href="/businesses" class="nav-link">Businesses</a>
-
-                <div class="separator"></div>
-
-                <!-- Icon Buttons -->
-                <button class="btn-icon" id="themeToggle">
+            </div>
+            <div class="header-right">
+                <button class="btn btn-icon" id="themeToggle">
                     <i class="fas fa-moon"></i>
                 </button>
                 <div class="dropdown">
-                    <button class="btn-icon" id="profileDropdown">
+                    <button class="btn btn-icon" id="profileDropdown">
                         <i class="fas fa-user"></i>
                     </button>
                     <div class="dropdown-content" id="profileMenu">
@@ -50,7 +46,7 @@
 
     <main class="main-content">
         <!-- Page Header -->
-        <div class="page-header">
+        <div class="page-header scroll-reveal">
             <div>
                 <h1 class="page-title">Orders Overview</h1>
                 <p class="page-subtitle">Manage and track all your business orders</p>
@@ -62,10 +58,10 @@
                     </button>
                     <div class="dropdown-content" id="exportMenu">
                         <a href="/api/export/orders?format=csv&userId=<%= userId %>&<%= new URLSearchParams(query).toString() %>" class="dropdown-item">
-                            <i class="fas fa-file-csv"></i> Export as CSV
+                            <i class="fas fa-file-csv"></i> as CSV
                         </a>
                         <a href="/api/export/orders?format=json&userId=<%= userId %>&<%= new URLSearchParams(query).toString() %>" class="dropdown-item">
-                            <i class="fas fa-file-code"></i> Export as JSON
+                            <i class="fas fa-file-code"></i> as JSON
                         </a>
                     </div>
                 </div>
@@ -74,21 +70,25 @@
 
         <!-- Analytics Charts -->
         <div class="charts-grid">
-            <div class="chart-card">
-                <canvas id="statusChart"></canvas>
+            <div class="chart-card scroll-reveal">
+                <div class="chart-container">
+                    <canvas id="statusChart"></canvas>
+                </div>
             </div>
-            <div class="chart-card">
-                <canvas id="businessChart"></canvas>
+            <div class="chart-card scroll-reveal">
+                <div class="chart-container">
+                    <canvas id="businessChart"></canvas>
+                </div>
             </div>
         </div>
-        <div class="content-card trend-chart-card">
-             <div class="card-content">
+        <div class="content-card scroll-reveal">
+             <div class="card-content chart-container" style="min-height: 250px;">
                 <canvas id="trendChart"></canvas>
             </div>
         </div>
-
+        
         <!-- Filters -->
-        <div class="content-card">
+        <div class="content-card scroll-reveal">
             <div class="card-header">
                 <h3 class="card-title">
                     <i class="fas fa-filter"></i> Filters
@@ -96,19 +96,19 @@
             </div>
             <div class="card-content">
                 <form class="filters-form" id="filtersForm">
-            <input type="hidden" name="userId" value="<%= userId %>">
-            
+                    <input type="hidden" name="userId" value="<%= userId %>">
+                    
                     <div class="form-group">
                         <label class="form-label" for="businessFilter">Business</label>
                         <select class="form-select" name="business" id="businessFilter">
-                <option value="">All Businesses</option>
+                            <option value="">All Businesses</option>
                             <% businesses.forEach(function(biz) { %>
                                 <option value="<%= biz.business_id %>" <%= selectedBusiness == biz.business_id ? 'selected' : '' %>>
                                     <%= biz.business_name %>
-                  </option>
-                <% }); %>
-              </select>
-            </div>
+                                </option>
+                            <% }); %>
+                        </select>
+                    </div>
 
                     <div class="form-group">
                         <label class="form-label" for="statusFilter">Status</label>
@@ -118,133 +118,150 @@
                             <option value="processing" <%= selectedStatus == 'processing' ? 'selected' : '' %>>Processing</option>
                             <option value="delivered" <%= selectedStatus == 'delivered' ? 'selected' : '' %>>Delivered</option>
                             <option value="cancelled" <%= selectedStatus == 'cancelled' ? 'selected' : '' %>>Cancelled</option>
-              </select>
-            </div>
+                        </select>
+                    </div>
 
                     <div class="form-group">
                         <label class="form-label" for="searchFilter">Search</label>
                         <input type="text" class="form-input" name="search" id="searchFilter"
                                placeholder="Customer name or order ID" value="<%= search || '' %>">
-            </div>
+                    </div>
 
                     <div class="form-group">
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-search"></i> Apply Filters
+                            <i class="fas fa-search"></i> Apply
                         </button>
+                    </div>
+                </form>
             </div>
-          </form>
         </div>
-      </div>
 
-      <!-- Orders Table -->
-        <div class="content-card">
+        <!-- Orders Table -->
+        <div class="content-card scroll-reveal">
             <div class="card-header">
                 <h3 class="card-title">
                     <i class="fas fa-box"></i> Orders (<%= totalOrders %>)
                 </h3>
                 <div class="header-actions-right">
-                    <form id="pageSizeForm">
+                    <form id="pageSizeForm" class="d-flex align-items-center">
                         <select class="form-select" style="width: auto;" name="pageSize" onchange="document.getElementById('pageSizeForm').submit()">
-              <option value="10" <%= pageSize == 10 ? 'selected' : '' %>>10 per page</option>
-              <option value="25" <%= pageSize == 25 ? 'selected' : '' %>>25 per page</option>
-              <option value="50" <%= pageSize == 50 ? 'selected' : '' %>>50 per page</option>
-            </select>
+                            <option value="10" <%= pageSize == 10 ? 'selected' : '' %>>10 per page</option>
+                            <option value="25" <%= pageSize == 25 ? 'selected' : '' %>>25 per page</option>
+                            <option value="50" <%= pageSize == 50 ? 'selected' : '' %>>50 per page</option>
+                        </select>
                         <% for(let key in query) { %>
-                            <% if (key !== 'pageSize') { %>
+                            <% if (key !== 'pageSize' && key !== 'page') { %>
                                 <input type="hidden" name="<%= key %>" value="<%= query[key] %>">
                             <% } %>
                         <% } %>
                     </form>
-          </div>
-        </div>
+                </div>
+            </div>
             <div class="card-content">
                 <div class="table-container">
                     <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Order ID</th>
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
                                 <th>Business</th>
-                  <th>Customer</th>
-                  <th>Status</th>
+                                <th>Customer</th>
+                                <th>Status</th>
                                 <th>Created</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                             <% if (orders && orders.length) { %>
                                 <% orders.forEach(function(order) { %>
-                    <tr>
+                                    <tr>
                                         <td><strong><%= order.order_id %></strong></td>
                                         <td><span class="business-badge"><%= order.business_name %></span></td>
                                         <td><%= order.customer_name %></td>
-                      <td>
+                                        <td>
                                             <span class="status-badge <%= order.status %>"><%= order.status %></span>
-                      </td>
-                                        <td><%= new Date(order.created_at).toLocaleString() %></td>
+                                        </td>
+                                        <td><%= new Date(order.created_at).toLocaleDateString() %></td>
                                         <td>
                                             <div class="btn-group">
                                                 <button class="btn btn-sm btn-outline" onclick="viewOrder('<%= order.id %>')">
-                                                    <i class="fas fa-eye"></i> View
-                        </button>
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
                                                 <button class="btn btn-sm btn-outline" onclick="editOrder('<%= order.id %>')">
-                                                    <i class="fas fa-edit"></i> Edit
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  <% }); %>
-                <% } else { %>
-                  <tr>
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            <% } else { %>
+                                <tr>
                                     <td colspan="6" class="no-orders">
                                         <i class="fas fa-box-open"></i>
                                         <p>No orders found matching your criteria.</p>
-                    </td>
-                  </tr>
-                <% } %>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Pagination -->
-      <% if (totalPages > 1) { %>
-            <div class="pagination">
-                <div class="pagination-info">
-                    Showing <%= (page - 1) * pageSize + 1 %> to <%= Math.min(page * pageSize, totalOrders) %> of <%= totalOrders %> orders
-          </div>
-                <div class="pagination-nav">
-                    <a href="?<%= new URLSearchParams({ ...query, page: page - 1 }).toString() %>" 
-                       class="pagination-btn <%= page <= 1 ? 'disabled' : '' %>">
-                    <i class="fas fa-chevron-left"></i> Previous
-                  </a>
-                    <% for(let i = 1; i <= totalPages; i++) { %>
-                        <a href="?<%= new URLSearchParams({ ...query, page: i }).toString() %>" 
-                           class="pagination-btn <%= i === page ? 'active' : '' %>"><%= i %></a>
-              <% } %>
-                    <a href="?<%= new URLSearchParams({ ...query, page: page + 1 }).toString() %>" 
-                       class="pagination-btn <%= page >= totalPages ? 'disabled' : '' %>">
-                    Next <i class="fas fa-chevron-right"></i>
-                  </a>
+                                    </td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
                 </div>
+                 <!-- Pagination -->
+                <% if (totalPages > 1) { %>
+                    <div class="pagination">
+                        <div class="pagination-info">
+                            Showing <%= (page - 1) * pageSize + 1 %> to <%= Math.min(page * pageSize, totalOrders) %> of <%= totalOrders %> orders
+                        </div>
+                        <nav class="pagination-nav">
+                            <a href="?<%= new URLSearchParams({ ...query, page: page - 1 }).toString() %>" 
+                               class="pagination-btn <%= page <= 1 ? 'disabled' : '' %>">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                            <% 
+                                const maxPagesToShow = 5;
+                                let startPage = Math.max(1, page - Math.floor(maxPagesToShow / 2));
+                                let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+                                if (endPage - startPage + 1 < maxPagesToShow) {
+                                  startPage = Math.max(1, endPage - maxPagesToShow + 1);
+                                }
+                            %>
+                            <% if (startPage > 1) { %>
+                                <a href="?<%= new URLSearchParams({ ...query, page: 1 }).toString() %>" class="pagination-btn">1</a>
+                                <% if (startPage > 2) { %><span class="pagination-btn disabled">...</span><% } %>
+                            <% } %>
+                            
+                            <% for(let i = startPage; i <= endPage; i++) { %>
+                                <a href="?<%= new URLSearchParams({ ...query, page: i }).toString() %>" 
+                                   class="pagination-btn <%= i === page ? 'active' : '' %>"><%= i %></a>
+                            <% } %>
+                            
+                            <% if (endPage < totalPages) { %>
+                                <% if (endPage < totalPages - 1) { %><span class="pagination-btn disabled">...</span><% } %>
+                                <a href="?<%= new URLSearchParams({ ...query, page: totalPages }).toString() %>" class="pagination-btn"><%= totalPages %></a>
+                            <% } %>
+                            <a href="?<%= new URLSearchParams({ ...query, page: page + 1 }).toString() %>" 
+                               class="pagination-btn <%= page >= totalPages ? 'disabled' : '' %>">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </nav>
+                    </div>
+                <% } %>
+            </div>
         </div>
-      <% } %>
     </main>
 
-<!-- Order Details Modal -->
+    <!-- Order Details Modal -->
     <div id="orderModal" class="modal-overlay">
-    <div class="modal-content">
-      <div class="modal-header">
+        <div class="modal-content">
+            <div class="modal-header">
                 <h3 class="modal-title">Order Details</h3>
                 <button class="close-modal" onclick="closeModal('orderModal')">&times;</button>
             </div>
             <div class="modal-body" id="orderModalBody">
                 <!-- Order details will be loaded here -->
+            </div>
+        </div>
     </div>
-  </div>
-</div>
-
-<script>
+    
+    <script>
         // Dropdown functionality
         function setupDropdown(buttonId, menuId) {
             const button = document.getElementById(buttonId);
@@ -269,32 +286,36 @@
         const themeToggle = document.getElementById('themeToggle');
         const html = document.documentElement;
         const savedTheme = localStorage.getItem('theme') || 'light';
-        html.setAttribute('data-theme', savedTheme);
-        themeToggle.querySelector('i').className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        
+        function applyTheme(theme) {
+            html.setAttribute('data-theme', theme);
+            themeToggle.querySelector('i').className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            localStorage.setItem('theme', theme);
+            if (window.charts) {
+                Object.values(window.charts).forEach(chart => {
+                    updateChartTheme(chart, theme);
+                });
+            }
+        }
+
         themeToggle.addEventListener('click', () => {
             const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            themeToggle.querySelector('i').className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            applyTheme(newTheme);
         });
 
         // Modal functionality
-        function openModal(modalId) {
-            document.getElementById(modalId).classList.add('show');
-        }
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('show');
-  }
+        function openModal(modalId) { document.getElementById(modalId).classList.add('show'); }
+        function closeModal(modalId) { document.getElementById(modalId).classList.remove('show'); }
 
-  async function viewOrder(orderId) {
+        async function viewOrder(orderId) {
             const modalBody = document.getElementById('orderModalBody');
             modalBody.innerHTML = '<p>Loading order details...</p>';
             openModal('orderModal');
-    try {
+            try {
                 const response = await fetch(`/api/orders/${orderId}?userId=<%= userId %>`);
                 if (!response.ok) throw new Error('Failed to fetch');
-      const order = await response.json();
-      
+                const order = await response.json();
+                
                 let itemsHtml = 'No items listed.';
                 if (order.items && order.items.length) {
                     itemsHtml = `<ul>${order.items.map(item => `<li>${item.name} (x${item.quantity}) - $${item.price}</li>`).join('')}</ul>`;
@@ -312,8 +333,8 @@
                     <p><strong>Total Price:</strong> $${order.total_price}</p>
                     <p><strong>Created:</strong> ${new Date(order.created_at).toLocaleString()}</p>
                 `;
-    } catch (error) {
-                modalBody.innerHTML = '<p class="text-danger">Failed to load order details.</p>';
+            } catch (error) {
+                modalBody.innerHTML = '<p style="color: var(--danger-color)">Failed to load order details.</p>';
             }
         }
 
@@ -322,14 +343,32 @@
             alert('Edit functionality coming soon for order: ' + orderId);
         }
 
-        // Charting
+        // Scroll Reveal Animation
         document.addEventListener('DOMContentLoaded', () => {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            document.querySelectorAll('.scroll-reveal').forEach(el => {
+                observer.observe(el);
+            });
+
+             // Charting
             const chartData = <%- JSON.stringify(chartData || {}) %>;
+            window.charts = {};
+
+            const isDark = savedTheme === 'dark';
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            const textColor = isDark ? '#f8fafc' : '#475569';
 
             // 1. Status Distribution Chart
             const statusCtx = document.getElementById('statusChart');
             if (statusCtx && chartData.statusCounts) {
-                new Chart(statusCtx, {
+                window.charts.status = new Chart(statusCtx, {
                     type: 'doughnut',
                     data: {
                         labels: chartData.statusCounts.map(s => s.status),
@@ -337,13 +376,15 @@
                             label: 'Order Status',
                             data: chartData.statusCounts.map(s => s.count),
                             backgroundColor: ['#f59e0b', '#3b82f6', '#10b981', '#ef4444'],
+                            borderColor: isDark ? '#1e293b' : '#ffffff',
+                            borderWidth: 4,
                         }]
                     },
                     options: {
-                        responsive: true,
+                        responsive: true, maintainAspectRatio: false,
                         plugins: {
-                            legend: { position: 'top' },
-                            title: { display: true, text: 'Order Status Distribution' }
+                            legend: { position: 'right', labels: { color: textColor } },
+                            title: { display: true, text: 'Order Status Distribution', color: textColor, font: { size: 16 } }
                         }
                     }
                 });
@@ -352,23 +393,28 @@
             // 2. Orders by Business Chart
             const businessCtx = document.getElementById('businessChart');
             if (businessCtx && chartData.ordersByBusiness) {
-                new Chart(businessCtx, {
+                window.charts.business = new Chart(businessCtx, {
                     type: 'bar',
                     data: {
                         labels: chartData.ordersByBusiness.map(b => b.business_name),
                         datasets: [{
                             label: '# of Orders',
                             data: chartData.ordersByBusiness.map(b => b.count),
-                            backgroundColor: '#2563eb',
+                            backgroundColor: 'rgba(79, 70, 229, 0.8)',
+                            borderColor: 'rgba(79, 70, 229, 1)',
+                            borderWidth: 1
                         }]
                     },
                     options: {
-                        responsive: true,
+                        responsive: true, maintainAspectRatio: false,
                         plugins: {
                             legend: { display: false },
-                            title: { display: true, text: 'Orders per Business' }
+                            title: { display: true, text: 'Orders per Business', color: textColor, font: { size: 16 } }
                         },
-                        scales: { y: { beginAtZero: true } }
+                        scales: { 
+                            y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor } },
+                            x: { grid: { display: false }, ticks: { color: textColor } }
+                        }
                     }
                 });
             }
@@ -376,39 +422,62 @@
             // 3. Recent Order Trends Chart
             const trendCtx = document.getElementById('trendChart');
             if (trendCtx && chartData.recentTrends) {
-                 const labels = Array.from({length: 7}, (_, i) => {
-                    const d = new Date();
-                    d.setDate(d.getDate() - i);
-                    return d.toISOString().split('T')[0];
-                }).reverse();
-
-                const dataMap = new Map(chartData.recentTrends.map(t => [new Date(t.date).toISOString().split('T')[0], t.count]));
-                const data = labels.map(label => dataMap.get(label) || 0);
-
-                new Chart(trendCtx, {
+                const trendData = chartData.recentTrends.map(t => ({ x: new Date(t.date), y: t.count }));
+                window.charts.trends = new Chart(trendCtx, {
                     type: 'line',
                     data: {
-                        labels: labels.map(l => dateFns.format(new Date(l), 'MMM d')),
                         datasets: [{
                             label: 'Orders',
-                            data: data,
+                            data: trendData,
                             borderColor: '#10b981',
-                            tension: 0.1,
-                            fill: false
+                            backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                            tension: 0.3,
+                            fill: true
                         }]
                     },
                     options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
+                        responsive: true, maintainAspectRatio: false,
                         plugins: {
                             legend: { display: false },
-                            title: { display: true, text: 'Orders in Last 7 Days' }
+                            title: { display: true, text: 'Orders in Last 7 Days', color: textColor, font: { size: 16 } }
                         },
-                        scales: { y: { beginAtZero: true } }
+                        scales: { 
+                            y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor } },
+                            x: { type: 'time', time: { unit: 'day', tooltipFormat: 'MMM d' }, grid: { display: false }, ticks: { color: textColor } }
+                        }
                     }
                 });
             }
+
+            // Initial theme setup
+            applyTheme(savedTheme);
         });
-</script>
+
+        function updateChartTheme(chart, theme) {
+            const isDark = theme === 'dark';
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+            const textColor = isDark ? '#f8fafc' : '#475569';
+
+            chart.options.plugins.legend.labels.color = textColor;
+            chart.options.plugins.title.color = textColor;
+
+            if (chart.options.scales) {
+                if (chart.options.scales.y) {
+                    chart.options.scales.y.grid.color = gridColor;
+                    chart.options.scales.y.ticks.color = textColor;
+                }
+                if (chart.options.scales.x) {
+                    chart.options.scales.x.ticks.color = textColor;
+                    if(chart.options.scales.x.grid) {
+                        chart.options.scales.x.grid.color = gridColor;
+                    }
+                }
+            }
+             if (chart.config.type === 'doughnut') {
+                chart.data.datasets[0].borderColor = isDark ? '#1e293b' : '#ffffff';
+            }
+            chart.update();
+        }
+    </script>
 </body>
 </html> 
