@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Orders Management - WhatsApp Delivery Bot</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="/css/admin-dashboard.css" rel="stylesheet">
+    <link href="/css/orders-dashboard.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 </head>
@@ -422,14 +422,30 @@
             // 3. Recent Order Trends Chart
             const trendCtx = document.getElementById('trendChart');
             if (trendCtx && chartData.recentTrends) {
-                const trendData = chartData.recentTrends.map(t => ({ x: new Date(t.date), y: t.count }));
+                // Generate labels for the last 7 days
+                const labels = Array.from({ length: 7 }, (_, i) => {
+                    const d = new Date();
+                    d.setDate(d.getDate() - i);
+                    return d;
+                }).reverse();
+
+                const dataMap = new Map(chartData.recentTrends.map(t => [new Date(t.date).toISOString().split('T')[0], t.count]));
+                
+                const trendData = labels.map(label => {
+                    const dateString = label.toISOString().split('T')[0];
+                    return {
+                        x: label,
+                        y: dataMap.get(dateString) || 0
+                    };
+                });
+
                 window.charts.trends = new Chart(trendCtx, {
                     type: 'line',
                     data: {
                         datasets: [{
                             label: 'Orders',
                             data: trendData,
-                            borderColor: '#10b981',
+                            borderColor: '#10b981', // Correct green color
                             backgroundColor: 'rgba(16, 185, 129, 0.2)',
                             tension: 0.3,
                             fill: true
