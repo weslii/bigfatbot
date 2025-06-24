@@ -405,6 +405,10 @@ async function startServer() {
         
         res.render('group-setup', { 
           userId,
+          business: {
+            business_id: result.businessId,
+            setup_identifier: result.setupIdentifier
+          },
           businessName,
           businessId: result.businessId,
           setupCommand
