@@ -55,57 +55,80 @@ body {
 /* Header */
 .header {
     background: var(--surface-color);
-    box-shadow: var(--shadow-sm);
     border-bottom: 1px solid var(--border-color);
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-sm);
 }
 
 .header-content {
-    max-width: 100%; /* Full width */
-    padding: 0 2rem;
-}
-
-.header-nav {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
     display: flex;
-    gap: 1.5rem;
-    margin-left: 2rem;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.header-nav a {
+/* Remove the old nav styles */
+.header-nav {
+    display: none;
+}
+
+/* Styles for the new nav links and icon buttons */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.header-actions .nav-link {
     text-decoration: none;
     color: var(--text-secondary);
     font-weight: 500;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius);
+    transition: all 0.2s ease;
     font-size: 0.9rem;
-    padding: 1.5rem 0;
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s;
 }
 
-.header-nav a:hover {
+.header-actions .nav-link:hover {
     color: var(--primary-color);
-    border-bottom-color: var(--primary-color);
+    background-color: var(--background-color);
 }
 
-.header-nav a.active {
+.header-actions .nav-link.active {
     color: var(--primary-color);
-    border-bottom-color: var(--primary-color);
+    font-weight: 600;
 }
 
-.logo-section .main-title {
-    color: var(--text-primary);
-}
-
-.header-actions .btn {
-    background-color: transparent;
+.header-actions .btn-icon {
+    background-color: var(--surface-color);
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
     width: 40px;
     height: 40px;
     padding: 0;
-    border-radius: 50%;
+    border-radius: var(--radius);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
-.header-actions .btn:hover {
+
+.header-actions .btn-icon:hover {
     background-color: var(--background-color);
     color: var(--primary-color);
+}
+
+.header-actions .separator {
+    width: 1px;
+    height: 24px;
+    background-color: var(--border-color);
+    margin: 0 0.5rem;
 }
 
 /* Main Content */
