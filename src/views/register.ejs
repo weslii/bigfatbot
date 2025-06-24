@@ -207,7 +207,7 @@
         }
         .register-fields-row,
         .form-group {
-            margin-bottom: 1.1rem;
+            margin-bottom: 0.7rem;
         }
         .register-fields-row:last-of-type,
         .form-group:last-of-type {
@@ -231,8 +231,9 @@
             box-sizing: border-box;
         }
         [data-theme="dark"] .form-control {
-            background: rgba(16,25,43,0.35);
+            background: rgba(16,25,43,0.18);
             color: #f8fafc;
+            backdrop-filter: blur(4px);
         }
         .form-control:focus {
             outline: none;
@@ -241,7 +242,7 @@
             box-shadow: 0 0 0 2px rgba(16,185,129,0.08);
         }
         [data-theme="dark"] .form-control:focus {
-            background: rgba(16,25,43,0.45);
+            background: rgba(16,25,43,0.28);
         }
         .form-control:hover {
             border-color: #14b8a6;
@@ -249,7 +250,7 @@
             box-shadow: 0 1px 4px 0 rgba(16,185,129,0.05);
         }
         [data-theme="dark"] .form-control:hover {
-            background: rgba(16,25,43,0.5);
+            background: rgba(16,25,43,0.32);
         }
         .form-control::placeholder {
             color: #64748b;
