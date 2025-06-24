@@ -545,11 +545,10 @@ async function startServer() {
         const businesses = await db.query('groups').where({ user_id: userId }).distinct('business_id', 'business_name');
 
         // Chart Data
-        const knex = db.knex; // Get the raw knex instance
         const baseChartQuery = db.query('orders as o').join('groups as g', 'o.business_id', 'g.business_id').where('g.user_id', userId);
         
-        const statusCounts = await baseChartQuery.clone().groupBy('o.status').select('o.status', knex.raw('count(*) as count'));
-        const ordersByBusiness = await baseChartQuery.clone().groupBy('g.business_name').select('g.business_name', knex.raw('count(*) as count'));
+        const statusCounts = await baseChartQuery.clone().groupBy('o.status').select('o.status', db.query.raw('count(*) as count'));
+        const ordersByBusiness = await baseChartQuery.clone().groupBy('g.business_name').select('g.business_name', db.query.raw('count(*) as count'));
         
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -557,7 +556,7 @@ async function startServer() {
           .where('o.created_at', '>=', sevenDaysAgo)
           .groupByRaw('date(o.created_at)')
           .orderByRaw('date(o.created_at)')
-          .select(knex.raw('date(o.created_at) as date'), knex.raw('count(*) as count'));
+          .select(db.query.raw('date(o.created_at) as date'), db.query.raw('count(*) as count'));
 
         res.render('orders', {
           title: 'Orders Management',
