@@ -269,6 +269,11 @@ app.get('/login', (req, res) => {
 
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
+  logger.info('POST /login - Request received');
+  logger.info('POST /login - Session:', req.session);
+  logger.info('POST /login - Session ID:', req.sessionID);
+  logger.info('POST /login - Cookies:', req.cookies);
+  logger.info('POST /login - Headers:', req.headers);
   if (!email || !password) {
     return res.render('login', { error: 'Email and password are required' });
   }
@@ -288,6 +293,10 @@ app.post('/login', async (req, res) => {
     }
     if (!req.session) {
       logger.error('Session is undefined during login');
+      logger.error('POST /login - Session:', req.session);
+      logger.error('POST /login - Session ID:', req.sessionID);
+      logger.error('POST /login - Cookies:', req.cookies);
+      logger.error('POST /login - Headers:', req.headers);
       return res.render('login', { error: 'Session error. Please try again or contact support.' });
     }
     req.session.userId = user.id;
