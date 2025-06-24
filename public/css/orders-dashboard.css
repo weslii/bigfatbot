@@ -14,9 +14,10 @@
     --text-secondary: #64748b;
     --text-muted: #94a3b8;
     --sidebar-bg: #ffffff;
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.07);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-inset: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
     --radius: 8px;
     --radius-lg: 12px;
 }
@@ -48,7 +49,7 @@ body {
 }
 
 [data-theme="dark"] body {
-    background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #1e293b 100%);
+    background: linear-gradient(180deg, #0b1120 0%, #182235 100%);
     background-attachment: fixed;
 }
 
@@ -215,12 +216,14 @@ body {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     margin-bottom: 1.5rem;
-    box-shadow: var(--shadow-sm);
-    transition: box-shadow 0.3s;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
 }
 
 .content-card:hover {
-    box-shadow: var(--shadow-md);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-color);
 }
 
 .card-header {
@@ -373,8 +376,16 @@ body {
     vertical-align: middle;
 }
 
+.data-table tbody tr {
+    transition: all 0.2s ease;
+}
+
 .data-table tbody tr:hover {
-    background: var(--background-color);
+    background-color: var(--background-color);
+    transform: scale(1.01);
+    box-shadow: 0 0 20px -5px rgb(0 0 0 / 0.1);
+    z-index: 10;
+    position: relative;
 }
 
 .data-table tbody tr:last-child td {
@@ -390,26 +401,28 @@ body {
     font-size: 0.75rem;
     font-weight: 500;
     text-transform: capitalize;
+    background-color: var(--surface-color);
+    border: 1px solid;
 }
 
 .status-badge.pending {
-    background: rgb(251 191 36 / 0.1);
+    border-color: #f59e0b;
     color: #d97706;
 }
 
 .status-badge.processing {
-    background: rgb(59 130 246 / 0.1);
-    color: var(--info-color);
+    border-color: #3b82f6;
+    color: #2563eb;
 }
 
 .status-badge.delivered {
-    background: rgb(16 185 129 / 0.1);
-    color: var(--success-color);
+    border-color: #10b981;
+    color: #059669;
 }
 
 .status-badge.cancelled {
-    background: rgb(239 68 68 / 0.1);
-    color: var(--danger-color);
+    border-color: #ef4444;
+    color: #dc2626;
 }
 
 .business-badge {
@@ -514,11 +527,14 @@ body {
     overflow-y: auto;
     box-shadow: var(--shadow-lg);
     transform: scale(0.95);
-    transition: all 0.3s;
+    transition: all 0.3s ease-out;
+    opacity: 0;
+    transform: translateY(20px);
 }
 
 .modal-overlay.show .modal-content {
-    transform: scale(1);
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .modal-header {
@@ -578,7 +594,8 @@ body {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     padding: 1.5rem;
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
 }
 
 .chart-header {
@@ -702,4 +719,80 @@ body {
 /* Make chart card for trend taller */
 .trend-chart-card .card-content {
     height: 300px;
+}
+
+/* Header logo and text styling */
+.logo-section .main-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+.logo-section .sub-title {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    opacity: 0.8;
+}
+.logo-icon {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+    box-shadow: 0 4px 8px -2px rgb(37 99 235 / 0.5);
+}
+
+/* Add hover effects and shadows */
+.content-card, .chart-card {
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+    border: 1px solid transparent; /* To prevent layout shift */
+}
+[data-theme="dark"] .content-card, [data-theme="dark"] .chart-card {
+     border: 1px solid var(--border-color);
+}
+.content-card:hover, .chart-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-color);
+}
+
+.data-table tbody tr {
+    transition: all 0.2s ease;
+}
+.data-table tbody tr:hover {
+    background-color: var(--background-color);
+    transform: scale(1.01);
+    box-shadow: 0 0 20px -5px rgb(0 0 0 / 0.1);
+    z-index: 10;
+    position: relative;
+}
+
+.btn, .btn-icon, .nav-link {
+    transition: all 0.2s ease-in-out;
+    box-shadow: var(--shadow-sm);
+}
+.btn:hover, .btn-icon:hover, .nav-link:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: var(--shadow-md);
+}
+
+/* Status badges with more flair */
+.status-badge {
+    background-color: var(--surface-color);
+    border: 1px solid;
+    font-weight: 600;
+}
+.status-badge.pending { border-color: #f59e0b; color: #d97706; }
+.status-badge.processing { border-color: #3b82f6; color: #2563eb; }
+.status-badge.delivered { border-color: #10b981; color: #059669; }
+.status-badge.cancelled { border-color: #ef4444; color: #dc2626; }
+
+[data-theme="dark"] .status-badge {
+    background-color: transparent;
+}
+
+/* Make modals slide in */
+.modal-content {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s ease-out;
+}
+.modal-overlay.show .modal-content {
+    opacity: 1;
+    transform: translateY(0);
 } 
