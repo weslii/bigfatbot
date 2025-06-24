@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Orders Management - WhatsApp Delivery Bot</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="/css/orders-dashboard.css" rel="stylesheet">
+    <link href="/css/admin-dashboard.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -21,6 +21,11 @@
                     <span class="sub-title">WhatsApp Delivery Bot</span>
                 </div>
             </a>
+            <nav class="header-nav">
+                <a href="/dashboard" class="nav-link">Dashboard</a>
+                <a href="/groups" class="nav-link">Groups</a>
+                <a href="/businesses" class="nav-link">Businesses</a>
+            </nav>
             <div class="header-actions">
                 <button class="btn btn-secondary" id="themeToggle">
                     <i class="fas fa-moon"></i>
@@ -73,7 +78,7 @@
         </div>
         <div class="content-card">
              <div class="card-content">
-                <canvas id="trendChart" height="100"></canvas>
+                <canvas id="trendChart" height="250"></canvas>
             </div>
         </div>
         
@@ -369,16 +374,17 @@
                  const labels = Array.from({length: 7}, (_, i) => {
                     const d = new Date();
                     d.setDate(d.getDate() - i);
-                    return d.toISOString().split('T')[0];
+                    return d;
                 }).reverse();
 
                 const dataMap = new Map(chartData.recentTrends.map(t => [new Date(t.date).toISOString().split('T')[0], t.count]));
-                const data = labels.map(label => dataMap.get(label) || 0);
+                const data = labels.map(label => dataMap.get(label.toISOString().split('T')[0]) || 0);
+                const formattedLabels = labels.map(d => d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }));
 
                 new Chart(trendCtx, {
                     type: 'line',
                     data: {
-                        labels: labels,
+                        labels: formattedLabels,
                         datasets: [{
                             label: 'Orders',
                             data: data,
@@ -388,6 +394,7 @@
                         }]
                     },
                     options: {
+                        maintainAspectRatio: false,
                         responsive: true,
                         plugins: {
                             legend: { display: false },
