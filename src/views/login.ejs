@@ -32,7 +32,9 @@
             line-height: 1.6;
             transition: background-color 0.3s ease, color 0.3s ease;
             height: 100vh;
-            overflow: hidden;
+        }
+        [data-theme="dark"] body {
+            background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #064e3b 100%);
         }
         [data-theme="dark"] body {
             background: linear-gradient(135deg, #020617 0%, #0f172a 50%, #064e3b 100%);
@@ -185,23 +187,22 @@
             transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
             box-sizing: border-box;
         }
-        .login-card body[data-theme='dark'] input.form-control,
-        .login-card body[data-theme='dark'] input,
-        body[data-theme='dark'] .login-card input.form-control,
-        body[data-theme='dark'] .login-card input {
-            background: rgba(16,25,43,0.18) !important;
-            color: #e5e7eb !important;
-            backdrop-filter: blur(4px) !important;
-            box-shadow: none !important;
-            border: 1px solid #334155 !important;
+        /* Dark mode glassmorphism for inputs */
+        [data-theme="dark"] .form-control {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e5e7eb;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.05);
         }
-        body[data-theme='dark'] .login-card input.form-control:focus,
-        body[data-theme='dark'] .login-card input:focus {
-            background: rgba(16,25,43,0.28) !important;
+        [data-theme="dark"] .form-control:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(16, 185, 129, 0.4);
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.08), 0 4px 12px rgba(0, 0, 0, 0.15);
+            outline: none;
         }
-        body[data-theme='dark'] .login-card input.form-control:hover,
-        body[data-theme='dark'] .login-card input:hover {
-            background: rgba(16,25,43,0.32) !important;
+        [data-theme="dark"] .form-control:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.15);
         }
         .form-control:focus {
             outline: none;
@@ -209,21 +210,18 @@
             background: rgba(255,255,255,0.13);
             box-shadow: 0 0 0 2px rgba(16,185,129,0.08);
         }
-        body[data-theme="dark"] .form-control:focus {
-            background: rgba(16,25,43,0.28) !important;
-        }
         .form-control:hover {
             border-color: #14b8a6;
             background: rgba(20,184,166,0.08);
             box-shadow: 0 1px 4px 0 rgba(16,185,129,0.05);
         }
-        body[data-theme="dark"] .form-control:hover {
-            background: rgba(16,25,43,0.32) !important;
-        }
         .form-control::placeholder {
             color: #64748b;
             font-size: 0.89em;
             opacity: 1;
+        }
+        [data-theme="dark"] .form-control::placeholder {
+            color: #94a3b8;
         }
         .alert {
             padding: 0.75rem 1rem;
@@ -360,4 +358,4 @@
         }
     </script>
 </body>
-</html> 
+</html>
