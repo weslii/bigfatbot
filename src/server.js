@@ -291,7 +291,13 @@ app.post('/login', async (req, res) => {
       return res.render('login', { error: 'Session error. Please try again or contact support.' });
     }
     req.session.userId = user.id;
-    res.redirect(`/dashboard?userId=${user.id}`);
+    req.session.save((err) => {
+      if (err) {
+        logger.error('Error saving session:', err);
+        return res.render('login', { error: 'Login failed. Please try again.' });
+      }
+      res.redirect(`/dashboard?userId=${user.id}`);
+    });
   } catch (error) {
     logger.error('User login error:', error);
     res.render('login', { error: 'Login failed. Please try again.' });
