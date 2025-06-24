@@ -141,8 +141,8 @@
             margin-bottom: 1.2rem;
         }
         .setup-almost {
-            font-size: 1.18rem;
-            font-weight: 800;
+            font-size: 1.7rem;
+            font-weight: 900;
             letter-spacing: -0.5px;
             color: #10b981;
             margin-bottom: 0.1rem;
@@ -157,7 +157,7 @@
         }
         .setup-cards {
             width: 100%;
-            max-width: 620px;
+            max-width: 600px;
             display: flex;
             flex-direction: column;
             gap: 1.3rem;
@@ -179,7 +179,7 @@
             box-shadow: 0 2px 12px rgba(16,185,129,0.07);
             text-align: center;
             letter-spacing: 0.01em;
-            max-width: 420px;
+            max-width: 540px;
         }
         .success-banner i {
             font-size: 1.13rem;
@@ -261,40 +261,41 @@
         .copy-card {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            background: linear-gradient(90deg, #232e3b 0%, #10b981 100%);
+            background: linear-gradient(90deg, #f1f5f9 60%, #e0f2fe 100%);
             border-radius: 0.7rem;
-            border: none;
-            padding: 0.18rem 0.18rem 0.18rem 1.1rem;
+            border: 1px solid #e2e8f0;
+            padding: 0.18rem 0.5rem 0.18rem 0.8rem;
             margin: 0.25rem 0 0.05rem 0;
             width: 100%;
+            justify-content: space-between;
             box-shadow: 0 1px 4px rgba(59,130,246,0.04);
             overflow: hidden;
+            box-sizing: border-box;
+            max-width: 100%;
         }
-        [data-theme="light"] .copy-card {
-            background: linear-gradient(90deg, #f1f5f9 0%, #10b981 100%);
+        [data-theme="dark"] .copy-card {
+            background: linear-gradient(90deg, #1e293b 60%, #164e63 100%);
+            border-color: #334155;
         }
         .copy-value {
-            font-family: 'Fira Mono', 'Consolas', monospace;
-            font-size: 0.97em;
-            color: #fff;
-            letter-spacing: 0.5px;
-            word-break: break-all;
-            padding-right: 0.5em;
-            white-space: pre-wrap;
+            min-width: 0;
+            max-width: 70%;
             overflow-wrap: break-word;
+            word-break: break-all;
         }
-        [data-theme="light"] .copy-value {
-            color: #334155;
+        [data-theme="dark"] .copy-value {
+            color: #e0e7ef;
         }
         .copy-btn {
+            flex-shrink: 0;
+            max-width: 30%;
             background: #10b981;
             color: #fff;
             font-weight: 600;
-            font-size: 0.97em;
+            font-size: 0.89em;
             border-radius: 0.5em;
             border: none;
-            padding: 0.22em 1.3em;
+            padding: 0.22em 0.9em;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -302,7 +303,6 @@
             transition: background 0.18s, color 0.18s, box-shadow 0.18s;
             box-shadow: 0 1px 4px rgba(16,185,129,0.08);
             white-space: nowrap;
-            margin-left: auto;
         }
         .copy-btn:hover, .copy-btn:focus {
             background: #059669;
@@ -444,6 +444,9 @@
                 margin-bottom: 0.5rem;
                 margin-top: 0;
             }
+            .copy-card {
+                padding: 0.18rem 0.2rem 0.18rem 0.5rem;
+            }
         }
     </style>
 </head>
@@ -546,7 +549,7 @@
             </div>
         </div>
     </section>
-    <script>
+<script>
         // Theme toggle functionality
         const themeToggle = document.getElementById('themeToggle');
         const html = document.documentElement;
@@ -565,45 +568,45 @@
             const icon = themeToggle.querySelector('i');
             icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
         }
-        // Load bot number when page loads
-        document.addEventListener('DOMContentLoaded', async function() {
-          try {
-            const response = await fetch('/api/whatsapp/bot-info');
-            const botInfo = await response.json();
-            if (botInfo.success) {
-              document.getElementById('botNumber').textContent = botInfo.number;
-            } else {
-              document.getElementById('botNumber').textContent = 'Not available';
-            }
-          } catch (error) {
-            console.error('Error loading bot info:', error);
-            document.getElementById('botNumber').textContent = 'Error loading';
-          }
-        });
-        function copyBotNumber() {
-            const botNumber = document.querySelector('#botNumber').textContent;
-            if (botNumber === 'Loading...' || botNumber === 'Not available' || botNumber === 'Error loading') {
-                alert('Bot number not available yet. Please try again in a moment.');
-                return;
-            }
-            navigator.clipboard.writeText(botNumber).then(() => {
-                const button = event.target;
-                button.textContent = 'Copied!';
-                setTimeout(() => {
-                    button.textContent = 'Copy';
-                }, 2000);
-            });
-        }
-        function copySetupCommand() {
+// Load bot number when page loads
+document.addEventListener('DOMContentLoaded', async function() {
+  try {
+    const response = await fetch('/api/whatsapp/bot-info');
+    const botInfo = await response.json();
+    if (botInfo.success) {
+      document.getElementById('botNumber').textContent = botInfo.number;
+    } else {
+      document.getElementById('botNumber').textContent = 'Not available';
+    }
+  } catch (error) {
+    console.error('Error loading bot info:', error);
+    document.getElementById('botNumber').textContent = 'Error loading';
+  }
+});
+function copyBotNumber() {
+    const botNumber = document.querySelector('#botNumber').textContent;
+    if (botNumber === 'Loading...' || botNumber === 'Not available' || botNumber === 'Error loading') {
+        alert('Bot number not available yet. Please try again in a moment.');
+        return;
+    }
+    navigator.clipboard.writeText(botNumber).then(() => {
+        const button = event.target;
+        button.textContent = 'Copied!';
+        setTimeout(() => {
+            button.textContent = 'Copy';
+        }, 2000);
+    });
+}
+function copySetupCommand() {
             const command = document.querySelector('.user-select-all').textContent;
-            navigator.clipboard.writeText(command).then(() => {
-                const button = event.target;
-                button.textContent = 'Copied!';
-                setTimeout(() => {
-                    button.textContent = 'Copy';
-                }, 2000);
-            });
-        }
-    </script>
+    navigator.clipboard.writeText(command).then(() => {
+        const button = event.target;
+        button.textContent = 'Copied!';
+        setTimeout(() => {
+            button.textContent = 'Copy';
+        }, 2000);
+    });
+}
+</script>
 </body>
 </html> 
