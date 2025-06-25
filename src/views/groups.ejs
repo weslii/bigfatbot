@@ -40,12 +40,17 @@
 
     <div class="main-content">
         <!-- Debug Information -->
-        <div style="background: #f0f0f0; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; font-family: monospace;">
+        <div style="background: #ff0000; color: white; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; font-family: monospace; font-size: 16px;">
             <h4>Debug Info:</h4>
             <p>Groups count: <%= groups ? groups.length : 'undefined' %></p>
             <p>Businesses count: <%= businesses ? businesses.length : 'undefined' %></p>
             <p>User ID: <%= userId %></p>
             <p>Groups data: <%= JSON.stringify(groups) %></p>
+        </div>
+
+        <div style="background: #00ff00; color: black; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; font-size: 18px;">
+            <h3>TEST - This should be visible in bright green!</h3>
+            <p>If you can see this, the page is loading correctly.</p>
         </div>
 
         <div class="page-header">
@@ -60,33 +65,40 @@
 
         <% const totalGroups = groups.length; %>
         <% const activeBusinesses = new Set(groups.map(g => g.business_id)).size; %>
-        <div class="kpi-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-            <div class="content-card kpi-card scroll-reveal" style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);">
-                <div class="kpi-icon" style="font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.05);"><i class="fas fa-comments"></i></div>
+        
+        <div style="background: #0000ff; color: white; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; font-size: 18px;">
+            <h3>KPI GRID TEST - This should be visible in bright blue!</h3>
+            <p>Total Groups: <%= totalGroups %></p>
+            <p>Active Businesses: <%= activeBusinesses %></p>
+        </div>
+        
+        <div class="kpi-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; background: yellow; padding: 1rem;">
+            <div class="content-card kpi-card scroll-reveal" style="background: red; border: 3px solid black; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); color: white; font-size: 18px;">
+                <div class="kpi-icon" style="font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: white; color: black;"><i class="fas fa-comments"></i></div>
                 <div class="kpi-info">
-                    <h3 style="font-size: 1.5rem; font-weight: 700; color: #1e293b;"><%= totalGroups %></h3>
-                    <p style="font-size: 0.875rem; color: #475569;">Total Groups</p>
+                    <h3 style="font-size: 1.5rem; font-weight: 700; color: white;"><%= totalGroups %></h3>
+                    <p style="font-size: 0.875rem; color: white;">Total Groups</p>
                 </div>
             </div>
-            <div class="content-card kpi-card scroll-reveal" style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);">
-                <div class="kpi-icon" style="font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.05);"><i class="fas fa-store"></i></div>
+            <div class="content-card kpi-card scroll-reveal" style="background: blue; border: 3px solid black; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); color: white; font-size: 18px;">
+                <div class="kpi-icon" style="font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: white; color: black;"><i class="fas fa-store"></i></div>
                 <div class="kpi-info">
-                    <h3 style="font-size: 1.5rem; font-weight: 700; color: #1e293b;"><%= activeBusinesses %></h3>
-                    <p style="font-size: 0.875rem; color: #475569;">Active Businesses</p>
+                    <h3 style="font-size: 1.5rem; font-weight: 700; color: white;"><%= activeBusinesses %></h3>
+                    <p style="font-size: 0.875rem; color: white;">Active Businesses</p>
                 </div>
             </div>
-             <div class="content-card kpi-card scroll-reveal" style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);">
-                <div class="kpi-icon" style="font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.05);"><i class="fas fa-arrow-up"></i></div>
+             <div class="content-card kpi-card scroll-reveal" style="background: green; border: 3px solid black; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); color: white; font-size: 18px;">
+                <div class="kpi-icon" style="font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: white; color: black;"><i class="fas fa-arrow-up"></i></div>
                 <div class="kpi-info">
-                     <h3 style="font-size: 1.5rem; font-weight: 700; color: #1e293b;"><%= groups.filter(g => g.group_type === 'sales').length %></h3>
-                    <p style="font-size: 0.875rem; color: #475569;">Sales Groups</p>
+                     <h3 style="font-size: 1.5rem; font-weight: 700; color: white;"><%= groups.filter(g => g.group_type === 'sales').length %></h3>
+                    <p style="font-size: 0.875rem; color: white;">Sales Groups</p>
                 </div>
             </div>
-             <div class="content-card kpi-card scroll-reveal" style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);">
-                <div class="kpi-icon" style="font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.05);"><i class="fas fa-truck"></i></div>
+             <div class="content-card kpi-card scroll-reveal" style="background: purple; border: 3px solid black; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); color: white; font-size: 18px;">
+                <div class="kpi-icon" style="font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: white; color: black;"><i class="fas fa-truck"></i></div>
                 <div class="kpi-info">
-                     <h3 style="font-size: 1.5rem; font-weight: 700; color: #1e293b;"><%= groups.filter(g => g.group_type === 'delivery').length %></h3>
-                    <p style="font-size: 0.875rem; color: #475569;">Delivery Groups</p>
+                     <h3 style="font-size: 1.5rem; font-weight: 700; color: white;"><%= groups.filter(g => g.group_type === 'delivery').length %></h3>
+                    <p style="font-size: 0.875rem; color: white;">Delivery Groups</p>
                 </div>
             </div>
         </div>
