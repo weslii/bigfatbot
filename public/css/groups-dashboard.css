@@ -697,15 +697,4 @@ select:hover, input:hover, .form-select:hover, .form-input:hover {
 [data-theme="dark"] h3,
 [data-theme="dark"] h5 {
     color: #fff !important;
-}
-
-.business-hover {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  display: inline-block;
-}
-.business-hover:hover {
-  transform: translateY(-4px) scale(1.07);
-  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.12);
-  color: var(--primary-color);
-  text-decoration: none;
 } 

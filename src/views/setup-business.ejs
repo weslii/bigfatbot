@@ -316,120 +316,41 @@
         </div>
     </header>
     <section class="setup-section">
-        <% if (typeof business !== 'undefined' && business) { %>
-            <!-- Group Setup Instructions for Existing Business -->
-            <div class="setup-card">
-                <div>
-                    <div class="setup-title">Setup Groups for <%= business.business_name %></div>
-                    <div class="setup-desc">Configure your WhatsApp groups to start managing deliveries.</div>
-                </div>
-                
-                <!-- Business Info -->
-                <div class="alert alert-info" style="padding: 1rem 1.2rem; display: flex; flex-direction: column; gap: 0.7rem; align-items: flex-start;">
-                    <div style="font-weight: 600; color: #10b981; display: flex; align-items: center; gap: 0.5rem; font-size: 1.05rem;">
-                        <i class="fas fa-building"></i> Business: <%= business.business_name %>
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 0.4rem;">
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <i class="fas fa-info-circle" style="color: #3b82f6;"></i>
-                            <span>You can add up to 2 WhatsApp groups: 1 sales group and 1 delivery group</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Setup Instructions -->
-                <div class="alert alert-info" style="padding: 1rem 1.2rem; display: flex; flex-direction: column; gap: 0.7rem; align-items: flex-start;">
-                    <div style="font-weight: 600; color: #10b981; display: flex; align-items: center; gap: 0.5rem; font-size: 1.05rem;">
-                        <i class="fas fa-info-circle"></i> Setup Instructions
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 0.4rem;">
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <i class="fab fa-whatsapp" style="color: #25D366;"></i>
-                            <span>Add our bot to your WhatsApp groups</span>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <i class="fas fa-terminal" style="color: #3b82f6;"></i>
-                            <span>Type this command in each group:</span>
-                        </div>
-                        <div style="background: rgba(59, 130, 246, 0.1); padding: 0.75rem; border-radius: 8px; margin: 0.5rem 0; display: flex; justify-content: space-between; align-items: center;">
-                            <code style="color: #3b82f6; font-weight: 600;">/setup <%= business.setup_identifier || business.business_id %></code>
-                            <button type="button" class="btn btn-sm" onclick="copySetupCommand()" style="background: #3b82f6; color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem;">Copy</button>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <i class="fas fa-rocket" style="color: #10b981;"></i>
-                            <span>Choose group type: "sales" or "delivery"</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Current Groups Status -->
-                <% if (typeof businessGroups !== 'undefined' && businessGroups && businessGroups.length > 0) { %>
-                    <div class="alert alert-info" style="padding: 1rem 1.2rem; display: flex; flex-direction: column; gap: 0.7rem; align-items: flex-start;">
-                        <div style="font-weight: 600; color: #10b981; display: flex; align-items: center; gap: 0.5rem; font-size: 1.05rem;">
-                            <i class="fas fa-list"></i> Current Groups
-                        </div>
-                        <div style="display: flex; flex-direction: column; gap: 0.4rem;">
-                            <% businessGroups.forEach(group => { %>
-                                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <i class="fas fa-check-circle" style="color: #10b981;"></i>
-                                    <span><%= group.group_name %> (<%= group.group_type %>)</span>
-                                </div>
-                            <% }); %>
-                        </div>
-                    </div>
-                <% } else { %>
-                    <div class="alert alert-info" style="padding: 1rem 1.2rem; display: flex; flex-direction: column; gap: 0.7rem; align-items: flex-start;">
-                        <div style="font-weight: 600; color: #f59e0b; display: flex; align-items: center; gap: 0.5rem; font-size: 1.05rem;">
-                            <i class="fas fa-exclamation-triangle"></i> No Groups Yet
-                        </div>
-                        <div style="display: flex; flex-direction: column; gap: 0.4rem;">
-                            <span>This business doesn't have any WhatsApp groups configured yet.</span>
-                        </div>
-                    </div>
+        <form class="setup-card" action="/setup-business" method="POST">
+            <input type="hidden" name="userId" value="<%= userId %>">
+            <div>
+                <div class="setup-title">Setup Your Business</div>
+                <div class="setup-desc">Enter your business name to get started with WhatsApp Delivery Bot.</div>
+                <% if (typeof error !== 'undefined') { %>
+                    <div class="alert"><%= error %></div>
                 <% } %>
-
-                <a href="/dashboard?userId=<%= userId %>" class="setup-btn" style="text-decoration: none;">
-                    <i class="fas fa-arrow-left"></i> Back to Dashboard
-                </a>
             </div>
-        <% } else { %>
-            <!-- Business Creation Form (for onboarding) -->
-            <form class="setup-card" action="/setup-business" method="POST">
-                <input type="hidden" name="userId" value="<%= userId %>">
-                <div>
-                    <div class="setup-title">Setup Your Business</div>
-                    <div class="setup-desc">Enter your business name to get started with WhatsApp Delivery Bot.</div>
-                    <% if (typeof error !== 'undefined') { %>
-                        <div class="alert"><%= error %></div>
-                    <% } %>
-                </div>
-                <div class="form-group">
-                  <label for="businessName" class="form-label">Business Name</label>
-                    <input type="text" class="form-control" id="businessName" name="businessName" required placeholder="e.g., Acme Delivery Services">
-                  <div class="form-text">This will be used to identify your business in the system</div>
-                </div>
-                <div class="alert alert-info" style="padding: 1rem 1.2rem; display: flex; flex-direction: column; gap: 0.7rem; align-items: flex-start;">
-                    <div style="font-weight: 600; color: #10b981; display: flex; align-items: center; gap: 0.5rem; font-size: 1.05rem;">
-                        <i class="fas fa-info-circle"></i> Next Steps
-                </div>
-                    <div style="display: flex; flex-direction: column; gap: 0.4rem;">
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <i class="fab fa-whatsapp" style="color: #25D366;"></i>
-                            <span>Add our bot to your WhatsApp groups</span>
+            <div class="form-group">
+              <label for="businessName" class="form-label">Business Name</label>
+                <input type="text" class="form-control" id="businessName" name="businessName" required placeholder="e.g., Acme Delivery Services">
+              <div class="form-text">This will be used to identify your business in the system</div>
             </div>
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <i class="fas fa-terminal" style="color: #3b82f6;"></i>
-                            <span>Type the setup command in each group</span>
-          </div>
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <i class="fas fa-rocket" style="color: #10b981;"></i>
-                            <span>Start managing your deliveries!</span>
+            <div class="alert alert-info" style="padding: 1rem 1.2rem; display: flex; flex-direction: column; gap: 0.7rem; align-items: flex-start;">
+                <div style="font-weight: 600; color: #10b981; display: flex; align-items: center; gap: 0.5rem; font-size: 1.05rem;">
+                    <i class="fas fa-info-circle"></i> Next Steps
+            </div>
+                <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fab fa-whatsapp" style="color: #25D366;"></i>
+                        <span>Add our bot to your WhatsApp groups</span>
         </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-terminal" style="color: #3b82f6;"></i>
+                        <span>Type the setup command in each group</span>
       </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-rocket" style="color: #10b981;"></i>
+                        <span>Start managing your deliveries!</span>
     </div>
-                <button type="submit" class="setup-btn">Create Business <i class="fas fa-arrow-right"></i></button>
-            </form>
-        <% } %>
+  </div>
+</div>
+            <button type="submit" class="setup-btn">Create Business <i class="fas fa-arrow-right"></i></button>
+        </form>
     </section>
     <script>
         // Theme toggle functionality
@@ -449,18 +370,6 @@
         function updateThemeIcon(theme) {
             const icon = themeToggle.querySelector('i');
             icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-        }
-
-        // Copy setup command function
-        function copySetupCommand() {
-            const command = document.querySelector('code').textContent;
-            navigator.clipboard.writeText(command).then(() => {
-                const button = event.target;
-                button.textContent = 'Copied!';
-                setTimeout(() => {
-                    button.textContent = 'Copy';
-                }, 2000);
-            });
         }
     </script>
 </body>
