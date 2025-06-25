@@ -1441,7 +1441,7 @@ async function startServer() {
 
         // Get business details with all necessary fields
         const business = await db.query('groups')
-          .select('business_id', 'business_name', 'created_at', 'updated_at', 'setup_identifier', 'description', 'phone', 'email', 'address')
+          .select('business_id', 'business_name', 'created_at', 'setup_identifier')
           .where('business_id', businessId)
           .where('user_id', userId)
           .first();
