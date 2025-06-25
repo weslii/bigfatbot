@@ -258,10 +258,6 @@ body {
     box-shadow: var(--shadow-sm);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
         box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 2px solid #f00 !important;
-    background: #fffbe6 !important;
-    color: #222 !important;
-    z-index: 1000;
 }
 
 .content-card:hover {
@@ -573,7 +569,7 @@ body {
 
 .scroll-reveal.visible {
     opacity: 1;
-    transform: none;
+    transform: translateY(0);
 }
 /* Specific styles for Groups page */
 .group-type-badge {
@@ -701,10 +697,4 @@ select:hover, input:hover, .form-select:hover, .form-input:hover {
 [data-theme="dark"] h3,
 [data-theme="dark"] h5 {
     color: #fff !important;
-}
-
-.stats-grid *, .content-card * {
-  color: inherit !important;
-  opacity: inherit !important;
-  visibility: inherit !important;
 } 
