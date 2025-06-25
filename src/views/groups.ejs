@@ -57,29 +57,29 @@
             <div style="background: var(--card-bg); backdrop-filter: blur(5px); border: 1px solid var(--card-border); border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 1rem;" class="card-hover">
                 <div style="font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.05);"><i class="fas fa-comments"></i></div>
                 <div>
-                    <h3 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin: 0;"><%= totalGroups %></h3>
-                    <p style="font-size: 0.875rem; color: #475569; margin: 0;">Total Groups</p>
+                    <h3 style="font-size: 1.5rem; font-weight: 700; margin: 0;"><%= totalGroups %></h3>
+                    <p style="font-size: 0.875rem; margin: 0;">Total Groups</p>
                 </div>
             </div>
             <div style="background: var(--card-bg); backdrop-filter: blur(5px); border: 1px solid var(--card-border); border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 1rem;" class="card-hover">
                 <div style="font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.05);"><i class="fas fa-store"></i></div>
                 <div>
-                    <h3 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin: 0;"><%= activeBusinesses %></h3>
-                    <p style="font-size: 0.875rem; color: #475569; margin: 0;">Active Businesses</p>
+                    <h3 style="font-size: 1.5rem; font-weight: 700; margin: 0;"><%= activeBusinesses %></h3>
+                    <p style="font-size: 0.875rem; margin: 0;">Active Businesses</p>
                 </div>
             </div>
             <div style="background: var(--card-bg); backdrop-filter: blur(5px); border: 1px solid var(--card-border); border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 1rem;" class="card-hover">
                 <div style="font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.05);"><i class="fas fa-arrow-up"></i></div>
                 <div>
-                    <h3 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin: 0;"><%= groups.filter(g => g.group_type === 'sales').length %></h3>
-                    <p style="font-size: 0.875rem; color: #475569; margin: 0;">Sales Groups</p>
+                    <h3 style="font-size: 1.5rem; font-weight: 700; margin: 0;"><%= groups.filter(g => g.group_type === 'sales').length %></h3>
+                    <p style="font-size: 0.875rem; margin: 0;">Sales Groups</p>
                 </div>
             </div>
             <div style="background: var(--card-bg); backdrop-filter: blur(5px); border: 1px solid var(--card-border); border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 1rem;" class="card-hover">
                 <div style="font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.05);"><i class="fas fa-truck"></i></div>
                 <div>
-                    <h3 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin: 0;"><%= groups.filter(g => g.group_type === 'delivery').length %></h3>
-                    <p style="font-size: 0.875rem; color: #475569; margin: 0;">Delivery Groups</p>
+                    <h3 style="font-size: 1.5rem; font-weight: 700; margin: 0;"><%= groups.filter(g => g.group_type === 'delivery').length %></h3>
+                    <p style="font-size: 0.875rem; margin: 0;">Delivery Groups</p>
                 </div>
             </div>
         </div>
@@ -87,7 +87,7 @@
         <!-- Groups Table -->
         <div style="background: var(--card-bg); backdrop-filter: blur(5px); border: 1px solid var(--card-border); border-radius: 16px; margin-bottom: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);" class="card-hover">
             <div style="padding: 1.5rem; border-bottom: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                <h2 style="font-size: 1.125rem; font-weight: 600; color: #1e293b; margin: 0; display: flex; align-items: center; gap: 0.5rem;"><i class="fas fa-list-alt"></i> All Groups</h2>
+                <h2 style="font-size: 1.125rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 0.5rem;"><i class="fas fa-list-alt"></i> All Groups</h2>
                 <div style="display: flex; gap: 1rem; align-items: flex-end;">
                     <div style="display: flex; flex-direction: column; flex-grow: 1;">
                         <label style="font-size: 0.875rem; font-weight: 500; color: #1e293b; margin-bottom: 0.5rem;">Filter by Business</label>
@@ -113,12 +113,12 @@
                     <table id="groupsTable" style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
                         <thead>
                             <tr>
-                                <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #1e293b; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Business</th>
-                                <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #1e293b; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Group Name</th>
-                                <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #1e293b; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Type</th>
-                                <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #1e293b; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Status</th>
-                                <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #1e293b; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Created</th>
-                                <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #1e293b; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Actions</th>
+                                <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Business</th>
+                                <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Group Name</th>
+                                <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Type</th>
+                                <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Status</th>
+                                <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Created</th>
+                                <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>

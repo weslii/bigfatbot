@@ -482,7 +482,7 @@ body {
 }
 
 [data-theme="dark"] .modal-content {
-    background: #1a1f2e;
+    background: rgba(26, 31, 46, 0.85);
     border: 1px solid #2d3748;
 }
 
@@ -684,4 +684,17 @@ select:hover, input:hover, .form-select:hover, .form-input:hover {
 
 [data-theme="dark"] .text-primary {
     color: #60a5fa !important;
+}
+
+[data-theme="dark"] .kpi-info h3,
+[data-theme="dark"] .kpi-info p {
+    color: #fff;
+}
+
+[data-theme="dark"] .card-title,
+[data-theme="dark"] .data-table th,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h5 {
+    color: #fff !important;
 } 
