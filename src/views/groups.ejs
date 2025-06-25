@@ -54,28 +54,28 @@
         
         <!-- KPI Cards -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-            <div style="background: var(--card-bg); backdrop-filter: blur(5px); border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 1rem;">
+            <div style="background: var(--card-bg); backdrop-filter: blur(5px); border: 1px solid var(--card-border); border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 1rem;">
                 <div style="font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.05);"><i class="fas fa-comments"></i></div>
                 <div>
                     <h3 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin: 0;"><%= totalGroups %></h3>
                     <p style="font-size: 0.875rem; color: #475569; margin: 0;">Total Groups</p>
                 </div>
             </div>
-            <div style="background: var(--card-bg); backdrop-filter: blur(5px); border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 1rem;">
+            <div style="background: var(--card-bg); backdrop-filter: blur(5px); border: 1px solid var(--card-border); border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 1rem;">
                 <div style="font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.05);"><i class="fas fa-store"></i></div>
                 <div>
                     <h3 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin: 0;"><%= activeBusinesses %></h3>
                     <p style="font-size: 0.875rem; color: #475569; margin: 0;">Active Businesses</p>
                 </div>
             </div>
-            <div style="background: var(--card-bg); backdrop-filter: blur(5px); border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 1rem;">
+            <div style="background: var(--card-bg); backdrop-filter: blur(5px); border: 1px solid var(--card-border); border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 1rem;">
                 <div style="font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.05);"><i class="fas fa-arrow-up"></i></div>
                 <div>
                     <h3 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin: 0;"><%= groups.filter(g => g.group_type === 'sales').length %></h3>
                     <p style="font-size: 0.875rem; color: #475569; margin: 0;">Sales Groups</p>
                 </div>
             </div>
-            <div style="background: var(--card-bg); backdrop-filter: blur(5px); border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 1rem;">
+            <div style="background: var(--card-bg); backdrop-filter: blur(5px); border: 1px solid var(--card-border); border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 1rem;">
                 <div style="font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.05);"><i class="fas fa-truck"></i></div>
                 <div>
                     <h3 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin: 0;"><%= groups.filter(g => g.group_type === 'delivery').length %></h3>
@@ -85,13 +85,13 @@
         </div>
 
         <!-- Groups Table -->
-        <div style="background: var(--card-bg); backdrop-filter: blur(5px); border: 1px solid #e2e8f0; border-radius: 16px; margin-bottom: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);">
-            <div style="padding: 1.5rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div style="background: var(--card-bg); backdrop-filter: blur(5px); border: 1px solid var(--card-border); border-radius: 16px; margin-bottom: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);">
+            <div style="padding: 1.5rem; border-bottom: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                 <h2 style="font-size: 1.125rem; font-weight: 600; color: #1e293b; margin: 0; display: flex; align-items: center; gap: 0.5rem;"><i class="fas fa-list-alt"></i> All Groups</h2>
                 <div style="display: flex; gap: 1rem; align-items: flex-end;">
                     <div style="display: flex; flex-direction: column; flex-grow: 1;">
                         <label style="font-size: 0.875rem; font-weight: 500; color: #1e293b; margin-bottom: 0.5rem;">Filter by Business</label>
-                        <select id="businessFilter" style="padding: 0.625rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; background: rgba(241, 245, 249, 0.5); color: #1e293b;">
+                        <select id="businessFilter" style="padding: 0.625rem 0.75rem; border: 1px solid var(--card-border); border-radius: 8px; font-size: 0.875rem; background: rgba(241, 245, 249, 0.5); color: #1e293b;">
                             <option value="">All Businesses</option>
                              <% businesses.forEach(business => { %>
                               <option value="<%= business.business_id %>"><%= business.business_name %></option>
@@ -100,7 +100,7 @@
                     </div>
                      <div style="display: flex; flex-direction: column; flex-grow: 1;">
                         <label style="font-size: 0.875rem; font-weight: 500; color: #1e293b; margin-bottom: 0.5rem;">Filter by Type</label>
-                        <select id="typeFilter" style="padding: 0.625rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; background: rgba(241, 245, 249, 0.5); color: #1e293b;">
+                        <select id="typeFilter" style="padding: 0.625rem 0.75rem; border: 1px solid var(--card-border); border-radius: 8px; font-size: 0.875rem; background: rgba(241, 245, 249, 0.5); color: #1e293b;">
                             <option value="">All Types</option>
                             <option value="sales">Sales</option>
                             <option value="delivery">Delivery</option>
@@ -109,23 +109,23 @@
                 </div>
             </div>
             <div style="padding: 1.5rem;">
-                <div style="overflow-x: auto; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div style="overflow-x: auto; border-radius: 8px; border: 1px solid var(--card-border);">
                     <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
                         <thead>
                             <tr>
-                                <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #1e293b; border-bottom: 1px solid #e2e8f0; white-space: nowrap;">Business</th>
-                                <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #1e293b; border-bottom: 1px solid #e2e8f0; white-space: nowrap;">Group Name</th>
-                                <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #1e293b; border-bottom: 1px solid #e2e8f0; white-space: nowrap;">Type</th>
-                                <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #1e293b; border-bottom: 1px solid #e2e8f0; white-space: nowrap;">Status</th>
-                                <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #1e293b; border-bottom: 1px solid #e2e8f0; white-space: nowrap;">Created</th>
-                                <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #1e293b; border-bottom: 1px solid #e2e8f0; white-space: nowrap;">Actions</th>
+                                <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #1e293b; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Business</th>
+                                <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #1e293b; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Group Name</th>
+                                <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #1e293b; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Type</th>
+                                <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #1e293b; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Status</th>
+                                <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #1e293b; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Created</th>
+                                <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #1e293b; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <% if (groups && groups.length > 0) { %>
                                 <% groups.forEach(group => { %>
                                     <tr data-business="<%= group.business_id %>" data-type="<%= group.group_type %>" style="transition: background-color 0.2s;">
-                                        <td style="padding: 0.75rem 1rem; border-bottom: 1px solid #e2e8f0; vertical-align: middle;">
+                                        <td style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--card-border); vertical-align: middle;">
                                             <div style="display: flex; align-items: center; gap: 0.75rem;">
                                                 <div style="width: 32px; height: 32px; background: #10b981; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600;"><%= group.business_name.charAt(0).toUpperCase() %></div>
                                                 <span><%= group.business_name %></span>
@@ -142,25 +142,25 @@
                                                 <% } %>
                                             </div>
                                         </td>
-                                        <td style="padding: 0.75rem 1rem; border-bottom: 1px solid #e2e8f0; vertical-align: middle;">
+                                        <td style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--card-border); vertical-align: middle;">
                                             <strong><%= group.group_name %></strong><br>
                                             <small style="color: #94a3b8;"><%= group.group_id %></small>
                                         </td>
-                                        <td style="padding: 0.75rem 1rem; border-bottom: 1px solid #e2e8f0; vertical-align: middle;">
+                                        <td style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--card-border); vertical-align: middle;">
                                             <span style="font-size: 0.75rem; font-weight: 500; padding: 0.2rem 0.6rem; border-radius: 8px; text-transform: capitalize; background: rgb(245 158 11 / 0.1); color: #f59e0b;"><%= group.group_type %></span>
                                         </td>
-                                        <td style="padding: 0.75rem 1rem; border-bottom: 1px solid #e2e8f0; vertical-align: middle;">
+                                        <td style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--card-border); vertical-align: middle;">
                                             <span style="display: inline-flex; align-items: center; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; background: rgb(59 130 246 / 0.1); color: #3b82f6;">
                                                 <%= group.is_active ? 'Active' : 'Inactive' %>
                                             </span>
                                         </td>
-                                        <td style="padding: 0.75rem 1rem; border-bottom: 1px solid #e2e8f0; vertical-align: middle;"><%= new Date(group.created_at).toLocaleDateString() %></td>
-                                        <td style="padding: 0.75rem 1rem; border-bottom: 1px solid #e2e8f0; vertical-align: middle;">
+                                        <td style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--card-border); vertical-align: middle;"><%= new Date(group.created_at).toLocaleDateString() %></td>
+                                        <td style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--card-border); vertical-align: middle;">
                                             <div style="display: flex; gap: 0.25rem;">
-                                                <button style="padding: 0.375rem 0.75rem; font-size: 0.8125rem; background: transparent; border: 1px solid #e2e8f0; color: #64748b; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onclick="viewGroup('<%= group.id %>')">
+                                                <button style="padding: 0.375rem 0.75rem; font-size: 0.8125rem; background: transparent; border: 1px solid var(--card-border); color: #64748b; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onclick="viewGroup('<%= group.id %>')">
                                                     <i class="fas fa-eye"></i> View
                                                 </button>
-                                                <button style="padding: 0.375rem 0.75rem; font-size: 0.8125rem; background: transparent; border: 1px solid #e2e8f0; color: #64748b; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onclick="removeGroup('<%= group.id %>')">
+                                                <button style="padding: 0.375rem 0.75rem; font-size: 0.8125rem; background: transparent; border: 1px solid var(--card-border); color: #64748b; border-radius: 8px; cursor: pointer; transition: all 0.2s;" onclick="removeGroup('<%= group.id %>')">
                                                     <i class="fas fa-trash"></i> Remove
                                                 </button>
                                             </div>
