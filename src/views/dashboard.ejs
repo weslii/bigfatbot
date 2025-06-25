@@ -24,19 +24,18 @@
                 <a href="/dashboard" class="nav-link">Dashboard</a>
                 <a href="/orders" class="nav-link">Orders</a>
                 <a href="/groups" class="nav-link">Groups</a>
-                <a href="/settings" class="nav-link">Settings</a>
+                <button class="btn btn-icon" id="theme-toggle" aria-label="Toggle Theme">
+                    <i class="fas fa-sun"></i><i class="fas fa-moon" style="display: none;"></i>
+                </button>
                 <div class="dropdown">
-                    <button class="profile-btn" id="profileDropdown">
-                        <i class="fas fa-user"></i>
-                    </button>
+                    <button class="btn btn-icon" id="profileDropdown"><i class="fas fa-user"></i></button>
                     <div class="dropdown-content" id="profileMenu">
-                        <a href="/settings"><i class="fas fa-cog"></i> Settings</a>
-                        <a href="/logout"><i class="fas fa-sign-out-alt"></i> Log out</a>
+                        <a href="/settings" class="dropdown-item"><i class="fas fa-cog"></i> Settings</a>
+                        <form action="/logout" method="post" class="dropdown-item" style="padding: 0; margin: 0;">
+                            <button type="submit" style="all: unset; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; width: 100%;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                        </form>
                     </div>
                 </div>
-                <button class="icon-btn" id="themeToggle">
-                    <i class="fas fa-moon"></i>
-                </button>
             </div>
         </div>
     </header>
@@ -109,7 +108,7 @@
                                     <h2>My Businesses</h2>
                                     <p>All businesses you manage</p>
                                 </div>
-                                <a href="/add-business" class="primary-btn" style="margin-left:auto;"><i class="fas fa-plus"></i> Add Business</a>
+                                <a href="/add-business" class="primary-btn" style="margin-left:auto;text-decoration:none;"><i class="fas fa-plus"></i> Add Business</a>
                             </div>
                             <div class="card-content">
                                 <% if (businesses && businesses.length) { %>
@@ -130,7 +129,7 @@
                                                             <div class="business-info">
                                                                 <div class="business-avatar"><i class="fas fa-building"></i></div>
                                                                 <div class="business-details">
-                                                                    <div class="business-name"><a href="/business/<%= biz.business_id %>" style="color:inherit;text-decoration:underline;"><%= biz.business_name %></a></div>
+                                                                    <div class="business-name"><a href="/business/<%= biz.business_id %>" style="color:inherit;text-decoration:none;font-size:1.15rem;font-weight:800;text-transform:capitalize;display:inline-block;line-height:1.2;"><%= biz.business_name %></a></div>
                                                                 </div>
                                                             </div>
                                                         </td>
@@ -308,7 +307,7 @@
     </main>
     <script>
         // Theme toggle functionality
-        const themeToggle = document.getElementById('themeToggle');
+        const themeToggle = document.getElementById('theme-toggle');
         const html = document.documentElement;
         const savedTheme = localStorage.getItem('theme') || 'light';
         html.setAttribute('data-theme', savedTheme);
@@ -321,8 +320,10 @@
             updateThemeIcon(newTheme);
         });
         function updateThemeIcon(theme) {
-            const icon = themeToggle.querySelector('i');
-            icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            const sunIcon = themeToggle.querySelector('i:nth-child(1)');
+            const moonIcon = themeToggle.querySelector('i:nth-child(2)');
+            sunIcon.style.display = theme === 'light' ? 'inline' : 'none';
+            moonIcon.style.display = theme === 'dark' ? 'inline' : 'none';
         }
         // Tabs functionality
         const tabBtns = document.querySelectorAll('.tab-btn');
