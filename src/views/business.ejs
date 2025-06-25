@@ -39,7 +39,7 @@
     <main class="main-content">
         <% if (business) { %>
             <!-- Page Header -->
-            <div class="page-header">
+            <div class="page-header scroll-reveal">
                 <div>
                     <h1 class="page-title"><%= business.business_name %></h1>
                     <p class="page-subtitle">Manage your business details, groups, and orders</p>
@@ -53,7 +53,7 @@
 
             <!-- KPI Cards -->
             <div class="stats-grid">
-                <div class="stat-card orders">
+                <div class="stat-card orders scroll-reveal">
                     <div class="stat-header">
                         <span class="stat-title">Total Orders</span>
                         <div class="stat-icon">
@@ -62,7 +62,7 @@
                     </div>
                     <div class="stat-value"><%= businessStats.totalOrders %></div>
                 </div>
-                <div class="stat-card completed">
+                <div class="stat-card completed scroll-reveal">
                     <div class="stat-header">
                         <span class="stat-title">Completed Orders</span>
                         <div class="stat-icon">
@@ -71,7 +71,7 @@
                     </div>
                     <div class="stat-value"><%= businessStats.completedOrders %></div>
                 </div>
-                <div class="stat-card pending">
+                <div class="stat-card pending scroll-reveal">
                     <div class="stat-header">
                         <span class="stat-title">Pending Orders</span>
                         <div class="stat-icon">
@@ -80,7 +80,7 @@
                     </div>
                     <div class="stat-value"><%= businessStats.pendingOrders %></div>
                 </div>
-                <div class="stat-card groups">
+                <div class="stat-card groups scroll-reveal">
                     <div class="stat-header">
                         <span class="stat-title">WhatsApp Groups</span>
                         <div class="stat-icon">
@@ -92,7 +92,7 @@
             </div>
 
             <!-- Business Information -->
-            <div class="content-card">
+            <div class="content-card scroll-reveal">
                 <div class="card-header">
                     <h3 class="card-title">
                         <i class="fas fa-info-circle"></i> Business Information
@@ -120,7 +120,7 @@
             </div>
 
             <!-- Business Details Sidebar -->
-            <div class="content-card">
+            <div class="content-card scroll-reveal">
                 <div class="card-header">
                     <h3 class="card-title">
                         <i class="fas fa-cog"></i> Business Details
@@ -155,7 +155,7 @@
             </div>
 
             <!-- WhatsApp Groups -->
-            <div class="content-card">
+            <div class="content-card scroll-reveal">
                 <div class="card-header">
                     <h3 class="card-title">
                         <i class="fas fa-comments"></i> WhatsApp Groups
@@ -222,7 +222,7 @@
             </div>
 
             <!-- Recent Orders -->
-            <div class="content-card">
+            <div class="content-card scroll-reveal">
                 <div class="card-header">
                     <h3 class="card-title">
                         <i class="fas fa-box"></i> Recent Orders
@@ -293,7 +293,7 @@
             </div>
         <% } else { %>
             <!-- Add New Business Form -->
-            <div class="page-header">
+            <div class="page-header scroll-reveal">
                 <div>
                     <h1 class="page-title">Add New Business</h1>
                     <p class="page-subtitle">Create a new business to start managing orders</p>
@@ -786,6 +786,29 @@
         setupDropdown('profileDropdown', 'profileMenu');
         setupDropdown('exportDropdown', 'exportMenu');
         window.addEventListener('click', () => document.querySelectorAll('.dropdown-content.show').forEach(m => m.classList.remove('show')));
+
+        // Scroll reveal functionality
+        function handleScrollReveal() {
+            const scrollRevealElements = document.querySelectorAll('.scroll-reveal');
+            
+            scrollRevealElements.forEach(element => {
+                const elementTop = element.getBoundingClientRect().top;
+                const elementVisible = 150;
+                
+                if (elementTop < window.innerHeight - elementVisible) {
+                    element.classList.add('visible');
+                }
+            });
+        }
+
+        // Initial check for elements in viewport
+        handleScrollReveal();
+        
+        // Add scroll event listener
+        window.addEventListener('scroll', handleScrollReveal);
+        
+        // Add resize event listener to handle responsive changes
+        window.addEventListener('resize', handleScrollReveal);
     });
 
     // Business form submission
