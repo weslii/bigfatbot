@@ -15,36 +15,25 @@
         <div class="header-content">
             <div class="header-left">
                 <a href="/dashboard" class="logo-section">
-                    <div class="logo-icon">
-                        <i class="fab fa-whatsapp"></i>
+                    <div class="logo-text">
+                        <span class="main-title" style="color: var(--primary-color); font-weight: 700; font-size: 1.5rem;">Orders Overview</span>
                     </div>
-                    <span class="logo-text main-title">Delivery Bot</span>
                 </a>
             </div>
-            
+
             <div class="header-right">
-                 <div class="dropdown">
-                    <button class="btn btn-icon" id="navMenuDropdown">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    <div class="dropdown-content" id="navMenu">
-                        <a href="/dashboard" class="dropdown-item">Dashboard</a>
-                        <a href="/orders" class="dropdown-item active">Orders</a>
-                        <a href="/groups" class="dropdown-item">Groups</a>
-                        <a href="/businesses" class="dropdown-item">Businesses</a>
-                    </div>
-                </div>
-                <button class="btn btn-icon" id="themeToggle">
-                    <i class="fas fa-moon"></i>
+                <a href="/settings" class="nav-link">Settings</a>
+                <form action="/logout" method="post" style="margin: 0;">
+                    <button type="submit" class="nav-link" style="background: none; border: none; cursor: pointer;">Logout</button>
+                </form>
+                <button class="btn btn-icon" id="theme-toggle" aria-label="Toggle Theme">
+                    <i class="fas fa-sun"></i>
+                    <i class="fas fa-moon" style="display: none;"></i>
                 </button>
-                <div class="dropdown">
-                    <button class="btn btn-icon" id="profileDropdown">
-                        <i class="fas fa-user"></i>
+                <div class="profile-dropdown">
+                    <button class="btn btn-icon profile-btn">
+                        <img src="/placeholder-user.jpg" alt="User" class="profile-img">
                     </button>
-                    <div class="dropdown-content" id="profileMenu">
-                        <a href="/settings" class="dropdown-item"><i class="fas fa-cog"></i> Settings</a>
-                        <a href="/logout" class="dropdown-item"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                    </div>
                 </div>
             </div>
         </div>
@@ -69,11 +58,11 @@
                         <a href="/api/export/orders?format=json&userId=<%= userId %>&<%= new URLSearchParams(query).toString() %>" class="dropdown-item">
                             <i class="fas fa-file-code"></i> as JSON
                         </a>
-                    </div>
-                </div>
             </div>
+          </div>
         </div>
-
+      </div>
+      
         <!-- Analytics Charts -->
         <div class="charts-grid">
             <div class="chart-card scroll-reveal">
@@ -86,14 +75,14 @@
                     <canvas id="businessChart"></canvas>
                 </div>
             </div>
-        </div>
+          </div>
         <div class="content-card scroll-reveal">
              <div class="card-content chart-container" style="min-height: 250px;">
                 <canvas id="trendChart"></canvas>
-            </div>
         </div>
-        
-        <!-- Filters -->
+      </div>
+
+      <!-- Filters -->
         <div class="content-card scroll-reveal">
             <div class="card-header">
                 <h3 class="card-title">
@@ -102,19 +91,19 @@
             </div>
             <div class="card-content">
                 <form class="filters-form" id="filtersForm">
-                    <input type="hidden" name="userId" value="<%= userId %>">
-                    
+            <input type="hidden" name="userId" value="<%= userId %>">
+            
                     <div class="form-group">
                         <label class="form-label" for="businessFilter">Business</label>
                         <select class="form-select" name="business" id="businessFilter">
-                            <option value="">All Businesses</option>
+                <option value="">All Businesses</option>
                             <% businesses.forEach(function(biz) { %>
                                 <option value="<%= biz.business_id %>" <%= selectedBusiness == biz.business_id ? 'selected' : '' %>>
                                     <%= biz.business_name %>
-                                </option>
-                            <% }); %>
-                        </select>
-                    </div>
+                  </option>
+                <% }); %>
+              </select>
+            </div>
 
                     <div class="form-group">
                         <label class="form-label" for="statusFilter">Status</label>
@@ -124,25 +113,25 @@
                             <option value="processing" <%= selectedStatus == 'processing' ? 'selected' : '' %>>Processing</option>
                             <option value="delivered" <%= selectedStatus == 'delivered' ? 'selected' : '' %>>Delivered</option>
                             <option value="cancelled" <%= selectedStatus == 'cancelled' ? 'selected' : '' %>>Cancelled</option>
-                        </select>
-                    </div>
+              </select>
+            </div>
 
                     <div class="form-group">
                         <label class="form-label" for="searchFilter">Search</label>
                         <input type="text" class="form-input" name="search" id="searchFilter"
                                placeholder="Customer name or order ID" value="<%= search || '' %>">
-                    </div>
+            </div>
 
                     <div class="form-group">
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-search"></i> Apply
                         </button>
-                    </div>
-                </form>
             </div>
+          </form>
         </div>
+      </div>
 
-        <!-- Orders Table -->
+      <!-- Orders Table -->
         <div class="content-card scroll-reveal">
             <div class="card-header">
                 <h3 class="card-title">
@@ -151,71 +140,71 @@
                 <div class="header-actions-right">
                     <form id="pageSizeForm" class="d-flex align-items-center">
                         <select class="form-select" style="width: auto;" name="pageSize" onchange="document.getElementById('pageSizeForm').submit()">
-                            <option value="10" <%= pageSize == 10 ? 'selected' : '' %>>10 per page</option>
-                            <option value="25" <%= pageSize == 25 ? 'selected' : '' %>>25 per page</option>
-                            <option value="50" <%= pageSize == 50 ? 'selected' : '' %>>50 per page</option>
-                        </select>
+              <option value="10" <%= pageSize == 10 ? 'selected' : '' %>>10 per page</option>
+              <option value="25" <%= pageSize == 25 ? 'selected' : '' %>>25 per page</option>
+              <option value="50" <%= pageSize == 50 ? 'selected' : '' %>>50 per page</option>
+            </select>
                         <% for(let key in query) { %>
                             <% if (key !== 'pageSize' && key !== 'page') { %>
                                 <input type="hidden" name="<%= key %>" value="<%= query[key] %>">
                             <% } %>
                         <% } %>
                     </form>
-                </div>
-            </div>
+          </div>
+        </div>
             <div class="card-content">
                 <div class="table-container">
                     <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Order ID</th>
+              <thead>
+                <tr>
+                  <th>Order ID</th>
                                 <th>Business</th>
-                                <th>Customer</th>
-                                <th>Status</th>
+                  <th>Customer</th>
+                  <th>Status</th>
                                 <th>Created</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
                             <% if (orders && orders.length) { %>
                                 <% orders.forEach(function(order) { %>
-                                    <tr>
+                    <tr>
                                         <td><strong><%= order.order_id %></strong></td>
                                         <td><span class="business-badge"><%= order.business_name %></span></td>
                                         <td><%= order.customer_name %></td>
-                                        <td>
+                      <td>
                                             <span class="status-badge <%= order.status %>"><%= order.status %></span>
-                                        </td>
+                      </td>
                                         <td><%= new Date(order.created_at).toLocaleDateString() %></td>
                                         <td>
                                             <div class="btn-group">
                                                 <button class="btn btn-sm btn-outline" onclick="viewOrder('<%= order.id %>')">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
+                            <i class="fas fa-eye"></i>
+                          </button>
                                                 <button class="btn btn-sm btn-outline" onclick="editOrder('<%= order.id %>')">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <% }); %>
-                            <% } else { %>
-                                <tr>
+                            <i class="fas fa-edit"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
                                     <td colspan="6" class="no-orders">
                                         <i class="fas fa-box-open"></i>
                                         <p>No orders found matching your criteria.</p>
-                                    </td>
-                                </tr>
-                            <% } %>
-                        </tbody>
-                    </table>
-                </div>
-                 <!-- Pagination -->
-                <% if (totalPages > 1) { %>
+                    </td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+      <!-- Pagination -->
+      <% if (totalPages > 1) { %>
                     <div class="pagination">
                         <div class="pagination-info">
                             Showing <%= (page - 1) * pageSize + 1 %> to <%= Math.min(page * pageSize, totalOrders) %> of <%= totalOrders %> orders
-                        </div>
+          </div>
                         <nav class="pagination-nav">
                             <a href="?<%= new URLSearchParams({ ...query, page: page - 1 }).toString() %>" 
                                class="pagination-btn <%= page <= 1 ? 'disabled' : '' %>">
@@ -229,45 +218,45 @@
                                   startPage = Math.max(1, endPage - maxPagesToShow + 1);
                                 }
                             %>
-                            <% if (startPage > 1) { %>
+              <% if (startPage > 1) { %>
                                 <a href="?<%= new URLSearchParams({ ...query, page: 1 }).toString() %>" class="pagination-btn">1</a>
                                 <% if (startPage > 2) { %><span class="pagination-btn disabled">...</span><% } %>
-                            <% } %>
-                            
+              <% } %>
+
                             <% for(let i = startPage; i <= endPage; i++) { %>
                                 <a href="?<%= new URLSearchParams({ ...query, page: i }).toString() %>" 
                                    class="pagination-btn <%= i === page ? 'active' : '' %>"><%= i %></a>
-                            <% } %>
-                            
-                            <% if (endPage < totalPages) { %>
+              <% } %>
+
+              <% if (endPage < totalPages) { %>
                                 <% if (endPage < totalPages - 1) { %><span class="pagination-btn disabled">...</span><% } %>
                                 <a href="?<%= new URLSearchParams({ ...query, page: totalPages }).toString() %>" class="pagination-btn"><%= totalPages %></a>
-                            <% } %>
+                <% } %>
                             <a href="?<%= new URLSearchParams({ ...query, page: page + 1 }).toString() %>" 
                                class="pagination-btn <%= page >= totalPages ? 'disabled' : '' %>">
                                 <i class="fas fa-chevron-right"></i>
                             </a>
-                        </nav>
-                    </div>
-                <% } %>
-            </div>
+          </nav>
         </div>
+      <% } %>
+    </div>
+  </div>
     </main>
 
-    <!-- Order Details Modal -->
+<!-- Order Details Modal -->
     <div id="orderModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
+    <div class="modal-content">
+      <div class="modal-header">
                 <h3 class="modal-title">Order Details</h3>
                 <button class="close-modal" onclick="closeModal('orderModal')">&times;</button>
             </div>
             <div class="modal-body" id="orderModalBody">
                 <!-- Order details will be loaded here -->
-            </div>
-        </div>
     </div>
-    
-    <script>
+  </div>
+</div>
+
+<script>
         // Dropdown functionality
         function setupDropdown(buttonId, menuId) {
             const button = document.getElementById(buttonId);
@@ -290,7 +279,7 @@
         });
 
         // Theme toggle
-        const themeToggle = document.getElementById('themeToggle');
+        const themeToggle = document.getElementById('theme-toggle');
         const html = document.documentElement;
         const savedTheme = localStorage.getItem('theme') || 'light';
         
@@ -321,8 +310,8 @@
             try {
                 const response = await fetch(`/api/orders/${orderId}?userId=<%= userId %>`);
                 if (!response.ok) throw new Error('Failed to fetch');
-                const order = await response.json();
-                
+      const order = await response.json();
+      
                 let itemsHtml = 'No items listed.';
                 if (order.items && order.items.length) {
                     itemsHtml = `<ul>${order.items.map(item => `<li>${item.name} (x${item.quantity}) - $${item.price}</li>`).join('')}</ul>`;
@@ -340,7 +329,7 @@
                     <p><strong>Total Price:</strong> $${order.total_price}</p>
                     <p><strong>Created:</strong> ${new Date(order.created_at).toLocaleString()}</p>
                 `;
-            } catch (error) {
+    } catch (error) {
                 modalBody.innerHTML = '<p style="color: var(--danger-color)">Failed to load order details.</p>';
             }
         }
@@ -499,7 +488,7 @@
                 chart.data.datasets[0].borderColor = isDark ? '#1e293b' : '#ffffff';
             }
             chart.update();
-        }
-    </script>
+  }
+</script>
 </body>
 </html> 

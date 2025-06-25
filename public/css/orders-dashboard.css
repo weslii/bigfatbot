@@ -19,15 +19,17 @@
     --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
     --radius: 8px;
     --radius-lg: 16px;
-    --background-start: #eef2ff;
-    --background-end: #f1f5f9;
+    --background-corner: #dbeafe;
+    --background-middle: #e0e7ff;
 }
 
 [data-theme="dark"] {
     --primary-color: #10b981;
     --primary-hover: #34d399;
+    --background-corner: #020617;
+    --background-middle: #0f172a;
     --background-color: #020617;
-    --surface-color: rgba(30, 41, 59, 0.6);
+    --surface-color: rgba(15, 23, 42, 0.75);
     --border-color: transparent;
     --text-primary: #f8fafc;
     --text-secondary: #cbd5e1;
@@ -48,7 +50,7 @@ body {
     color: var(--text-primary);
     line-height: 1.6;
     transition: background-color 0.3s ease, color 0.3s ease;
-    background: linear-gradient(135deg, var(--background-start), var(--background-end));
+    background: linear-gradient(135deg, var(--background-corner), var(--background-middle), var(--background-corner));
     background-attachment: fixed;
 }
 
@@ -104,7 +106,7 @@ body {
 }
 
 .nav-link:hover {
-    background-color: var(--background-color);
+    background-color: var(--surface-color);
     color: var(--primary-color);
 }
 
@@ -205,14 +207,14 @@ body {
 }
 
 .content-card:hover {
-    transform: translateY(-5px) scale(1.02);
+    transform: translateY(-5px) scale(1.04);
     box-shadow: var(--shadow-xl);
 }
 
 [data-theme="dark"] .content-card:hover {
     background: var(--surface-color);
-    box-shadow: 0 0 25px rgba(16, 185, 129, 0.3);
-    border-color: rgba(16, 185, 129, 0.7);
+    box-shadow: 0 0 25px rgba(248, 250, 252, 0.07);
+    border-color: rgba(248, 250, 252, 0.15);
 }
 
 .card-header {
