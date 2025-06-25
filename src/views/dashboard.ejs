@@ -11,14 +11,11 @@
     <!-- Header -->
     <header class="header">
         <div class="header-content">
-            <div class="logo-section">
-                <div class="logo-icon">
-                    <i class="fab fa-whatsapp"></i>
-                </div>
-                <div class="logo-text">
-                    <span class="main-title">User Dashboard</span>
-                    <span class="sub-title">WhatsApp Delivery Bot</span>
-                </div>
+            <div class="header-left">
+                <a href="/dashboard" class="logo-section">
+                    <div class="logo-icon"><i class="fas fa-users"></i></div>
+                    <div class="logo-text"><span class="main-title">User Dashboard</span></div>
+                </a>
             </div>
             <div class="header-right">
                 <a href="/dashboard" class="nav-link">Dashboard</a>
@@ -129,7 +126,7 @@
                                                             <div class="business-info">
                                                                 <div class="business-avatar"><i class="fas fa-building"></i></div>
                                                                 <div class="business-details">
-                                                                    <div class="business-name"><a href="/business/<%= biz.business_id %>" style="color:inherit;text-decoration:none;font-size:1.15rem;font-weight:800;text-transform:capitalize;display:inline-block;line-height:1.2;"><%= biz.business_name %></a></div>
+                                                                    <div class="business-name"><a href="/business/<%= biz.business_id %>" class="business-hover" style="color:inherit;text-decoration:none;font-size:1.15rem;font-weight:800;text-transform:capitalize;display:inline-block;line-height:1.2;"><%= biz.business_name %></a></div>
                                                                 </div>
                                                             </div>
                                                         </td>
@@ -161,7 +158,7 @@
                                     <h2>My Groups</h2>
                                     <p>All groups you manage</p>
                                 </div>
-                                <a href="/setup-group" class="primary-btn" style="margin-left:auto;"><i class="fas fa-plus"></i> Add Group</a>
+                                <button class="btn btn-primary" id="openAddGroupModal" type="button"><i class="fas fa-plus"></i> Add Group</button>
                             </div>
                             <div class="card-content">
                                 <% if (groups && groups.length) { %>
@@ -305,6 +302,119 @@
             </div>
         </div>
     </main>
+    <!-- Add Group Modal (copied from groups.ejs) -->
+    <div class="modal-overlay" id="addGroupModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New WhatsApp Group</h5>
+                <button type="button" class="close-modal" id="closeAddGroupModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Step 1: Business Selection -->
+                <div id="businessSelectionStep">
+                    <div style="background: rgba(59, 130, 246, 0.05); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                        <h6 style="margin: 0 0 1rem 0; color: var(--info-color); display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-building"></i> Select Business
+                        </h6>
+                        <p style="margin: 0; color: #64748b; line-height: 1.6;">
+                            Choose which business you want to add a WhatsApp group to.
+                        </p>
+                    </div>
+                    <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <label for="businessSelect" style="display: block; font-weight: 600; margin-bottom: 0.75rem; color: var(--text-primary);">Business *</label>
+                        <select id="businessSelect" style="width: 100%; padding: 0.75rem; border: 1px solid var(--card-border); border-radius: 8px; background: var(--card-bg); color: var(--text-primary); font-size: 0.875rem;">
+                            <option value="" disabled selected>Select a business</option>
+                            <% businesses.forEach(business => { %>
+                                <% 
+                                    const businessGroups = groups.filter(g => g.business_id === business.business_id);
+                                    const hasSales = businessGroups.some(g => g.group_type === 'sales');
+                                    const hasDelivery = businessGroups.some(g => g.group_type === 'delivery');
+                                    const isAtLimit = hasSales && hasDelivery;
+                                %>
+                                <option value="<%= business.business_id %>" 
+                                        data-business-name="<%= business.business_name %>"
+                                        data-has-sales="<%= hasSales %>" 
+                                        data-has-delivery="<%= hasDelivery %>" 
+                                        data-setup-code="<%= business.setup_identifier || business.business_id %>"
+                                        <%= isAtLimit ? 'disabled' : '' %>>
+                                    <%= business.business_name %>
+                                    <% if (isAtLimit) { %> (Has both groups) <% } else if (hasSales || hasDelivery) { %>
+                                        (<%= hasSales ? 'Has sales' : '' %><%= hasSales && hasDelivery ? ', ' : '' %><%= hasDelivery ? 'Has delivery' : '' %>)
+                                    <% } %>
+                                </option>
+                            <% }); %>
+                        </select>
+                    </div>
+                    <div style="text-align: center;">
+                        <button type="button" class="btn btn-primary" onclick="showSetupInstructions()" id="continueBtn" disabled>
+                            <i class="fas fa-arrow-right"></i> Continue
+                        </button>
+                    </div>
+                </div>
+                <!-- Step 2: Setup Instructions -->
+                <div id="setupInstructionsStep" style="display: none;">
+                    <div style="background: rgba(59, 130, 246, 0.05); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                        <h6 style="margin: 0 0 1rem 0; color: var(--info-color); display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-robot"></i> Setup Instructions for <span id="selectedBusinessName"></span>
+                        </h6>
+                        <p style="margin: 0; color: #64748b; line-height: 1.6;">
+                            Follow these steps to add a WhatsApp group to your business.
+                        </p>
+                    </div>
+                    <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <h6 style="margin: 0 0 1rem 0; color: var(--text-primary);">How to Add a Group:</h6>
+                        <ol style="margin: 0; padding-left: 1.5rem; color: var(--text-secondary); line-height: 1.8;">
+                            <li style="margin-bottom: 0.75rem;">
+                                <strong style="color: var(--text-primary);">Add the Bot to Your Group</strong><br>
+                                <small>Add this WhatsApp number to your group as an admin:</small><br>
+                                <div style="background: rgba(59, 130, 246, 0.1); padding: 0.75rem; border-radius: 8px; margin: 0.5rem 0; display: flex; justify-content: space-between; align-items: center;">
+                                    <code id="botNumber" style="color: #3b82f6; font-weight: 600;">Loading...</code>
+                                    <button type="button" class="btn btn-sm" onclick="copyBotNumber()" style="background: #3b82f6; color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem;">Copy</button>
+                                </div>
+                            </li>
+                            <li style="margin-bottom: 0.75rem;">
+                                <strong style="color: var(--text-primary);">Run the Setup Command</strong><br>
+                                <small>In your WhatsApp group, type this command:</small><br>
+                                <div style="background: rgba(59, 130, 246, 0.1); padding: 0.75rem; border-radius: 8px; margin: 0.5rem 0; display: flex; justify-content: space-between; align-items: center;">
+                                    <code id="setupCommand" style="color: #3b82f6; font-weight: 600;">Select a business first</code>
+                                    <button type="button" class="btn btn-sm" onclick="copySetupCommand()" style="background: #3b82f6; color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem;">Copy</button>
+                                </div>
+                            </li>
+                            <li style="margin-bottom: 0.75rem;">
+                                <strong style="color: var(--text-primary);">Choose Group Type</strong><br>
+                                <small>The bot will ask if this is a "sales" or "delivery" group. Reply with:</small><br>
+                                <div id="groupTypeOptions" style="display: flex; gap: 0.5rem; margin: 0.5rem 0;">
+                                    <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">"sales"</span>
+                                    <span style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">"delivery"</span>
+                                </div>
+                            </li>
+                            <li>
+                                <strong style="color: var(--text-primary);">That's It!</strong><br>
+                                <small>The bot will automatically register your group and confirm the setup.</small>
+                            </li>
+                        </ol>
+                    </div>
+                    <div id="businessStatus" style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <h6 style="margin: 0 0 0.75rem 0; color: #f59e0b; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-info-circle"></i> Business Status
+                        </h6>
+                        <div id="businessStatusContent">
+                            Select a business to see its current group status.
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 1.5rem;">
+                        <button type="button" class="btn btn-secondary" onclick="backToBusinessSelection()" style="margin-right: 0.5rem;">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="document.getElementById('closeAddGroupModal').click()">
+                            <i class="fas fa-check"></i> Got It!
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Add Group Modal -->
     <script>
         // Theme toggle functionality
         const themeToggle = document.getElementById('theme-toggle');
@@ -353,6 +463,108 @@
                 }
             });
         }
+        // Add Group Modal JS (copied from groups.ejs)
+        document.addEventListener('DOMContentLoaded', function () {
+            // Modal
+            const modal = document.getElementById('addGroupModal');
+            const openModalBtn = document.getElementById('openAddGroupModal');
+            const closeModalBtn = document.getElementById('closeAddGroupModal');
+            function showModal() { modal.classList.add('show'); }
+            function hideModal() { modal.classList.remove('show'); }
+            if(openModalBtn) openModalBtn.addEventListener('click', showModal);
+            if(closeModalBtn) closeModalBtn.addEventListener('click', hideModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) hideModal();
+            });
+            // Two-step modal functionality
+            const businessSelect = document.getElementById('businessSelect');
+            const continueBtn = document.getElementById('continueBtn');
+            businessSelect.addEventListener('change', function() {
+                continueBtn.disabled = !this.value;
+            });
+            window.showSetupInstructions = function() {
+                const selectedOption = businessSelect.options[businessSelect.selectedIndex];
+                if (!selectedOption || !selectedOption.value) return;
+                const businessName = selectedOption.getAttribute('data-business-name');
+                const setupCode = selectedOption.getAttribute('data-setup-code');
+                const hasSales = selectedOption.getAttribute('data-has-sales') === 'true';
+                const hasDelivery = selectedOption.getAttribute('data-has-delivery') === 'true';
+                document.getElementById('setupCommand').textContent = `/setup ${setupCode}`;
+                document.getElementById('selectedBusinessName').textContent = businessName;
+                const groupTypeOptions = document.getElementById('groupTypeOptions');
+                groupTypeOptions.innerHTML = '';
+                if (!hasSales) {
+                    groupTypeOptions.innerHTML += '<span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">"sales"</span>';
+                }
+                if (!hasDelivery) {
+                    groupTypeOptions.innerHTML += '<span style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">"delivery"</span>';
+                }
+                const businessStatusContent = document.getElementById('businessStatusContent');
+                let statusHTML = '';
+                if (!hasSales && !hasDelivery) {
+                    statusHTML = `<div style="color: var(--text-secondary); line-height: 1.6;"><p style="margin: 0 0 0.5rem 0;"><strong>No groups set up yet.</strong></p><p style="margin: 0;">You can add both a sales group and a delivery group for this business.</p></div>`;
+                } else if (hasSales && hasDelivery) {
+                    statusHTML = `<div style="color: var(--text-secondary); line-height: 1.6;"><p style="margin: 0 0 0.5rem 0;"><strong>All groups set up!</strong></p><p style="margin: 0;">This business already has both sales and delivery groups configured.</p></div>`;
+                } else {
+                    const availableType = hasSales ? 'delivery' : 'sales';
+                    const existingType = hasSales ? 'sales' : 'delivery';
+                    statusHTML = `<div style="color: var(--text-secondary); line-height: 1.6;"><p style="margin: 0 0 0.5rem 0;"><strong>${existingType.charAt(0).toUpperCase() + existingType.slice(1)} group already set up.</strong></p><p style="margin: 0;">You can add a ${availableType} group to complete your setup.</p></div>`;
+                }
+                businessStatusContent.innerHTML = statusHTML;
+                document.getElementById('businessSelectionStep').style.display = 'none';
+                document.getElementById('setupInstructionsStep').style.display = 'block';
+            };
+            window.backToBusinessSelection = function() {
+                document.getElementById('setupInstructionsStep').style.display = 'none';
+                document.getElementById('businessSelectionStep').style.display = 'block';
+                businessSelect.value = '';
+                continueBtn.disabled = true;
+            };
+            // Reset modal when closed
+            closeModalBtn.addEventListener('click', function() {
+                backToBusinessSelection();
+            });
+            // Load bot number
+            async function loadBotInfo() {
+                try {
+                    const response = await fetch('/api/whatsapp/bot-info');
+                    const botInfo = await response.json();
+                    if (botInfo.success) {
+                        document.getElementById('botNumber').textContent = botInfo.number;
+                    } else {
+                        document.getElementById('botNumber').textContent = 'Not available';
+                    }
+                } catch (error) {
+                    document.getElementById('botNumber').textContent = 'Error loading';
+                }
+            }
+            loadBotInfo();
+            // Copy functions
+            window.copyBotNumber = function() {
+                const botNumber = document.querySelector('#botNumber').textContent;
+                if (botNumber === 'Loading...' || botNumber === 'Not available' || botNumber === 'Error loading') {
+                    alert('Bot number not available yet. Please try again in a moment.');
+                    return;
+                }
+                navigator.clipboard.writeText(botNumber).then(() => {
+                    const button = event.target;
+                    button.textContent = 'Copied!';
+                    setTimeout(() => {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                });
+            }
+            window.copySetupCommand = function() {
+                const command = document.querySelector('code').textContent;
+                navigator.clipboard.writeText(command).then(() => {
+                    const button = event.target;
+                    button.textContent = 'Copied!';
+                    setTimeout(() => {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                });
+            }
+        });
     </script>
 </body>
 </html> 
