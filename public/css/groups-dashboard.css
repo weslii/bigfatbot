@@ -110,8 +110,8 @@ body {
 
 .logo-text .main-title {
     font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--text-primary);
+    font-weight: 900;
+    color: var(--primary-color);
     display: block;
 }
 
