@@ -55,30 +55,12 @@
             <div class="add-business-hint">This will be used to identify your new business in the system.</div>
           </div>
           <div class="add-business-nextsteps">
-            <div class="nextsteps-header">
-              <i class="fas fa-info-circle"></i>
-              <span>Next Steps</span>
-            </div>
-            <div class="nextsteps-steps">
-              <div class="nextstep">
-                <div class="step-badge">1</div>
-                <div class="step-content">
-                  <div class="step-title"><i class="fab fa-whatsapp step-icon"></i> Add our bot to your WhatsApp groups</div>
-                </div>
-              </div>
-              <div class="nextstep">
-                <div class="step-badge">2</div>
-                <div class="step-content">
-                  <div class="step-title"><i class="fas fa-terminal step-icon"></i> Type the setup command in each group</div>
-                </div>
-              </div>
-              <div class="nextstep">
-                <div class="step-badge">3</div>
-                <div class="step-content">
-                  <div class="step-title"><i class="fas fa-rocket step-icon"></i> Start managing your deliveries!</div>
-                </div>
-              </div>
-            </div>
+            <h5><i class="fas fa-info-circle"></i> Next Steps</h5>
+            <ol>
+              <li>Add our bot to your new business's WhatsApp groups</li>
+              <li>Type the setup command in each group</li>
+              <li>Start managing your deliveries!</li>
+            </ol>
           </div>
           <div class="add-business-actions">
             <a href="/dashboard" class="btn btn-secondary">Cancel</a>
@@ -110,7 +92,7 @@
   box-shadow: 0 8px 32px rgba(16,185,129,0.08), 0 1.5px 4px rgba(0,0,0,0.04);
   max-width: 400px;
   width: 95vw;
-  padding: 1.5rem 1.1rem 1.1rem 1.1rem;
+  padding: 1.5rem 1.2rem 1.2rem 1.2rem;
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
@@ -120,17 +102,20 @@
   text-align: center;
 }
 .add-business-title {
-  font-size: 1.35rem;
+  font-size: 1.7rem;
   font-weight: 900;
   color: var(--primary-color);
-  margin-bottom: 0.18rem;
+  margin-bottom: 0.15rem;
 }
 .add-business-subtitle {
   color: var(--text-secondary);
-  font-size: 0.93rem;
+  font-size: 0.98rem;
   margin-bottom: 0;
 }
-.add-business-body { width: 100%; font-size: 0.97rem; }
+.add-business-body {
+  width: 100%;
+  font-size: 0.93rem;
+}
 .add-business-error {
   background: rgba(239,68,68,0.08);
   color: #ef4444;
@@ -142,25 +127,22 @@
   text-align: center;
 }
 .add-business-form-group {
-  margin-bottom: 1.1rem;
+  margin-bottom: 1.5rem;
 }
+.add-business-form-group label,
 .add-business-label {
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 0.35rem;
-  display: block;
   font-size: 0.97rem;
 }
 .add-business-input {
   width: 100%;
-  padding: 0.6rem 0.8rem;
+  padding: 0.65rem 0.9rem;
   border-radius: 8px;
   border: 1px solid var(--card-border);
   background: var(--card-bg);
   color: var(--text-primary);
   font-size: 0.97rem;
   transition: border-color 0.18s;
-  margin-bottom: 0.18rem;
+  margin-bottom: 0.25rem;
 }
 .add-business-input:focus {
   border-color: var(--primary-color);
@@ -168,55 +150,44 @@
 }
 .add-business-hint {
   color: var(--text-muted);
-  font-size: 0.89rem;
-  margin-top: 0.07rem;
+  font-size: 0.88rem;
+  margin-top: 0.1rem;
 }
 .add-business-nextsteps {
   background: rgba(59,130,246,0.06);
-  border-radius: 14px;
-  padding: 0.7rem 0.7rem 1rem 0.7rem;
+  border-radius: 10px;
+  padding: 0.7rem 1rem;
   margin-bottom: 1.1rem;
   color: var(--text-secondary);
-  font-size: 0.95rem;
-  box-shadow: 0 2px 8px rgba(59,130,246,0.04);
-  border: 1px solid rgba(59,130,246,0.10);
+  font-size: 0.93rem;
 }
-.nextsteps-header {
-  font-size: 1rem;
-  margin-bottom: 0.7rem;
-}
-.nextsteps-steps {
-  gap: 0.7rem;
-}
-.nextstep {
-  gap: 0.5rem;
-}
-.step-badge {
-  min-width: 1.3rem;
-  height: 1.3rem;
-  font-size: 0.9rem;
-  margin-top: 0.05rem;
-}
-.step-title {
-  font-size: 0.95rem;
-}
-.step-icon {
-  font-size: 1.1rem;
+.add-business-nextsteps h5 {
+  font-size: 1.01rem;
+  font-weight: 700;
   color: var(--info-color);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.add-business-nextsteps h5 .fa-info-circle {
+  font-size: 1rem;
+  color: var(--info-color);
+  opacity: 0.7;
 }
 .add-business-actions {
   display: flex;
   justify-content: space-between;
-  gap: 0.7rem;
-  margin-top: 1.1rem;
+  gap: 1rem;
+  margin-top: 1.5rem;
 }
 .btn.btn-primary {
   background: var(--primary-color);
   color: #fff;
   border: none;
   border-radius: 8px;
-  padding: 0.5rem 1.1rem;
-  font-size: 0.97rem;
+  padding: 0.7rem 1.5rem;
+  font-size: 1rem;
   font-weight: 600;
   transition: background 0.18s, box-shadow 0.18s, transform 0.18s;
   box-shadow: 0 2px 8px rgba(16,185,129,0.08);
@@ -231,8 +202,8 @@
   color: var(--primary-color);
   border: 1px solid var(--primary-color);
   border-radius: 8px;
-  padding: 0.5rem 1.1rem;
-  font-size: 0.97rem;
+  padding: 0.7rem 1.5rem;
+  font-size: 1rem;
   font-weight: 600;
   transition: background 0.18s, color 0.18s, box-shadow 0.18s, transform 0.18s;
 }
@@ -243,12 +214,8 @@
   transform: translateY(-2px) scale(1.04);
 }
 @media (max-width: 600px) {
-  .add-business-card { padding: 0.7rem 0.3rem; }
-  .add-business-title { font-size: 1.05rem; }
-  .add-business-nextsteps { padding: 0.5rem 0.2rem 0.7rem 0.2rem; }
-  .nextstep { gap: 0.3rem; }
-  .step-badge { min-width: 1rem; height: 1rem; font-size: 0.75rem; }
-  .step-title { font-size: 0.85rem; }
+  .add-business-card { padding: 1.2rem 0.5rem; }
+  .add-business-title { font-size: 1.3rem; }
 }
 /* Fix nav-link color for visibility */
 .header .nav-link {
