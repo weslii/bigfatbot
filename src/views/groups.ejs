@@ -54,28 +54,28 @@
         
         <!-- KPI Cards -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-            <div style="background: rgba(255, 255, 255, 0.55); backdrop-filter: blur(5px); border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 1rem;">
+            <div style="background: var(--card-bg); backdrop-filter: blur(5px); border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 1rem;">
                 <div style="font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.05);"><i class="fas fa-comments"></i></div>
                 <div>
                     <h3 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin: 0;"><%= totalGroups %></h3>
                     <p style="font-size: 0.875rem; color: #475569; margin: 0;">Total Groups</p>
                 </div>
             </div>
-            <div style="background: rgba(255, 255, 255, 0.55); backdrop-filter: blur(5px); border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 1rem;">
+            <div style="background: var(--card-bg); backdrop-filter: blur(5px); border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 1rem;">
                 <div style="font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.05);"><i class="fas fa-store"></i></div>
                 <div>
                     <h3 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin: 0;"><%= activeBusinesses %></h3>
                     <p style="font-size: 0.875rem; color: #475569; margin: 0;">Active Businesses</p>
                 </div>
             </div>
-            <div style="background: rgba(255, 255, 255, 0.55); backdrop-filter: blur(5px); border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 1rem;">
+            <div style="background: var(--card-bg); backdrop-filter: blur(5px); border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 1rem;">
                 <div style="font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.05);"><i class="fas fa-arrow-up"></i></div>
                 <div>
                     <h3 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin: 0;"><%= groups.filter(g => g.group_type === 'sales').length %></h3>
                     <p style="font-size: 0.875rem; color: #475569; margin: 0;">Sales Groups</p>
                 </div>
             </div>
-            <div style="background: rgba(255, 255, 255, 0.55); backdrop-filter: blur(5px); border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 1rem;">
+            <div style="background: var(--card-bg); backdrop-filter: blur(5px); border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 1rem;">
                 <div style="font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.05);"><i class="fas fa-truck"></i></div>
                 <div>
                     <h3 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin: 0;"><%= groups.filter(g => g.group_type === 'delivery').length %></h3>
@@ -85,7 +85,7 @@
         </div>
 
         <!-- Groups Table -->
-        <div style="background: rgba(255, 255, 255, 0.55); backdrop-filter: blur(5px); border: 1px solid #e2e8f0; border-radius: 16px; margin-bottom: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);">
+        <div style="background: var(--card-bg); backdrop-filter: blur(5px); border: 1px solid #e2e8f0; border-radius: 16px; margin-bottom: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);">
             <div style="padding: 1.5rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
                 <h2 style="font-size: 1.125rem; font-weight: 600; color: #1e293b; margin: 0; display: flex; align-items: center; gap: 0.5rem;"><i class="fas fa-list-alt"></i> All Groups</h2>
                 <div style="display: flex; gap: 1rem; align-items: flex-end;">
