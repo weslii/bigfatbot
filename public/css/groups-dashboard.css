@@ -36,8 +36,9 @@
     --text-primary: #f8fafc;
     --text-secondary: #cbd5e1;
     --text-muted: #94a3b8;
-    --card-bg: #0e1426;
-    --card-border: #0e1426;
+    --info-color: #60a5fa;
+    --card-bg: rgba(14, 20, 38, 0.8);
+    --card-border: rgba(14, 20, 38, 0.8);
     --card-hover-transform: translateY(-4px) scale(1.02);
     --card-hover-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
 }
@@ -674,13 +675,13 @@ select:hover, input:hover, .form-select:hover, .form-input:hover {
 
 /* Fix blue text contrast in dark mode */
 [data-theme="dark"] code {
-  color: #60a5fa !important;
+    color: #60a5fa;
 }
 
 [data-theme="dark"] .text-blue {
-  color: #60a5fa !important;
+    color: #60a5fa !important;
 }
 
 [data-theme="dark"] .text-primary {
-  color: #60a5fa !important;
+    color: #60a5fa !important;
 } 
