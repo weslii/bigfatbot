@@ -194,65 +194,112 @@
                 <button type="button" class="close-modal" id="closeAddGroupModal">&times;</button>
             </div>
             <div class="modal-body">
-                <div style="background: rgba(59, 130, 246, 0.05); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
-                    <h6 style="margin: 0 0 1rem 0; color: #3b82f6; display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fas fa-robot"></i> Automated Group Setup
-                    </h6>
-                    <p style="margin: 0; color: #64748b; line-height: 1.6;">
-                        Groups are now set up automatically through WhatsApp. No need to manually enter group details!
-                    </p>
+                <!-- Step 1: Business Selection -->
+                <div id="businessSelectionStep">
+                    <div style="background: rgba(59, 130, 246, 0.05); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                        <h6 style="margin: 0 0 1rem 0; color: #3b82f6; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-building"></i> Select Business
+                        </h6>
+                        <p style="margin: 0; color: #64748b; line-height: 1.6;">
+                            Choose which business you want to add a WhatsApp group to.
+                        </p>
+                    </div>
+
+                    <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <label for="businessSelect" style="display: block; font-weight: 600; margin-bottom: 0.75rem; color: var(--text-primary);">Business *</label>
+                        <select id="businessSelect" style="width: 100%; padding: 0.75rem; border: 1px solid var(--card-border); border-radius: 8px; background: var(--card-bg); color: var(--text-primary); font-size: 0.875rem;">
+                            <option value="" disabled selected>Select a business</option>
+                            <% businesses.forEach(business => { %>
+                                <% 
+                                    const businessGroups = groups.filter(g => g.business_id === business.business_id);
+                                    const hasSales = businessGroups.some(g => g.group_type === 'sales');
+                                    const hasDelivery = businessGroups.some(g => g.group_type === 'delivery');
+                                    const isAtLimit = hasSales && hasDelivery;
+                                %>
+                                <option value="<%= business.business_id %>" 
+                                        data-business-name="<%= business.business_name %>"
+                                        data-has-sales="<%= hasSales %>" 
+                                        data-has-delivery="<%= hasDelivery %>" 
+                                        data-setup-code="<%= business.setup_identifier || business.business_id %>"
+                                        <%= isAtLimit ? 'disabled' : '' %>>
+                                    <%= business.business_name %>
+                                    <% if (isAtLimit) { %> (Has both groups) <% } else if (hasSales || hasDelivery) { %>
+                                        (<%= hasSales ? 'Has sales' : '' %><%= hasSales && hasDelivery ? ', ' : '' %><%= hasDelivery ? 'Has delivery' : '' %>)
+                                    <% } %>
+                                </option>
+                            <% }); %>
+                        </select>
+                    </div>
+
+                    <div style="text-align: center;">
+                        <button type="button" class="btn btn-primary" onclick="showSetupInstructions()" id="continueBtn" disabled>
+                            <i class="fas fa-arrow-right"></i> Continue
+                        </button>
+                    </div>
                 </div>
 
-                <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
-                    <h6 style="margin: 0 0 1rem 0; color: var(--text-primary);">How to Add a Group:</h6>
-                    <ol style="margin: 0; padding-left: 1.5rem; color: var(--text-secondary); line-height: 1.8;">
-                        <li style="margin-bottom: 0.75rem;">
-                            <strong style="color: var(--text-primary);">Add the Bot to Your Group</strong><br>
-                            <small>Add this WhatsApp number to your group as an admin:</small><br>
-                            <div style="background: rgba(59, 130, 246, 0.1); padding: 0.75rem; border-radius: 8px; margin: 0.5rem 0; display: flex; justify-content: space-between; align-items: center;">
-                                <code id="botNumber" style="color: #3b82f6; font-weight: 600;">Loading...</code>
-                                <button type="button" class="btn btn-sm" onclick="copyBotNumber()" style="background: #3b82f6; color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem;">Copy</button>
-                            </div>
-                        </li>
-                        <li style="margin-bottom: 0.75rem;">
-                            <strong style="color: var(--text-primary);">Run the Setup Command</strong><br>
-                            <small>In your WhatsApp group, type this command:</small><br>
-                            <div style="background: rgba(59, 130, 246, 0.1); padding: 0.75rem; border-radius: 8px; margin: 0.5rem 0; display: flex; justify-content: space-between; align-items: center;">
-                                <code style="color: #3b82f6; font-weight: 600;">/setup YOUR-BUSINESS-CODE</code>
-                                <button type="button" class="btn btn-sm" onclick="copySetupCommand()" style="background: #3b82f6; color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem;">Copy</button>
-                            </div>
-                        </li>
-                        <li style="margin-bottom: 0.75rem;">
-                            <strong style="color: var(--text-primary);">Choose Group Type</strong><br>
-                            <small>The bot will ask if this is a "sales" or "delivery" group. Reply with:</small><br>
-                            <div style="display: flex; gap: 0.5rem; margin: 0.5rem 0;">
-                                <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">"sales"</span>
-                                <span style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">"delivery"</span>
-                            </div>
-                        </li>
-                        <li>
-                            <strong style="color: var(--text-primary);">That's It!</strong><br>
-                            <small>The bot will automatically register your group and confirm the setup.</small>
-                        </li>
-                    </ol>
-                </div>
+                <!-- Step 2: Setup Instructions -->
+                <div id="setupInstructionsStep" style="display: none;">
+                    <div style="background: rgba(59, 130, 246, 0.05); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                        <h6 style="margin: 0 0 1rem 0; color: #3b82f6; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-robot"></i> Setup Instructions for <span id="selectedBusinessName"></span>
+                        </h6>
+                        <p style="margin: 0; color: #64748b; line-height: 1.6;">
+                            Follow these steps to add a WhatsApp group to your business.
+                        </p>
+                    </div>
 
-                <div style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 12px; padding: 1.5rem;">
-                    <h6 style="margin: 0 0 0.75rem 0; color: #f59e0b; display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fas fa-lightbulb"></i> Pro Tips
-                    </h6>
-                    <ul style="margin: 0; padding-left: 1.5rem; color: var(--text-secondary); line-height: 1.6;">
-                        <li>Make sure the bot has admin permissions in your group</li>
-                        <li>You can add up to 2 groups per business (1 sales + 1 delivery)</li>
-                        <li>The bot will automatically detect which group type you need</li>
-                        <li>Groups appear in your dashboard immediately after setup</li>
-                    </ul>
-                </div>
+                    <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <h6 style="margin: 0 0 1rem 0; color: var(--text-primary);">How to Add a Group:</h6>
+                        <ol style="margin: 0; padding-left: 1.5rem; color: var(--text-secondary); line-height: 1.8;">
+                            <li style="margin-bottom: 0.75rem;">
+                                <strong style="color: var(--text-primary);">Add the Bot to Your Group</strong><br>
+                                <small>Add this WhatsApp number to your group as an admin:</small><br>
+                                <div style="background: rgba(59, 130, 246, 0.1); padding: 0.75rem; border-radius: 8px; margin: 0.5rem 0; display: flex; justify-content: space-between; align-items: center;">
+                                    <code id="botNumber" style="color: #3b82f6; font-weight: 600;">Loading...</code>
+                                    <button type="button" class="btn btn-sm" onclick="copyBotNumber()" style="background: #3b82f6; color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem;">Copy</button>
+                                </div>
+                            </li>
+                            <li style="margin-bottom: 0.75rem;">
+                                <strong style="color: var(--text-primary);">Run the Setup Command</strong><br>
+                                <small>In your WhatsApp group, type this command:</small><br>
+                                <div style="background: rgba(59, 130, 246, 0.1); padding: 0.75rem; border-radius: 8px; margin: 0.5rem 0; display: flex; justify-content: space-between; align-items: center;">
+                                    <code id="setupCommand" style="color: #3b82f6; font-weight: 600;">Select a business first</code>
+                                    <button type="button" class="btn btn-sm" onclick="copySetupCommand()" style="background: #3b82f6; color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem;">Copy</button>
+                                </div>
+                            </li>
+                            <li style="margin-bottom: 0.75rem;">
+                                <strong style="color: var(--text-primary);">Choose Group Type</strong><br>
+                                <small>The bot will ask if this is a "sales" or "delivery" group. Reply with:</small><br>
+                                <div id="groupTypeOptions" style="display: flex; gap: 0.5rem; margin: 0.5rem 0;">
+                                    <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">"sales"</span>
+                                    <span style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">"delivery"</span>
+                                </div>
+                            </li>
+                            <li>
+                                <strong style="color: var(--text-primary);">That's It!</strong><br>
+                                <small>The bot will automatically register your group and confirm the setup.</small>
+                            </li>
+                        </ol>
+                    </div>
 
-                <div style="text-align: center; margin-top: 1.5rem;">
-                    <button type="button" class="btn btn-primary" onclick="document.getElementById('closeAddGroupModal').click()">
-                        <i class="fas fa-check"></i> Got It!
-                    </button>
+                    <div id="businessStatus" style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <h6 style="margin: 0 0 0.75rem 0; color: #f59e0b; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-info-circle"></i> Business Status
+                        </h6>
+                        <div id="businessStatusContent">
+                            Select a business to see its current group status.
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 1.5rem;">
+                        <button type="button" class="btn btn-secondary" onclick="backToBusinessSelection()" style="margin-right: 0.5rem;">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="document.getElementById('closeAddGroupModal').click()">
+                            <i class="fas fa-check"></i> Got It!
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -393,36 +440,51 @@
                     if (response.ok) {
                         const content = document.getElementById('groupDetailsContent');
                         content.innerHTML = `
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                                <div>
-                                    <h6>Group Information</h6>
-                                    <div style="background: var(--surface-color); padding: 1rem; border-radius: var(--radius);">
-                                        <p><strong>Group Name:</strong> ${group.group_name}</p>
-                                        <p><strong>Group ID:</strong> <code>${group.group_id}</code></p>
-                                        <p><strong>Type:</strong> <span class="group-type-badge ${group.group_type}">${group.group_type}</span></p>
-                                        <p><strong>Business:</strong> ${group.business_name}</p>
-                                        <p><strong>Created:</strong> ${new Date(group.created_at).toLocaleString()}</p>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                                <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.5rem;">
+                                    <h6 style="margin: 0 0 1rem 0; color: var(--text-primary); font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Group Information</h6>
+                                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--card-border);">
+                                            <span style="color: var(--text-secondary); font-size: 0.875rem;">Name:</span>
+                                            <span style="color: var(--text-primary); font-weight: 600;">${group.group_name}</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--card-border);">
+                                            <span style="color: var(--text-secondary); font-size: 0.875rem;">Type:</span>
+                                            <span style="background: ${group.group_type === 'sales' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)'}; color: ${group.group_type === 'sales' ? '#10b981' : '#3b82f6'}; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; text-transform: capitalize;">${group.group_type}</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--card-border);">
+                                            <span style="color: var(--text-secondary); font-size: 0.875rem;">Business:</span>
+                                            <span style="color: var(--text-primary); font-weight: 600;">${group.business_name}</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--card-border);">
+                                            <span style="color: var(--text-secondary); font-size: 0.875rem;">Created:</span>
+                                            <span style="color: var(--text-primary);">${new Date(group.created_at).toLocaleDateString()}</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 0.5rem 0;">
+                                            <span style="color: var(--text-secondary); font-size: 0.875rem;">Group ID:</span>
+                                            <code style="background: rgba(0, 0, 0, 0.05); color: var(--text-primary); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; word-break: break-all; max-width: 200px; text-align: right;">${group.group_id}</code>
+                                        </div>
                                     </div>
                                 </div>
-                                <div>
-                                    <h6>Group Statistics</h6>
-                                    <div style="background: var(--surface-color); padding: 1rem; border-radius: var(--radius);">
-                                        <div style="text-align: center; margin-bottom: 1rem;">
-                                            <h3 style="color: var(--primary-color);">${group.orderCount || 0}</h3>
-                                            <p>Total Orders</p>
+                                <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.5rem;">
+                                    <h6 style="margin: 0 0 1rem 0; color: var(--text-primary); font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Statistics</h6>
+                                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                        <div style="text-align: center; padding: 1rem; background: rgba(16, 185, 129, 0.05); border-radius: 8px;">
+                                            <div style="font-size: 2rem; font-weight: 700; color: #10b981; margin-bottom: 0.25rem;">${group.orderCount || 0}</div>
+                                            <div style="color: var(--text-secondary); font-size: 0.875rem;">Total Orders</div>
                                         </div>
-                                        <div style="text-align: center;">
-                                            <h3 style="color: var(--warning-color);">${group.pendingOrders || 0}</h3>
-                                            <p>Pending Orders</p>
+                                        <div style="text-align: center; padding: 1rem; background: rgba(245, 158, 11, 0.05); border-radius: 8px;">
+                                            <div style="font-size: 2rem; font-weight: 700; color: #f59e0b; margin-bottom: 0.25rem;">${group.pendingOrders || 0}</div>
+                                            <div style="color: var(--text-secondary); font-size: 0.875rem;">Pending Orders</div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div style="margin-top: 1rem;">
-                                <h6>Recent Activity</h6>
-                                <div style="background: rgba(59, 130, 246, 0.05); padding: 1rem; border-radius: var(--radius);">
-                                    <i class="fas fa-info-circle"></i>
-                                    Activity tracking will be available soon.
+                            <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.5rem;">
+                                <h6 style="margin: 0 0 1rem 0; color: var(--text-primary); font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Recent Activity</h6>
+                                <div style="display: flex; align-items: center; gap: 0.75rem; color: var(--text-secondary);">
+                                    <i class="fas fa-info-circle" style="color: #3b82f6;"></i>
+                                    <span style="font-size: 0.875rem;">Activity tracking will be available soon.</span>
                                 </div>
                             </div>
                         `;
@@ -501,6 +563,87 @@
                 }
             }
             loadBotInfo();
+
+            // Two-step modal functionality
+            const businessSelect = document.getElementById('businessSelect');
+            const continueBtn = document.getElementById('continueBtn');
+
+            businessSelect.addEventListener('change', function() {
+                continueBtn.disabled = !this.value;
+            });
+
+            window.showSetupInstructions = function() {
+                const selectedOption = businessSelect.options[businessSelect.selectedIndex];
+                if (!selectedOption || !selectedOption.value) return;
+
+                const businessName = selectedOption.getAttribute('data-business-name');
+                const setupCode = selectedOption.getAttribute('data-setup-code');
+                const hasSales = selectedOption.getAttribute('data-has-sales') === 'true';
+                const hasDelivery = selectedOption.getAttribute('data-has-delivery') === 'true';
+
+                // Update setup command
+                document.getElementById('setupCommand').textContent = `/setup ${setupCode}`;
+                document.getElementById('selectedBusinessName').textContent = businessName;
+
+                // Update group type options based on what's available
+                const groupTypeOptions = document.getElementById('groupTypeOptions');
+                groupTypeOptions.innerHTML = '';
+                
+                if (!hasSales) {
+                    groupTypeOptions.innerHTML += '<span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">"sales"</span>';
+                }
+                if (!hasDelivery) {
+                    groupTypeOptions.innerHTML += '<span style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">"delivery"</span>';
+                }
+
+                // Update business status
+                const businessStatusContent = document.getElementById('businessStatusContent');
+                let statusHTML = '';
+                
+                if (!hasSales && !hasDelivery) {
+                    statusHTML = `
+                        <div style="color: var(--text-secondary); line-height: 1.6;">
+                            <p style="margin: 0 0 0.5rem 0;"><strong>No groups set up yet.</strong></p>
+                            <p style="margin: 0;">You can add both a sales group and a delivery group for this business.</p>
+                        </div>
+                    `;
+                } else if (hasSales && hasDelivery) {
+                    statusHTML = `
+                        <div style="color: var(--text-secondary); line-height: 1.6;">
+                            <p style="margin: 0 0 0.5rem 0;"><strong>All groups set up!</strong></p>
+                            <p style="margin: 0;">This business already has both sales and delivery groups configured.</p>
+                        </div>
+                    `;
+                } else {
+                    const availableType = hasSales ? 'delivery' : 'sales';
+                    const existingType = hasSales ? 'sales' : 'delivery';
+                    statusHTML = `
+                        <div style="color: var(--text-secondary); line-height: 1.6;">
+                            <p style="margin: 0 0 0.5rem 0;"><strong>${existingType.charAt(0).toUpperCase() + existingType.slice(1)} group already set up.</strong></p>
+                            <p style="margin: 0;">You can add a ${availableType} group to complete your setup.</p>
+                        </div>
+                    `;
+                }
+                
+                businessStatusContent.innerHTML = statusHTML;
+
+                // Show step 2
+                document.getElementById('businessSelectionStep').style.display = 'none';
+                document.getElementById('setupInstructionsStep').style.display = 'block';
+            };
+
+            window.backToBusinessSelection = function() {
+                document.getElementById('setupInstructionsStep').style.display = 'none';
+                document.getElementById('businessSelectionStep').style.display = 'block';
+                businessSelect.value = '';
+                continueBtn.disabled = true;
+            };
+
+            // Reset modal when closed
+            const closeAddGroupModal = document.getElementById('closeAddGroupModal');
+            closeAddGroupModal.addEventListener('click', function() {
+                backToBusinessSelection();
+            });
         });
     </script>
 </body>
