@@ -131,6 +131,20 @@ window.addEventListener('DOMContentLoaded', function() {
 
   // --- Real Analytics Fetch ---
   fetchAndRenderAnalytics();
+
+  // Scroll-reveal logic
+  const revealElements = document.querySelectorAll('.scroll-reveal');
+  const revealOnScroll = () => {
+    const windowHeight = window.innerHeight;
+    revealElements.forEach(el => {
+      const rect = el.getBoundingClientRect();
+      if (rect.top < windowHeight - 40) {
+        el.classList.add('visible');
+      }
+    });
+  };
+  window.addEventListener('scroll', revealOnScroll);
+  revealOnScroll();
 });
 
 // --- AJAX Pagination for Businesses and Orders Tabs ---

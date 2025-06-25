@@ -37,12 +37,6 @@
     </header>
 
     <main class="main-content">
-        <pre style="background: #222; color: #0f0; padding: 1rem; font-size: 0.85rem; border-radius: 8px; margin-bottom: 2rem; overflow-x: auto;">
-            business: <%= JSON.stringify(business, null, 2) %>
-            businessGroups: <%= JSON.stringify(businessGroups, null, 2) %>
-            businessStats: <%= JSON.stringify(businessStats, null, 2) %>
-            recentOrders: <%= JSON.stringify(recentOrders, null, 2) %>
-        </pre>
         <% if (business) { %>
             <!-- Page Header -->
             <div class="page-header scroll-reveal">
