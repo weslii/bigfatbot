@@ -73,33 +73,21 @@
         </div>
         
         <div class="kpi-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; background: yellow; padding: 1rem;">
-            <div class="content-card kpi-card scroll-reveal" style="background: red; border: 3px solid black; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); color: white; font-size: 18px;">
-                <div class="kpi-icon" style="font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: white; color: black;"><i class="fas fa-comments"></i></div>
-                <div class="kpi-info">
-                    <h3 style="font-size: 1.5rem; font-weight: 700; color: white;"><%= totalGroups %></h3>
-                    <p style="font-size: 0.875rem; color: white;">Total Groups</p>
-                </div>
+            <div style="background: red; color: white; padding: 1rem; border: 3px solid black; font-size: 18px;">
+                <h3>TEST CARD 1 - RED</h3>
+                <p>Total Groups: <%= totalGroups %></p>
             </div>
-            <div class="content-card kpi-card scroll-reveal" style="background: blue; border: 3px solid black; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); color: white; font-size: 18px;">
-                <div class="kpi-icon" style="font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: white; color: black;"><i class="fas fa-store"></i></div>
-                <div class="kpi-info">
-                    <h3 style="font-size: 1.5rem; font-weight: 700; color: white;"><%= activeBusinesses %></h3>
-                    <p style="font-size: 0.875rem; color: white;">Active Businesses</p>
-                </div>
+            <div style="background: blue; color: white; padding: 1rem; border: 3px solid black; font-size: 18px;">
+                <h3>TEST CARD 2 - BLUE</h3>
+                <p>Active Businesses: <%= activeBusinesses %></p>
             </div>
-             <div class="content-card kpi-card scroll-reveal" style="background: green; border: 3px solid black; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); color: white; font-size: 18px;">
-                <div class="kpi-icon" style="font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: white; color: black;"><i class="fas fa-arrow-up"></i></div>
-                <div class="kpi-info">
-                     <h3 style="font-size: 1.5rem; font-weight: 700; color: white;"><%= groups.filter(g => g.group_type === 'sales').length %></h3>
-                    <p style="font-size: 0.875rem; color: white;">Sales Groups</p>
-                </div>
+            <div style="background: green; color: white; padding: 1rem; border: 3px solid black; font-size: 18px;">
+                <h3>TEST CARD 3 - GREEN</h3>
+                <p>Sales Groups: <%= groups.filter(g => g.group_type === 'sales').length %></p>
             </div>
-             <div class="content-card kpi-card scroll-reveal" style="background: purple; border: 3px solid black; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); color: white; font-size: 18px;">
-                <div class="kpi-icon" style="font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: white; color: black;"><i class="fas fa-truck"></i></div>
-                <div class="kpi-info">
-                     <h3 style="font-size: 1.5rem; font-weight: 700; color: white;"><%= groups.filter(g => g.group_type === 'delivery').length %></h3>
-                    <p style="font-size: 0.875rem; color: white;">Delivery Groups</p>
-                </div>
+            <div style="background: purple; color: white; padding: 1rem; border: 3px solid black; font-size: 18px;">
+                <h3>TEST CARD 4 - PURPLE</h3>
+                <p>Delivery Groups: <%= groups.filter(g => g.group_type === 'delivery').length %></p>
             </div>
         </div>
 
