@@ -1,591 +1,343 @@
-<%- include('header', { title: 'Groups Management' }) %>
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Groups Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="/css/groups-dashboard.css">
+</head>
+<body>
 
-<div class="container-fluid">
-  <div class="row">
-    <!-- Sidebar -->
-    <%- include('sidebar') %>
-    
-    <!-- Main Content -->
-    <div class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">Groups Management</h1>
-        <div class="btn-toolbar mb-2 mb-md-0">
-          <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGroupModal">
-            <i class="fas fa-plus"></i> Add New Group
-          </button>
-        </div>
-      </div>
-
-      <!-- Business Filter -->
-      <div class="row mb-4">
-        <div class="col-md-6">
-          <label for="businessFilter" class="form-label">Filter by Business</label>
-          <select class="form-select" id="businessFilter" onchange="filterGroups()">
-            <option value="">All Businesses</option>
-            <% businesses.forEach(business => { %>
-              <option value="<%= business.business_id %>"><%= business.business_name %></option>
-            <% }); %>
-          </select>
-        </div>
-        <div class="col-md-6">
-          <label for="typeFilter" class="form-label">Filter by Type</label>
-          <select class="form-select" id="typeFilter" onchange="filterGroups()">
-            <option value="">All Types</option>
-            <option value="sales">Sales Groups</option>
-            <option value="delivery">Delivery Groups</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Groups Table -->
-      <div class="card">
-        <div class="card-header">
-          <h5 class="mb-0">WhatsApp Groups</h5>
-        </div>
-        <div class="card-body">
-          <div class="table-responsive">
-            <table class="table table-hover" id="groupsTable">
-              <thead>
-                <tr>
-                  <th>Business</th>
-                  <th>Group Name</th>
-                  <th>Type</th>
-                  <th>Status</th>
-                  <th>Created</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% if (groups && groups.length > 0) { %>
-                  <% groups.forEach(group => { %>
-                    <% 
-                      const businessGroups = groups.filter(g => g.business_id === group.business_id);
-                      const hasSales = businessGroups.some(g => g.group_type === 'sales');
-                      const hasDelivery = businessGroups.some(g => g.group_type === 'delivery');
-                      const isAtLimit = hasSales && hasDelivery;
-                    %>
-                    <tr data-business="<%= group.business_id %>" data-type="<%= group.group_type %>">
-                      <td>
-                        <div class="d-flex align-items-center">
-                          <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2">
-                            <%= group.business_name.charAt(0).toUpperCase() %>
-                          </div>
-                          <span><%= group.business_name %></span>
-                          <% if (isAtLimit) { %>
-                            <span class="badge bg-success ms-2" title="This business has both sales and delivery groups">
-                              <i class="fas fa-check-circle"></i> Complete
-                            </span>
-                          <% } %>
-                        </div>
-                      </td>
-                      <td>
-                        <strong><%= group.group_name %></strong>
-                        <br>
-                        <small class="text-muted"><%= group.group_id %></small>
-                      </td>
-                      <td>
-                        <span class="badge bg-<%= group.group_type === 'sales' ? 'success' : 'info' %>">
-                          <%= group.group_type.charAt(0).toUpperCase() + group.group_type.slice(1) %>
-                        </span>
-                      </td>
-                      <td>
-                        <span class="badge bg-success">
-                          <i class="fas fa-check-circle"></i> Active
-                        </span>
-                      </td>
-                      <td>
-                        <%= new Date(group.created_at).toLocaleDateString() %>
-                        <br>
-                        <small class="text-muted"><%= new Date(group.created_at).toLocaleTimeString() %></small>
-                      </td>
-                      <td>
-                        <div class="btn-group" role="group">
-                          <button class="btn btn-sm btn-outline-primary" onclick="viewGroup('<%= group.id %>')">
-                            <i class="fas fa-eye"></i> View
-                          </button>
-                          <button class="btn btn-sm btn-outline-danger" onclick="removeGroup('<%= group.id %>')">
-                            <i class="fas fa-trash"></i> Remove
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  <% }); %>
-                <% } else { %>
-                  <tr>
-                    <td colspan="6" class="text-center py-5">
-                      <div class="text-muted">
-                        <i class="fas fa-comments fa-3x mb-3"></i>
-                        <h5>No Groups Found</h5>
-                        <p>You haven't set up any WhatsApp groups yet.</p>
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGroupModal">
-                          <i class="fas fa-plus"></i> Add Your First Group
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                <% } %>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Group Statistics -->
-      <% if (groups && groups.length > 0) { %>
-        <div class="row mt-4">
-          <div class="col-md-3">
-            <div class="card bg-primary text-white">
-              <div class="card-body">
-                <div class="d-flex justify-content-between">
-                  <div>
-                    <h6 class="card-title">Total Groups</h6>
-                    <h3 class="mb-0"><%= groups.length %></h3>
-                  </div>
-                  <div class="align-self-center">
-                    <i class="fas fa-comments fa-2x"></i>
-                  </div>
-                </div>
-              </div>
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="/dashboard" class="logo-section">
+                    <div class="logo-icon"><i class="fas fa-users"></i></div>
+                    <div class="logo-text"><span class="main-title">Groups</span></div>
+                </a>
             </div>
-          </div>
-          <div class="col-md-3">
-            <div class="card bg-success text-white">
-              <div class="card-body">
-                <div class="d-flex justify-content-between">
-                  <div>
-                    <h6 class="card-title">Sales Groups</h6>
-                    <h3 class="mb-0"><%= groups.filter(g => g.group_type === 'sales').length %></h3>
-                  </div>
-                  <div class="align-self-center">
-                    <i class="fas fa-shopping-cart fa-2x"></i>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="card bg-info text-white">
-              <div class="card-body">
-                <div class="d-flex justify-content-between">
-                  <div>
-                    <h6 class="card-title">Delivery Groups</h6>
-                    <h3 class="mb-0"><%= groups.filter(g => g.group_type === 'delivery').length %></h3>
-                  </div>
-                  <div class="align-self-center">
-                    <i class="fas fa-truck fa-2x"></i>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="card bg-warning text-white">
-              <div class="card-body">
-                <div class="d-flex justify-content-between">
-                  <div>
-                    <h6 class="card-title">Active Businesses</h6>
-                    <h3 class="mb-0"><%= new Set(groups.map(g => g.business_id)).size %></h3>
-                  </div>
-                  <div class="align-self-center">
-                    <i class="fas fa-building fa-2x"></i>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      <% } %>
-    </div>
-  </div>
-</div>
-
-<!-- Add Group Modal -->
-<div class="modal fade" id="addGroupModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Add New WhatsApp Group</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <form id="addGroupForm">
-          <div class="row">
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label for="businessSelect" class="form-label">Business *</label>
-                <select class="form-select" id="businessSelect" name="business_id" required onchange="updateGroupTypeOptions()">
-                  <option value="">Select a business</option>
-                  <% businesses.forEach(business => { %>
-                    <% 
-                      const businessGroups = groups.filter(g => g.business_id === business.business_id);
-                      const hasSales = businessGroups.some(g => g.group_type === 'sales');
-                      const hasDelivery = businessGroups.some(g => g.group_type === 'delivery');
-                      const isAtLimit = hasSales && hasDelivery;
-                    %>
-                    <option value="<%= business.business_id %>" 
-                            data-has-sales="<%= hasSales %>" 
-                            data-has-delivery="<%= hasDelivery %>"
-                            <%= isAtLimit ? 'disabled' : '' %>>
-                      <%= business.business_name %>
-                      <% if (isAtLimit) { %>
-                        (Has both groups)
-                      <% } else if (hasSales || hasDelivery) { %>
-                        (<%= hasSales ? 'Has sales' : '' %><%= hasSales && hasDelivery ? ', ' : '' %><%= hasDelivery ? 'Has delivery' : '' %>)
-                      <% } %>
-                    </option>
-                  <% }); %>
-                </select>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label for="groupType" class="form-label">Group Type *</label>
-                <select class="form-select" id="groupType" name="group_type" required>
-                  <option value="">Select group type</option>
-                  <option value="sales">Sales Group</option>
-                  <option value="delivery">Delivery Group</option>
-                </select>
-              </div>
-            </div>
-          </div>
-          
-          <div class="mb-3">
-            <label for="groupName" class="form-label">Group Name *</label>
-            <input type="text" class="form-control" id="groupName" name="group_name" required>
-            <div class="form-text">The name of your WhatsApp group</div>
-          </div>
-          
-          <div class="mb-3">
-            <label for="groupId" class="form-label">Group ID *</label>
-            <input type="text" class="form-control" id="groupId" name="group_id" required>
-            <div class="form-text">The WhatsApp group ID (you'll get this after adding the bot to the group)</div>
-          </div>
-          
-          <div class="alert alert-info">
-            <h6><i class="fas fa-info-circle"></i> Setup Instructions</h6>
-            <ol class="mb-0">
-              <li class="mb-2">
-                <strong>Step 1: Add Our Bot to Your Group</strong>
-                <p class="mb-1">Add this WhatsApp number to your group as an admin:</p>
-                <div class="alert alert-light border">
-                  <strong>Bot Number:</strong> <code id="botNumber">Loading...</code>
-                  <button class="btn btn-sm btn-outline-primary float-end" onclick="copyBotNumber()">Copy</button>
-                </div>
-                <small class="text-muted">Make sure to give the bot admin permissions for full functionality</small>
-              </li>
-              <li class="mb-2">
-                <strong>Step 2: Run the Setup Command</strong>
-                <p class="mb-1">In your WhatsApp group, type this command:</p>
-                <div class="alert alert-light border">
-                  <code>/setup YOUR-BUSINESS-CODE</code>
-                  <button class="btn btn-sm btn-outline-primary float-end" onclick="copySetupCommand()">Copy</button>
-                </div>
-                <small class="text-muted">Replace YOUR-BUSINESS-CODE with your actual business setup code</small>
-              </li>
-              <li class="mb-2">
-                <strong>Step 3: Choose Group Type</strong>
-                <p class="mb-1">The bot will ask if this is a "sales" or "delivery" group. Reply with:</p>
-                <ul class="mb-1">
-                  <li><strong>"sales"</strong> - For receiving customer orders</li>
-                  <li><strong>"delivery"</strong> - For managing deliveries and tracking orders</li>
-                </ul>
-              </li>
-              <li class="mb-2">
-                <strong>Step 4: Get Group ID</strong>
-                <p class="mb-1">After setup, the bot will provide a Group ID. Copy it and enter it above.</p>
-              </li>
-              <li>
-                <strong>Step 5: Save and Repeat</strong>
-                <p class="mb-0">Save this group, then repeat the process for your second group.</p>
-              </li>
-            </ol>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="addGroup()">Add Group</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Group Details Modal -->
-<div class="modal fade" id="groupDetailsModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Group Details</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body" id="groupDetailsContent">
-        Loading...
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Setup Instructions Modal -->
-<div class="modal fade" id="setupInstructionsModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Setup Instructions</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body" id="setupInstructionsContent">
-        Loading...
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-  function updateGroupTypeOptions() {
-    const businessSelect = document.getElementById('businessSelect');
-    const groupTypeSelect = document.getElementById('groupType');
-    const selectedOption = businessSelect.options[businessSelect.selectedIndex];
-    
-    if (!selectedOption || !selectedOption.value) {
-      // Reset group type options
-      groupTypeSelect.innerHTML = '<option value="">Select group type</option><option value="sales">Sales Group</option><option value="delivery">Delivery Group</option>';
-      return;
-    }
-    
-    const hasSales = selectedOption.getAttribute('data-has-sales') === 'true';
-    const hasDelivery = selectedOption.getAttribute('data-has-delivery') === 'true';
-    
-    // Clear existing options
-    groupTypeSelect.innerHTML = '<option value="">Select group type</option>';
-    
-    // Add available options
-    if (!hasSales) {
-      groupTypeSelect.innerHTML += '<option value="sales">Sales Group</option>';
-    }
-    if (!hasDelivery) {
-      groupTypeSelect.innerHTML += '<option value="delivery">Delivery Group</option>';
-    }
-    
-    // If no options available, show message
-    if (hasSales && hasDelivery) {
-      groupTypeSelect.innerHTML = '<option value="">This business already has both groups</option>';
-    }
-  }
-
-  function filterGroups() {
-    const businessFilter = document.getElementById('businessFilter').value;
-    const typeFilter = document.getElementById('typeFilter').value;
-    const rows = document.querySelectorAll('#groupsTable tbody tr');
-    
-    rows.forEach(row => {
-      const business = row.getAttribute('data-business');
-      const type = row.getAttribute('data-type');
-      
-      const businessMatch = !businessFilter || business === businessFilter;
-      const typeMatch = !typeFilter || type === typeFilter;
-      
-      row.style.display = businessMatch && typeMatch ? '' : 'none';
-    });
-  }
-
-  async function addGroup() {
-    const form = document.getElementById('addGroupForm');
-    const formData = new FormData(form);
-    
-    try {
-      const response = await fetch('/api/groups', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          business_id: formData.get('business_id'),
-          group_type: formData.get('group_type'),
-          group_name: formData.get('group_name'),
-          group_id: formData.get('group_id'),
-          user_id: '<%= userId %>'
-        })
-      });
-      
-      const result = await response.json();
-      
-      if (response.ok) {
-        alert('Group added successfully!');
-        location.reload();
-      } else {
-        alert('Failed to add group: ' + result.error);
-      }
-    } catch (error) {
-      alert('Error adding group: ' + error.message);
-    }
-  }
-
-  async function viewGroup(groupId) {
-    try {
-      const response = await fetch(`/api/groups/${groupId}?userId=<%= userId %>`);
-      const group = await response.json();
-      
-      if (response.ok) {
-        const content = document.getElementById('groupDetailsContent');
-        content.innerHTML = `
-          <div class="row">
-            <div class="col-md-6">
-              <h6>Group Information</h6>
-              <table class="table table-sm">
-                <tr><td><strong>Group Name:</strong></td><td>${group.group_name}</td></tr>
-                <tr><td><strong>Group ID:</strong></td><td><code>${group.group_id}</code></td></tr>
-                <tr><td><strong>Type:</strong></td><td><span class="badge bg-${group.group_type === 'sales' ? 'success' : 'info'}">${group.group_type}</span></td></tr>
-                <tr><td><strong>Business:</strong></td><td>${group.business_name}</td></tr>
-                <tr><td><strong>Created:</strong></td><td>${new Date(group.created_at).toLocaleString()}</td></tr>
-              </table>
-            </div>
-            <div class="col-md-6">
-              <h6>Group Statistics</h6>
-              <div class="row">
-                <div class="col-6">
-                  <div class="card bg-light">
-                    <div class="card-body text-center">
-                      <h6>Total Orders</h6>
-                      <h3>${group.orderCount || 0}</h3>
+            <div class="header-right">
+                <a href="/dashboard" class="nav-link">Dashboard</a>
+                <a href="/orders" class="nav-link">Orders</a>
+                <a href="/groups" class="nav-link active">Groups</a>
+                <a href="/businesses" class="nav-link">Businesses</a>
+                <button class="btn btn-icon" id="theme-toggle" aria-label="Toggle Theme">
+                    <i class="fas fa-sun"></i><i class="fas fa-moon" style="display: none;"></i>
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-icon" id="profileDropdown"><i class="fas fa-user"></i></button>
+                    <div class="dropdown-content" id="profileMenu">
+                        <a href="/settings" class="dropdown-item"><i class="fas fa-cog"></i> Settings</a>
+                        <form action="/logout" method="post" class="dropdown-item" style="padding: 0; margin: 0;">
+                            <button type="submit" style="all: unset; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; width: 100%;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                        </form>
                     </div>
-                  </div>
                 </div>
-                <div class="col-6">
-                  <div class="card bg-light">
-                    <div class="card-body text-center">
-                      <h6>Pending Orders</h6>
-                      <h3>${group.pendingOrders || 0}</h3>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-content">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Groups Overview</h1>
+                <p class="page-subtitle">Manage your WhatsApp sales and delivery groups.</p>
+            </div>
+            <div class="header-actions-right">
+                <button class="btn btn-primary" id="openAddGroupModal"><i class="fas fa-plus"></i> Add New Group</button>
+            </div>
+        </div>
+
+        <% const totalGroups = groups.length; %>
+        <% const activeBusinesses = new Set(groups.map(g => g.business_id)).size; %>
+        <div class="kpi-grid">
+            <div class="content-card kpi-card scroll-reveal">
+                <div class="kpi-icon"><i class="fas fa-comments"></i></div>
+                <div class="kpi-info">
+                    <h3><%= totalGroups %></h3>
+                    <p>Total Groups</p>
+                </div>
+            </div>
+            <div class="content-card kpi-card scroll-reveal" style="--delay: 0.1s;">
+                <div class="kpi-icon"><i class="fas fa-store"></i></div>
+                <div class="kpi-info">
+                    <h3><%= activeBusinesses %></h3>
+                    <p>Active Businesses</p>
+                </div>
+            </div>
+             <div class="content-card kpi-card scroll-reveal" style="--delay: 0.2s;">
+                <div class="kpi-icon"><i class="fas fa-arrow-up"></i></div>
+                <div class="kpi-info">
+                     <h3><%= groups.filter(g => g.group_type === 'sales').length %></h3>
+                    <p>Sales Groups</p>
+                </div>
+            </div>
+             <div class="content-card kpi-card scroll-reveal" style="--delay: 0.3s;">
+                <div class="kpi-icon"><i class="fas fa-truck"></i></div>
+                <div class="kpi-info">
+                     <h3><%= groups.filter(g => g.group_type === 'delivery').length %></h3>
+                    <p>Delivery Groups</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-card scroll-reveal" style="--delay: 0.4s;">
+            <div class="card-header">
+                <h2 class="card-title"><i class="fas fa-list-alt"></i> All Groups</h2>
+                <div class="filters-form">
+                    <div class="form-group">
+                        <label for="businessFilter" class="form-label">Filter by Business</label>
+                        <select id="businessFilter" class="form-select">
+                            <option value="">All Businesses</option>
+                             <% businesses.forEach(business => { %>
+                              <option value="<%= business.business_id %>"><%= business.business_name %></option>
+                            <% }); %>
+                        </select>
                     </div>
-                  </div>
+                     <div class="form-group">
+                        <label for="typeFilter" class="form-label">Filter by Type</label>
+                        <select id="typeFilter" class="form-select">
+                            <option value="">All Types</option>
+                            <option value="sales">Sales</option>
+                            <option value="delivery">Delivery</option>
+                        </select>
+                    </div>
                 </div>
-              </div>
             </div>
-          </div>
-          <div class="mt-3">
-            <h6>Recent Activity</h6>
-            <div class="alert alert-info">
-              <i class="fas fa-info-circle"></i>
-              Activity tracking will be available soon.
+            <div class="card-content">
+                <div class="table-container">
+                    <table class="data-table" id="groupsTable">
+                        <thead>
+                            <tr>
+                                <th>Business</th>
+                                <th>Group Name</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (groups && groups.length > 0) { %>
+                                <% groups.forEach(group => { %>
+                                    <tr data-business="<%= group.business_id %>" data-type="<%= group.group_type %>">
+                                        <td>
+                                            <div class="business-info">
+                                                <div class="business-avatar"><%= group.business_name.charAt(0).toUpperCase() %></div>
+                                                <span><%= group.business_name %></span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <strong><%= group.group_name %></strong><br>
+                                            <small class="text-muted"><%= group.group_id %></small>
+                                        </td>
+                                        <td><span class="group-type-badge <%= group.group_type %>"><%= group.group_type %></span></td>
+                                        <td>
+                                            <span class="status-badge <%= group.is_active ? 'active' : 'inactive' %>">
+                                                <%= group.is_active ? 'Active' : 'Inactive' %>
+                                            </span>
+                                        </td>
+                                        <td><%= new Date(group.created_at).toLocaleDateString() %></td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button class="btn btn-sm btn-outline" onclick="removeGroup('<%= group.id %>')"><i class="fas fa-trash"></i> Remove</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="6">
+                                        <div class="no-results">
+                                            <i class="fas fa-comments"></i>
+                                            <h5>No Groups Found</h5>
+                                            <p>Get started by adding your first group.</p>
+                                            <button class="btn btn-primary" id="addFirstGroupBtn"><i class="fas fa-plus"></i> Add Group</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-          </div>
-        `;
-        
-        const modal = new bootstrap.Modal(document.getElementById('groupDetailsModal'));
-        modal.show();
-      } else {
-        alert('Failed to load group details: ' + group.error);
-      }
-    } catch (error) {
-      alert('Error loading group details: ' + error.message);
-    }
-  }
+        </div>
+    </div>
 
-  function showSetupInstructions(groupId) {
-    const content = document.getElementById('setupInstructionsContent');
-    content.innerHTML = `
-      <div class="alert alert-warning">
-        <h6><i class="fas fa-exclamation-triangle"></i> Important</h6>
-        <p>Make sure you have admin rights in the WhatsApp group before proceeding.</p>
-      </div>
-      
-      <h6>Step-by-Step Setup:</h6>
-      <ol>
-        <li class="mb-2">
-          <strong>Add the Bot to Your Group</strong>
-          <p class="mb-0">Add our WhatsApp bot number to your group as an admin.</p>
-        </li>
-        <li class="mb-2">
-          <strong>Run Setup Command</strong>
-          <p class="mb-0">In the group, type: <code>/setup</code></p>
-        </li>
-        <li class="mb-2">
-          <strong>Get Group ID</strong>
-          <p class="mb-0">The bot will respond with the group ID. Copy it and update the group details.</p>
-        </li>
-        <li class="mb-2">
-          <strong>Test the Setup</strong>
-          <p class="mb-0">Send a test message to verify the bot is working correctly.</p>
-        </li>
-      </ol>
-      
-      <div class="alert alert-info">
-        <h6><i class="fas fa-lightbulb"></i> Tips</h6>
-        <ul class="mb-0">
-          <li>Keep the bot as an admin for full functionality</li>
-          <li>Sales groups receive customer orders</li>
-          <li>Delivery groups manage order fulfillment</li>
-          <li>You can have multiple groups per business</li>
-        </ul>
-      </div>
-    `;
-    
-    const modal = new bootstrap.Modal(document.getElementById('setupInstructionsModal'));
-    modal.show();
-  }
+    <!-- Add Group Modal -->
+    <div class="modal-overlay" id="addGroupModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New WhatsApp Group</h5>
+                <button type="button" class="close-modal" id="closeAddGroupModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addGroupForm">
+                    <input type="hidden" name="user_id" value="<%= userId %>">
+                    <div class="form-group mb-3">
+                        <label for="businessSelect" class="form-label">Business *</label>
+                        <select class="form-select" id="businessSelect" name="business_id" required>
+                             <option value="" disabled selected>Select a business</option>
+                             <% businesses.forEach(business => { %>
+                                <% 
+                                    const businessGroups = groups.filter(g => g.business_id === business.business_id);
+                                    const hasSales = businessGroups.some(g => g.group_type === 'sales');
+                                    const hasDelivery = businessGroups.some(g => g.group_type === 'delivery');
+                                    const isAtLimit = hasSales && hasDelivery;
+                                %>
+                                <option value="<%= business.business_id %>" data-has-sales="<%= hasSales %>" data-has-delivery="<%= hasDelivery %>" <%= isAtLimit ? 'disabled' : '' %>>
+                                    <%= business.business_name %>
+                                </option>
+                            <% }); %>
+                        </select>
+                    </div>
+                     <div class="form-group mb-3">
+                        <label for="groupType" class="form-label">Group Type *</label>
+                        <select class="form-select" id="groupType" name="group_type" required>
+                            <option value="" disabled selected>Select group type</option>
+                            <option value="sales">Sales Group</option>
+                            <option value="delivery">Delivery Group</option>
+                        </select>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="groupName" class="form-label">Group Name *</label>
+                        <input type="text" class="form-input" id="groupName" name="group_name" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="groupId" class="form-label">Group ID *</label>
+                        <input type="text" class="form-input" id="groupId" name="group_id" required placeholder="e.g., 12036302...-1619...@g.us">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Add Group</button>
+                </form>
+            </div>
+        </div>
+    </div>
 
-  async function removeGroup(groupId) {
-    if (!confirm('Are you sure you want to remove this group? This action cannot be undone.')) {
-      return;
-    }
-    
-    try {
-      const response = await fetch(`/api/groups/${groupId}?userId=<%= userId %>`, {
-        method: 'DELETE'
-      });
-      
-      const result = await response.json();
-      
-      if (response.ok) {
-        alert('Group removed successfully!');
-        location.reload();
-      } else {
-        alert('Failed to remove group: ' + result.error);
-      }
-    } catch (error) {
-      alert('Error removing group: ' + error.message);
-    }
-  }
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Theme toggle
+            const themeToggle = document.getElementById('theme-toggle');
+            const html = document.documentElement;
+            const sunIcon = themeToggle.querySelector('.fa-sun');
+            const moonIcon = themeToggle.querySelector('.fa-moon');
 
-  // Load bot number when page loads
-  document.addEventListener('DOMContentLoaded', async function() {
-    try {
-      const response = await fetch('/api/whatsapp/bot-info');
-      const botInfo = await response.json();
-      
-      if (botInfo.success) {
-        document.getElementById('botNumber').textContent = botInfo.number;
-      } else {
-        document.getElementById('botNumber').textContent = 'Not available';
-      }
-    } catch (error) {
-      console.error('Error loading bot info:', error);
-      document.getElementById('botNumber').textContent = 'Error loading';
-    }
-  });
+            function applyTheme(theme) {
+                html.setAttribute('data-theme', theme);
+                if (theme === 'dark') {
+                    sunIcon.style.display = 'none';
+                    moonIcon.style.display = 'inline-block';
+                } else {
+                    sunIcon.style.display = 'inline-block';
+                    moonIcon.style.display = 'none';
+                }
+            }
 
-  function copyBotNumber() {
-    const botNumber = document.querySelector('#botNumber').textContent;
-    if (botNumber === 'Loading...' || botNumber === 'Not available' || botNumber === 'Error loading') {
-      alert('Bot number not available yet. Please try again in a moment.');
-      return;
-    }
-    navigator.clipboard.writeText(botNumber).then(() => {
-      const button = event.target;
-      button.textContent = 'Copied!';
-      setTimeout(() => {
-        button.textContent = 'Copy';
-      }, 2000);
-    });
-  }
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            applyTheme(savedTheme);
 
-  function copySetupCommand() {
-    const command = document.querySelector('code').textContent;
-    navigator.clipboard.writeText(command).then(() => {
-      const button = event.target;
-      button.textContent = 'Copied!';
-      setTimeout(() => {
-        button.textContent = 'Copy';
-      }, 2000);
-    });
-  }
-</script> 
+            themeToggle.addEventListener('click', () => {
+                const newTheme = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+                localStorage.setItem('theme', newTheme);
+                applyTheme(newTheme);
+            });
+
+            // Dropdown
+             function setupDropdown(buttonId, menuId) {
+                const dropdownBtn = document.getElementById(buttonId);
+                const dropdownMenu = document.getElementById(menuId);
+
+                if (dropdownBtn && dropdownMenu) {
+                    dropdownBtn.addEventListener('click', (event) => {
+                        event.stopPropagation();
+                        document.querySelectorAll('.dropdown-content.show').forEach(menu => {
+                            if (menu.id !== menuId) menu.classList.remove('show');
+                        });
+                        dropdownMenu.classList.toggle('show');
+                    });
+                }
+            }
+            setupDropdown('profileDropdown', 'profileMenu');
+            window.addEventListener('click', () => document.querySelectorAll('.dropdown-content.show').forEach(m => m.classList.remove('show')));
+
+            // Modal
+            const modal = document.getElementById('addGroupModal');
+            const openModalBtn = document.getElementById('openAddGroupModal');
+            const closeModalBtn = document.getElementById('closeAddGroupModal');
+            const addFirstGroupBtn = document.getElementById('addFirstGroupBtn');
+            
+            function showModal() { modal.classList.add('show'); }
+            function hideModal() { modal.classList.remove('show'); }
+
+            if(openModalBtn) openModalBtn.addEventListener('click', showModal);
+            if(addFirstGroupBtn) addFirstGroupBtn.addEventListener('click', showModal);
+            if(closeModalBtn) closeModalBtn.addEventListener('click', hideModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) hideModal();
+            });
+
+            // Filtering
+            const businessFilter = document.getElementById('businessFilter');
+            const typeFilter = document.getElementById('typeFilter');
+            const groupsTable = document.getElementById('groupsTable').getElementsByTagName('tbody')[0];
+
+            function filterGroups() {
+                const businessValue = businessFilter.value;
+                const typeValue = typeFilter.value;
+                for (let row of groupsTable.rows) {
+                    const rowBusiness = row.getAttribute('data-business');
+                    const rowType = row.getAttribute('data-type');
+                    const businessMatch = !businessValue || rowBusiness === businessValue;
+                    const typeMatch = !typeValue || rowType === typeValue;
+                    row.style.display = businessMatch && typeMatch ? '' : 'none';
+                }
+            }
+            if(businessFilter) businessFilter.addEventListener('change', filterGroups);
+            if(typeFilter) typeFilter.addEventListener('change', filterGroups);
+            
+            // Add Group Form Submission
+            const addGroupForm = document.getElementById('addGroupForm');
+            addGroupForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(addGroupForm);
+                const data = Object.fromEntries(formData.entries());
+                
+                try {
+                    const response = await fetch('/api/groups', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    const result = await response.json();
+                    if(response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert('Error: ' + result.error);
+                    }
+                } catch (error) {
+                    alert('An unexpected error occurred.');
+                }
+            });
+
+            // Remove Group
+            window.removeGroup = async (groupId) => {
+                if(confirm('Are you sure you want to remove this group?')) {
+                    try {
+                         const response = await fetch(`/api/groups/${groupId}?userId=<%= userId %>`, {
+                            method: 'DELETE'
+                        });
+                        const result = await response.json();
+                        if(response.ok) {
+                            window.location.reload();
+                        } else {
+                            alert('Error: ' + result.error);
+                        }
+                    } catch(error) {
+                         alert('An unexpected error occurred.');
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html> 

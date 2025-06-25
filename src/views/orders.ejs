@@ -17,35 +17,35 @@
                 <a href="/dashboard" class="logo-section">
                     <div class="logo-icon">
                         <i class="fas fa-box-open"></i>
-                    </div>
+        </div>
                     <div class="logo-text">
                         <span class="main-title" style="color: var(--primary-color); font-weight: 700; font-size: 1.5rem;">Orders Overview</span>
-                    </div>
+      </div>
                 </a>
-            </div>
+    </div>
 
             <div class="header-right">
                 <a href="/dashboard" class="nav-link">Dashboard</a>
                 <a href="/orders" class="nav-link active">Orders</a>
                 <a href="/groups" class="nav-link">Groups</a>
-                <a href="/business" class="nav-link">Businesses</a>
+                <a href="/businesses" class="nav-link">Businesses</a>
 
                 <button class="btn btn-icon" id="theme-toggle" aria-label="Toggle Theme">
                     <i class="fas fa-sun"></i>
                     <i class="fas fa-moon" style="display: none;"></i>
-                </button>
+            </button>
                 <div class="dropdown">
                     <button class="btn btn-icon" id="profileDropdown">
                         <i class="fas fa-user"></i>
-                    </button>
+          </button>
                     <div class="dropdown-content" id="profileMenu">
                         <a href="/settings" class="dropdown-item"><i class="fas fa-cog"></i> Settings</a>
                         <form action="/logout" method="post" class="dropdown-item" style="padding: 0; margin: 0;">
                            <button type="submit" style="all: unset; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; width: 100%;"><i class="fas fa-sign-out-alt"></i> Logout</button>
                         </form>
-                    </div>
-                </div>
+        </div>
             </div>
+          </div>
         </div>
     </header>
 
@@ -68,11 +68,11 @@
                         <a href="/api/export/orders?format=json&userId=<%= userId %>&<%= new URLSearchParams(query).toString() %>" class="dropdown-item">
                             <i class="fas fa-file-code"></i> as JSON
                         </a>
-                    </div>
-                </div>
             </div>
+          </div>
         </div>
-        
+      </div>
+      
         <!-- Analytics Charts -->
         <div class="charts-grid">
             <div class="chart-card scroll-reveal">
@@ -85,7 +85,7 @@
                     <canvas id="businessChart"></canvas>
                 </div>
             </div>
-        </div>
+          </div>
         <div class="content-card scroll-reveal">
              <div class="card-content chart-container" style="min-height: 250px;">
                 <canvas id="trendChart"></canvas>
