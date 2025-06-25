@@ -65,9 +65,9 @@
 
         <div class="existing-groups">
           <h5><i class="fas fa-list"></i> Existing Groups</h5>
-          <% if (groups && groups.length > 0) { %>
+          <% if (businessGroups && businessGroups.length > 0) { %>
             <div class="groups-list">
-              <% groups.forEach(group => { %>
+              <% businessGroups.forEach(group => { %>
                 <div class="group-item">
                   <span class="group-name"><%= group.name %></span>
                   <span class="group-status <%= group.is_active ? 'active' : 'inactive' %>">
