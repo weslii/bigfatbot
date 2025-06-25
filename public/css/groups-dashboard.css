@@ -36,8 +36,8 @@
     --text-primary: #f8fafc;
     --text-secondary: #cbd5e1;
     --text-muted: #94a3b8;
-    --card-bg: #0a0c26;
-    --card-border: #0a0c26;
+    --card-bg: #0e1426;
+    --card-border: #0e1426;
     --card-hover-transform: translateY(-4px) scale(1.02);
     --card-hover-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
 }
