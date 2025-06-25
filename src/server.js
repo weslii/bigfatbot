@@ -1439,9 +1439,9 @@ async function startServer() {
 
         const { businessId } = req.params;
 
-        // Get business details
+        // Get business details with all necessary fields
         const business = await db.query('groups')
-          .select('business_id', 'business_name', 'created_at')
+          .select('business_id', 'business_name', 'created_at', 'updated_at', 'setup_identifier', 'description', 'phone', 'email', 'address')
           .where('business_id', businessId)
           .where('user_id', userId)
           .first();
@@ -1452,6 +1452,7 @@ async function startServer() {
 
         // Get business groups
         const businessGroups = await db.query('groups')
+          .select('id', 'group_name', 'group_id', 'group_type', 'created_at')
           .where('business_id', businessId)
           .orderBy('created_at', 'desc');
 
@@ -1468,6 +1469,7 @@ async function startServer() {
 
         // Get recent orders
         const recentOrders = await db.query('orders')
+          .select('id', 'order_id', 'customer_name', 'items', 'status', 'created_at')
           .where('business_id', businessId)
           .orderBy('created_at', 'desc')
           .limit(10);
@@ -1624,6 +1626,7 @@ async function startServer() {
 
         // Get business groups
         const businessGroups = await db.query('groups')
+          .select('id', 'group_name', 'group_id', 'group_type', 'created_at')
           .where('business_id', businessId)
           .orderBy('created_at', 'desc');
 
