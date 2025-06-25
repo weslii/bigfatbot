@@ -15,6 +15,9 @@
         <div class="header-content">
             <div class="header-left">
                 <a href="/dashboard" class="logo-section">
+                    <div class="logo-icon">
+                        <i class="fas fa-box-open"></i>
+                    </div>
                     <div class="logo-text">
                         <span class="main-title" style="color: var(--primary-color); font-weight: 700; font-size: 1.5rem;">Orders Overview</span>
                     </div>
@@ -22,18 +25,25 @@
             </div>
 
             <div class="header-right">
-                <a href="/settings" class="nav-link">Settings</a>
-                <form action="/logout" method="post" style="margin: 0;">
-                    <button type="submit" class="nav-link" style="background: none; border: none; cursor: pointer;">Logout</button>
-                </form>
+                <a href="/dashboard" class="nav-link">Dashboard</a>
+                <a href="/orders" class="nav-link active">Orders</a>
+                <a href="/groups" class="nav-link">Groups</a>
+                <a href="/businesses" class="nav-link">Businesses</a>
+
                 <button class="btn btn-icon" id="theme-toggle" aria-label="Toggle Theme">
                     <i class="fas fa-sun"></i>
                     <i class="fas fa-moon" style="display: none;"></i>
                 </button>
-                <div class="profile-dropdown">
-                    <button class="btn btn-icon profile-btn">
-                        <img src="/placeholder-user.jpg" alt="User" class="profile-img">
+                <div class="dropdown">
+                    <button class="btn btn-icon" id="profileDropdown">
+                        <i class="fas fa-user"></i>
                     </button>
+                    <div class="dropdown-content" id="profileMenu">
+                        <a href="/settings" class="dropdown-item"><i class="fas fa-cog"></i> Settings</a>
+                        <form action="/logout" method="post" class="dropdown-item" style="padding: 0; margin: 0;">
+                           <button type="submit" style="all: unset; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; width: 100%;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -58,11 +68,11 @@
                         <a href="/api/export/orders?format=json&userId=<%= userId %>&<%= new URLSearchParams(query).toString() %>" class="dropdown-item">
                             <i class="fas fa-file-code"></i> as JSON
                         </a>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
-      
+        
         <!-- Analytics Charts -->
         <div class="charts-grid">
             <div class="chart-card scroll-reveal">
@@ -75,7 +85,7 @@
                     <canvas id="businessChart"></canvas>
                 </div>
             </div>
-          </div>
+        </div>
         <div class="content-card scroll-reveal">
              <div class="card-content chart-container" style="min-height: 250px;">
                 <canvas id="trendChart"></canvas>
@@ -259,23 +269,32 @@
 <script>
         // Dropdown functionality
         function setupDropdown(buttonId, menuId) {
-            const button = document.getElementById(buttonId);
-            const menu = document.getElementById(menuId);
-            if(button && menu) {
-                button.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    menu.classList.toggle('show');
+            const dropdownBtn = document.getElementById(buttonId);
+            const dropdownMenu = document.getElementById(menuId);
+
+            if (dropdownBtn && dropdownMenu) {
+                dropdownBtn.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    // Hide other dropdowns
+                    document.querySelectorAll('.dropdown-content.show').forEach(menu => {
+                        if (menu.id !== menuId) {
+                            menu.classList.remove('show');
+                        }
+                    });
+                    dropdownMenu.classList.toggle('show');
                 });
             }
         }
-        setupDropdown('exportDropdown', 'exportMenu');
-        setupDropdown('profileDropdown', 'profileMenu');
-        setupDropdown('navMenuDropdown', 'navMenu');
 
-        document.addEventListener('click', () => {
-            document.querySelectorAll('.dropdown-content.show').forEach(menu => {
-                menu.classList.remove('show');
-            });
+        setupDropdown('profileDropdown', 'profileMenu');
+
+        // Hide dropdown when clicking outside
+        window.addEventListener('click', (event) => {
+            if (!event.target.closest('.dropdown')) {
+                document.querySelectorAll('.dropdown-content.show').forEach(menu => {
+                    menu.classList.remove('show');
+                });
+            }
         });
 
         // Theme toggle

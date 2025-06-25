@@ -29,7 +29,7 @@
     --background-corner: #020617;
     --background-middle: #0f172a;
     --background-color: #020617;
-    --surface-color: rgba(15, 23, 42, 0.75);
+    --surface-color: rgba(10, 15, 28, 0.85);
     --border-color: transparent;
     --text-primary: #f8fafc;
     --text-secondary: #cbd5e1;
@@ -212,7 +212,7 @@ body {
 }
 
 [data-theme="dark"] .content-card:hover {
-    background: var(--surface-color);
+    background: rgba(22, 31, 53, 0.85);
     box-shadow: 0 0 25px rgba(248, 250, 252, 0.07);
     border-color: rgba(248, 250, 252, 0.15);
 }
