@@ -480,11 +480,11 @@
     if (profileDropdownBtn && profileMenu) {
         profileDropdownBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            profileMenu.classList.toggle('show');
+            profileDropdownBtn.parentElement.classList.toggle('active');
         });
         document.addEventListener('click', function(e) {
             if (!profileMenu.contains(e.target) && !profileDropdownBtn.contains(e.target)) {
-                profileMenu.classList.remove('show');
+                profileDropdownBtn.parentElement.classList.remove('active');
             }
         });
     }
