@@ -18,9 +18,9 @@
                 </a>
             </div>
             <nav class="header-right" style="display: flex; align-items: center; gap: 0.75rem;">
-                <a href="/dashboard" class="nav-link"><i class="fas fa-home"></i> Dashboard</a>
-                <a href="/orders" class="nav-link"><i class="fas fa-box"></i> Orders</a>
-                <a href="/groups" class="nav-link"><i class="fas fa-users"></i> Groups</a>
+                <a href="/dashboard" class="nav-link<%= (typeof page !== 'undefined' && page === 'dashboard') ? ' active' : '' %>">Dashboard</a>
+                <a href="/orders" class="nav-link<%= (typeof page !== 'undefined' && page === 'orders') ? ' active' : '' %>">Orders</a>
+                <a href="/groups" class="nav-link<%= (typeof page !== 'undefined' && page === 'groups') ? ' active' : '' %>">Groups</a>
                 <button class="btn btn-icon" id="theme-toggle" aria-label="Toggle Theme">
                     <i class="fas fa-sun"></i><i class="fas fa-moon" style="display: none;"></i>
                 </button>
@@ -158,7 +158,6 @@
                                     <h2>My Groups</h2>
                                     <p>All groups you manage</p>
                                 </div>
-                                <a href="/setup-group" class="primary-btn" style="margin-left:auto;"><i class="fas fa-plus"></i> Add Group</a>
                             </div>
                             <div class="card-content">
                                 <% if (groups && groups.length) { %>
@@ -391,12 +390,22 @@
         from { opacity: 0; transform: scale(0.95); }
         to { opacity: 1; transform: scale(1); }
     }
+    .header {
+        background: rgba(255,255,255,0.5);
+        backdrop-filter: blur(16px);
+        border-bottom: 1px solid var(--border-color);
+        padding: 1.5rem 0; /* Thicker header */
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        transition: background-color 0.3s, border-color 0.3s;
+    }
     .header-content { max-width: 1400px; margin: 0 auto; padding: 0 1.5rem; display: flex; justify-content: space-between; align-items: center; }
     .header-left .logo-section { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; }
     .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #25d366, #128c7e); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.25rem; }
     .logo-text .main-title { font-size: 1.1rem; font-weight: 900; color: var(--primary-color); display: block; }
-    .header-right .nav-link { text-decoration: none; color: var(--text-secondary); font-weight: 500; font-size: 0.95rem; padding: 0.5rem 0.9rem; border-radius: 8px; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); }
-    .header-right .nav-link:hover, .header-right .nav-link.active { background: var(--primary-color); color: #fff; box-shadow: 0 4px 12px rgba(16,185,129,0.13); transform: translateY(-2px) scale(1.04); }
+    .header-right .nav-link { text-decoration: none; color: var(--text-secondary); font-weight: 500; font-size: 0.92rem; padding: 0.45rem 0.8rem; border-radius: 8px; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); font-weight: 400; }
+    .header-right .nav-link:hover, .header-right .nav-link.active { background: var(--primary-color); color: #fff; box-shadow: 0 4px 12px rgba(16,185,129,0.13); transform: translateY(-2px) scale(1.04); font-weight: 500; }
     .btn.btn-icon { width: 40px; height: 40px; padding: 0; font-size: 1.1rem; background: var(--surface-color); color: var(--text-secondary); border: 1px solid var(--border-color); border-radius: 8px; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); display: flex; align-items: center; justify-content: center; }
     .btn.btn-icon:hover { background: var(--primary-color); color: #fff; box-shadow: 0 4px 12px rgba(16,185,129,0.13); transform: translateY(-2px) scale(1.08); }
     .dropdown { position: relative; display: inline-block; }
@@ -440,17 +449,15 @@
         });
     });
     // Profile dropdown functionality
-    const profileBtn = document.getElementById('profileDropdown');
+    const profileDropdownBtn = document.getElementById('profileDropdown');
     const profileMenu = document.getElementById('profileMenu');
-    if (profileBtn) {
-        profileBtn.addEventListener('click', (e) => {
+    if (profileDropdownBtn && profileMenu) {
+        profileDropdownBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            profileMenu.parentElement.classList.toggle('active');
+            profileMenu.classList.toggle('show');
         });
-        document.addEventListener('click', (e) => {
-            if (!profileMenu.contains(e.target) && !profileBtn.contains(e.target)) {
-                profileMenu.parentElement.classList.remove('active');
-            }
+        window.addEventListener('click', function() {
+            profileMenu.classList.remove('show');
         });
     }
     // Modal open/close logic for dashboard Add Group
