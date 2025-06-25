@@ -82,7 +82,56 @@
             </div>
         </div>
 
+        <!-- Group Statistics Cards -->
+        <% if (groups && groups.length > 0) { %>
         <div class="content-card scroll-reveal" style="--delay: 0.4s;">
+            <div class="card-header">
+                <h2 class="card-title"><i class="fas fa-chart-bar"></i> Group Statistics</h2>
+            </div>
+            <div class="card-content">
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-icon" style="background: rgba(59, 130, 246, 0.1); color: var(--info-color);">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="kpi-info">
+                            <h3><%= groups.length %></h3>
+                            <p>Total Groups</p>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--success-color);">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="kpi-info">
+                            <h3><%= groups.filter(g => g.group_type === 'sales').length %></h3>
+                            <p>Sales Groups</p>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon" style="background: rgba(59, 130, 246, 0.1); color: var(--info-color);">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <div class="kpi-info">
+                            <h3><%= groups.filter(g => g.group_type === 'delivery').length %></h3>
+                            <p>Delivery Groups</p>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--warning-color);">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div class="kpi-info">
+                            <h3><%= new Set(groups.map(g => g.business_id)).size %></h3>
+                            <p>Active Businesses</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <% } %>
+
+        <div class="content-card scroll-reveal" style="--delay: 0.5s;">
             <div class="card-header">
                 <h2 class="card-title"><i class="fas fa-list-alt"></i> All Groups</h2>
                 <div class="filters-form">
@@ -126,6 +175,17 @@
                                             <div class="business-info">
                                                 <div class="business-avatar"><%= group.business_name.charAt(0).toUpperCase() %></div>
                                                 <span><%= group.business_name %></span>
+                                                <% 
+                                                    const businessGroups = groups.filter(g => g.business_id === group.business_id);
+                                                    const hasSales = businessGroups.some(g => g.group_type === 'sales');
+                                                    const hasDelivery = businessGroups.some(g => g.group_type === 'delivery');
+                                                    const isAtLimit = hasSales && hasDelivery;
+                                                %>
+                                                <% if (isAtLimit) { %>
+                                                    <span class="status-badge complete" title="This business has both sales and delivery groups">
+                                                        <i class="fas fa-check-circle"></i> Complete
+                                                    </span>
+                                                <% } %>
                                             </div>
                                         </td>
                                         <td>
@@ -141,7 +201,12 @@
                                         <td><%= new Date(group.created_at).toLocaleDateString() %></td>
                                         <td>
                                             <div class="btn-group">
-                                                <button class="btn btn-sm btn-outline" onclick="removeGroup('<%= group.id %>')"><i class="fas fa-trash"></i> Remove</button>
+                                                <button class="btn btn-sm btn-outline" onclick="viewGroup('<%= group.id %>')">
+                                                    <i class="fas fa-eye"></i> View
+                                                </button>
+                                                <button class="btn btn-sm btn-outline" onclick="removeGroup('<%= group.id %>')">
+                                                    <i class="fas fa-trash"></i> Remove
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -177,7 +242,7 @@
                     <input type="hidden" name="user_id" value="<%= userId %>">
                     <div class="form-group mb-3">
                         <label for="businessSelect" class="form-label">Business *</label>
-                        <select class="form-select" id="businessSelect" name="business_id" required>
+                        <select class="form-select" id="businessSelect" name="business_id" required onchange="updateGroupTypeOptions()">
                              <option value="" disabled selected>Select a business</option>
                              <% businesses.forEach(business => { %>
                                 <% 
@@ -188,6 +253,9 @@
                                 %>
                                 <option value="<%= business.business_id %>" data-has-sales="<%= hasSales %>" data-has-delivery="<%= hasDelivery %>" <%= isAtLimit ? 'disabled' : '' %>>
                                     <%= business.business_name %>
+                                    <% if (isAtLimit) { %> (Has both groups) <% } else if (hasSales || hasDelivery) { %>
+                                        (<%= hasSales ? 'Has sales' : '' %><%= hasSales && hasDelivery ? ', ' : '' %><%= hasDelivery ? 'Has delivery' : '' %>)
+                                    <% } %>
                                 </option>
                             <% }); %>
                         </select>
@@ -208,8 +276,68 @@
                         <label for="groupId" class="form-label">Group ID *</label>
                         <input type="text" class="form-input" id="groupId" name="group_id" required placeholder="e.g., 12036302...-1619...@g.us">
                     </div>
+                    
+                    <!-- Setup Instructions -->
+                    <div class="content-card" style="margin: 1rem 0; background: rgba(59, 130, 246, 0.05);">
+                        <div class="card-content">
+                            <h6><i class="fas fa-info-circle"></i> Setup Instructions</h6>
+                            <ol style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                                <li class="mb-2">
+                                    <strong>Add Our Bot to Your Group</strong><br>
+                                    <small>Add this WhatsApp number to your group as an admin:</small><br>
+                                    <div style="background: var(--surface-color); padding: 0.5rem; border-radius: var(--radius); margin: 0.5rem 0;">
+                                        <strong>Bot Number:</strong> <code id="botNumber">Loading...</code>
+                                        <button type="button" class="btn btn-sm btn-outline" onclick="copyBotNumber()" style="float: right;">Copy</button>
+                                    </div>
+                                </li>
+                                <li class="mb-2">
+                                    <strong>Run the Setup Command</strong><br>
+                                    <small>In your WhatsApp group, type this command:</small><br>
+                                    <div style="background: var(--surface-color); padding: 0.5rem; border-radius: var(--radius); margin: 0.5rem 0;">
+                                        <code>/setup YOUR-BUSINESS-CODE</code>
+                                        <button type="button" class="btn btn-sm btn-outline" onclick="copySetupCommand()" style="float: right;">Copy</button>
+                                    </div>
+                                </li>
+                                <li class="mb-2">
+                                    <strong>Choose Group Type</strong><br>
+                                    <small>The bot will ask if this is a "sales" or "delivery" group.</small>
+                                </li>
+                                <li class="mb-2">
+                                    <strong>Get Group ID</strong><br>
+                                    <small>After setup, the bot will provide a Group ID. Copy it and enter it above.</small>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+                    
                     <button type="submit" class="btn btn-primary w-100">Add Group</button>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Group Details Modal -->
+    <div class="modal-overlay" id="groupDetailsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Group Details</h5>
+                <button type="button" class="close-modal" id="closeGroupDetailsModal">&times;</button>
+            </div>
+            <div class="modal-body" id="groupDetailsContent">
+                Loading...
+            </div>
+        </div>
+    </div>
+
+    <!-- Setup Instructions Modal -->
+    <div class="modal-overlay" id="setupInstructionsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Setup Instructions</h5>
+                <button type="button" class="close-modal" id="closeSetupInstructionsModal">&times;</button>
+            </div>
+            <div class="modal-body" id="setupInstructionsContent">
+                Loading...
             </div>
         </div>
     </div>
@@ -337,6 +465,152 @@
                     }
                 }
             }
+
+            // View Group Details
+            window.viewGroup = async (groupId) => {
+                try {
+                    const response = await fetch(`/api/groups/${groupId}?userId=<%= userId %>`);
+                    const group = await response.json();
+                    
+                    if (response.ok) {
+                        const content = document.getElementById('groupDetailsContent');
+                        content.innerHTML = `
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div>
+                                    <h6>Group Information</h6>
+                                    <div style="background: var(--surface-color); padding: 1rem; border-radius: var(--radius);">
+                                        <p><strong>Group Name:</strong> ${group.group_name}</p>
+                                        <p><strong>Group ID:</strong> <code>${group.group_id}</code></p>
+                                        <p><strong>Type:</strong> <span class="group-type-badge ${group.group_type}">${group.group_type}</span></p>
+                                        <p><strong>Business:</strong> ${group.business_name}</p>
+                                        <p><strong>Created:</strong> ${new Date(group.created_at).toLocaleString()}</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h6>Group Statistics</h6>
+                                    <div style="background: var(--surface-color); padding: 1rem; border-radius: var(--radius);">
+                                        <div style="text-align: center; margin-bottom: 1rem;">
+                                            <h3 style="color: var(--primary-color);">${group.orderCount || 0}</h3>
+                                            <p>Total Orders</p>
+                                        </div>
+                                        <div style="text-align: center;">
+                                            <h3 style="color: var(--warning-color);">${group.pendingOrders || 0}</h3>
+                                            <p>Pending Orders</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="margin-top: 1rem;">
+                                <h6>Recent Activity</h6>
+                                <div style="background: rgba(59, 130, 246, 0.05); padding: 1rem; border-radius: var(--radius);">
+                                    <i class="fas fa-info-circle"></i>
+                                    Activity tracking will be available soon.
+                                </div>
+                            </div>
+                        `;
+                        
+                        const modal = document.getElementById('groupDetailsModal');
+                        modal.classList.add('show');
+                    } else {
+                        alert('Failed to load group details: ' + group.error);
+                    }
+                } catch (error) {
+                    alert('Error loading group details: ' + error.message);
+                }
+            }
+
+            // Update Group Type Options
+            window.updateGroupTypeOptions = function() {
+                const businessSelect = document.getElementById('businessSelect');
+                const groupTypeSelect = document.getElementById('groupType');
+                const selectedOption = businessSelect.options[businessSelect.selectedIndex];
+                
+                if (!selectedOption || !selectedOption.value) {
+                    groupTypeSelect.innerHTML = '<option value="" disabled selected>Select group type</option><option value="sales">Sales Group</option><option value="delivery">Delivery Group</option>';
+                    return;
+                }
+                
+                const hasSales = selectedOption.getAttribute('data-has-sales') === 'true';
+                const hasDelivery = selectedOption.getAttribute('data-has-delivery') === 'true';
+                
+                groupTypeSelect.innerHTML = '<option value="" disabled selected>Select group type</option>';
+                
+                if (!hasSales) {
+                    groupTypeSelect.innerHTML += '<option value="sales">Sales Group</option>';
+                }
+                if (!hasDelivery) {
+                    groupTypeSelect.innerHTML += '<option value="delivery">Delivery Group</option>';
+                }
+                
+                if (hasSales && hasDelivery) {
+                    groupTypeSelect.innerHTML = '<option value="" disabled>This business already has both groups</option>';
+                }
+            }
+
+            // Copy Bot Number
+            window.copyBotNumber = function() {
+                const botNumber = document.querySelector('#botNumber').textContent;
+                if (botNumber === 'Loading...' || botNumber === 'Not available' || botNumber === 'Error loading') {
+                    alert('Bot number not available yet. Please try again in a moment.');
+                    return;
+                }
+                navigator.clipboard.writeText(botNumber).then(() => {
+                    const button = event.target;
+                    button.textContent = 'Copied!';
+                    setTimeout(() => {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                });
+            }
+
+            // Copy Setup Command
+            window.copySetupCommand = function() {
+                const command = document.querySelector('code').textContent;
+                navigator.clipboard.writeText(command).then(() => {
+                    const button = event.target;
+                    button.textContent = 'Copied!';
+                    setTimeout(() => {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                });
+            }
+
+            // Additional Modal Controls
+            const groupDetailsModal = document.getElementById('groupDetailsModal');
+            const setupInstructionsModal = document.getElementById('setupInstructionsModal');
+            const closeGroupDetailsModal = document.getElementById('closeGroupDetailsModal');
+            const closeSetupInstructionsModal = document.getElementById('closeSetupInstructionsModal');
+
+            function hideGroupDetailsModal() { groupDetailsModal.classList.remove('show'); }
+            function hideSetupInstructionsModal() { setupInstructionsModal.classList.remove('show'); }
+
+            if(closeGroupDetailsModal) closeGroupDetailsModal.addEventListener('click', hideGroupDetailsModal);
+            if(closeSetupInstructionsModal) closeSetupInstructionsModal.addEventListener('click', hideSetupInstructionsModal);
+            
+            groupDetailsModal.addEventListener('click', (e) => {
+                if (e.target === groupDetailsModal) hideGroupDetailsModal();
+            });
+            setupInstructionsModal.addEventListener('click', (e) => {
+                if (e.target === setupInstructionsModal) hideSetupInstructionsModal();
+            });
+
+            // Load bot number when page loads
+            async function loadBotInfo() {
+                try {
+                    const response = await fetch('/api/whatsapp/bot-info');
+                    const botInfo = await response.json();
+                    
+                    if (botInfo.success) {
+                        document.getElementById('botNumber').textContent = botInfo.number;
+                    } else {
+                        document.getElementById('botNumber').textContent = 'Not available';
+                    }
+                } catch (error) {
+                    console.error('Error loading bot info:', error);
+                    document.getElementById('botNumber').textContent = 'Error loading';
+                }
+            }
+            loadBotInfo();
         });
     </script>
 </body>
