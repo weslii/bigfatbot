@@ -13,14 +13,14 @@
         <div class="header-content">
             <div class="header-left">
                 <a href="/dashboard" class="logo-section">
-                    <div class="logo-icon"><i class="fas fa-users"></i></div>
-                    <div class="logo-text"><span class="main-title">User Dashboard</span></div>
+                    <div class="logo-icon"><i class="fas fa-home"></i></div>
+                    <div class="logo-text"><span class="main-title">Dashboard</span></div>
                 </a>
             </div>
-            <div class="header-right">
-                <a href="/dashboard" class="nav-link">Dashboard</a>
-                <a href="/orders" class="nav-link">Orders</a>
-                <a href="/groups" class="nav-link">Groups</a>
+            <nav class="header-right" style="display: flex; align-items: center; gap: 0.75rem;">
+                <a href="/dashboard" class="nav-link"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="/orders" class="nav-link"><i class="fas fa-box"></i> Orders</a>
+                <a href="/groups" class="nav-link"><i class="fas fa-users"></i> Groups</a>
                 <button class="btn btn-icon" id="theme-toggle" aria-label="Toggle Theme">
                     <i class="fas fa-sun"></i><i class="fas fa-moon" style="display: none;"></i>
                 </button>
@@ -33,7 +33,7 @@
                         </form>
                     </div>
                 </div>
-            </div>
+            </nav>
         </div>
     </header>
     <main class="main-content">
@@ -126,7 +126,7 @@
                                                             <div class="business-info">
                                                                 <div class="business-avatar"><i class="fas fa-building"></i></div>
                                                                 <div class="business-details">
-                                                                    <div class="business-name"><a href="/business/<%= biz.business_id %>" class="business-hover" style="color:inherit;text-decoration:none;font-size:1.15rem;font-weight:800;text-transform:capitalize;display:inline-block;line-height:1.2;"><%= biz.business_name %></a></div>
+                                                                    <div class="business-name business-name-hover"><a href="/business/<%= biz.business_id %>" style="color:inherit;text-decoration:none;font-size:1.15rem;font-weight:800;text-transform:capitalize;display:inline-block;line-height:1.2;"><%= biz.business_name %></a></div>
                                                                 </div>
                                                             </div>
                                                         </td>
@@ -158,7 +158,7 @@
                                     <h2>My Groups</h2>
                                     <p>All groups you manage</p>
                                 </div>
-                                <button class="btn btn-primary" id="openAddGroupModal" type="button"><i class="fas fa-plus"></i> Add Group</button>
+                                <a href="/setup-group" class="primary-btn" style="margin-left:auto;"><i class="fas fa-plus"></i> Add Group</a>
                             </div>
                             <div class="card-content">
                                 <% if (groups && groups.length) { %>
@@ -302,269 +302,178 @@
             </div>
         </div>
     </main>
-    <!-- Add Group Modal (copied from groups.ejs) -->
-    <div class="modal-overlay" id="addGroupModal">
+    <!-- Add Group Modal (new, clean implementation) -->
+    <div class="modal-overlay" id="dashboardAddGroupModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Add New WhatsApp Group</h5>
-                <button type="button" class="close-modal" id="closeAddGroupModal">&times;</button>
+                <h5 class="modal-title">Add Group to Business</h5>
+                <button type="button" class="close-modal" id="closeDashboardAddGroupModal">&times;</button>
             </div>
             <div class="modal-body">
-                <!-- Step 1: Business Selection -->
-                <div id="businessSelectionStep">
-                    <div style="background: rgba(59, 130, 246, 0.05); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
-                        <h6 style="margin: 0 0 1rem 0; color: var(--info-color); display: flex; align-items: center; gap: 0.5rem;">
-                            <i class="fas fa-building"></i> Select Business
-                        </h6>
-                        <p style="margin: 0; color: #64748b; line-height: 1.6;">
-                            Choose which business you want to add a WhatsApp group to.
-                        </p>
-                    </div>
-                    <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
-                        <label for="businessSelect" style="display: block; font-weight: 600; margin-bottom: 0.75rem; color: var(--text-primary);">Business *</label>
-                        <select id="businessSelect" style="width: 100%; padding: 0.75rem; border: 1px solid var(--card-border); border-radius: 8px; background: var(--card-bg); color: var(--text-primary); font-size: 0.875rem;">
+                <form id="dashboardAddGroupForm">
+                    <div class="form-group">
+                        <label for="dashboardBusinessSelect" class="form-label">Select Business</label>
+                        <select id="dashboardBusinessSelect" class="form-input" required>
                             <option value="" disabled selected>Select a business</option>
                             <% businesses.forEach(business => { %>
-                                <% 
-                                    const businessGroups = groups.filter(g => g.business_id === business.business_id);
-                                    const hasSales = businessGroups.some(g => g.group_type === 'sales');
-                                    const hasDelivery = businessGroups.some(g => g.group_type === 'delivery');
-                                    const isAtLimit = hasSales && hasDelivery;
-                                %>
-                                <option value="<%= business.business_id %>" 
-                                        data-business-name="<%= business.business_name %>"
-                                        data-has-sales="<%= hasSales %>" 
-                                        data-has-delivery="<%= hasDelivery %>" 
-                                        data-setup-code="<%= business.setup_identifier || business.business_id %>"
-                                        <%= isAtLimit ? 'disabled' : '' %>>
-                                    <%= business.business_name %>
-                                    <% if (isAtLimit) { %> (Has both groups) <% } else if (hasSales || hasDelivery) { %>
-                                        (<%= hasSales ? 'Has sales' : '' %><%= hasSales && hasDelivery ? ', ' : '' %><%= hasDelivery ? 'Has delivery' : '' %>)
-                                    <% } %>
-                                </option>
+                                <option value="<%= business.business_id %>"><%= business.business_name %></option>
                             <% }); %>
                         </select>
                     </div>
-                    <div style="text-align: center;">
-                        <button type="button" class="btn btn-primary" onclick="showSetupInstructions()" id="continueBtn" disabled>
-                            <i class="fas fa-arrow-right"></i> Continue
-                        </button>
+                    <div class="form-group">
+                        <label for="dashboardGroupType" class="form-label">Group Type</label>
+                        <select id="dashboardGroupType" class="form-input" required>
+                            <option value="" disabled selected>Select group type</option>
+                            <option value="sales">Sales</option>
+                            <option value="delivery">Delivery</option>
+                        </select>
                     </div>
-                </div>
-                <!-- Step 2: Setup Instructions -->
-                <div id="setupInstructionsStep" style="display: none;">
-                    <div style="background: rgba(59, 130, 246, 0.05); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
-                        <h6 style="margin: 0 0 1rem 0; color: var(--info-color); display: flex; align-items: center; gap: 0.5rem;">
-                            <i class="fas fa-robot"></i> Setup Instructions for <span id="selectedBusinessName"></span>
-                        </h6>
-                        <p style="margin: 0; color: #64748b; line-height: 1.6;">
-                            Follow these steps to add a WhatsApp group to your business.
-                        </p>
+                    <div class="form-group">
+                        <label for="dashboardGroupName" class="form-label">Group Name</label>
+                        <input type="text" id="dashboardGroupName" class="form-input" required placeholder="Enter group name">
                     </div>
-                    <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
-                        <h6 style="margin: 0 0 1rem 0; color: var(--text-primary);">How to Add a Group:</h6>
-                        <ol style="margin: 0; padding-left: 1.5rem; color: var(--text-secondary); line-height: 1.8;">
-                            <li style="margin-bottom: 0.75rem;">
-                                <strong style="color: var(--text-primary);">Add the Bot to Your Group</strong><br>
-                                <small>Add this WhatsApp number to your group as an admin:</small><br>
-                                <div style="background: rgba(59, 130, 246, 0.1); padding: 0.75rem; border-radius: 8px; margin: 0.5rem 0; display: flex; justify-content: space-between; align-items: center;">
-                                    <code id="botNumber" style="color: #3b82f6; font-weight: 600;">Loading...</code>
-                                    <button type="button" class="btn btn-sm" onclick="copyBotNumber()" style="background: #3b82f6; color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem;">Copy</button>
-                                </div>
-                            </li>
-                            <li style="margin-bottom: 0.75rem;">
-                                <strong style="color: var(--text-primary);">Run the Setup Command</strong><br>
-                                <small>In your WhatsApp group, type this command:</small><br>
-                                <div style="background: rgba(59, 130, 246, 0.1); padding: 0.75rem; border-radius: 8px; margin: 0.5rem 0; display: flex; justify-content: space-between; align-items: center;">
-                                    <code id="setupCommand" style="color: #3b82f6; font-weight: 600;">Select a business first</code>
-                                    <button type="button" class="btn btn-sm" onclick="copySetupCommand()" style="background: #3b82f6; color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem;">Copy</button>
-                                </div>
-                            </li>
-                            <li style="margin-bottom: 0.75rem;">
-                                <strong style="color: var(--text-primary);">Choose Group Type</strong><br>
-                                <small>The bot will ask if this is a "sales" or "delivery" group. Reply with:</small><br>
-                                <div id="groupTypeOptions" style="display: flex; gap: 0.5rem; margin: 0.5rem 0;">
-                                    <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">"sales"</span>
-                                    <span style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">"delivery"</span>
-                                </div>
-                            </li>
-                            <li>
-                                <strong style="color: var(--text-primary);">That's It!</strong><br>
-                                <small>The bot will automatically register your group and confirm the setup.</small>
-                            </li>
-                        </ol>
+                    <div class="form-group">
+                        <label for="dashboardGroupId" class="form-label">Group ID</label>
+                        <input type="text" id="dashboardGroupId" class="form-input" required placeholder="Paste WhatsApp group ID">
                     </div>
-                    <div id="businessStatus" style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
-                        <h6 style="margin: 0 0 0.75rem 0; color: #f59e0b; display: flex; align-items: center; gap: 0.5rem;">
-                            <i class="fas fa-info-circle"></i> Business Status
-                        </h6>
-                        <div id="businessStatusContent">
-                            Select a business to see its current group status.
-                        </div>
+                    <div class="form-actions" style="text-align:right; margin-top:1.5rem;">
+                        <button type="button" class="btn btn-secondary" id="cancelDashboardAddGroup">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Group</button>
                     </div>
-                    <div style="text-align: center; margin-top: 1.5rem;">
-                        <button type="button" class="btn btn-secondary" onclick="backToBusinessSelection()" style="margin-right: 0.5rem;">
-                            <i class="fas fa-arrow-left"></i> Back
-                        </button>
-                        <button type="button" class="btn btn-primary" onclick="document.getElementById('closeAddGroupModal').click()">
-                            <i class="fas fa-check"></i> Got It!
-                        </button>
-                    </div>
-                </div>
+                </form>
             </div>
         </div>
     </div>
-    <!-- End Add Group Modal -->
+    <style>
+    /* New modal style for dashboard Add Group */
+    #dashboardAddGroupModal.modal-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(0,0,0,0.6);
+        display: none; align-items: center; justify-content: center;
+        z-index: 2000;
+    }
+    #dashboardAddGroupModal.modal-overlay.show { display: flex; }
+    #dashboardAddGroupModal .modal-content {
+        background: var(--card-bg);
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.18);
+        max-width: 420px;
+        width: 95vw;
+        padding: 0;
+        animation: fadeInScale 0.25s cubic-bezier(0.4,0,0.2,1);
+    }
+    #dashboardAddGroupModal .modal-header {
+        padding: 1.25rem 1.5rem 1rem 1.5rem;
+        border-bottom: 1px solid var(--card-border);
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    #dashboardAddGroupModal .modal-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    #dashboardAddGroupModal .close-modal {
+        background: none; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer;
+    }
+    #dashboardAddGroupModal .modal-body {
+        padding: 1.5rem;
+    }
+    #dashboardAddGroupModal .form-group { margin-bottom: 1.25rem; }
+    #dashboardAddGroupModal .form-label { font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem; display: block; }
+    #dashboardAddGroupModal .form-input {
+        width: 100%; padding: 0.7rem 1rem; border-radius: 8px; border: 1px solid var(--card-border);
+        background: var(--card-bg); color: var(--text-primary); font-size: 1rem; transition: border-color 0.2s;
+    }
+    #dashboardAddGroupModal .form-input:focus { border-color: var(--primary-color); outline: none; }
+    #dashboardAddGroupModal .btn { margin-left: 0.5rem; }
+    @keyframes fadeInScale {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+    }
+    .header-content { max-width: 1400px; margin: 0 auto; padding: 0 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+    .header-left .logo-section { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; }
+    .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #25d366, #128c7e); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.25rem; }
+    .logo-text .main-title { font-size: 1.1rem; font-weight: 900; color: var(--primary-color); display: block; }
+    .header-right .nav-link { text-decoration: none; color: var(--text-secondary); font-weight: 500; font-size: 0.95rem; padding: 0.5rem 0.9rem; border-radius: 8px; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); }
+    .header-right .nav-link:hover, .header-right .nav-link.active { background: var(--primary-color); color: #fff; box-shadow: 0 4px 12px rgba(16,185,129,0.13); transform: translateY(-2px) scale(1.04); }
+    .btn.btn-icon { width: 40px; height: 40px; padding: 0; font-size: 1.1rem; background: var(--surface-color); color: var(--text-secondary); border: 1px solid var(--border-color); border-radius: 8px; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); display: flex; align-items: center; justify-content: center; }
+    .btn.btn-icon:hover { background: var(--primary-color); color: #fff; box-shadow: 0 4px 12px rgba(16,185,129,0.13); transform: translateY(-2px) scale(1.08); }
+    .dropdown { position: relative; display: inline-block; }
+    .dropdown-content { display: none; position: absolute; right: 0; background: var(--surface-color); min-width: 160px; box-shadow: 0 10px 20px rgba(0,0,0,0.08); border: 1px solid var(--border-color); border-radius: 8px; z-index: 1000; margin-top: 0.5rem; padding: 0.5rem; }
+    .dropdown-content.show { display: block; }
+    .dropdown-item { color: var(--text-primary); padding: 0.75rem 1rem; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; border: none; background: none; width: 100%; text-align: left; cursor: pointer; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); border-radius: 8px; }
+    .dropdown-item:hover { background: rgba(59,130,246,0.1); transform: translateX(2px); }
+    </style>
     <script>
-        // Theme toggle functionality
-        const themeToggle = document.getElementById('theme-toggle');
-        const html = document.documentElement;
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        html.setAttribute('data-theme', savedTheme);
-        updateThemeIcon(savedTheme);
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateThemeIcon(newTheme);
-        });
-        function updateThemeIcon(theme) {
-            const sunIcon = themeToggle.querySelector('i:nth-child(1)');
-            const moonIcon = themeToggle.querySelector('i:nth-child(2)');
-            sunIcon.style.display = theme === 'light' ? 'inline' : 'none';
-            moonIcon.style.display = theme === 'dark' ? 'inline' : 'none';
-        }
-        // Tabs functionality
-        const tabBtns = document.querySelectorAll('.tab-btn');
-        const tabContents = document.querySelectorAll('.tab-content');
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                tabBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                const tab = btn.getAttribute('data-tab');
-                tabContents.forEach(tc => {
-                    tc.classList.remove('active');
-                    if (tc.id === tab) tc.classList.add('active');
-                });
+    // Theme toggle functionality
+    const themeToggle = document.getElementById('theme-toggle');
+    const html = document.documentElement;
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    html.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+    themeToggle.addEventListener('click', () => {
+        const currentTheme = html.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateThemeIcon(newTheme);
+    });
+    function updateThemeIcon(theme) {
+        const sunIcon = themeToggle.querySelector('i:nth-child(1)');
+        const moonIcon = themeToggle.querySelector('i:nth-child(2)');
+        sunIcon.style.display = theme === 'light' ? 'inline' : 'none';
+        moonIcon.style.display = theme === 'dark' ? 'inline' : 'none';
+    }
+    // Tabs functionality
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            tabBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const tab = btn.getAttribute('data-tab');
+            tabContents.forEach(tc => {
+                tc.classList.remove('active');
+                if (tc.id === tab) tc.classList.add('active');
             });
         });
-        // Profile dropdown functionality
-        const profileBtn = document.getElementById('profileDropdown');
-        const profileMenu = document.getElementById('profileMenu');
-        if (profileBtn) {
-            profileBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                profileMenu.parentElement.classList.toggle('active');
-            });
-            document.addEventListener('click', (e) => {
-                if (!profileMenu.contains(e.target) && !profileBtn.contains(e.target)) {
-                    profileMenu.parentElement.classList.remove('active');
-                }
-            });
-        }
-        // Add Group Modal JS (copied from groups.ejs)
-        document.addEventListener('DOMContentLoaded', function () {
-            // Modal
-            const modal = document.getElementById('addGroupModal');
-            const openModalBtn = document.getElementById('openAddGroupModal');
-            const closeModalBtn = document.getElementById('closeAddGroupModal');
-            function showModal() { modal.classList.add('show'); }
-            function hideModal() { modal.classList.remove('show'); }
-            if(openModalBtn) openModalBtn.addEventListener('click', showModal);
-            if(closeModalBtn) closeModalBtn.addEventListener('click', hideModal);
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) hideModal();
-            });
-            // Two-step modal functionality
-            const businessSelect = document.getElementById('businessSelect');
-            const continueBtn = document.getElementById('continueBtn');
-            businessSelect.addEventListener('change', function() {
-                continueBtn.disabled = !this.value;
-            });
-            window.showSetupInstructions = function() {
-                const selectedOption = businessSelect.options[businessSelect.selectedIndex];
-                if (!selectedOption || !selectedOption.value) return;
-                const businessName = selectedOption.getAttribute('data-business-name');
-                const setupCode = selectedOption.getAttribute('data-setup-code');
-                const hasSales = selectedOption.getAttribute('data-has-sales') === 'true';
-                const hasDelivery = selectedOption.getAttribute('data-has-delivery') === 'true';
-                document.getElementById('setupCommand').textContent = `/setup ${setupCode}`;
-                document.getElementById('selectedBusinessName').textContent = businessName;
-                const groupTypeOptions = document.getElementById('groupTypeOptions');
-                groupTypeOptions.innerHTML = '';
-                if (!hasSales) {
-                    groupTypeOptions.innerHTML += '<span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">"sales"</span>';
-                }
-                if (!hasDelivery) {
-                    groupTypeOptions.innerHTML += '<span style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">"delivery"</span>';
-                }
-                const businessStatusContent = document.getElementById('businessStatusContent');
-                let statusHTML = '';
-                if (!hasSales && !hasDelivery) {
-                    statusHTML = `<div style="color: var(--text-secondary); line-height: 1.6;"><p style="margin: 0 0 0.5rem 0;"><strong>No groups set up yet.</strong></p><p style="margin: 0;">You can add both a sales group and a delivery group for this business.</p></div>`;
-                } else if (hasSales && hasDelivery) {
-                    statusHTML = `<div style="color: var(--text-secondary); line-height: 1.6;"><p style="margin: 0 0 0.5rem 0;"><strong>All groups set up!</strong></p><p style="margin: 0;">This business already has both sales and delivery groups configured.</p></div>`;
-                } else {
-                    const availableType = hasSales ? 'delivery' : 'sales';
-                    const existingType = hasSales ? 'sales' : 'delivery';
-                    statusHTML = `<div style="color: var(--text-secondary); line-height: 1.6;"><p style="margin: 0 0 0.5rem 0;"><strong>${existingType.charAt(0).toUpperCase() + existingType.slice(1)} group already set up.</strong></p><p style="margin: 0;">You can add a ${availableType} group to complete your setup.</p></div>`;
-                }
-                businessStatusContent.innerHTML = statusHTML;
-                document.getElementById('businessSelectionStep').style.display = 'none';
-                document.getElementById('setupInstructionsStep').style.display = 'block';
-            };
-            window.backToBusinessSelection = function() {
-                document.getElementById('setupInstructionsStep').style.display = 'none';
-                document.getElementById('businessSelectionStep').style.display = 'block';
-                businessSelect.value = '';
-                continueBtn.disabled = true;
-            };
-            // Reset modal when closed
-            closeModalBtn.addEventListener('click', function() {
-                backToBusinessSelection();
-            });
-            // Load bot number
-            async function loadBotInfo() {
-                try {
-                    const response = await fetch('/api/whatsapp/bot-info');
-                    const botInfo = await response.json();
-                    if (botInfo.success) {
-                        document.getElementById('botNumber').textContent = botInfo.number;
-                    } else {
-                        document.getElementById('botNumber').textContent = 'Not available';
-                    }
-                } catch (error) {
-                    document.getElementById('botNumber').textContent = 'Error loading';
-                }
-            }
-            loadBotInfo();
-            // Copy functions
-            window.copyBotNumber = function() {
-                const botNumber = document.querySelector('#botNumber').textContent;
-                if (botNumber === 'Loading...' || botNumber === 'Not available' || botNumber === 'Error loading') {
-                    alert('Bot number not available yet. Please try again in a moment.');
-                    return;
-                }
-                navigator.clipboard.writeText(botNumber).then(() => {
-                    const button = event.target;
-                    button.textContent = 'Copied!';
-                    setTimeout(() => {
-                        button.textContent = 'Copy';
-                    }, 2000);
-                });
-            }
-            window.copySetupCommand = function() {
-                const command = document.querySelector('code').textContent;
-                navigator.clipboard.writeText(command).then(() => {
-                    const button = event.target;
-                    button.textContent = 'Copied!';
-                    setTimeout(() => {
-                        button.textContent = 'Copy';
-                    }, 2000);
-                });
+    });
+    // Profile dropdown functionality
+    const profileBtn = document.getElementById('profileDropdown');
+    const profileMenu = document.getElementById('profileMenu');
+    if (profileBtn) {
+        profileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileMenu.parentElement.classList.toggle('active');
+        });
+        document.addEventListener('click', (e) => {
+            if (!profileMenu.contains(e.target) && !profileBtn.contains(e.target)) {
+                profileMenu.parentElement.classList.remove('active');
             }
         });
+    }
+    // Modal open/close logic for dashboard Add Group
+    const dashboardAddGroupBtn = document.querySelector('#groups-tab .primary-btn');
+    const dashboardAddGroupModal = document.getElementById('dashboardAddGroupModal');
+    const closeDashboardAddGroupModal = document.getElementById('closeDashboardAddGroupModal');
+    const cancelDashboardAddGroup = document.getElementById('cancelDashboardAddGroup');
+    if (dashboardAddGroupBtn && dashboardAddGroupModal) {
+        dashboardAddGroupBtn.addEventListener('click', () => dashboardAddGroupModal.classList.add('show'));
+    }
+    if (closeDashboardAddGroupModal) {
+        closeDashboardAddGroupModal.addEventListener('click', () => dashboardAddGroupModal.classList.remove('show'));
+    }
+    if (cancelDashboardAddGroup) {
+        cancelDashboardAddGroup.addEventListener('click', () => dashboardAddGroupModal.classList.remove('show'));
+    }
+    // Form submission (AJAX or regular, as needed)
+    document.getElementById('dashboardAddGroupForm')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        // TODO: Implement group creation logic (AJAX or form POST)
+        dashboardAddGroupModal.classList.remove('show');
+        alert('Group added (demo)!');
+    });
     </script>
 </body>
 </html> 
