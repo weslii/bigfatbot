@@ -315,43 +315,82 @@
             </nav>
         </div>
     </header>
-    <section class="setup-section">
-        <form class="setup-card" action="/setup-business" method="POST">
-            <input type="hidden" name="userId" value="<%= userId %>">
-            <div>
-                <div class="setup-title">Setup Your Business</div>
-                <div class="setup-desc">Enter your business name to get started with WhatsApp Delivery Bot.</div>
-                <% if (typeof error !== 'undefined') { %>
-                    <div class="alert"><%= error %></div>
-                <% } %>
+    <% if (typeof business !== 'undefined' && business) { %>
+      <section class="setup-section">
+        <div class="setup-card">
+          <div class="setup-title">Set Up WhatsApp Groups for <%= business.business_name %></div>
+          <div class="setup-desc">Follow these steps to add your WhatsApp groups for this business.</div>
+          <div class="form-group">
+            <label class="form-label">Setup Command</label>
+            <div class="alert alert-info" style="display: flex; align-items: center; gap: 0.7rem;">
+              <i class="fas fa-terminal" style="color: #3b82f6;"></i>
+              <code style="font-size:1.1em; font-weight:600;">/setup <%= business.setup_identifier || business.business_id %></code>
+              <button class="setup-btn" style="padding:0.3rem 0.8rem; font-size:0.9em; height:auto;" onclick="navigator.clipboard.writeText('/setup <%= business.setup_identifier || business.business_id %>')">Copy</button>
             </div>
-            <div class="form-group">
-              <label for="businessName" class="form-label">Business Name</label>
-                <input type="text" class="form-control" id="businessName" name="businessName" required placeholder="e.g., Acme Delivery Services">
-              <div class="form-text">This will be used to identify your business in the system</div>
-            </div>
-            <div class="alert alert-info" style="padding: 1rem 1.2rem; display: flex; flex-direction: column; gap: 0.7rem; align-items: flex-start;">
-                <div style="font-weight: 600; color: #10b981; display: flex; align-items: center; gap: 0.5rem; font-size: 1.05rem;">
-                    <i class="fas fa-info-circle"></i> Next Steps
-            </div>
-                <div style="display: flex; flex-direction: column; gap: 0.4rem;">
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fab fa-whatsapp" style="color: #25D366;"></i>
-                        <span>Add our bot to your WhatsApp groups</span>
+            <div class="form-text">Type this command in your WhatsApp group after adding the bot as admin.</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Current Groups</label>
+            <% if (businessGroups && businessGroups.length > 0) { %>
+              <ul style="margin:0; padding-left:1.2em;">
+                <% businessGroups.forEach(function(group) { %>
+                  <li><strong><%= group.group_name %></strong> (<%= group.group_type %>)</li>
+                <% }); %>
+              </ul>
+            <% } else { %>
+              <div class="form-text">No groups have been set up yet for this business.</div>
+            <% } %>
+          </div>
+          <div class="alert alert-info" style="margin-top:1.2em;">
+            <div style="font-weight:600; color:#10b981; display:flex; align-items:center; gap:0.5rem; font-size:1.05rem;"><i class="fas fa-info-circle"></i> Steps</div>
+            <ol style="margin:0.7em 0 0 1.2em; padding:0; color:#0369a1;">
+              <li>Add our bot to your WhatsApp group as an admin.</li>
+              <li>Type the setup command above in the group.</li>
+              <li>When prompted, reply with "sales" or "delivery" to set the group type.</li>
+              <li>Repeat for your second group if needed.</li>
+            </ol>
+          </div>
         </div>
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fas fa-terminal" style="color: #3b82f6;"></i>
-                        <span>Type the setup command in each group</span>
-      </div>
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fas fa-rocket" style="color: #10b981;"></i>
-                        <span>Start managing your deliveries!</span>
-    </div>
-  </div>
-</div>
-            <button type="submit" class="setup-btn">Create Business <i class="fas fa-arrow-right"></i></button>
+      </section>
+    <% } else { %>
+      <section class="setup-section">
+        <form class="setup-card" action="/setup-business" method="POST">
+          <input type="hidden" name="userId" value="<%= userId %>">
+          <div>
+            <div class="setup-title">Setup Your Business</div>
+            <div class="setup-desc">Enter your business name to get started with WhatsApp Delivery Bot.</div>
+            <% if (typeof error !== 'undefined') { %>
+              <div class="alert"><%= error %></div>
+            <% } %>
+          </div>
+          <div class="form-group">
+            <label for="businessName" class="form-label">Business Name</label>
+            <input type="text" class="form-control" id="businessName" name="businessName" required placeholder="e.g., Acme Delivery Services">
+            <div class="form-text">This will be used to identify your business in the system</div>
+          </div>
+          <div class="alert alert-info" style="padding: 1rem 1.2rem; display: flex; flex-direction: column; gap: 0.7rem; align-items: flex-start;">
+            <div style="font-weight: 600; color: #10b981; display: flex; align-items: center; gap: 0.5rem; font-size: 1.05rem;">
+              <i class="fas fa-info-circle"></i> Next Steps
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fab fa-whatsapp" style="color: #25D366;"></i>
+                <span>Add our bot to your WhatsApp groups</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-terminal" style="color: #3b82f6;"></i>
+                <span>Type the setup command in each group</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fas fa-rocket" style="color: #10b981;"></i>
+                <span>Start managing your deliveries!</span>
+              </div>
+            </div>
+          </div>
+          <button type="submit" class="setup-btn">Create Business <i class="fas fa-arrow-right"></i></button>
         </form>
-    </section>
+      </section>
+    <% } %>
     <script>
         // Theme toggle functionality
         const themeToggle = document.getElementById('themeToggle');

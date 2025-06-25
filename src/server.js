@@ -355,9 +355,31 @@ async function startServer() {
       }
     });
 
-    app.get('/setup-business', (req, res) => {
-      const { userId } = req.query;
-      res.render('setup-business', { userId });
+    app.get('/setup-business', async (req, res) => {
+      const { userId, businessId } = req.query;
+      if (businessId) {
+        try {
+          // Get business details
+          const business = await db.query('groups')
+            .select('business_id', 'business_name', 'setup_identifier')
+            .where('business_id', businessId)
+            .where('user_id', userId)
+            .first();
+          if (!business) {
+            return res.status(404).render('error', { error: 'Business not found' });
+          }
+          // Get business groups
+          const businessGroups = await db.query('groups')
+            .where('business_id', businessId)
+            .orderBy('created_at', 'desc');
+          res.render('setup-business', { userId, business, businessGroups });
+        } catch (error) {
+          logger.error('Setup business page error:', error);
+          res.status(500).render('error', { error: 'Failed to load setup business page' });
+        }
+      } else {
+        res.render('setup-business', { userId });
+      }
     });
 
     // Add user login routes
