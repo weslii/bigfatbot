@@ -769,9 +769,9 @@ async function startServer() {
 
         // Get user's businesses
         const businesses = await db.query('groups')
-          .select('business_id', 'business_name')
+          .select('business_id', 'business_name', 'setup_identifier')
           .where('user_id', userId)
-          .groupBy('business_id', 'business_name');
+          .groupBy('business_id', 'business_name', 'setup_identifier');
 
         // Get user's groups
         const groups = await db.query('groups')

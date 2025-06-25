@@ -447,16 +447,16 @@ body {
     position: fixed;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1000;
     opacity: 0;
     visibility: hidden;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
 }
 
 .modal-overlay.show {
@@ -465,19 +465,24 @@ body {
 }
 
 .modal-content {
-    background: var(--surface-color);
-    border-radius: var(--radius-lg);
-    max-width: 500px;
+    background: var(--card-bg);
+    border-radius: 16px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+    max-width: 600px;
     width: 90%;
     max-height: 90vh;
     overflow-y: auto;
-    box-shadow: var(--shadow-lg);
-    transform: scale(0.95);
-    transition: all 0.3s;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
 }
 
 .modal-overlay.show .modal-content {
     transform: scale(1);
+}
+
+[data-theme="dark"] .modal-content {
+    background: #1a1f2e;
+    border: 1px solid #2d3748;
 }
 
 .modal-header {
@@ -665,4 +670,17 @@ select:hover, input:hover, .form-select:hover, .form-input:hover {
 #theme-toggle:hover {
   transform: rotate(15deg) scale(1.1);
   background: rgba(59, 130, 246, 0.1);
+}
+
+/* Fix blue text contrast in dark mode */
+[data-theme="dark"] code {
+  color: #60a5fa !important;
+}
+
+[data-theme="dark"] .text-blue {
+  color: #60a5fa !important;
+}
+
+[data-theme="dark"] .text-primary {
+  color: #60a5fa !important;
 } 
