@@ -1,47 +1,217 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Business</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="/css/groups-dashboard.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="/dashboard" class="logo-section">
+                    <div class="logo-icon"><i class="fas fa-users"></i></div>
+                    <div class="logo-text"><span class="main-title">Add Business</span></div>
+                </a>
+            </div>
+            <div class="header-right">
+                <a href="/dashboard" class="nav-link">Dashboard</a>
+                <a href="/orders" class="nav-link">Orders</a>
+                <a href="/groups" class="nav-link">Groups</a>
+                <button class="btn btn-icon" id="theme-toggle" aria-label="Toggle Theme">
+                    <i class="fas fa-sun"></i><i class="fas fa-moon" style="display: none;"></i>
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-icon" id="profileDropdown"><i class="fas fa-user"></i></button>
+                    <div class="dropdown-content" id="profileMenu">
+                        <a href="/settings" class="dropdown-item"><i class="fas fa-cog"></i> Settings</a>
+                        <form action="/logout" method="post" class="dropdown-item" style="padding: 0; margin: 0;">
+                            <button type="submit" style="all: unset; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; width: 100%;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
 <%- include('header', { title: 'Add New Business' }) %>
 
-<div class="container mt-5">
-  <div class="row justify-content-center">
-    <div class="col-md-6">
-      <div class="card">
-        <div class="card-header">
-          <h4 class="mb-0">Add New Business</h4>
-        </div>
-        <div class="card-body">
-          <% if (typeof error !== 'undefined') { %>
-            <div class="alert alert-danger" role="alert">
-              <%= error %>
-            </div>
-          <% } %>
-
-          <form action="/add-business" method="POST">
-            <input type="hidden" name="userId" value="<%= userId %>">
-            
-            <div class="mb-3">
-              <label for="businessName" class="form-label">Business Name</label>
-              <input type="text" class="form-control" id="businessName" name="businessName" required>
-              <div class="form-text">This will be used to identify your new business in the system</div>
-            </div>
-
-            <div class="alert alert-info" role="alert">
-              <h5 class="alert-heading">Next Steps</h5>
-              <p>After creating your new business, you'll need to:</p>
-              <ol class="mb-0">
-                <li>Add our bot to your new business's WhatsApp groups</li>
-                <li>Type the setup command in each group</li>
-                <li>Start managing your deliveries!</li>
-              </ol>
-            </div>
-
-            <div class="d-flex justify-content-between">
-              <a href="/dashboard" class="btn btn-secondary">Cancel</a>
-              <button type="submit" class="btn btn-primary">Create Business</button>
-            </div>
-          </form>
-        </div>
+<div class="add-business-bg">
+  <div class="add-business-center">
+    <div class="add-business-card">
+      <div class="add-business-header">
+        <h2 class="add-business-title">Add New Business</h2>
+        <p class="add-business-subtitle">Create a new business to manage your WhatsApp groups and orders.</p>
+      </div>
+      <div class="add-business-body">
+        <% if (typeof error !== 'undefined') { %>
+          <div class="add-business-error"><%= error %></div>
+        <% } %>
+        <form action="/add-business" method="POST" autocomplete="off">
+          <input type="hidden" name="userId" value="<%= userId %>">
+          <div class="add-business-form-group">
+            <label for="businessName" class="add-business-label">Business Name</label>
+            <input type="text" class="add-business-input" id="businessName" name="businessName" required placeholder="e.g. FreshMart Groceries">
+            <div class="add-business-hint">This will be used to identify your new business in the system.</div>
+          </div>
+          <div class="add-business-nextsteps">
+            <h5>Next Steps</h5>
+            <ol>
+              <li>Add our bot to your new business's WhatsApp groups</li>
+              <li>Type the setup command in each group</li>
+              <li>Start managing your deliveries!</li>
+            </ol>
+          </div>
+          <div class="add-business-actions">
+            <a href="/dashboard" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Create Business</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
 </div>
+<style>
+.add-business-bg {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--background-corner), var(--background-middle), var(--background-corner));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.add-business-center {
+  width: 100vw;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.add-business-card {
+  background: var(--card-bg);
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(16,185,129,0.08), 0 1.5px 4px rgba(0,0,0,0.04);
+  max-width: 400px;
+  width: 95vw;
+  padding: 2.5rem 2rem 2rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  border: 1px solid var(--card-border);
+}
+.add-business-header {
+  text-align: center;
+}
+.add-business-title {
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--primary-color);
+  margin-bottom: 0.25rem;
+}
+.add-business-subtitle {
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  margin-bottom: 0;
+}
+.add-business-body { width: 100%; }
+.add-business-error {
+  background: rgba(239,68,68,0.08);
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.98rem;
+  text-align: center;
+}
+.add-business-form-group {
+  margin-bottom: 1.5rem;
+}
+.add-business-label {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  display: block;
+}
+.add-business-input {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  color: var(--text-primary);
+  font-size: 1.08rem;
+  transition: border-color 0.18s;
+  margin-bottom: 0.25rem;
+}
+.add-business-input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+.add-business-hint {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  margin-top: 0.1rem;
+}
+.add-business-nextsteps {
+  background: rgba(59,130,246,0.06);
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 1.5rem;
+  color: var(--text-secondary);
+  font-size: 0.98rem;
+}
+.add-business-nextsteps h5 {
+  font-size: 1.08rem;
+  font-weight: 700;
+  color: var(--info-color);
+  margin-bottom: 0.5rem;
+}
+.add-business-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.btn.btn-primary {
+  background: var(--primary-color);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.7rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background 0.18s, box-shadow 0.18s, transform 0.18s;
+  box-shadow: 0 2px 8px rgba(16,185,129,0.08);
+}
+.btn.btn-primary:hover {
+  background: #059669;
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 4px 16px rgba(16,185,129,0.13);
+}
+.btn.btn-secondary {
+  background: var(--surface-color);
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  border-radius: 8px;
+  padding: 0.7rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s, transform 0.18s;
+}
+.btn.btn-secondary:hover {
+  background: var(--primary-color);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(16,185,129,0.13);
+  transform: translateY(-2px) scale(1.04);
+}
+@media (max-width: 600px) {
+  .add-business-card { padding: 1.2rem 0.5rem; }
+  .add-business-title { font-size: 1.3rem; }
+}
+</style>
 
 <%- include('footer') %> 
+</body>
+</html> 
