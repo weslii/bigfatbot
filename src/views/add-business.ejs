@@ -36,8 +36,6 @@
         </div>
     </header>
 
-<%- include('header', { title: 'Add New Business' }) %>
-
 <div class="add-business-bg">
   <div class="add-business-center">
     <div class="add-business-card">
@@ -210,8 +208,67 @@
   .add-business-card { padding: 1.2rem 0.5rem; }
   .add-business-title { font-size: 1.3rem; }
 }
+/* Fix nav-link color for visibility */
+.header .nav-link {
+  color: var(--primary-color);
+  background: transparent;
+}
+.header .nav-link.active {
+  background: var(--primary-color);
+  color: #fff;
+}
+.header .nav-link:hover {
+  color: #059669;
+  background: var(--surface-color);
+}
 </style>
 
-<%- include('footer') %> 
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Theme toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+        const sunIcon = themeToggle.querySelector('.fa-sun');
+        const moonIcon = themeToggle.querySelector('.fa-moon');
+
+        function applyTheme(theme) {
+            html.setAttribute('data-theme', theme);
+            if (theme === 'dark') {
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'inline-block';
+            } else {
+                sunIcon.style.display = 'inline-block';
+                moonIcon.style.display = 'none';
+            }
+        }
+
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        applyTheme(savedTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const newTheme = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            localStorage.setItem('theme', newTheme);
+            applyTheme(newTheme);
+        });
+
+        // Dropdown
+        function setupDropdown(buttonId, menuId) {
+            const dropdownBtn = document.getElementById(buttonId);
+            const dropdownMenu = document.getElementById(menuId);
+
+            if (dropdownBtn && dropdownMenu) {
+                dropdownBtn.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    document.querySelectorAll('.dropdown-content.show').forEach(menu => {
+                        if (menu.id !== menuId) menu.classList.remove('show');
+                    });
+                    dropdownMenu.classList.toggle('show');
+                });
+            }
+        }
+        setupDropdown('profileDropdown', 'profileMenu');
+        window.addEventListener('click', () => document.querySelectorAll('.dropdown-content.show').forEach(m => m.classList.remove('show')));
+    });
+</script> 
 </body>
 </html> 
