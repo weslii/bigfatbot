@@ -495,8 +495,8 @@ async function startServer() {
       try {
         const { userId, businessName } = req.body;
         const result = await RegistrationService.addBusinessToUser(userId, businessName);
-        // Redirect to group setup page for the new business
-        res.redirect(`/setup-group?businessId=${result.businessId}&userId=${userId}`);
+        // Redirect to setup-business page for the new business
+        res.redirect(`/setup-business?businessId=${result.businessId}&userId=${userId}`);
       } catch (error) {
         logger.error('Add business error:', error);
         res.render('add-business', { 
@@ -1595,46 +1595,6 @@ async function startServer() {
       } catch (error) {
         logger.error('Delete business error:', error);
         res.status(500).json({ error: 'Failed to delete business' });
-      }
-    });
-
-    // Setup group route
-    app.get('/setup-group', async (req, res) => {
-      try {
-        const userId = req.session ? req.session.userId : null;
-        if (!userId) {
-          return res.redirect('/login');
-        }
-
-        const { businessId } = req.query;
-        if (!businessId) {
-          return res.redirect('/dashboard');
-        }
-
-        // Get business details
-        const business = await db.query('groups')
-          .select('business_id', 'business_name', 'setup_identifier')
-          .where('business_id', businessId)
-          .where('user_id', userId)
-          .first();
-
-        if (!business) {
-          return res.status(404).render('error', { error: 'Business not found' });
-        }
-
-        // Get business groups
-        const businessGroups = await db.query('groups')
-          .where('business_id', businessId)
-          .orderBy('created_at', 'desc');
-
-        res.render('setup-group', {
-          userId,
-          business,
-          businessGroups
-        });
-      } catch (error) {
-        logger.error('Setup group page error:', error);
-        res.status(500).render('error', { error: 'Failed to load setup group page' });
       }
     });
 
