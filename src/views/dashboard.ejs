@@ -20,7 +20,11 @@
                     <span class="sub-title">WhatsApp Delivery Bot</span>
                 </div>
             </div>
-            <div class="header-actions">
+            <div class="header-right">
+                <a href="/dashboard" class="nav-link">Dashboard</a>
+                <a href="/orders" class="nav-link">Orders</a>
+                <a href="/groups" class="nav-link">Groups</a>
+                <a href="/settings" class="nav-link">Settings</a>
                 <div class="dropdown">
                     <button class="profile-btn" id="profileDropdown">
                         <i class="fas fa-user"></i>
@@ -126,7 +130,7 @@
                                                             <div class="business-info">
                                                                 <div class="business-avatar"><i class="fas fa-building"></i></div>
                                                                 <div class="business-details">
-                                                                    <div class="business-name"><%= biz.business_name %></div>
+                                                                    <div class="business-name"><a href="/business/<%= biz.business_id %>" style="color:inherit;text-decoration:underline;"><%= biz.business_name %></a></div>
                                                                 </div>
                                                             </div>
                                                         </td>
