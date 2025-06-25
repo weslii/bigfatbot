@@ -495,7 +495,8 @@ async function startServer() {
       try {
         const { userId, businessName } = req.body;
         const result = await RegistrationService.addBusinessToUser(userId, businessName);
-        res.redirect(`/dashboard?userId=${userId}`);
+        // Redirect to group setup page for the new business
+        res.redirect(`/setup-group?businessId=${result.businessId}&userId=${userId}`);
       } catch (error) {
         logger.error('Add business error:', error);
         res.render('add-business', { 
