@@ -1839,9 +1839,16 @@ async function startServer() {
         // Get total count of unique businesses
         const [{ count }] = await db.query('groups').countDistinct('business_id as count');
 
-        // Get paginated businesses, grouped by business_id
+        // Get paginated businesses with status and owner info
         const businesses = await db.query('groups as g')
-          .select('g.business_id', 'g.business_name')
+          .select(
+            'g.business_id', 
+            'g.business_name',
+            db.query.raw('MAX(g.is_active::int) = 1 as is_active'),
+            db.query.raw('MIN(u.full_name) as owner_name'),
+            db.query.raw('MIN(u.email) as owner_email')
+          )
+          .leftJoin('users as u', 'g.user_id', 'u.id')
           .groupBy('g.business_id', 'g.business_name')
           .orderBy('g.business_name')
           .limit(pageSize)
