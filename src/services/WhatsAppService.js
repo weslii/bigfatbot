@@ -402,11 +402,12 @@ class WhatsAppService {
       if (contact.isMe) return;
 
       const messageBody = message.body.toLowerCase().trim();
-      const senderName = contact.name || contact.number;
+      const senderName = contact.name;
+      const senderNumber = contact.number;
 
       // Handle reply-based cancellation FIRST (before command processing)
       if (message.hasQuotedMsg && messageBody === 'cancel') {
-        await this.handleReplyCancellation(message, senderName, groupInfo);
+        await this.handleReplyCancellation(message, senderName, senderNumber, groupInfo);
         return;
       }
 
@@ -436,7 +437,7 @@ class WhatsAppService {
         // Handle order cancellation in sales group
         else if (messageBody.startsWith('cancel #')) {
           const orderId = messageBody.replace('cancel #', '').trim();
-          await this.cancelOrder(orderId, senderName, groupInfo);
+          await this.cancelOrder(orderId, senderName, senderNumber, groupInfo);
           return;
         }
       }
@@ -507,7 +508,8 @@ class WhatsAppService {
       if (contact.isMe) return;
 
       const messageBody = message.body.toLowerCase().trim();
-      const senderName = contact.name || contact.number;
+      const senderName = contact.name;
+      const senderNumber = contact.number;
 
       // Handle reply-based completion
       if (message.hasQuotedMsg && messageBody === 'done') {
@@ -515,7 +517,7 @@ class WhatsAppService {
       }
       // Handle reply-based cancellation
       else if (message.hasQuotedMsg && messageBody === 'cancel') {
-        await this.handleReplyCancellation(message, senderName, groupInfo);
+        await this.handleReplyCancellation(message, senderName, senderNumber, groupInfo);
       }
       // Handle command-based operations
       else if (messageBody.startsWith('done #')) {
@@ -524,7 +526,7 @@ class WhatsAppService {
       }
       else if (messageBody.startsWith('cancel #')) {
         const orderId = messageBody.replace('cancel #', '').trim();
-        await this.cancelOrder(orderId, senderName, groupInfo);
+        await this.cancelOrder(orderId, senderName, senderNumber, groupInfo);
       }
       // Handle report commands
       else if (messageBody === '/daily') {
@@ -576,7 +578,7 @@ class WhatsAppService {
     }
   }
 
-  async handleReplyCancellation(message, senderName, groupInfo) {
+  async handleReplyCancellation(message, senderName, senderNumber, groupInfo) {
     try {
       const quotedMessage = await message.getQuotedMessage();
       
@@ -595,13 +597,13 @@ class WhatsAppService {
       }
       
       if (orderId) {
-        await this.cancelOrder(orderId, senderName, groupInfo);
+        await this.cancelOrder(orderId, senderName, senderNumber, groupInfo);
       } else {
-        await this.client.sendMessage(groupInfo.group_id, '❌ Could not find order ID in the quoted message. Please try using: cancel #<order_id>');
+        await this.client.sendMessage(groupInfo.group_id, '❌ Could not find order ID in the quoted message. Please try using: done #<order_id>');
       }
     } catch (error) {
       logger.error('Error handling reply cancellation:', error);
-      await this.client.sendMessage(groupInfo.group_id, '❌ Error processing reply. Please try using: cancel #<order_id>');
+      await this.client.sendMessage(groupInfo.group_id, '❌ Error processing reply. Please try using: done #<order_id>');
     }
   }
 
@@ -636,7 +638,7 @@ class WhatsAppService {
     }
   }
 
-  async cancelOrder(orderId, cancelledBy, groupInfo) {
+  async cancelOrder(orderId, cancelledBy, cancelledByNumber, groupInfo) {
     try {
       const order = await OrderService.getOrderById(orderId, groupInfo.business_id);
       
@@ -658,7 +660,8 @@ class WhatsAppService {
       await OrderService.updateOrderStatus(orderId, 'cancelled', cancelledBy, groupInfo.business_id);
       
       // Send cancellation notification to the group where cancellation was initiated
-      await this.client.sendMessage(groupInfo.group_id, `❌ Order #${orderId} cancelled by ${cancelledBy}.`);
+      const displayName = cancelledBy || cancelledByNumber;
+      await this.client.sendMessage(groupInfo.group_id, `❌ Order #${orderId} cancelled by ${displayName}.`);
       
       // Get both sales and delivery groups for this business
       const businessGroups = await database.query('groups')
@@ -674,7 +677,7 @@ class WhatsAppService {
             `❌ *Order Cancelled*\n\n` +
             `*Order ID:* ${orderId}\n` +
             `*Customer:* ${order.customer_name}\n` +
-            `*Cancelled by:* ${cancelledBy} (${groupType} Team)\n` +
+            `*Cancelled by:* ${displayName} (${groupType} Team)\n` +
             `*Items:* ${order.items}`
           );
         }
