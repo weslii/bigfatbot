@@ -255,14 +255,15 @@ class AdminService {
         .select(
           'g.business_id',
           'g.business_name',
-          'g.user_id',
-          'g.short_code',
-          'g.setup_identifier',
-          'g.is_active',
-          'u.full_name as owner_name',
-          'u.email as owner_email'
+          database.query.raw('MIN(g.user_id) as user_id'),
+          database.query.raw('MIN(g.short_code) as short_code'),
+          database.query.raw('MIN(g.setup_identifier) as setup_identifier'),
+          database.query.raw('MAX(g.is_active::int) = 1 as is_active'),
+          database.query.raw('MIN(u.full_name) as owner_name'),
+          database.query.raw('MIN(u.email) as owner_email')
         )
         .leftJoin('users as u', 'g.user_id', 'u.id')
+        .groupBy('g.business_id', 'g.business_name')
         .orderBy('g.business_name')
         .limit(limit)
         .offset(offset);
