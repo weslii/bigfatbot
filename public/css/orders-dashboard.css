@@ -698,7 +698,9 @@ body {
     display: none;
     position: absolute;
     right: 0;
-    background: var(--surface-color);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     min-width: 160px;
     box-shadow: var(--shadow-lg);
     border: 1px solid var(--border-color);
@@ -706,6 +708,13 @@ body {
     z-index: 1000;
     margin-top: 0.5rem;
     padding: 0.5rem;
+}
+
+[data-theme="dark"] .dropdown-content {
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-color: rgba(148, 163, 184, 0.2);
 }
 
 .dropdown-content.show {
