@@ -64,14 +64,7 @@
                     </div>
                     <div style="flex: 2 1 200px; min-width: 160px;">
                         <label for="phone" class="form-label" style="font-weight: 600; color: var(--text-primary);">Phone</label>
-                        <select class="form-select" id="phone" name="phone" style="width: 100%; padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-hover); color: var(--text-primary);">
-                            <option value="">All</option>
-                            <% if (allPhones && allPhones.length > 0) { %>
-                                <% allPhones.forEach(p => { %>
-                                    <option value="<%= p %>" <%= filter && filter.phone == p ? 'selected' : '' %>><%= p %></option>
-                                <% }); %>
-                            <% } %>
-                        </select>
+                        <input type="text" class="form-input" id="phone" name="phone" placeholder="Search phone..." value="<%= filter && filter.phone ? filter.phone : '' %>" style="width: 100%; padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-hover); color: var(--text-primary);" />
                     </div>
                     <div style="flex: 0 0 140px; min-width: 120px; align-self: flex-end;">
                         <button type="submit" class="btn btn-primary w-100" style="width: 100%;">Filter/Search</button>
