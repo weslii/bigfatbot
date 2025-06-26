@@ -249,7 +249,7 @@ class AdminService {
     }
   }
 
-  static async getAllBusinessesWithOwners(limit = 10, offset = 0, search = '', business_name = '', owner = '') {
+  static async getAllBusinessesWithOwners(limit = 10, offset = 0, search = '', business_name = '', owner = '', status = '') {
     try {
       const query = database.query('groups as g')
         .select(
@@ -280,6 +280,11 @@ class AdminService {
           this.where('u.full_name', 'ilike', `%${owner}%`).orWhere('u.email', 'ilike', `%${owner}%`);
         });
       }
+      if (status === 'active') {
+        query.where('g.is_active', true);
+      } else if (status === 'inactive') {
+        query.where('g.is_active', false);
+      }
       const businesses = await query;
       // Count query with filters
       const countQuery = database.query('groups as g')
@@ -297,6 +302,11 @@ class AdminService {
         countQuery.where(function() {
           this.where('u.full_name', 'ilike', `%${owner}%`).orWhere('u.email', 'ilike', `%${owner}%`);
         });
+      }
+      if (status === 'active') {
+        countQuery.where('g.is_active', true);
+      } else if (status === 'inactive') {
+        countQuery.where('g.is_active', false);
       }
       const [{ count }] = await countQuery.countDistinct('g.business_id as count');
       return { businesses, total: parseInt(count) };

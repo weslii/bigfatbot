@@ -1238,10 +1238,21 @@ async function startServer() {
     app.get('/admin/businesses', requireAdmin, async (req, res) => {
       console.log('=== /admin/businesses route hit ===');
       try {
-        const { business_name = '', owner = '' } = req.query;
-        const { businesses } = await AdminService.getAllBusinessesWithOwners(1000, 0, '', business_name, owner);
-        const filter = { business_name, owner };
-        res.render('admin/businesses', { admin: req.admin, businesses, filter });
+        const { business_name = '', owner = '', status = '' } = req.query;
+        const { businesses } = await AdminService.getAllBusinessesWithOwners(1000, 0, '', business_name, owner, status);
+        const filter = { business_name, owner, status };
+        // Get all unique business names
+        const allBusinesses = await db.query('groups').distinct('business_name');
+        // Get all unique owner names and emails
+        const ownersRaw = await db.query('groups as g')
+          .leftJoin('users as u', 'g.user_id', 'u.id')
+          .distinct('u.full_name', 'u.email');
+        const allOwners = ownersRaw
+          .map(o => o.full_name)
+          .filter(Boolean)
+          .concat(ownersRaw.map(o => o.email).filter(Boolean))
+          .filter((v, i, a) => a.indexOf(v) === i);
+        res.render('admin/businesses', { admin: req.admin, businesses, filter, allBusinesses, allOwners });
       } catch (error) {
         logger.error('Admin businesses error:', error);
         res.render('error', { error: 'Failed to load businesses.' });

@@ -40,13 +40,35 @@
         <div class="container" style="max-width: 1100px; margin: 0 auto;">
             <div class="content-card" style="padding: 2.2rem 2rem 1.5rem 2rem; border-radius: 18px; box-shadow: var(--shadow-lg); background: var(--surface); border: 1px solid var(--border); margin-bottom: 2rem;">
                 <form class="filter-bar" method="get" action="/admin/businesses" style="display: flex; flex-wrap: wrap; gap: 1.2rem; align-items: flex-end;">
+                    <div style="flex: 1 1 180px; min-width: 160px;">
+                        <label for="status" class="form-label" style="font-weight: 600; color: var(--text-primary);">Status</label>
+                        <select class="form-select" id="status" name="status" style="width: 100%; padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-hover); color: var(--text-primary);">
+                            <option value="">All</option>
+                            <option value="active" <%= filter && filter.status === 'active' ? 'selected' : '' %>>Active</option>
+                            <option value="inactive" <%= filter && filter.status === 'inactive' ? 'selected' : '' %>>Inactive</option>
+                        </select>
+                    </div>
                     <div style="flex: 2 1 260px; min-width: 200px;">
                         <label for="business_name" class="form-label" style="font-weight: 600; color: var(--text-primary);">Business Name</label>
-                        <input type="text" class="form-control" id="business_name" name="business_name" value="<%= filter && filter.business_name ? filter.business_name : '' %>" placeholder="Search by business name..." style="width: 100%; padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-hover); color: var(--text-primary);">
+                        <select class="form-select" id="business_name" name="business_name" style="width: 100%; padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-hover); color: var(--text-primary);">
+                            <option value="">All</option>
+                            <% if (allBusinesses && allBusinesses.length > 0) { %>
+                                <% allBusinesses.forEach(biz => { %>
+                                    <option value="<%= biz.business_name %>" <%= filter && filter.business_name == biz.business_name ? 'selected' : '' %>><%= biz.business_name %></option>
+                                <% }); %>
+                            <% } %>
+                        </select>
                     </div>
                     <div style="flex: 2 1 260px; min-width: 200px;">
                         <label for="owner" class="form-label" style="font-weight: 600; color: var(--text-primary);">Owner</label>
-                        <input type="text" class="form-control" id="owner" name="owner" value="<%= filter && filter.owner ? filter.owner : '' %>" placeholder="Search by owner name or email..." style="width: 100%; padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-hover); color: var(--text-primary);">
+                        <select class="form-select" id="owner" name="owner" style="width: 100%; padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-hover); color: var(--text-primary);">
+                            <option value="">All</option>
+                            <% if (allOwners && allOwners.length > 0) { %>
+                                <% allOwners.forEach(owner => { %>
+                                    <option value="<%= owner %>" <%= filter && filter.owner == owner ? 'selected' : '' %>><%= owner %></option>
+                                <% }); %>
+                            <% } %>
+                        </select>
                     </div>
                     <div style="flex: 0 0 140px; min-width: 120px; align-self: flex-end;">
                         <button type="submit" class="btn btn-primary w-100" style="width: 100%;">Filter/Search</button>
