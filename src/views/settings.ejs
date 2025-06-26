@@ -1,422 +1,362 @@
-<%- include('header', { title: 'Settings' }) %>
-
-<div class="container-fluid">
-  <div class="row">
-    <!-- Sidebar -->
-    <%- include('sidebar') %>
-    
-    <!-- Main Content -->
-    <div class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-      <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">Settings</h1>
-      </div>
-
-      <!-- Settings Navigation -->
-      <ul class="nav nav-tabs mb-4" id="settingsTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-          <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab">
-            <i class="fas fa-user"></i> Profile
-          </button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button class="nav-link" id="account-tab" data-bs-toggle="tab" data-bs-target="#account" type="button" role="tab">
-            <i class="fas fa-shield-alt"></i> Account
-          </button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button class="nav-link" id="notifications-tab" data-bs-toggle="tab" data-bs-target="#notifications" type="button" role="tab">
-            <i class="fas fa-bell"></i> Notifications
-          </button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button class="nav-link" id="businesses-tab" data-bs-toggle="tab" data-bs-target="#businesses" type="button" role="tab">
-            <i class="fas fa-building"></i> Businesses
-          </button>
-        </li>
-      </ul>
-
-      <!-- Tab Content -->
-      <div class="tab-content" id="settingsTabContent">
-        <!-- Profile Tab -->
-        <div class="tab-pane fade show active" id="profile" role="tabpanel">
-          <div class="card">
-            <div class="card-header">
-              <h5 class="mb-0">Profile Information</h5>
-            </div>
-            <div class="card-body">
-              <form id="profileForm">
-                <div class="row">
-                  <div class="col-md-6">
-                    <div class="mb-3">
-                      <label for="fullName" class="form-label">Full Name *</label>
-                      <input type="text" class="form-control" id="fullName" name="full_name" value="<%= user.full_name %>" required>
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="mb-3">
-                      <label for="email" class="form-label">Email Address *</label>
-                      <input type="email" class="form-control" id="email" name="email" value="<%= user.email %>" required>
-                    </div>
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-md-6">
-                    <div class="mb-3">
-                      <label for="phone" class="form-label">Phone Number</label>
-                      <input type="tel" class="form-control" id="phone" name="phone" value="<%= user.phone || user.phone_number || '' %>">
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="mb-3">
-                      <label for="timezone" class="form-label">Timezone</label>
-                      <select class="form-select" id="timezone" name="timezone">
-                        <option value="UTC" <%= (user.timezone || 'UTC') === 'UTC' ? 'selected' : '' %>>UTC</option>
-                        <option value="America/New_York" <%= (user.timezone || 'UTC') === 'America/New_York' ? 'selected' : '' %>>Eastern Time</option>
-                        <option value="America/Chicago" <%= (user.timezone || 'UTC') === 'America/Chicago' ? 'selected' : '' %>>Central Time</option>
-                        <option value="America/Denver" <%= (user.timezone || 'UTC') === 'America/Denver' ? 'selected' : '' %>>Mountain Time</option>
-                        <option value="America/Los_Angeles" <%= (user.timezone || 'UTC') === 'America/Los_Angeles' ? 'selected' : '' %>>Pacific Time</option>
-                        <option value="Europe/London" <%= (user.timezone || 'UTC') === 'Europe/London' ? 'selected' : '' %>>London</option>
-                        <option value="Europe/Paris" <%= (user.timezone || 'UTC') === 'Europe/Paris' ? 'selected' : '' %>>Paris</option>
-                        <option value="Asia/Tokyo" <%= (user.timezone || 'UTC') === 'Asia/Tokyo' ? 'selected' : '' %>>Tokyo</option>
-                        <option value="Asia/Shanghai" <%= (user.timezone || 'UTC') === 'Asia/Shanghai' ? 'selected' : '' %>>Shanghai</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-                <div class="mb-3">
-                  <label for="address" class="form-label">Address</label>
-                  <textarea class="form-control" id="address" name="address" rows="3"><%= user.address || '' %></textarea>
-                </div>
-                <button type="submit" class="btn btn-primary">
-                  <i class="fas fa-save"></i> Save Profile
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-
-        <!-- Account Tab -->
-        <div class="tab-pane fade" id="account" role="tabpanel">
-          <div class="row">
-            <div class="col-md-6">
-              <div class="card">
-                <div class="card-header">
-                  <h5 class="mb-0">Change Password</h5>
-                </div>
-                <div class="card-body">
-                  <form id="passwordForm">
-                    <div class="mb-3">
-                      <label for="currentPassword" class="form-label">Current Password *</label>
-                      <input type="password" class="form-control" id="currentPassword" name="current_password" required>
-                    </div>
-                    <div class="mb-3">
-                      <label for="newPassword" class="form-label">New Password *</label>
-                      <input type="password" class="form-control" id="newPassword" name="new_password" required>
-                      <div class="form-text">Password must be at least 8 characters long</div>
-                    </div>
-                    <div class="mb-3">
-                      <label for="confirmPassword" class="form-label">Confirm New Password *</label>
-                      <input type="password" class="form-control" id="confirmPassword" name="confirm_password" required>
-                    </div>
-                    <button type="submit" class="btn btn-warning">
-                      <i class="fas fa-key"></i> Change Password
-                    </button>
-                  </form>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="card">
-                <div class="card-header">
-                  <h5 class="mb-0">Account Information</h5>
-                </div>
-                <div class="card-body">
-                  <div class="mb-3">
-                    <label class="form-label">Account ID</label>
-                    <input type="text" class="form-control" value="<%= user.id %>" readonly>
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">Member Since</label>
-                    <input type="text" class="form-control" value="<%= new Date(user.created_at).toLocaleDateString() %>" readonly>
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">Last Login</label>
-                    <input type="text" class="form-control" value="<%= user.last_login ? new Date(user.last_login).toLocaleString() : 'Never' %>" readonly>
-                  </div>
-                  <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i>
-                    <strong>Account Status:</strong> Active
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Notifications Tab -->
-        <div class="tab-pane fade" id="notifications" role="tabpanel">
-          <div class="card">
-            <div class="card-header">
-              <h5 class="mb-0">Notification Preferences</h5>
-            </div>
-            <div class="card-body">
-              <form id="notificationsForm">
-                <div class="mb-4">
-                  <h6>Email Notifications</h6>
-                  <div class="form-check mb-2">
-                    <input class="form-check-input" type="checkbox" id="emailNewOrders" name="email_new_orders" <%= (user.email_new_orders !== false) ? 'checked' : '' %>>
-                    <label class="form-check-label" for="emailNewOrders">
-                      New order notifications
-                    </label>
-                  </div>
-                  <div class="form-check mb-2">
-                    <input class="form-check-input" type="checkbox" id="emailDailyReports" name="email_daily_reports" <%= user.email_daily_reports ? 'checked' : '' %>>
-                    <label class="form-check-label" for="emailDailyReports">
-                      Daily order reports
-                    </label>
-                  </div>
-                  <div class="form-check mb-2">
-                    <input class="form-check-input" type="checkbox" id="emailWeeklyReports" name="email_weekly_reports" <%= user.email_weekly_reports ? 'checked' : '' %>>
-                    <label class="form-check-label" for="emailWeeklyReports">
-                      Weekly summary reports
-                    </label>
-                  </div>
-                </div>
-                <div class="mb-4">
-                  <h6>WhatsApp Notifications</h6>
-                  <div class="form-check mb-2">
-                    <input class="form-check-input" type="checkbox" id="whatsappNewOrders" name="whatsapp_new_orders" <%= (user.whatsapp_new_orders !== false) ? 'checked' : '' %>>
-                    <label class="form-check-label" for="whatsappNewOrders">
-                      New order alerts in WhatsApp groups
-                    </label>
-                  </div>
-                  <div class="form-check mb-2">
-                    <input class="form-check-input" type="checkbox" id="whatsappReminders" name="whatsapp_reminders" <%= (user.whatsapp_reminders !== false) ? 'checked' : '' %>>
-                    <label class="form-check-label" for="whatsappReminders">
-                      Pending order reminders
-                    </label>
-                  </div>
-                </div>
-                <div class="mb-4">
-                  <h6>Dashboard Notifications</h6>
-                  <div class="form-check mb-2">
-                    <input class="form-check-input" type="checkbox" id="dashboardAlerts" name="dashboard_alerts" <%= (user.dashboard_alerts !== false) ? 'checked' : '' %>>
-                    <label class="form-check-label" for="dashboardAlerts">
-                      Show alerts on dashboard
-                    </label>
-                  </div>
-                </div>
-                <button type="submit" class="btn btn-primary">
-                  <i class="fas fa-save"></i> Save Preferences
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-
-        <!-- Businesses Tab -->
-        <div class="tab-pane fade" id="businesses" role="tabpanel">
-          <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-              <h5 class="mb-0">My Businesses</h5>
-              <a href="/add-business" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Add New Business
-              </a>
-            </div>
-            <div class="card-body">
-              <div class="table-responsive">
-                <table class="table">
-                  <thead>
-                    <tr>
-                      <th>Business Name</th>
-                      <th>Groups</th>
-                      <th>Orders</th>
-                      <th>Created</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <% if (businesses && businesses.length > 0) { %>
-                      <% businesses.forEach(business => { %>
-                        <% 
-                          const businessGroups = groups.filter(g => g.business_id === business.business_id);
-                          const businessOrders = orders.filter(o => o.business_id === business.business_id);
-                        %>
-                        <tr>
-                          <td>
-                            <strong><%= business.business_name %></strong>
-                          </td>
-                          <td>
-                            <span class="badge bg-info"><%= businessGroups.length %> groups</span>
-                          </td>
-                          <td>
-                            <span class="badge bg-secondary"><%= businessOrders.length %> orders</span>
-                          </td>
-                          <td>
-                            <%= new Date(business.created_at || Date.now()).toLocaleDateString() %>
-                          </td>
-                          <td>
-                            <div class="btn-group" role="group">
-                              <button class="btn btn-sm btn-outline-primary" onclick="editBusiness('<%= business.business_id %>')">
-                                <i class="fas fa-edit"></i> Edit
-                              </button>
-                              <button class="btn btn-sm btn-outline-danger" onclick="deleteBusiness('<%= business.business_id %>')">
-                                <i class="fas fa-trash"></i> Delete
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      <% }); %>
-                    <% } else { %>
-                      <tr>
-                        <td colspan="5" class="text-center">
-                          <div class="alert alert-info mb-0">
-                            No businesses yet. <a href="/add-business">Create your first business</a> to get started.
-                          </div>
-                        </td>
-                      </tr>
-                    <% } %>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-  // Profile form submission
-  document.getElementById('profileForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    try {
-      const formData = new FormData(e.target);
-      const response = await fetch('/api/settings/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          full_name: formData.get('full_name'),
-          email: formData.get('email'),
-          phone: formData.get('phone'),
-          timezone: formData.get('timezone'),
-          address: formData.get('address'),
-          user_id: '<%= user.id %>'
-        })
-      });
-      
-      const result = await response.json();
-      
-      if (response.ok) {
-        alert('Profile updated successfully!');
-        location.reload();
-      } else {
-        alert('Failed to update profile: ' + result.error);
-      }
-    } catch (error) {
-      alert('Error updating profile: ' + error.message);
-    }
-  });
-
-  // Password form submission
-  document.getElementById('passwordForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const newPassword = document.getElementById('newPassword').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-    
-    if (newPassword !== confirmPassword) {
-      alert('New passwords do not match!');
-      return;
-    }
-    
-    if (newPassword.length < 8) {
-      alert('Password must be at least 8 characters long!');
-      return;
-    }
-    
-    try {
-      const formData = new FormData(e.target);
-      const response = await fetch('/api/settings/password', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          current_password: formData.get('current_password'),
-          new_password: formData.get('new_password'),
-          user_id: '<%= user.id %>'
-        })
-      });
-      
-      const result = await response.json();
-      
-      if (response.ok) {
-        alert('Password changed successfully!');
-        e.target.reset();
-      } else {
-        alert('Failed to change password: ' + result.error);
-      }
-    } catch (error) {
-      alert('Error changing password: ' + error.message);
-    }
-  });
-
-  // Notifications form submission
-  document.getElementById('notificationsForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    try {
-      const formData = new FormData(e.target);
-      const response = await fetch('/api/settings/notifications', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email_new_orders: formData.get('email_new_orders') === 'on',
-          email_daily_reports: formData.get('email_daily_reports') === 'on',
-          email_weekly_reports: formData.get('email_weekly_reports') === 'on',
-          whatsapp_new_orders: formData.get('whatsapp_new_orders') === 'on',
-          whatsapp_reminders: formData.get('whatsapp_reminders') === 'on',
-          dashboard_alerts: formData.get('dashboard_alerts') === 'on',
-          user_id: '<%= user.id %>'
-        })
-      });
-      
-      const result = await response.json();
-      
-      if (response.ok) {
-        alert('Notification preferences saved!');
-      } else {
-        alert('Failed to save preferences: ' + result.error);
-      }
-    } catch (error) {
-      alert('Error saving preferences: ' + error.message);
-    }
-  });
-
-  function editBusiness(businessId) {
-    // Redirect to business edit page
-    window.location.href = `/business/${businessId}`;
-  }
-
-  function deleteBusiness(businessId) {
-    if (confirm('Are you sure you want to delete this business? This action cannot be undone and will also delete all associated groups and orders.')) {
-      // Call the delete API
-      fetch(`/api/businesses/${businessId}?user_id=<%= user.id %>`, {
-        method: 'DELETE'
-      })
-      .then(response => response.json())
-      .then(result => {
-        if (result.success) {
-          alert('Business deleted successfully!');
-          location.reload();
-        } else {
-          alert('Failed to delete business: ' + result.error);
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - WhatsApp Delivery Bot</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/admin-dashboard.css" rel="stylesheet">
+    <style>
+        .settings-container {
+            max-width: 900px;
+            margin: 2.5rem auto;
+            padding: 0 1.5rem;
         }
-      })
-      .catch(error => {
-        alert('Error deleting business: ' + error.message);
-      });
-    }
-  }
-</script> 
+        .settings-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .settings-tab {
+            background: none;
+            border: none;
+            border-bottom: 2.5px solid transparent;
+            color: var(--text-secondary);
+            font-size: 1rem;
+            font-weight: 500;
+            padding: 0.75rem 1.5rem 0.5rem 1.5rem;
+            cursor: pointer;
+            transition: color 0.2s, border-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .settings-tab.active {
+            color: var(--primary-color);
+            border-bottom: 2.5px solid var(--primary-color);
+            background: none;
+        }
+        .settings-card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            padding: 2rem 2rem 1.5rem 2rem;
+            margin-bottom: 2rem;
+            max-width: 100%;
+        }
+        .settings-card h2 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+        .settings-form label {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .settings-form input,
+        .settings-form select,
+        .settings-form textarea {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface-hover);
+            color: var(--text-primary);
+            font-size: 1rem;
+            margin-bottom: 1.25rem;
+            transition: border-color 0.2s;
+        }
+        .settings-form input:focus,
+        .settings-form select:focus,
+        .settings-form textarea:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+        .settings-form .form-actions {
+            text-align: right;
+        }
+        .settings-form .btn {
+            min-width: 140px;
+        }
+        .settings-form .form-row {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .settings-form .form-col {
+            flex: 1 1 250px;
+        }
+        .settings-form .form-group {
+            margin-bottom: 1.25rem;
+        }
+        .settings-form .form-text {
+            color: var(--text-muted);
+            font-size: 0.92rem;
+            margin-top: -0.75rem;
+            margin-bottom: 1rem;
+        }
+        .settings-form .alert {
+            background: rgba(59, 130, 246, 0.08);
+            color: var(--info-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.25rem;
+            font-size: 0.98rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        @media (max-width: 600px) {
+            .settings-card { padding: 1.25rem 0.75rem; }
+            .settings-tabs { flex-direction: column; gap: 0; }
+            .settings-tab { width: 100%; justify-content: flex-start; }
+            .settings-form .form-row { flex-direction: column; gap: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="/dashboard" class="logo-section">
+                    <div class="logo-icon"><i class="fas fa-cog"></i></div>
+                    <div class="logo-text"><span class="main-title">Settings</span></div>
+                </a>
+            </div>
+            <nav class="header-right" style="display: flex; align-items: center; gap: 0.75rem;">
+                <a href="/dashboard" class="nav-link">Dashboard</a>
+                <a href="/orders" class="nav-link">Orders</a>
+                <a href="/groups" class="nav-link">Groups</a>
+                <button class="btn btn-icon" id="theme-toggle" aria-label="Toggle Theme">
+                    <i class="fas fa-sun"></i><i class="fas fa-moon" style="display: none;"></i>
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-icon" id="profileDropdown"><i class="fas fa-user"></i></button>
+                    <div class="dropdown-content" id="profileMenu">
+                        <a href="/settings" class="dropdown-item"><i class="fas fa-cog"></i> Settings</a>
+                        <form action="/logout" method="post" class="dropdown-item" style="padding: 0; margin: 0;">
+                            <button type="submit" style="all: unset; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; width: 100%;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                        </form>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+    <main class="settings-container">
+        <div class="settings-tabs" id="settingsTabs">
+            <button class="settings-tab active" data-tab="profile"><i class="fas fa-user"></i> Profile</button>
+            <button class="settings-tab" data-tab="account"><i class="fas fa-shield-alt"></i> Account</button>
+            <button class="settings-tab" data-tab="notifications"><i class="fas fa-bell"></i> Notifications</button>
+            <button class="settings-tab" data-tab="businesses"><i class="fas fa-building"></i> Businesses</button>
+        </div>
+        <div id="settingsTabContent">
+            <!-- Profile Tab -->
+            <div class="settings-card tab-pane active" id="profileTab">
+                <h2>Profile Information</h2>
+                <form class="settings-form" id="profileForm">
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label for="fullName">Full Name *</label>
+                            <input type="text" id="fullName" name="full_name" value="<%= user.full_name %>" required>
+                        </div>
+                        <div class="form-col">
+                            <label for="email">Email Address *</label>
+                            <input type="email" id="email" name="email" value="<%= user.email %>" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" id="phone" name="phone" value="<%= user.phone || user.phone_number || '' %>">
+                        </div>
+                        <div class="form-col">
+                            <label for="timezone">Timezone</label>
+                            <select id="timezone" name="timezone">
+                                <option value="UTC" <%= (user.timezone || 'UTC') === 'UTC' ? 'selected' : '' %>>UTC</option>
+                                <option value="America/New_York" <%= (user.timezone || 'UTC') === 'America/New_York' ? 'selected' : '' %>>Eastern Time</option>
+                                <option value="America/Chicago" <%= (user.timezone || 'UTC') === 'America/Chicago' ? 'selected' : '' %>>Central Time</option>
+                                <option value="America/Denver" <%= (user.timezone || 'UTC') === 'America/Denver' ? 'selected' : '' %>>Mountain Time</option>
+                                <option value="America/Los_Angeles" <%= (user.timezone || 'UTC') === 'America/Los_Angeles' ? 'selected' : '' %>>Pacific Time</option>
+                                <option value="Europe/London" <%= (user.timezone || 'UTC') === 'Europe/London' ? 'selected' : '' %>>London</option>
+                                <option value="Europe/Paris" <%= (user.timezone || 'UTC') === 'Europe/Paris' ? 'selected' : '' %>>Paris</option>
+                                <option value="Asia/Tokyo" <%= (user.timezone || 'UTC') === 'Asia/Tokyo' ? 'selected' : '' %>>Tokyo</option>
+                                <option value="Asia/Shanghai" <%= (user.timezone || 'UTC') === 'Asia/Shanghai' ? 'selected' : '' %>>Shanghai</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="address">Address</label>
+                        <textarea id="address" name="address" rows="3"><%= user.address || '' %></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Profile
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <!-- Account Tab -->
+            <div class="settings-card tab-pane" id="accountTab" style="display:none;">
+                <h2>Account Security</h2>
+                <form class="settings-form" id="passwordForm">
+                    <div class="form-group">
+                        <label for="currentPassword">Current Password *</label>
+                        <input type="password" id="currentPassword" name="current_password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword">New Password *</label>
+                        <input type="password" id="newPassword" name="new_password" required>
+                        <div class="form-text">Password must be at least 8 characters long</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm New Password *</label>
+                        <input type="password" id="confirmPassword" name="confirm_password" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-key"></i> Change Password
+                        </button>
+                    </div>
+                </form>
+                <div class="settings-card" style="margin-top:2rem; background: var(--surface-hover);">
+                    <h2 style="font-size:1.1rem; margin-bottom:1rem;">Account Information</h2>
+                    <div class="settings-form">
+                        <div class="form-group">
+                            <label>Account ID</label>
+                            <input type="text" value="<%= user.id %>" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Member Since</label>
+                            <input type="text" value="<%= new Date(user.created_at).toLocaleDateString() %>" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Last Login</label>
+                            <input type="text" value="<%= user.last_login ? new Date(user.last_login).toLocaleString() : 'Never' %>" readonly>
+                        </div>
+                        <div class="alert">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Account Status:</strong> Active
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Notifications Tab -->
+            <div class="settings-card tab-pane" id="notificationsTab" style="display:none;">
+                <h2>Notification Preferences</h2>
+                <form class="settings-form" id="notificationsForm">
+                    <div class="form-group">
+                        <h4 style="font-size:1.05rem; margin-bottom:0.5rem;">Email Notifications</h4>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="emailNewOrders" name="email_new_orders" <%= (user.email_new_orders !== false) ? 'checked' : '' %>>
+                            <label class="form-check-label" for="emailNewOrders">New order notifications</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="emailDailyReports" name="email_daily_reports" <%= user.email_daily_reports ? 'checked' : '' %>>
+                            <label class="form-check-label" for="emailDailyReports">Daily order reports</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="emailWeeklyReports" name="email_weekly_reports" <%= user.email_weekly_reports ? 'checked' : '' %>>
+                            <label class="form-check-label" for="emailWeeklyReports">Weekly summary reports</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <h4 style="font-size:1.05rem; margin-bottom:0.5rem;">WhatsApp Notifications</h4>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="whatsappNewOrders" name="whatsapp_new_orders" <%= (user.whatsapp_new_orders !== false) ? 'checked' : '' %>>
+                            <label class="form-check-label" for="whatsappNewOrders">New order alerts in WhatsApp groups</label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="whatsappReminders" name="whatsapp_reminders" <%= (user.whatsapp_reminders !== false) ? 'checked' : '' %>>
+                            <label class="form-check-label" for="whatsappReminders">Pending order reminders</label>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Preferences
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <!-- Businesses Tab -->
+            <div class="settings-card tab-pane" id="businessesTab" style="display:none;">
+                <h2>My Businesses</h2>
+                <div class="settings-form">
+                    <% if (businesses && businesses.length) { %>
+                        <ul style="list-style:none; padding:0; margin:0;">
+                            <% businesses.forEach(function(biz) { %>
+                                <li style="margin-bottom:1.25rem;">
+                                    <div style="display:flex; align-items:center; gap:1rem;">
+                                        <div style="width:40px; height:40px; background:var(--primary-color); color:white; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:1.25rem; font-weight:700;">
+                                            <i class="fas fa-building"></i>
+                                        </div>
+                                        <div style="flex:1;">
+                                            <div style="font-size:1.1rem; font-weight:700; color:var(--text-primary); text-transform:capitalize;"> <%= biz.business_name %> </div>
+                                            <div style="font-size:0.92rem; color:var(--text-secondary);">ID: <%= biz.business_id %></div>
+                                        </div>
+                                        <a href="/business/<%= biz.business_id %>" class="btn btn-outline" style="font-size:0.92rem;">View</a>
+                                    </div>
+                                </li>
+                            <% }); %>
+                        </ul>
+                    <% } else { %>
+                        <div class="alert"><i class="fas fa-info-circle"></i> You have no businesses yet.</div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script>
+        // Tabs functionality
+        const tabBtns = document.querySelectorAll('.settings-tab');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const tab = btn.getAttribute('data-tab');
+                tabPanes.forEach(tc => {
+                    tc.classList.remove('active');
+                    tc.style.display = 'none';
+                    if (tc.id === tab + 'Tab') {
+                        tc.classList.add('active');
+                        tc.style.display = '';
+                    }
+                });
+            });
+        });
+        // Profile dropdown functionality
+        const profileDropdown = document.getElementById('profileDropdown');
+        const profileMenu = document.getElementById('profileMenu');
+        profileDropdown.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileMenu.classList.toggle('show');
+        });
+        document.addEventListener('click', () => {
+            profileMenu.classList.remove('show');
+        });
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+        function updateThemeIcon(theme) {
+            const sunIcon = themeToggle.querySelector('i:nth-child(1)');
+            const moonIcon = themeToggle.querySelector('i:nth-child(2)');
+            sunIcon.style.display = theme === 'light' ? 'inline' : 'none';
+            moonIcon.style.display = theme === 'dark' ? 'inline' : 'none';
+        }
+    </script>
+</body>
+</html> 
