@@ -1313,4 +1313,27 @@ a, .nav-link, .no-underline {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+.btn.btn-icon.btn-edit {
+  background: var(--surface-hover);
+  color: var(--primary-color);
+  border: none;
+  border-radius: 50%;
+  transition: background 0.18s, color 0.18s;
+}
+.btn.btn-icon.btn-edit:hover {
+  background: var(--primary-color);
+  color: #fff;
+}
+.btn.btn-icon.btn-delete {
+  background: var(--surface-hover);
+  color: var(--danger);
+  border: none;
+  border-radius: 50%;
+  transition: background 0.18s, color 0.18s;
+}
+.btn.btn-icon.btn-delete:hover {
+  background: var(--danger);
+  color: #fff;
 } 
