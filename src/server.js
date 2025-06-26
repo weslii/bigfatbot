@@ -493,7 +493,12 @@ async function startServer() {
 
     app.post('/add-business', async (req, res) => {
       try {
-        const { userId, businessName } = req.body;
+        const userId = req.session ? req.session.userId : null;
+        const { businessName } = req.body;
+        logger.info('Add business for userId:', userId);
+        if (!userId) {
+          return res.redirect('/login');
+        }
         const result = await RegistrationService.addBusinessToUser(userId, businessName);
         // Redirect to group setup page for the new business
         res.redirect(`/setup-group?businessId=${result.businessId}&userId=${userId}`);
@@ -501,7 +506,7 @@ async function startServer() {
         logger.error('Add business error:', error);
         res.render('add-business', { 
           error: 'Failed to add business. Please try again.',
-          userId: req.body.userId
+          userId: req.session ? req.session.userId : null
         });
       }
     });
