@@ -1832,14 +1832,25 @@ async function startServer() {
     // Paginated API for businesses
     app.get('/admin/api/businesses', requireAdmin, async (req, res) => {
       try {
-        const businesses = await db.query('groups')
-          .select('business_id', 'business_name')
-          .distinct()
-          .orderBy('business_name');
-        res.json({ businesses });
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = parseInt(req.query.pageSize) || 10;
+        const offset = (page - 1) * pageSize;
+
+        // Get total count of unique businesses
+        const [{ count }] = await db.query('groups').countDistinct('business_id as count');
+
+        // Get paginated businesses, grouped by business_id
+        const businesses = await db.query('groups as g')
+          .select('g.business_id', 'g.business_name')
+          .groupBy('g.business_id', 'g.business_name')
+          .orderBy('g.business_name')
+          .limit(pageSize)
+          .offset(offset);
+
+        res.json({ businesses, total: parseInt(count) });
       } catch (error) {
         logger.error('API businesses error:', error);
-        res.status(500).json({ businesses: [] });
+        res.status(500).json({ businesses: [], total: 0 });
       }
     });
 
