@@ -91,204 +91,185 @@
                 </div>
             </div>
 
-            <!-- Business Information -->
-            <div class="content-card scroll-reveal">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-info-circle"></i> Business Information
-                    </h3>
-                </div>
-                <div class="card-content">
-                    <form id="businessForm" class="business-form">
-                        <input type="hidden" name="business_id" value="<%= business.business_id %>">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="businessName" class="form-label">Business Name *</label>
-                                <input type="text" class="form-input" id="businessName" name="business_name" value="<%= business.business_name %>" required>
+            <div class="business-page-layout">
+                <!-- Business Information Side Card -->
+                <div class="business-side-card scroll-reveal">
+                    <div class="side-card-header">
+                        <h3 class="side-card-title">
+                            <i class="fas fa-info-circle"></i> Business Info
+                        </h3>
+                    </div>
+                    <div class="side-card-content">
+                        <div class="business-details-list">
+                            <div class="detail-row">
+                                <label class="detail-label">Business ID</label>
+                                <div class="detail-value"><code><%= business.business_id %></code></div>
+                            </div>
+                            <div class="detail-row">
+                                <label class="detail-label">Setup Code</label>
+                                <div class="detail-value"><code><%= business.setup_identifier %></code></div>
+                            </div>
+                            <div class="detail-row">
+                                <label class="detail-label">Created</label>
+                                <div class="detail-value"><%= new Date(business.created_at).toLocaleDateString() %></div>
+                            </div>
+                            <div class="detail-row">
+                                <label class="detail-label">Status</label>
+                                <div class="detail-value">
+                                    <span class="status-badge active">Active</span>
+                                </div>
                             </div>
                         </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Save Changes
+                        <div class="side-card-actions">
+                            <button class="btn btn-sm btn-outline" onclick="editBusinessName()">
+                                <i class="fas fa-edit"></i> Edit Name
                             </button>
-                            <button type="button" class="btn btn-danger" onclick="deleteBusiness()">
-                                <i class="fas fa-trash"></i> Delete Business
+                            <button class="btn btn-sm btn-danger" onclick="deleteBusiness()">
+                                <i class="fas fa-trash"></i> Delete
                             </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Business Details Sidebar -->
-            <div class="content-card scroll-reveal">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-cog"></i> Business Details
-                    </h3>
-                </div>
-                <div class="card-content">
-                    <div class="details-grid">
-                        <div class="detail-item">
-                            <label class="detail-label">Business ID</label>
-                            <div class="detail-value"><code><%= business.business_id %></code></div>
-                        </div>
-                        <div class="detail-item">
-                            <label class="detail-label">Setup Code</label>
-                            <div class="detail-value"><code><%= business.setup_identifier %></code></div>
-                        </div>
-                        <div class="detail-item">
-                            <label class="detail-label">Created</label>
-                            <div class="detail-value"><%= new Date(business.created_at).toLocaleDateString() %></div>
-                        </div>
-                        <div class="detail-item">
-                            <label class="detail-label">Last Updated</label>
-                            <div class="detail-value">Never</div>
-                        </div>
-                        <div class="detail-item">
-                            <label class="detail-label">Status</label>
-                            <div class="detail-value">
-                                <span class="status-badge active">Active</span>
-                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- WhatsApp Groups -->
-            <div class="content-card scroll-reveal">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-comments"></i> WhatsApp Groups
-                    </h3>
-                    <button class="btn btn-primary" onclick="openAddGroupModal()">
-                        <i class="fas fa-plus"></i> Add Group
-                    </button>
-                </div>
-                <div class="card-content">
-                    <% if (businessGroups && businessGroups.length > 0) { %>
-                        <div class="table-container">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Group Name</th>
-                                        <th>Type</th>
-                                        <th>Status</th>
-                                        <th>Created</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <% businessGroups.forEach(group => { %>
-                                        <tr>
-                                            <td>
-                                                <div class="group-info">
-                                                    <div class="group-name"><%= group.group_name %></div>
-                                                    <div class="group-id"><%= group.group_id %></div>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <span class="status-badge <%= group.group_type === 'sales' ? 'success' : 'info' %>">
-                                                    <%= group.group_type.charAt(0).toUpperCase() + group.group_type.slice(1) %>
-                                                </span>
-                                            </td>
-                                            <td><span class="status-badge active">Active</span></td>
-                                            <td><%= new Date(group.created_at).toLocaleDateString() %></td>
-                                            <td>
-                                                <div class="btn-group">
-                                                    <button class="btn btn-sm btn-outline" onclick="viewGroup('<%= group.id %>')">
-                                                        <i class="fas fa-eye"></i>
-                                                    </button>
-                                                    <button class="btn btn-sm btn-outline" onclick="removeGroup('<%= group.id %>')">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    <% }); %>
-                                </tbody>
-                            </table>
-                        </div>
-                    <% } else { %>
-                        <div class="empty-state">
-                            <i class="fas fa-comments"></i>
-                            <h4>No WhatsApp Groups</h4>
-                            <p>You haven't added any WhatsApp groups yet. Add your first group to start receiving orders.</p>
+                <!-- Main Content Area -->
+                <div class="main-content-area">
+                    <!-- WhatsApp Groups -->
+                    <div class="content-card scroll-reveal">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-comments"></i> WhatsApp Groups
+                            </h3>
                             <button class="btn btn-primary" onclick="openAddGroupModal()">
-                                <i class="fas fa-plus"></i> Add Your First Group
+                                <i class="fas fa-plus"></i> Add Group
                             </button>
                         </div>
-                    <% } %>
-                </div>
-            </div>
+                        <div class="card-content">
+                            <% if (businessGroups && businessGroups.length > 0) { %>
+                                <div class="table-container">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Group Name</th>
+                                                <th>Type</th>
+                                                <th>Status</th>
+                                                <th>Created</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% businessGroups.forEach(group => { %>
+                                                <tr>
+                                                    <td>
+                                                        <div class="group-info">
+                                                            <div class="group-name"><%= group.group_name %></div>
+                                                            <div class="group-id"><%= group.group_id %></div>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <span class="status-badge <%= group.group_type === 'sales' ? 'success' : 'info' %>">
+                                                            <%= group.group_type.charAt(0).toUpperCase() + group.group_type.slice(1) %>
+                                                        </span>
+                                                    </td>
+                                                    <td><span class="status-badge active">Active</span></td>
+                                                    <td><%= new Date(group.created_at).toLocaleDateString() %></td>
+                                                    <td>
+                                                        <div class="btn-group">
+                                                            <button class="btn btn-sm btn-outline" onclick="viewGroup('<%= group.id %>')">
+                                                                <i class="fas fa-eye"></i>
+                                                            </button>
+                                                            <button class="btn btn-sm btn-outline" onclick="removeGroup('<%= group.id %>')">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            <% }); %>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <% } else { %>
+                                <div class="empty-state">
+                                    <i class="fas fa-comments"></i>
+                                    <h4>No WhatsApp Groups</h4>
+                                    <p>You haven't added any WhatsApp groups yet. Add your first group to start receiving orders.</p>
+                                    <button class="btn btn-primary" onclick="openAddGroupModal()">
+                                        <i class="fas fa-plus"></i> Add Your First Group
+                                    </button>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
 
-            <!-- Recent Orders -->
-            <div class="content-card scroll-reveal">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-box"></i> Recent Orders
-                    </h3>
-                    <div class="header-actions-right">
-                        <div class="dropdown">
-                            <button class="btn btn-secondary" id="exportDropdown">
-                                <i class="fas fa-download"></i> Export
-                            </button>
-                            <div class="dropdown-content" id="exportMenu">
-                                <a href="#" class="dropdown-item" onclick="exportBusinessOrders('csv')">
-                                    <i class="fas fa-file-csv"></i> Export to CSV
-                                </a>
-                                <a href="#" class="dropdown-item" onclick="exportBusinessOrders('json')">
-                                    <i class="fas fa-file-code"></i> Export to JSON
+                    <!-- Recent Orders -->
+                    <div class="content-card scroll-reveal">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-box"></i> Recent Orders
+                            </h3>
+                            <div class="header-actions-right">
+                                <div class="dropdown">
+                                    <button class="btn btn-secondary" id="exportDropdown">
+                                        <i class="fas fa-download"></i> Export
+                                    </button>
+                                    <div class="dropdown-content" id="exportMenu">
+                                        <a href="#" class="dropdown-item" onclick="exportBusinessOrders('csv')">
+                                            <i class="fas fa-file-csv"></i> Export to CSV
+                                        </a>
+                                        <a href="#" class="dropdown-item" onclick="exportBusinessOrders('json')">
+                                            <i class="fas fa-file-code"></i> Export to JSON
+                                        </a>
+                                    </div>
+                                </div>
+                                <a href="/orders?business=<%= business.business_id %>" class="btn btn-primary">
+                                    <i class="fas fa-external-link-alt"></i> View All Orders
                                 </a>
                             </div>
                         </div>
-                        <a href="/orders?business=<%= business.business_id %>" class="btn btn-primary">
-                            <i class="fas fa-external-link-alt"></i> View All Orders
-                        </a>
+                        <div class="card-content">
+                            <% if (recentOrders && recentOrders.length > 0) { %>
+                                <div class="table-container">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Order ID</th>
+                                                <th>Customer</th>
+                                                <th>Items</th>
+                                                <th>Status</th>
+                                                <th>Date</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% recentOrders.forEach(order => { %>
+                                                <tr>
+                                                    <td><strong><%= order.order_id %></strong></td>
+                                                    <td><%= order.customer_name %></td>
+                                                    <td><%= order.items ? order.items.length : 0 %> items</td>
+                                                    <td>
+                                                        <span class="status-badge <%= order.status %>">
+                                                            <%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %>
+                                                        </span>
+                                                    </td>
+                                                    <td><%= new Date(order.created_at).toLocaleDateString() %></td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-outline" onclick="viewOrder('<%= order.id %>')">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            <% }); %>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <% } else { %>
+                                <div class="empty-state">
+                                    <i class="fas fa-box-open"></i>
+                                    <h4>No Orders Yet</h4>
+                                    <p>Orders will appear here when customers place them in your WhatsApp groups.</p>
+                                </div>
+                            <% } %>
+                        </div>
                     </div>
-                </div>
-                <div class="card-content">
-                    <% if (recentOrders && recentOrders.length > 0) { %>
-                        <div class="table-container">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Order ID</th>
-                                        <th>Customer</th>
-                                        <th>Items</th>
-                                        <th>Status</th>
-                                        <th>Date</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <% recentOrders.forEach(order => { %>
-                                        <tr>
-                                            <td><strong><%= order.order_id %></strong></td>
-                                            <td><%= order.customer_name %></td>
-                                            <td><%= order.items ? order.items.length : 0 %> items</td>
-                                            <td>
-                                                <span class="status-badge <%= order.status %>">
-                                                    <%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %>
-                                                </span>
-                                            </td>
-                                            <td><%= new Date(order.created_at).toLocaleDateString() %></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline" onclick="viewOrder('<%= order.id %>')">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    <% }); %>
-                                </tbody>
-                            </table>
-                        </div>
-                    <% } else { %>
-                        <div class="empty-state">
-                            <i class="fas fa-box-open"></i>
-                            <h4>No Orders Yet</h4>
-                            <p>Orders will appear here when customers place them in your WhatsApp groups.</p>
-                        </div>
-                    <% } %>
                 </div>
             </div>
         <% } else { %>
@@ -646,6 +627,74 @@
     color: var(--text-secondary);
 }
 
+/* Side card layout */
+.business-side-card {
+    position: sticky;
+    top: 2rem;
+    width: 300px;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 2rem;
+    transition: transform 0.18s cubic-bezier(0.4,0,0.2,1), box-shadow 0.18s cubic-bezier(0.4,0,0.2,1);
+}
+
+.business-side-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.side-card-header {
+    padding: 1.5rem 1.5rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.side-card-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.side-card-content {
+    padding: 1rem 1.5rem 1.5rem;
+}
+
+.business-details-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.detail-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.side-card-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.main-content-area {
+    flex: 1;
+    margin-left: 2rem;
+}
+
+/* Layout for business page */
+.business-page-layout {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+}
+
 /* Stats grid for business page */
 .stats-grid {
     display: grid;
@@ -717,10 +766,131 @@
     color: var(--text-primary);
 }
 
+/* Improved group details modal */
+.group-details-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.group-details-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.group-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.group-header-info h4 {
+    margin: 0 0 0.25rem 0;
+    color: var(--text-primary);
+    font-size: 1.25rem;
+}
+
+.group-header-info p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.group-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.group-detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.group-detail-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.group-detail-value {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.group-detail-value code {
+    background: var(--surface-color);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-family: monospace;
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+
+.group-info-note {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: var(--radius);
+    padding: 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.group-info-note i {
+    color: var(--info-color);
+    margin-top: 0.125rem;
+}
+
+.group-info-note-content h5 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.group-info-note-content p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+}
+
 /* Responsive */
+@media (max-width: 1024px) {
+    .business-page-layout {
+        flex-direction: column;
+    }
+    
+    .business-side-card {
+        width: 100%;
+        position: static;
+    }
+    
+    .main-content-area {
+        margin-left: 0;
+    }
+}
+
 @media (max-width: 768px) {
     .form-grid,
-    .details-grid {
+    .details-grid,
+    .group-details-grid {
         grid-template-columns: 1fr;
     }
     
@@ -890,6 +1060,37 @@
         }
     }
 
+    function editBusinessName() {
+        const newName = prompt('Enter new business name:', '<%= business ? business.business_name : "" %>');
+        if (newName && newName.trim() !== '') {
+            updateBusinessName(newName.trim());
+        }
+    }
+
+    async function updateBusinessName(newName) {
+        try {
+            const response = await fetch('/api/businesses/<%= business ? business.business_id : "" %>', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    business_name: newName,
+                    user_id: '<%= userId %>'
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                alert('Business name updated successfully!');
+                location.reload();
+            } else {
+                alert('Failed to update business name: ' + result.error);
+            }
+        } catch (error) {
+            alert('Error updating business name: ' + error.message);
+        }
+    }
+
     function openAddGroupModal() {
         document.getElementById('addGroupModal').classList.add('show');
     }
@@ -941,39 +1142,54 @@
                 const content = document.getElementById('groupDetailsContent');
                 
                 content.innerHTML = `
-                    <div class="details-grid">
-                        <div class="detail-item">
-                            <label class="detail-label">Group Name</label>
-                            <div class="detail-value">${group.group_name}</div>
-                        </div>
-                        <div class="detail-item">
-                            <label class="detail-label">Group Type</label>
-                            <div class="detail-value">
-                                <span class="status-badge ${group.group_type === 'sales' ? 'success' : 'info'}">${group.group_type}</span>
+                    <div class="group-details-content">
+                        <div class="group-details-header">
+                            <div class="group-avatar">
+                                <i class="fas fa-comments"></i>
+                            </div>
+                            <div class="group-header-info">
+                                <h4>${group.group_name}</h4>
+                                <p>${group.group_type} group</p>
                             </div>
                         </div>
-                        <div class="detail-item">
-                            <label class="detail-label">Group ID</label>
-                            <div class="detail-value"><code>${group.group_id}</code></div>
-                        </div>
-                        <div class="detail-item">
-                            <label class="detail-label">Business</label>
-                            <div class="detail-value">${group.business_name}</div>
-                        </div>
-                        <div class="detail-item">
-                            <label class="detail-label">Created</label>
-                            <div class="detail-value">${new Date(group.created_at).toLocaleString()}</div>
-                        </div>
-                        <div class="detail-item">
-                            <label class="detail-label">Status</label>
-                            <div class="detail-value">
-                                <span class="status-badge active">Active</span>
+                        
+                        <div class="group-details-grid">
+                            <div class="group-detail-item">
+                                <label class="group-detail-label">Group Type</label>
+                                <div class="group-detail-value">
+                                    <span class="status-badge ${group.group_type === 'sales' ? 'success' : 'info'}">${group.group_type}</span>
+                                </div>
+                            </div>
+                            <div class="group-detail-item">
+                                <label class="group-detail-label">Business</label>
+                                <div class="group-detail-value">${group.business_name}</div>
+                            </div>
+                            <div class="group-detail-item">
+                                <label class="group-detail-label">Created</label>
+                                <div class="group-detail-value">${new Date(group.created_at).toLocaleString()}</div>
+                            </div>
+                            <div class="group-detail-item">
+                                <label class="group-detail-label">Status</label>
+                                <div class="group-detail-value">
+                                    <span class="status-badge active">Active</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="alert alert-info mt-3">
-                        <i class="fas fa-info-circle"></i>
-                        <strong>Note:</strong> This group is connected to your WhatsApp business. Orders will be automatically sent to the appropriate group based on their status.
+                        
+                        <div class="group-detail-item" style="grid-column: 1 / -1;">
+                            <label class="group-detail-label">Group ID</label>
+                            <div class="group-detail-value">
+                                <code>${group.group_id}</code>
+                            </div>
+                        </div>
+                        
+                        <div class="group-info-note">
+                            <i class="fas fa-info-circle"></i>
+                            <div class="group-info-note-content">
+                                <h5>Connected to WhatsApp</h5>
+                                <p>This group is connected to your WhatsApp business. Orders will be automatically sent to the appropriate group based on their status.</p>
+                            </div>
+                        </div>
                     </div>
                 `;
                 
