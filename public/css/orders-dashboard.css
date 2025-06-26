@@ -713,8 +713,9 @@ body {
 
 .dropdown-content {
     display: none;
-    position: absolute;
-    right: 0;
+    position: fixed;
+    top: auto;
+    right: 2.5rem;
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
