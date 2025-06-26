@@ -1238,7 +1238,7 @@ async function startServer() {
     app.get('/admin/businesses', requireAdmin, async (req, res) => {
       console.log('=== /admin/businesses route hit ===');
       try {
-        const businesses = await AdminService.getAllBusinessesWithOwners();
+        const { businesses } = await AdminService.getAllBusinessesWithOwners();
         res.render('admin/businesses', { admin: req.admin, businesses });
       } catch (error) {
         logger.error('Admin businesses error:', error);
