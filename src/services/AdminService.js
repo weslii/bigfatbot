@@ -324,6 +324,7 @@ class AdminService {
           'g.business_id',
           'g.business_name',
           'g.user_id',
+          'g.is_active',
           'u.full_name as owner_name',
           'u.email as owner_email'
         )
@@ -376,7 +377,7 @@ class AdminService {
         .update({
           business_name: data.business_name,
           user_id: data.user_id,
-          is_active: data.is_active === '1' || data.is_active === 1 || data.is_active === true
+          is_active: data.is_active !== undefined ? !!data.is_active : true
         });
     } catch (error) {
       logger.error('Error editing business:', error);
