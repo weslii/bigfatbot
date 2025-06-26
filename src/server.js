@@ -453,15 +453,15 @@ async function startServer() {
         // Updated query to get businesses with order counts
         const businessesWithOrders = await db.query('groups as g')
           .select(
-            'g.business_id', 
-            'g.business_name', 
-            'g.created_at',
-            'g.is_active'
+            'g.business_id',
+            'g.business_name',
+            db.query.raw('MIN(g.created_at) as created_at'),
+            db.query.raw('MAX(g.is_active::int) as is_active'),
+            db.query.raw('COUNT(DISTINCT o.id) as order_count')
           )
           .leftJoin('orders as o', 'g.business_id', 'o.business_id')
-          .count('o.id as order_count')
           .where('g.user_id', userId)
-          .groupBy('g.business_id', 'g.business_name', 'g.created_at', 'g.is_active');
+          .groupBy('g.business_id', 'g.business_name');
         
         const [groups, orderStats, recentOrders] = await Promise.all([
           RegistrationService.getUserGroups(userId),
