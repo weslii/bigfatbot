@@ -1872,6 +1872,11 @@ async function startServer() {
       }
     });
 
+    // Admin: Reports page (placeholder)
+    app.get('/admin/reports', requireAdmin, (req, res) => {
+      res.render('admin/reports', { admin: req.admin });
+    });
+
     // Start the server
     app.listen(port, () => {
       console.log(`Server is running on port ${port}`);

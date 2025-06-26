@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - Admin</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/admin-dashboard.css" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="/admin/dashboard" class="logo-section">
+                    <div class="logo-icon"><i class="fas fa-chart-bar"></i></div>
+                    <div class="logo-text"><span class="main-title">Reports</span></div>
+                </a>
+            </div>
+            <nav class="header-right" style="display: flex; align-items: center; gap: 0.75rem;">
+                <a href="/admin/dashboard" class="nav-link">Dashboard</a>
+                <a href="/admin/businesses" class="nav-link">Businesses</a>
+                <a href="/admin/orders" class="nav-link">Orders</a>
+                <a href="/admin/users" class="nav-link">Users</a>
+                <a href="/admin/admins" class="nav-link">Admins</a>
+                <a href="/admin/reports" class="nav-link active">Reports</a>
+                <button class="btn btn-icon" id="theme-toggle" aria-label="Toggle Theme">
+                    <i class="fas fa-sun"></i><i class="fas fa-moon" style="display: none;"></i>
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-icon" id="profileDropdown"><i class="fas fa-user"></i></button>
+                    <div class="dropdown-content" id="profileMenu">
+                        <a href="/admin/profile" class="dropdown-item"><i class="fas fa-cog"></i> Profile</a>
+                        <form action="/admin/logout" method="post" class="dropdown-item" style="padding: 0; margin: 0;">
+                            <button type="submit" style="all: unset; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; width: 100%;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                        </form>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+    <main class="main-content" style="padding: 2.5rem 0; min-height: 80vh;">
+        <div class="container" style="max-width: 700px; margin: 0 auto;">
+            <div class="content-card" style="padding: 2.2rem 2rem 2.5rem 2rem; border-radius: 18px; box-shadow: var(--shadow-lg); background: var(--surface); border: 1px solid var(--border); text-align: center;">
+                <div class="card-header" style="margin-bottom: 1.5rem;">
+                    <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--primary-color); margin: 0;">Reports</h2>
+                </div>
+                <div class="card-content">
+                    <i class="fas fa-chart-bar" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
+                    <p style="font-size: 1.15rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Reports functionality is coming soon.</p>
+                    <p style="color: var(--text-muted);">You will be able to generate and view detailed business, order, and user reports here.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script>
+        // Profile dropdown functionality
+        const profileDropdown = document.getElementById('profileDropdown');
+        const profileMenu = document.getElementById('profileMenu');
+        const dropdownParent = profileDropdown.closest('.dropdown');
+        profileDropdown.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdownParent.classList.toggle('active');
+        });
+        document.addEventListener('click', (e) => {
+            if (!profileMenu.contains(e.target) && !profileDropdown.contains(e.target)) {
+                dropdownParent.classList.remove('active');
+            }
+        });
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+        function updateThemeIcon(theme) {
+            const sunIcon = themeToggle.querySelector('i:nth-child(1)');
+            const moonIcon = themeToggle.querySelector('i:nth-child(2)');
+            sunIcon.style.display = theme === 'light' ? 'inline' : 'none';
+            moonIcon.style.display = theme === 'dark' ? 'inline' : 'none';
+        }
+    </script>
+</body>
+</html> 
