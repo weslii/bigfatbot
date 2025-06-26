@@ -164,6 +164,15 @@
             font-weight: 600;
             background: none;
         }
+        .main-title {
+            text-decoration: none !important;
+        }
+        .dropdown-content {
+            display: none;
+        }
+        .dropdown.active .dropdown-content {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -379,12 +388,15 @@
         // Profile dropdown functionality
         const profileDropdown = document.getElementById('profileDropdown');
         const profileMenu = document.getElementById('profileMenu');
+        const dropdownParent = profileDropdown.closest('.dropdown');
         profileDropdown.addEventListener('click', (e) => {
             e.stopPropagation();
-            profileMenu.classList.toggle('show');
+            dropdownParent.classList.toggle('active');
         });
-        document.addEventListener('click', () => {
-            profileMenu.classList.remove('show');
+        document.addEventListener('click', (e) => {
+            if (!profileMenu.contains(e.target) && !profileDropdown.contains(e.target)) {
+                dropdownParent.classList.remove('active');
+            }
         });
         // Theme toggle functionality
         const themeToggle = document.getElementById('theme-toggle');

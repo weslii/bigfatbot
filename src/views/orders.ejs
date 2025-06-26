@@ -546,14 +546,15 @@
         // Profile dropdown functionality
         const profileDropdown = document.getElementById('profileDropdown');
         const profileMenu = document.getElementById('profileMenu');
-
+        const dropdownParent = profileDropdown.closest('.dropdown');
         profileDropdown.addEventListener('click', (e) => {
             e.stopPropagation();
-            profileMenu.classList.toggle('show');
+            dropdownParent.classList.toggle('active');
         });
-
-        document.addEventListener('click', () => {
-            profileMenu.classList.remove('show');
+        document.addEventListener('click', (e) => {
+            if (!profileMenu.contains(e.target) && !profileDropdown.contains(e.target)) {
+                dropdownParent.classList.remove('active');
+            }
         });
 </script>
 </body>
