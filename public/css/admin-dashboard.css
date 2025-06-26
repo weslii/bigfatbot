@@ -1267,4 +1267,23 @@ body {
 .btn.btn-primary:hover {
   background: var(--primary-hover);
   box-shadow: 0 4px 16px 0 rgb(16 185 129 / 0.12);
+}
+
+/* --- Secondary Button --- */
+.btn.btn-secondary {
+  background: var(--surface-hover);
+  color: var(--primary-color);
+  border: 1.5px solid var(--primary-color);
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 1rem;
+  padding: 0.7rem 1.5rem;
+  box-shadow: 0 2px 8px 0 rgb(16 185 129 / 0.04);
+  transition: background 0.18s, color 0.18s, border 0.18s, box-shadow 0.18s;
+}
+.btn.btn-secondary:hover {
+  background: var(--primary-color);
+  color: #fff;
+  border-color: var(--primary-hover);
+  box-shadow: 0 4px 16px 0 rgb(16 185 129 / 0.10);
 } 
