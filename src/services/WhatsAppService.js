@@ -404,6 +404,12 @@ class WhatsAppService {
       const messageBody = message.body.toLowerCase().trim();
       const senderName = contact.name || contact.number;
 
+      // Handle reply-based cancellation FIRST (before command processing)
+      if (message.hasQuotedMsg && messageBody === 'cancel') {
+        await this.handleReplyCancellation(message, senderName, groupInfo);
+        return;
+      }
+
       // Handle commands in sales group
       if (messageBody.startsWith('/')) {
         // Handle report commands
@@ -431,11 +437,6 @@ class WhatsAppService {
         else if (messageBody.startsWith('cancel #')) {
           const orderId = messageBody.replace('cancel #', '').trim();
           await this.cancelOrder(orderId, senderName, groupInfo);
-          return;
-        }
-        // Handle reply-based cancellation in sales group
-        else if (message.hasQuotedMsg && messageBody === 'cancel') {
-          await this.handleReplyCancellation(message, senderName, groupInfo);
           return;
         }
       }
