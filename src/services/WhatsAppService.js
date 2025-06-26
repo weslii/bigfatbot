@@ -401,6 +401,9 @@ class WhatsAppService {
       // Skip if message is from bot itself
       if (contact.isMe) return;
 
+      // Debug log for contact object
+      logger.info('Contact object:', contact);
+
       const messageBody = message.body.toLowerCase().trim();
       const senderName = contact.name;
       const senderNumber = contact.number;
@@ -506,6 +509,9 @@ class WhatsAppService {
     try {
       // Skip if message is from bot itself
       if (contact.isMe) return;
+
+      // Debug log for contact object
+      logger.info('Contact object:', contact);
 
       const messageBody = message.body.toLowerCase().trim();
       const senderName = contact.name;
