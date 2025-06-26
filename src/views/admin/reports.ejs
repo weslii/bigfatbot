@@ -41,34 +41,59 @@
     </header>
     <main class="main-content" style="padding: 2.5rem 0; min-height: 80vh;">
         <div class="container" style="max-width: 1200px; margin: 0 auto;">
-            <div id="total-orders-handled-card" class="summary-cards" style="display: flex; gap: 1.5rem; margin-bottom: 1.2rem;"></div>
-            <div style="display: flex; gap: 1.2rem; flex-wrap: wrap; margin-bottom: 1.2rem;">
-                <div class="content-card" style="flex: 1 1 0; min-width: 320px; padding: 2rem; border-radius: 18px; box-shadow: var(--shadow-lg); background: var(--surface); border: 1px solid var(--border);">
-                    <div class="card-header" style="margin-bottom: 1.5rem;">
-                        <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--primary-color); margin: 0;">Summary Overview</h3>
+            <div id="total-orders-handled-card" class="summary-cards" style="display: flex; gap: 1rem; margin-bottom: 0.7rem;"></div>
+            <div class="content-card" style="padding: 1.2rem 1.2rem 1rem 1.2rem; border-radius: 14px; box-shadow: var(--shadow-lg); background: var(--surface); border: 1px solid var(--border); margin-bottom: 1.2rem;">
+                <form id="report-filter-form" class="filter-bar" style="display: flex; flex-wrap: wrap; gap: 0.7rem; align-items: flex-end;">
+                    <div style="flex: 2 1 180px; min-width: 120px;">
+                        <label for="date-range" class="form-label" style="font-weight: 600; color: var(--text-primary); font-size: 0.97rem;">Date Range</label>
+                        <input type="text" id="date-range" name="date-range" class="form-input" placeholder="Select date range" style="width: 100%; padding: 0.4rem 0.7rem; border-radius: 6px; border: 1px solid var(--border); background: var(--surface-hover); color: var(--text-primary); font-size: 0.97rem;" autocomplete="off" />
                     </div>
-                    <canvas id="businessUserBarChart" style="height: 260px; width: 100%; margin-bottom: 2rem;"></canvas>
-                </div>
-                <div class="content-card" style="flex: 1 1 0; min-width: 320px; padding: 2rem; border-radius: 18px; box-shadow: var(--shadow-lg); background: var(--surface); border: 1px solid var(--border);">
-                    <div class="card-header" style="margin-bottom: 1.5rem;">
-                        <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--primary-color); margin: 0;">Orders Overview</h3>
+                    <div style="flex: 2 1 180px; min-width: 120px;">
+                        <label for="business" class="form-label" style="font-weight: 600; color: var(--text-primary); font-size: 0.97rem;">Business</label>
+                        <select id="business" name="business" class="form-select" style="width: 100%; padding: 0.4rem 0.7rem; border-radius: 6px; border: 1px solid var(--border); background: var(--surface-hover); color: var(--text-primary); font-size: 0.97rem;">
+                            <option value="">All</option>
+                        </select>
                     </div>
-                    <canvas id="ordersBarChart" style="height: 220px; width: 100%;"></canvas>
-                </div>
+                    <div style="flex: 2 1 180px; min-width: 120px;">
+                        <label for="user" class="form-label" style="font-weight: 600; color: var(--text-primary); font-size: 0.97rem;">User</label>
+                        <select id="user" name="user" class="form-select" style="width: 100%; padding: 0.4rem 0.7rem; border-radius: 6px; border: 1px solid var(--border); background: var(--surface-hover); color: var(--text-primary); font-size: 0.97rem;">
+                            <option value="">All</option>
+                        </select>
+                    </div>
+                    <div style="flex: 0 0 90px; min-width: 90px; align-self: flex-end;">
+                        <button type="submit" class="btn btn-primary w-100" style="width: 100%; font-size: 0.97rem; padding: 0.4rem 0.7rem;">Generate</button>
+                    </div>
+                    <div style="display: flex; gap: 0.4rem; align-items: flex-end;">
+                        <button type="button" id="export-btn" class="btn btn-secondary" style="font-size: 0.97rem; padding: 0.4rem 0.7rem;"><i class="fas fa-download"></i> CSV</button>
+                        <button type="button" id="export-pdf-btn" class="btn btn-secondary" style="font-size: 0.97rem; padding: 0.4rem 0.7rem;"><i class="fas fa-file-pdf"></i> PDF</button>
+                        <button type="button" id="export-excel-btn" class="btn btn-secondary" style="font-size: 0.97rem; padding: 0.4rem 0.7rem;"><i class="fas fa-file-excel"></i> Excel</button>
+                    </div>
+                </form>
             </div>
-            <div style="display: flex; gap: 1.2rem; flex-wrap: wrap; margin-bottom: 2rem;">
-                <div class="content-card" style="flex: 1 1 0; min-width: 320px; padding: 2rem; border-radius: 18px; box-shadow: var(--shadow-lg); background: var(--surface); border: 1px solid var(--border);">
-                    <div class="card-header" style="margin-bottom: 1.5rem;">
-                        <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--primary-color); margin: 0;">Parsing Overview (Pie)</h3>
-                    </div>
-                    <canvas id="parsingPieChart" style="height: 220px; width: 100%;"></canvas>
+            <div id="summary-cards" class="summary-cards" style="display: flex; flex-wrap: wrap; gap: 0.7rem; margin-bottom: 1.2rem;"></div>
+            <div class="content-card" style="padding: 2rem; border-radius: 18px; box-shadow: var(--shadow-lg); background: var(--surface); border: 1px solid var(--border); margin-bottom: 2rem;">
+                <div class="card-header" style="margin-bottom: 1.5rem;">
+                    <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--primary-color); margin: 0;">Summary Overview</h3>
                 </div>
-                <div class="content-card" style="flex: 1 1 0; min-width: 320px; padding: 2rem; border-radius: 18px; box-shadow: var(--shadow-lg); background: var(--surface); border: 1px solid var(--border);">
-                    <div class="card-header" style="margin-bottom: 1.5rem;">
-                        <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--primary-color); margin: 0;">Parsing Overview (Bar)</h3>
-                    </div>
-                    <canvas id="parsingBarChart" style="height: 220px; width: 100%;"></canvas>
+                <canvas id="businessUserBarChart" style="height: 260px; width: 100%; margin-bottom: 2rem;"></canvas>
+            </div>
+            <div class="content-card" style="padding: 2rem; border-radius: 18px; box-shadow: var(--shadow-lg); background: var(--surface); border: 1px solid var(--border); margin-bottom: 2rem;">
+                <div class="card-header" style="margin-bottom: 1.5rem;">
+                    <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--primary-color); margin: 0;">Orders Overview</h3>
                 </div>
+                <canvas id="ordersBarChart" style="height: 220px; width: 100%;"></canvas>
+            </div>
+            <div class="content-card" style="padding: 2rem; border-radius: 18px; box-shadow: var(--shadow-lg); background: var(--surface); border: 1px solid var(--border); margin-bottom: 2rem;">
+                <div class="card-header" style="margin-bottom: 1.5rem;">
+                    <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--primary-color); margin: 0;">Parsing Overview (Pie)</h3>
+                </div>
+                <canvas id="parsingPieChart" style="height: 220px; width: 100%;"></canvas>
+            </div>
+            <div class="content-card" style="padding: 2rem; border-radius: 18px; box-shadow: var(--shadow-lg); background: var(--surface); border: 1px solid var(--border); margin-bottom: 2rem;">
+                <div class="card-header" style="margin-bottom: 1.5rem;">
+                    <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--primary-color); margin: 0;">Parsing Overview (Bar)</h3>
+                </div>
+                <canvas id="parsingBarChart" style="height: 220px; width: 100%;"></canvas>
             </div>
             <div class="content-card" style="padding: 2rem; border-radius: 18px; box-shadow: var(--shadow-lg); background: var(--surface); border: 1px solid var(--border); margin-bottom: 2rem;">
                 <div class="card-header" style="margin-bottom: 1.5rem;">
