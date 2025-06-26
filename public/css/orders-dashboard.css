@@ -722,7 +722,7 @@ body {
     box-shadow: var(--shadow-lg);
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
-    z-index: 1000;
+    z-index: 9999;
     margin-top: 0.5rem;
     padding: 0.5rem;
 }
