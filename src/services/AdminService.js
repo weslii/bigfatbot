@@ -713,6 +713,8 @@ class AdminService {
       }
       const totalOrders = await orderQuery.clone().count('id as count').first();
       const newOrders = startDate ? await orderQuery.clone().where('created_at', '>=', startDate).count('id as count').first() : { count: 0 };
+      // All-time total orders (ignoring filters)
+      const totalOrdersAllTime = await database.query('orders').count('id as count').first();
 
       // Parsing success rate (from bot_metrics)
       const metrics = await database.query('bot_metrics').orderBy('created_at', 'desc').first();
@@ -732,6 +734,7 @@ class AdminService {
         newUsers: parseInt(newUsers.count) || 0,
         totalOrders: parseInt(totalOrders.count) || 0,
         newOrders: parseInt(newOrders.count) || 0,
+        totalOrdersAllTime: parseInt(totalOrdersAllTime.count) || 0,
         parsingSuccessRate,
         parsingAttempts,
         parsingSuccesses,

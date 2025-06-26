@@ -44,7 +44,9 @@ async function fetchAndRenderStats() {
     const { success, stats } = await res.json();
     if (!success) throw new Error('Failed to fetch stats');
     renderSummaryCards(stats);
+    renderTotalOrdersHandledCard(stats);
     window.currentReportStats = stats;
+    renderAllCharts(stats);
   } catch (err) {
     summaryCards.innerHTML = '<div style="color: var(--danger);">Failed to load report stats.</div>';
     console.error('Failed to fetch stats', err);
@@ -97,6 +99,16 @@ function renderSummaryCards(stats) {
     <div class="summary-card">
       <div class="summary-title">Parsing Failures</div>
       <div class="summary-value">${stats.parsingFailures}</div>
+    </div>
+  `;
+}
+
+function renderTotalOrdersHandledCard(stats) {
+  const card = document.getElementById('total-orders-handled-card');
+  card.innerHTML = `
+    <div class="summary-card" style="min-width: 180px;">
+      <div class="summary-title">Total Orders Handled</div>
+      <div class="summary-value" style="font-size: 2.1rem; font-weight: 800; color: var(--primary-color);">${stats.totalOrdersAllTime}</div>
     </div>
   `;
 }
@@ -262,6 +274,117 @@ flatpickr('#date-range', {
   maxDate: 'today',
   plugins: [new rangePlugin({ input: '#date-range' })]
 });
+
+let businessUserBarChart = null;
+let ordersBarChart = null;
+let parsingPieChart = null;
+let parsingBarChart = null;
+
+function renderBusinessUserBarChart(stats) {
+  const ctx = document.getElementById('businessUserBarChart').getContext('2d');
+  if (businessUserBarChart) businessUserBarChart.destroy();
+  businessUserBarChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Total Businesses', 'Active Businesses', 'New Businesses', 'Total Users', 'New Users'],
+      datasets: [{
+        label: 'Count',
+        data: [stats.totalBusinesses, stats.activeBusinesses, stats.newBusinesses, stats.totalUsers, stats.newUsers],
+        backgroundColor: [
+          'rgba(54, 162, 235, 0.7)',
+          'rgba(75, 192, 192, 0.7)',
+          'rgba(255, 206, 86, 0.7)',
+          'rgba(153, 102, 255, 0.7)',
+          'rgba(255, 99, 132, 0.7)'
+        ]
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+}
+
+function renderOrdersBarChart(stats) {
+  const ctx = document.getElementById('ordersBarChart').getContext('2d');
+  if (ordersBarChart) ordersBarChart.destroy();
+  ordersBarChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Total Orders', 'New Orders'],
+      datasets: [{
+        label: 'Count',
+        data: [stats.totalOrders, stats.newOrders],
+        backgroundColor: [
+          'rgba(255, 159, 64, 0.7)',
+          'rgba(54, 162, 235, 0.7)'
+        ]
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+}
+
+function renderParsingPieChart(stats) {
+  const ctx = document.getElementById('parsingPieChart').getContext('2d');
+  if (parsingPieChart) parsingPieChart.destroy();
+  parsingPieChart = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: ['Successes', 'Failures'],
+      datasets: [{
+        data: [stats.parsingSuccesses, stats.parsingFailures],
+        backgroundColor: [
+          'rgba(75, 192, 192, 0.7)',
+          'rgba(255, 99, 132, 0.7)'
+        ]
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'bottom' } }
+    }
+  });
+}
+
+function renderParsingBarChart(stats) {
+  const ctx = document.getElementById('parsingBarChart').getContext('2d');
+  if (parsingBarChart) parsingBarChart.destroy();
+  parsingBarChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Attempts', 'Successes', 'Failures'],
+      datasets: [{
+        label: 'Count',
+        data: [stats.parsingAttempts, stats.parsingSuccesses, stats.parsingFailures],
+        backgroundColor: [
+          'rgba(54, 162, 235, 0.7)',
+          'rgba(75, 192, 192, 0.7)',
+          'rgba(255, 99, 132, 0.7)'
+        ]
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+}
+
+// Update all charts when stats change
+function renderAllCharts(stats) {
+  renderBusinessUserBarChart(stats);
+  renderOrdersBarChart(stats);
+  renderParsingPieChart(stats);
+  renderParsingBarChart(stats);
+}
 
 document.getElementById('report-filter-form').addEventListener('submit', function(e) {
   e.preventDefault();
