@@ -3,6 +3,7 @@ const logger = require('../utils/logger');
 const bcrypt = require('bcryptjs');
 const ShortCodeGenerator = require('../utils/shortCodeGenerator');
 const WhatsAppService = require('./WhatsAppService');
+const { v4: uuidv4 } = require('uuid');
 
 class AdminService {
   static async createAdmin(username, email, password, role = 'admin') {
@@ -310,19 +311,20 @@ class AdminService {
 
   static async addBusiness(data) {
     try {
+      // Generate unique business_id
+      const businessId = uuidv4();
       // Generate short code and setup identifier
       const { shortCode, setupIdentifier } = await ShortCodeGenerator.generateBusinessSetupCode(data.business_name);
-      
       await database.query('groups').insert({
-        business_id: data.business_id,
+        business_id: businessId,
         business_name: data.business_name,
         user_id: data.user_id,
+        is_active: data.is_active !== undefined ? !!data.is_active : true,
         short_code: shortCode,
         setup_identifier: setupIdentifier
       });
-
       return {
-        business_id: data.business_id,
+        business_id: businessId,
         business_name: data.business_name,
         short_code: shortCode,
         setup_identifier: setupIdentifier

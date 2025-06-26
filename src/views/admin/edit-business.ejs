@@ -1,33 +1,173 @@
-<%- include('../layout', { title: business ? 'Edit Business' : 'Add Business' }) %>
-
-<div class="container mt-5 pastel-blue-bg">
-  <div class="row justify-content-center">
-    <div class="col-md-8">
-      <div class="card pastel-blue-card text-dark">
-        <div class="card-header">
-          <h4><%= business ? 'Edit Business' : 'Add Business' %></h4>
-        </div>
-        <div class="card-body">
-          <form action="<%= business ? '/admin/businesses/' + business.business_id + '/edit' : '/admin/businesses/add' %>" method="POST">
-            <% if (!business) { %>
-              <div class="mb-3">
-                <label for="business_id" class="form-label">Business ID</label>
-                <input type="text" class="form-control" id="business_id" name="business_id" required>
-              </div>
-            <% } %>
-            <div class="mb-3">
-              <label for="business_name" class="form-label">Business Name</label>
-              <input type="text" class="form-control" id="business_name" name="business_name" value="<%= business ? business.business_name : '' %>" required>
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= business ? 'Edit Business' : 'Add Business' %> - Admin</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/admin-dashboard.css" rel="stylesheet">
+    <style>
+        .admin-center {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--background-corner), var(--background-middle), var(--background-corner));
+        }
+        .admin-card {
+            background: var(--surface);
+            border-radius: 18px;
+            box-shadow: var(--shadow-lg);
+            max-width: 420px;
+            width: 95vw;
+            padding: 2.2rem 2rem 1.5rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.1rem;
+            border: 1px solid var(--border);
+        }
+        .admin-card h2 {
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 0.2rem;
+            text-align: center;
+        }
+        .admin-card .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            text-align: center;
+            margin-bottom: 1.2rem;
+        }
+        .admin-form label {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.4rem;
+            display: block;
+        }
+        .admin-form input,
+        .admin-form select {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface-hover);
+            color: var(--text-primary);
+            font-size: 1rem;
+            margin-bottom: 1.1rem;
+            transition: border-color 0.2s;
+        }
+        .admin-form input:focus,
+        .admin-form select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+        .admin-form .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        .admin-form .btn {
+            min-width: 120px;
+        }
+        .admin-form .status-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            margin-bottom: 1.1rem;
+        }
+        .admin-form .status-toggle label {
+            margin-bottom: 0;
+            font-weight: 500;
+        }
+        @media (max-width: 600px) {
+            .admin-card { padding: 1.2rem 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="/admin/dashboard" class="logo-section">
+                    <div class="logo-icon"><i class="fas fa-building"></i></div>
+                    <div class="logo-text"><span class="main-title"><%= business ? 'Edit Business' : 'Add Business' %></span></div>
+                </a>
             </div>
-            <div class="mb-3">
-              <label for="user_id" class="form-label">Owner User ID</label>
-              <input type="text" class="form-control" id="user_id" name="user_id" value="<%= business ? business.user_id : '' %>" required>
-            </div>
-            <button type="submit" class="btn btn-primary"><%= business ? 'Save Changes' : 'Add Business' %></button>
-            <a href="/admin/businesses" class="btn btn-secondary ms-2">Cancel</a>
-          </form>
+            <nav class="header-right" style="display: flex; align-items: center; gap: 0.75rem;">
+                <a href="/admin/dashboard" class="nav-link">Dashboard</a>
+                <a href="/admin/businesses" class="nav-link">Businesses</a>
+                <a href="/admin/orders" class="nav-link">Orders</a>
+                <a href="/admin/users" class="nav-link">Users</a>
+                <button class="btn btn-icon" id="theme-toggle" aria-label="Toggle Theme">
+                    <i class="fas fa-sun"></i><i class="fas fa-moon" style="display: none;"></i>
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-icon" id="profileDropdown"><i class="fas fa-user"></i></button>
+                    <div class="dropdown-content" id="profileMenu">
+                        <a href="/admin/profile" class="dropdown-item"><i class="fas fa-cog"></i> Profile</a>
+                        <form action="/admin/logout" method="post" class="dropdown-item" style="padding: 0; margin: 0;">
+                            <button type="submit" style="all: unset; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; width: 100%;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                        </form>
+                    </div>
+                </div>
+            </nav>
         </div>
-      </div>
+    </header>
+    <div class="admin-center">
+        <div class="admin-card">
+            <h2><%= business ? 'Edit Business' : 'Add Business' %></h2>
+            <div class="subtitle"><%= business ? 'Update business details below.' : 'Create a new business for the platform.' %></div>
+            <form class="admin-form" action="<%= business ? '/admin/businesses/' + business.business_id + '/edit' : '/admin/businesses/add' %>" method="POST" autocomplete="off">
+                <label for="business_name">Business Name</label>
+                <input type="text" id="business_name" name="business_name" value="<%= business ? business.business_name : '' %>" required placeholder="Business name">
+                <label for="user_id">Owner User ID</label>
+                <input type="text" id="user_id" name="user_id" value="<%= business ? business.user_id : '' %>" required placeholder="Owner's user ID">
+                <div class="status-toggle">
+                    <input type="checkbox" id="is_active" name="is_active" value="1" <%= business && business.is_active ? 'checked' : '' %>>
+                    <label for="is_active">Active</label>
+                </div>
+                <div class="form-actions">
+                    <a href="/admin/businesses" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary"><%= business ? 'Save Changes' : 'Add Business' %></button>
+                </div>
+            </form>
+        </div>
     </div>
-  </div>
-</div> 
+    <script>
+        // Profile dropdown functionality
+        const profileDropdown = document.getElementById('profileDropdown');
+        const profileMenu = document.getElementById('profileMenu');
+        const dropdownParent = profileDropdown.closest('.dropdown');
+        profileDropdown.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdownParent.classList.toggle('active');
+        });
+        document.addEventListener('click', (e) => {
+            if (!profileMenu.contains(e.target) && !profileDropdown.contains(e.target)) {
+                dropdownParent.classList.remove('active');
+            }
+        });
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+        function updateThemeIcon(theme) {
+            const sunIcon = themeToggle.querySelector('i:nth-child(1)');
+            const moonIcon = themeToggle.querySelector('i:nth-child(2)');
+            sunIcon.style.display = theme === 'light' ? 'inline' : 'none';
+            moonIcon.style.display = theme === 'dark' ? 'inline' : 'none';
+        }
+    </script>
+</body>
+</html> 
