@@ -1290,8 +1290,6 @@ async function startServer() {
     
     app.post('/admin/businesses/:businessId/edit', requireAdmin, async (req, res) => {
       try {
-        // Ensure is_active is always present as '1' or '0'
-        req.body.is_active = req.body.is_active === '1' ? '1' : '0';
         await AdminService.editBusiness(req.params.businessId, req.body);
         res.redirect('/admin/businesses');
       } catch (error) {

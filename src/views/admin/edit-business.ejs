@@ -125,9 +125,20 @@
                 <label for="user_id">Owner User ID</label>
                 <input type="text" id="user_id" name="user_id" value="<%= business ? business.user_id : '' %>" required placeholder="Owner's user ID">
                 <div class="status-toggle">
-                    <input type="checkbox" id="is_active" name="is_active" value="1" <%= (business && (business.is_active === true || business.is_active === 1 || business.is_active === '1')) ? 'checked' : '' %>>
+                    <input type="checkbox" id="is_active" name="is_active" value="1" <%= (business ? business.is_active : true) ? 'checked' : '' %>>
                     <label for="is_active">Active</label>
                 </div>
+                <!-- Status display and toggle button -->
+                <% if (business) { %>
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.1rem;">
+                  <span id="status-label" style="font-weight:600; color:<%= business.is_active ? 'green' : 'red' %>">
+                    <%= business.is_active ? 'Active' : 'Inactive' %>
+                  </span>
+                  <button type="button" id="toggle-status-btn" class="btn btn-outline" data-business-id="<%= business.business_id %>">
+                    <%= business.is_active ? 'Deactivate' : 'Activate' %>
+                  </button>
+                </div>
+                <% } %>
                 <div class="form-actions">
                     <a href="/admin/dashboard" class="btn btn-secondary">Cancel</a>
                     <button type="submit" class="btn btn-primary"><%= business ? 'Save Changes' : 'Add Business' %></button>
@@ -167,6 +178,38 @@
             const moonIcon = themeToggle.querySelector('i:nth-child(2)');
             sunIcon.style.display = theme === 'light' ? 'inline' : 'none';
             moonIcon.style.display = theme === 'dark' ? 'inline' : 'none';
+        }
+        // Toggle status button logic
+        const toggleBtn = document.getElementById('toggle-status-btn');
+        const statusLabel = document.getElementById('status-label');
+        if (toggleBtn && statusLabel) {
+          toggleBtn.addEventListener('click', async function() {
+            const businessId = this.getAttribute('data-business-id');
+            this.disabled = true;
+            this.textContent = 'Toggling...';
+            try {
+              const res = await fetch(`/admin/api/businesses/${businessId}/toggle`, { method: 'POST' });
+              if (res.ok) {
+                // Toggle UI
+                if (statusLabel.textContent === 'Active') {
+                  statusLabel.textContent = 'Inactive';
+                  statusLabel.style.color = 'red';
+                  this.textContent = 'Activate';
+                } else {
+                  statusLabel.textContent = 'Active';
+                  statusLabel.style.color = 'green';
+                  this.textContent = 'Deactivate';
+                }
+              } else {
+                alert('Failed to toggle business status');
+                this.textContent = statusLabel.textContent === 'Active' ? 'Deactivate' : 'Activate';
+              }
+            } catch (err) {
+              alert('Error toggling business status');
+              this.textContent = statusLabel.textContent === 'Active' ? 'Deactivate' : 'Activate';
+            }
+            this.disabled = false;
+          });
         }
     </script>
 </body>
