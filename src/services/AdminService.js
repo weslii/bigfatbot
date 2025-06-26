@@ -581,13 +581,16 @@ class AdminService {
 
   static async toggleBusinessActive(businessId) {
     try {
-      const business = await database.query('groups')
+      // Check if any group for this business is active
+      const anyActive = await database.query('groups')
         .where('business_id', businessId)
+        .where('is_active', true)
         .first();
-      if (!business) throw new Error('Business not found');
+      // If any group is active, deactivate all; otherwise, activate all
+      const newStatus = !anyActive;
       await database.query('groups')
         .where('business_id', businessId)
-        .update({ is_active: !business.is_active });
+        .update({ is_active: newStatus });
     } catch (error) {
       logger.error('Error toggling business active:', error);
       throw error;
