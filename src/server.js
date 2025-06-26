@@ -1918,6 +1918,17 @@ async function startServer() {
       }
     });
 
+    // Add user logout route
+    app.post('/logout', (req, res) => {
+      if (req.session) {
+        req.session.destroy(() => {
+          res.redirect('/login');
+        });
+      } else {
+        res.redirect('/login');
+      }
+    });
+
     // Start the server
     app.listen(port, () => {
       console.log(`Server is running on port ${port}`);
