@@ -125,7 +125,7 @@
                 <label for="user_id">Owner User ID</label>
                 <input type="text" id="user_id" name="user_id" value="<%= business ? business.user_id : '' %>" required placeholder="Owner's user ID">
                 <div class="status-toggle">
-                    <input type="checkbox" id="is_active" name="is_active" value="1" <%= (business ? business.is_active : true) ? 'checked' : '' %>>
+                    <input type="checkbox" id="is_active" name="is_active" value="1" <%= (business && (business.is_active === true || business.is_active === 1 || business.is_active === '1')) ? 'checked' : '' %>>
                     <label for="is_active">Active</label>
                 </div>
                 <div class="form-actions">

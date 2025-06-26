@@ -375,7 +375,8 @@ class AdminService {
         .where('business_id', businessId)
         .update({
           business_name: data.business_name,
-          user_id: data.user_id
+          user_id: data.user_id,
+          is_active: data.is_active === '1' || data.is_active === 1 || data.is_active === true
         });
     } catch (error) {
       logger.error('Error editing business:', error);
