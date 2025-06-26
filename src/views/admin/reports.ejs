@@ -6,6 +6,7 @@
     <title>Reports - Admin</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="/css/admin-dashboard.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
 </head>
 <body>
     <header class="header">
@@ -39,19 +40,53 @@
         </div>
     </header>
     <main class="main-content" style="padding: 2.5rem 0; min-height: 80vh;">
-        <div class="container" style="max-width: 700px; margin: 0 auto;">
-            <div class="content-card" style="padding: 2.2rem 2rem 2.5rem 2rem; border-radius: 18px; box-shadow: var(--shadow-lg); background: var(--surface); border: 1px solid var(--border); text-align: center;">
+        <div class="container" style="max-width: 1200px; margin: 0 auto;">
+            <div class="content-card" style="padding: 2.2rem 2rem 1.5rem 2rem; border-radius: 18px; box-shadow: var(--shadow-lg); background: var(--surface); border: 1px solid var(--border); margin-bottom: 2rem;">
+                <form id="report-filter-form" class="filter-bar" style="display: flex; flex-wrap: wrap; gap: 1.2rem; align-items: flex-end;">
+                    <div style="flex: 2 1 200px; min-width: 160px;">
+                        <label for="date-range" class="form-label" style="font-weight: 600; color: var(--text-primary);">Date Range</label>
+                        <input type="text" id="date-range" name="date-range" class="form-input" placeholder="Select date range" style="width: 100%; padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-hover); color: var(--text-primary);" autocomplete="off" />
+                    </div>
+                    <div style="flex: 2 1 200px; min-width: 160px;">
+                        <label for="business" class="form-label" style="font-weight: 600; color: var(--text-primary);">Business</label>
+                        <select id="business" name="business" class="form-select" style="width: 100%; padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-hover); color: var(--text-primary);">
+                            <option value="">All</option>
+                        </select>
+                    </div>
+                    <div style="flex: 2 1 200px; min-width: 160px;">
+                        <label for="user" class="form-label" style="font-weight: 600; color: var(--text-primary);">User</label>
+                        <select id="user" name="user" class="form-select" style="width: 100%; padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-hover); color: var(--text-primary);">
+                            <option value="">All</option>
+                        </select>
+                    </div>
+                    <div style="flex: 0 0 140px; min-width: 120px; align-self: flex-end;">
+                        <button type="submit" class="btn btn-primary w-100" style="width: 100%;">Generate</button>
+                    </div>
+                    <div style="flex: 0 0 140px; min-width: 120px; align-self: flex-end;">
+                        <button type="button" id="export-btn" class="btn btn-secondary w-100" style="width: 100%;"><i class="fas fa-download"></i> Export CSV</button>
+                    </div>
+                    <div style="flex: 0 0 140px; min-width: 120px; align-self: flex-end;">
+                        <button type="button" id="export-pdf-btn" class="btn btn-secondary w-100" style="width: 100%;"><i class="fas fa-file-pdf"></i> Export PDF</button>
+                    </div>
+                    <div style="flex: 0 0 140px; min-width: 120px; align-self: flex-end;">
+                        <button type="button" id="export-excel-btn" class="btn btn-secondary w-100" style="width: 100%;"><i class="fas fa-file-excel"></i> Export Excel</button>
+                    </div>
+                </form>
+            </div>
+            <div id="summary-cards" class="summary-cards" style="display: flex; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 2.5rem;"></div>
+            <div class="content-card" style="padding: 2rem; border-radius: 18px; box-shadow: var(--shadow-lg); background: var(--surface); border: 1px solid var(--border); margin-bottom: 2rem;">
                 <div class="card-header" style="margin-bottom: 1.5rem;">
-                    <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--primary-color); margin: 0;">Reports</h2>
+                    <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--primary-color); margin: 0;">Parsing Success Rate Over Time</h3>
                 </div>
-                <div class="card-content">
-                    <i class="fas fa-chart-bar" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
-                    <p style="font-size: 1.15rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Reports functionality is coming soon.</p>
-                    <p style="color: var(--text-muted);">You will be able to generate and view detailed business, order, and user reports here.</p>
-                </div>
+                <canvas id="parsing-success-chart" style="height: 320px; width: 100%; background: var(--surface-hover); border-radius: 12px;"></canvas>
             </div>
         </div>
     </main>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/rangePlugin.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
         // Profile dropdown functionality
         const profileDropdown = document.getElementById('profileDropdown');
@@ -86,5 +121,6 @@
             moonIcon.style.display = theme === 'dark' ? 'inline' : 'none';
         }
     </script>
+    <script src="/js/admin-reports.js"></script>
 </body>
 </html> 

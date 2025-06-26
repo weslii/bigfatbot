@@ -680,6 +680,95 @@ class AdminService {
       throw error;
     }
   }
+
+  static async getReportStats({ startDate, endDate, businessId, userId } = {}) {
+    try {
+      // Businesses
+      const businessQuery = database.query('groups');
+      if (startDate) businessQuery.where('created_at', '>=', startDate);
+      if (endDate) businessQuery.where('created_at', '<=', endDate);
+      if (businessId) businessQuery.where('business_id', businessId);
+      const totalBusinesses = await businessQuery.clone().countDistinct('business_id as count').first();
+      const activeBusinesses = await businessQuery.clone().where('is_active', true).countDistinct('business_id as count').first();
+      const newBusinesses = startDate ? await businessQuery.clone().where('created_at', '>=', startDate).countDistinct('business_id as count').first() : { count: 0 };
+
+      // Users
+      const userQuery = database.query('users');
+      if (startDate) userQuery.where('created_at', '>=', startDate);
+      if (endDate) userQuery.where('created_at', '<=', endDate);
+      if (userId) userQuery.where('id', userId);
+      const totalUsers = await userQuery.clone().count('id as count').first();
+      const newUsers = startDate ? await userQuery.clone().where('created_at', '>=', startDate).count('id as count').first() : { count: 0 };
+
+      // Orders
+      const orderQuery = database.query('orders');
+      if (startDate) orderQuery.where('created_at', '>=', startDate);
+      if (endDate) orderQuery.where('created_at', '<=', endDate);
+      if (businessId) orderQuery.where('business_id', businessId);
+      if (userId) {
+        // Get all business IDs for this user
+        const userBusinesses = await database.query('groups').select('business_id').where('user_id', userId);
+        const businessIds = userBusinesses.map(b => b.business_id);
+        if (businessIds.length > 0) orderQuery.whereIn('business_id', businessIds);
+      }
+      const totalOrders = await orderQuery.clone().count('id as count').first();
+      const newOrders = startDate ? await orderQuery.clone().where('created_at', '>=', startDate).count('id as count').first() : { count: 0 };
+
+      // Parsing success rate (from bot_metrics)
+      const metrics = await database.query('bot_metrics').orderBy('created_at', 'desc').first();
+      let parsingSuccessRate = 100, parsingAttempts = 0, parsingSuccesses = 0, parsingFailures = 0;
+      if (metrics) {
+        parsingAttempts = metrics.total_messages;
+        parsingSuccesses = metrics.successful_messages;
+        parsingFailures = metrics.failed_messages;
+        parsingSuccessRate = parsingAttempts > 0 ? (parsingSuccesses / parsingAttempts) * 100 : 100;
+      }
+
+      return {
+        totalBusinesses: parseInt(totalBusinesses.count) || 0,
+        activeBusinesses: parseInt(activeBusinesses.count) || 0,
+        newBusinesses: parseInt(newBusinesses.count) || 0,
+        totalUsers: parseInt(totalUsers.count) || 0,
+        newUsers: parseInt(newUsers.count) || 0,
+        totalOrders: parseInt(totalOrders.count) || 0,
+        newOrders: parseInt(newOrders.count) || 0,
+        parsingSuccessRate,
+        parsingAttempts,
+        parsingSuccesses,
+        parsingFailures
+      };
+    } catch (error) {
+      logger.error('Error getting report stats:', error);
+      throw error;
+    }
+  }
+
+  static async getParsingSuccessTimeSeries(days = 14) {
+    try {
+      // Get the latest metrics
+      const metrics = await database.query('bot_metrics').orderBy('created_at', 'desc').first();
+      if (!metrics || !metrics.daily_counts) return [];
+      // Assume daily_counts is an object: { 'YYYY-MM-DD': count }
+      // We'll estimate successes/failures by distributing based on total ratio
+      const total = metrics.total_messages || 0;
+      const successes = metrics.successful_messages || 0;
+      const failures = metrics.failed_messages || 0;
+      const successRate = total > 0 ? successes / total : 1;
+      const failureRate = total > 0 ? failures / total : 0;
+      const allDates = Object.keys(metrics.daily_counts).sort();
+      const lastDates = allDates.slice(-days);
+      return lastDates.map(date => {
+        const attempts = metrics.daily_counts[date] || 0;
+        const succ = Math.round(attempts * successRate);
+        const fail = attempts - succ;
+        const rate = attempts > 0 ? (succ / attempts) * 100 : 100;
+        return { date, attempts, successes: succ, failures: fail, rate };
+      });
+    } catch (error) {
+      logger.error('Error getting parsing success time series:', error);
+      return [];
+    }
+  }
 }
 
 module.exports = AdminService; 

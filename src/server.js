@@ -1827,15 +1827,14 @@ async function startServer() {
     // Paginated API for businesses
     app.get('/admin/api/businesses', requireAdmin, async (req, res) => {
       try {
-        const page = parseInt(req.query.page) || 1;
-        const pageSize = parseInt(req.query.pageSize) || 10;
-        const offset = (page - 1) * pageSize;
-        const search = req.query.search || '';
-        const { businesses, total } = await AdminService.getAllBusinessesWithOwners(pageSize, offset, search);
-        res.json({ businesses, total });
+        const businesses = await db.query('groups')
+          .select('business_id', 'business_name')
+          .distinct()
+          .orderBy('business_name');
+        res.json({ businesses });
       } catch (error) {
         logger.error('API businesses error:', error);
-        res.status(500).json({ error: 'Failed to load businesses.' });
+        res.status(500).json({ businesses: [] });
       }
     });
 
@@ -1875,6 +1874,43 @@ async function startServer() {
     // Admin: Reports page (placeholder)
     app.get('/admin/reports', requireAdmin, (req, res) => {
       res.render('admin/reports', { admin: req.admin });
+    });
+
+    // Admin: Reports API endpoint for summary stats
+    app.get('/admin/api/reports', requireAdmin, async (req, res) => {
+      try {
+        const { startDate, endDate, businessId, userId } = req.query;
+        const stats = await AdminService.getReportStats({ startDate, endDate, businessId, userId });
+        res.json({ success: true, stats });
+      } catch (error) {
+        logger.error('Reports API error:', error);
+        res.status(500).json({ success: false, error: 'Failed to fetch report stats.' });
+      }
+    });
+
+    // API: All users for dropdown
+    app.get('/admin/api/users', requireAdmin, async (req, res) => {
+      try {
+        const users = await db.query('users')
+          .select('id', 'full_name', 'email')
+          .orderBy('full_name');
+        res.json({ users });
+      } catch (error) {
+        logger.error('API users error:', error);
+        res.status(500).json({ users: [] });
+      }
+    });
+
+    // API: Parsing success time-series for chart
+    app.get('/admin/api/reports/parsing-time-series', requireAdmin, async (req, res) => {
+      try {
+        const days = parseInt(req.query.days) || 14;
+        const data = await AdminService.getParsingSuccessTimeSeries(days);
+        res.json({ success: true, data });
+      } catch (error) {
+        logger.error('Parsing time-series API error:', error);
+        res.status(500).json({ success: false, data: [] });
+      }
     });
 
     // Start the server
