@@ -372,13 +372,19 @@ class AdminService {
 
   static async editBusiness(businessId, data) {
     try {
+      const updateData = {
+        business_name: data.business_name,
+        user_id: data.user_id
+      };
+      
+      // Only update is_active if it's explicitly provided
+      if (data.is_active !== undefined) {
+        updateData.is_active = !!data.is_active;
+      }
+      
       await database.query('groups')
         .where('business_id', businessId)
-        .update({
-          business_name: data.business_name,
-          user_id: data.user_id,
-          is_active: data.is_active !== undefined ? !!data.is_active : true
-        });
+        .update(updateData);
     } catch (error) {
       logger.error('Error editing business:', error);
       throw error;
