@@ -1286,4 +1286,9 @@ body {
   color: #fff;
   border-color: var(--primary-hover);
   box-shadow: 0 4px 16px 0 rgb(16 185 129 / 0.10);
+}
+
+a, .nav-link, .no-underline {
+  text-decoration: none !important;
+  border-bottom: none !important;
 } 
