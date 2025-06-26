@@ -38,6 +38,21 @@
     </header>
     <main class="main-content" style="padding: 2.5rem 0; min-height: 80vh;">
         <div class="container" style="max-width: 1100px; margin: 0 auto;">
+            <div class="content-card" style="padding: 2.2rem 2rem 1.5rem 2rem; border-radius: 18px; box-shadow: var(--shadow-lg); background: var(--surface); border: 1px solid var(--border); margin-bottom: 2rem;">
+                <form class="filter-bar" method="get" action="/admin/businesses" style="display: flex; flex-wrap: wrap; gap: 1.2rem; align-items: flex-end;">
+                    <div style="flex: 2 1 260px; min-width: 200px;">
+                        <label for="business_name" class="form-label" style="font-weight: 600; color: var(--text-primary);">Business Name</label>
+                        <input type="text" class="form-control" id="business_name" name="business_name" value="<%= filter && filter.business_name ? filter.business_name : '' %>" placeholder="Search by business name..." style="width: 100%; padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-hover); color: var(--text-primary);">
+                    </div>
+                    <div style="flex: 2 1 260px; min-width: 200px;">
+                        <label for="owner" class="form-label" style="font-weight: 600; color: var(--text-primary);">Owner</label>
+                        <input type="text" class="form-control" id="owner" name="owner" value="<%= filter && filter.owner ? filter.owner : '' %>" placeholder="Search by owner name or email..." style="width: 100%; padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-hover); color: var(--text-primary);">
+                    </div>
+                    <div style="flex: 0 0 140px; min-width: 120px; align-self: flex-end;">
+                        <button type="submit" class="btn btn-primary w-100" style="width: 100%;">Filter/Search</button>
+                    </div>
+                </form>
+            </div>
             <div class="content-card" style="padding: 2.2rem 2rem 1.5rem 2rem; border-radius: 18px; box-shadow: var(--shadow-lg); background: var(--surface); border: 1px solid var(--border);">
                 <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                     <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--primary-color); margin: 0;">Businesses</h2>

@@ -249,7 +249,7 @@ class AdminService {
     }
   }
 
-  static async getAllBusinessesWithOwners(limit = 10, offset = 0, search = '') {
+  static async getAllBusinessesWithOwners(limit = 10, offset = 0, search = '', business_name = '', owner = '') {
     try {
       const query = database.query('groups as g')
         .select(
@@ -272,14 +272,30 @@ class AdminService {
               .orWhere('u.full_name', 'ilike', `%${search}%`);
         });
       }
+      if (business_name) {
+        query.where('g.business_name', 'ilike', `%${business_name}%`);
+      }
+      if (owner) {
+        query.where(function() {
+          this.where('u.full_name', 'ilike', `%${owner}%`).orWhere('u.email', 'ilike', `%${owner}%`);
+        });
+      }
       const businesses = await query;
-      // Count query with search
+      // Count query with filters
       const countQuery = database.query('groups as g')
         .leftJoin('users as u', 'g.user_id', 'u.id');
       if (search) {
         countQuery.where(function() {
           this.where('g.business_name', 'ilike', `%${search}%`)
               .orWhere('u.full_name', 'ilike', `%${search}%`);
+        });
+      }
+      if (business_name) {
+        countQuery.where('g.business_name', 'ilike', `%${business_name}%`);
+      }
+      if (owner) {
+        countQuery.where(function() {
+          this.where('u.full_name', 'ilike', `%${owner}%`).orWhere('u.email', 'ilike', `%${owner}%`);
         });
       }
       const [{ count }] = await countQuery.countDistinct('g.business_id as count');

@@ -1238,8 +1238,10 @@ async function startServer() {
     app.get('/admin/businesses', requireAdmin, async (req, res) => {
       console.log('=== /admin/businesses route hit ===');
       try {
-        const { businesses } = await AdminService.getAllBusinessesWithOwners();
-        res.render('admin/businesses', { admin: req.admin, businesses });
+        const { business_name = '', owner = '' } = req.query;
+        const { businesses } = await AdminService.getAllBusinessesWithOwners(1000, 0, '', business_name, owner);
+        const filter = { business_name, owner };
+        res.render('admin/businesses', { admin: req.admin, businesses, filter });
       } catch (error) {
         logger.error('Admin businesses error:', error);
         res.render('error', { error: 'Failed to load businesses.' });
