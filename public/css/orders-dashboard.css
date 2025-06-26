@@ -620,9 +620,26 @@ body {
     box-shadow: 0 8px 32px rgba(16,185,129,0.08), 0 1.5px 4px rgba(0,0,0,0.04);
 }
 
+.trend-chart-card {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.15s cubic-bezier(0.4,0,0.2,1), box-shadow 0.15s cubic-bezier(0.4,0,0.2,1);
+}
+
 .trend-chart-card:hover {
     transform: translateY(-4px) scale(1.02);
     box-shadow: 0 8px 32px rgba(16,185,129,0.08), 0 1.5px 4px rgba(0,0,0,0.04);
+}
+
+.trend-chart-card .chart-container {
+    transition: none;
+}
+
+.trend-chart-card .chart-container canvas {
+    transition: none;
 }
 
 .chart-header {
