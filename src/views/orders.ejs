@@ -56,19 +56,9 @@
                 <p class="page-subtitle">Manage and track all your business orders</p>
             </div>
             <div class="header-actions-right">
-                <div class="dropdown">
-                    <button class="btn btn-secondary" id="exportDropdown">
-                        <i class="fas fa-download"></i> Export
-                    </button>
-                    <div class="dropdown-content" id="exportMenu">
-                        <a href="/api/export/orders?format=csv&userId=<%= userId %>&<%= new URLSearchParams(query).toString() %>" class="dropdown-item">
-                            <i class="fas fa-file-csv"></i> Export as CSV
-                        </a>
-                        <a href="/api/export/orders?format=pdf&userId=<%= userId %>&<%= new URLSearchParams(query).toString() %>" class="dropdown-item">
-                            <i class="fas fa-file-pdf"></i> Export as PDF
-                        </a>
-                    </div>
-                </div>
+                <button class="btn btn-secondary" id="exportDropdown">
+                    <i class="fas fa-download"></i> Export
+                </button>
             </div>
         </div>
       
@@ -263,6 +253,16 @@
                 <!-- Order details will be loaded here -->
     </div>
   </div>
+</div>
+
+<!-- Export Dropdown rendered at the end of body for robust stacking -->
+<div class="dropdown-content" id="exportMenu" style="display:none;">
+    <a href="/api/export/orders?format=csv&userId=<%= userId %>&<%= new URLSearchParams(query).toString() %>" class="dropdown-item">
+        <i class="fas fa-file-csv"></i> Export as CSV
+    </a>
+    <a href="/api/export/orders?format=pdf&userId=<%= userId %>&<%= new URLSearchParams(query).toString() %>" class="dropdown-item">
+        <i class="fas fa-file-pdf"></i> Export as PDF
+    </a>
 </div>
 
 <script>
@@ -519,17 +519,28 @@
             chart.update();
   }
 
-        // Export dropdown functionality
+        // Export dropdown functionality (robust, body-level)
         const exportDropdown = document.getElementById('exportDropdown');
         const exportMenu = document.getElementById('exportMenu');
 
         exportDropdown.addEventListener('click', (e) => {
             e.stopPropagation();
-            exportMenu.classList.toggle('show');
+            const rect = exportDropdown.getBoundingClientRect();
+            exportMenu.style.display = 'block';
+            exportMenu.style.position = 'fixed';
+            exportMenu.style.left = rect.left + 'px';
+            exportMenu.style.top = (rect.bottom + 4) + 'px';
+            exportMenu.style.zIndex = 9999;
         });
 
-        document.addEventListener('click', () => {
-            exportMenu.classList.remove('show');
+        document.addEventListener('click', (e) => {
+            if (!exportMenu.contains(e.target) && e.target !== exportDropdown) {
+                exportMenu.style.display = 'none';
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            exportMenu.style.display = 'none';
         });
 
         // Profile dropdown functionality
