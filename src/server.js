@@ -680,29 +680,66 @@ async function startServer() {
     app.put('/api/orders/:orderId', async (req, res) => {
       try {
         const { orderId } = req.params;
-        const { userId, ...updateData } = req.body;
-        
-        // Get user's business IDs to ensure they can only update their orders
-        const userBusinesses = await db.query('groups')
-          .select('business_id')
-          .where('user_id', userId)
-          .groupBy('business_id');
-        
-        const businessIds = userBusinesses.map(b => b.business_id);
-        
-        const result = await db.query('orders')
+        const {
+          customer_name,
+          customer_phone,
+          address,
+          items,
+          notes,
+          delivery_date,
+          status,
+          business_id
+        } = req.body;
+
+        // Validate orderId format (should be a UUID)
+        if (!/^[a-fA-F0-9-]{36}$/.test(orderId)) {
+          return res.status(400).json({ error: 'Invalid order ID format' });
+        }
+
+        // Get current user ID (from session or JWT)
+        const userId = req.session ? req.session.userId : req.user && req.user.id;
+        if (!userId) {
+          return res.status(401).json({ error: 'Not authenticated' });
+        }
+
+        // Check that the order belongs to the user
+        const order = await db.query('orders as o')
+          .join('groups as g', 'o.business_id', 'g.business_id')
+          .where('o.id', orderId)
+          .where('g.user_id', userId)
+          .select('o.*')
+          .first();
+        if (!order) {
+          return res.status(403).json({ error: 'You do not have permission to update this order.' });
+        }
+
+        // Validate required fields (at least one must be present)
+        if (!customer_name && !customer_phone && !address && !items && !notes && !delivery_date && !status && !business_id) {
+          return res.status(400).json({ error: 'No fields to update' });
+        }
+
+        // Build update object
+        const updateData = {};
+        if (customer_name !== undefined) updateData.customer_name = customer_name;
+        if (customer_phone !== undefined) updateData.customer_phone = customer_phone;
+        if (address !== undefined) updateData.address = address;
+        if (items !== undefined) updateData.items = items;
+        if (notes !== undefined) updateData.notes = notes;
+        if (delivery_date !== undefined) updateData.delivery_date = delivery_date;
+        if (status !== undefined) updateData.status = status;
+        if (business_id !== undefined) updateData.business_id = business_id;
+
+        // Update the order
+        const updated = await db.query('orders')
           .where('id', orderId)
-          .whereIn('business_id', businessIds)
-          .update({ 
-            ...updateData,
-            updated_at: new Date()
-          });
-        
-        if (result === 0) {
+          .update(updateData)
+          .returning('*');
+
+        if (!updated.length) {
           return res.status(404).json({ error: 'Order not found' });
         }
-        
-        res.json({ success: true, message: 'Order updated' });
+
+        res.json({ success: true, order: updated[0] });
       } catch (error) {
         logger.error('Update order error:', error);
         res.status(500).json({ error: 'Failed to update order' });
