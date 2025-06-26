@@ -651,15 +651,8 @@
             });
             const data = await res.json();
             if (!data.success) throw new Error(data.error || 'Failed to update order');
-            // Update the table row in place
-            const row = document.querySelector(`button[onclick="editOrder('${orderId}')"]`).closest('tr');
-            if (row) {
-              row.querySelector('td:nth-child(3)').textContent = data.order.customer_name;
-              row.querySelector('td:nth-child(4) .status-badge').textContent = data.order.status;
-              row.querySelector('td:nth-child(4) .status-badge').className = 'status-badge ' + data.order.status;
-              row.querySelector('td:nth-child(5)').textContent = new Date(data.order.created_at).toLocaleDateString();
-            }
-            closeEditOrderModal();
+            // Update the table row (simple reload for now)
+            location.reload();
           } catch (err) {
             document.getElementById('editOrderError').textContent = err.message;
             document.getElementById('editOrderError').style.display = 'block';

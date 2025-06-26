@@ -688,25 +688,26 @@ async function startServer() {
           notes,
           delivery_date,
           status,
-          business_id
+          business_id,
+          userId // allow userId from session or query
         } = req.body;
+
+        // Get userId from session or request (adjust as needed for your auth)
+        const currentUserId = req.session?.userId || userId || req.query.userId;
+        if (!currentUserId) {
+          return res.status(401).json({ error: 'Not authenticated' });
+        }
 
         // Validate orderId format (should be a UUID)
         if (!/^[a-fA-F0-9-]{36}$/.test(orderId)) {
           return res.status(400).json({ error: 'Invalid order ID format' });
         }
 
-        // Get current user ID (from session or JWT)
-        const userId = req.session ? req.session.userId : req.user && req.user.id;
-        if (!userId) {
-          return res.status(401).json({ error: 'Not authenticated' });
-        }
-
         // Check that the order belongs to the user
         const order = await db.query('orders as o')
           .join('groups as g', 'o.business_id', 'g.business_id')
           .where('o.id', orderId)
-          .where('g.user_id', userId)
+          .where('g.user_id', currentUserId)
           .select('o.*')
           .first();
         if (!order) {
