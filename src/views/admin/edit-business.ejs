@@ -134,8 +134,8 @@
                 <!-- Status display and toggle slider -->
                 <% if (business) { %>
                 <div style="display: flex; align-items: center; gap: 1.2rem; margin-bottom: 1.1rem;">
-                  <span id="status-label" style="font-weight:600; color:<%= business.is_active ? 'red' : 'green' %>">
-                    <%= business.is_active ? 'Inactive' : 'Active' %>
+                  <span id="status-label" style="font-weight:600; color:<%= business.is_active ? 'green' : 'red' %>">
+                    <%= business.is_active ? 'Active' : 'Inactive' %>
                   </span>
                   <label class="switch">
                     <input type="checkbox" id="toggle-status-slider" <%= business.is_active ? 'checked' : '' %> data-business-id="<%= business.business_id %>">
