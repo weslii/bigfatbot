@@ -315,13 +315,20 @@ class AdminService {
       const businessId = uuidv4();
       // Generate short code and setup identifier
       const { shortCode, setupIdentifier } = await ShortCodeGenerator.generateBusinessSetupCode(data.business_name);
+      // Generate required group fields
+      const groupName = `${data.business_name} - Main Group`;
+      const groupType = 'main';
+      const groupId = `main_${businessId}`;
       await database.query('groups').insert({
         business_id: businessId,
         business_name: data.business_name,
         user_id: data.user_id,
         is_active: data.is_active !== undefined ? !!data.is_active : true,
         short_code: shortCode,
-        setup_identifier: setupIdentifier
+        setup_identifier: setupIdentifier,
+        group_name: groupName,
+        group_type: groupType,
+        group_id: groupId
       });
       return {
         business_id: businessId,

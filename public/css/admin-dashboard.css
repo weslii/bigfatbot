@@ -107,6 +107,8 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  text-decoration: none !important;
+  border-bottom: none !important;
 }
 
 .sub-title {
@@ -1162,4 +1164,107 @@ body {
 
 .notification-close:hover {
   opacity: 1;
+}
+
+/* --- Navigation Buttons --- */
+.nav-link {
+  display: inline-block;
+  padding: 0.5rem 1.1rem;
+  margin: 0 0.2rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-decoration: none;
+  background: none;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  border: none;
+  outline: none;
+  position: relative;
+}
+.nav-link:hover, .nav-link.active {
+  background: var(--surface-hover);
+  color: var(--primary-color);
+  box-shadow: 0 2px 8px 0 rgb(16 185 129 / 0.08);
+}
+
+/* --- Profile & Toggle Icons --- */
+.btn.btn-icon, .profile-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  background: var(--surface-hover);
+  border: none;
+  border-radius: 50%;
+  color: var(--primary-color);
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  box-shadow: 0 1px 4px 0 rgb(16 185 129 / 0.08);
+}
+.btn.btn-icon:hover, .profile-btn:hover {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+/* --- Active Toggle Switch --- */
+.status-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 1.1rem;
+}
+.status-toggle input[type="checkbox"] {
+  appearance: none;
+  width: 2.4rem;
+  height: 1.3rem;
+  background: var(--border-light);
+  border-radius: 1.3rem;
+  position: relative;
+  outline: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  box-shadow: 0 1px 4px 0 rgb(16 185 129 / 0.08);
+}
+.status-toggle input[type="checkbox"]:checked {
+  background: var(--primary-color);
+}
+.status-toggle input[type="checkbox"]::before {
+  content: '';
+  position: absolute;
+  left: 0.2rem;
+  top: 0.18rem;
+  width: 1rem;
+  height: 1rem;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 4px 0 rgb(16 185 129 / 0.08);
+}
+.status-toggle input[type="checkbox"]:checked::before {
+  transform: translateX(1.1rem);
+}
+.status-toggle label {
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 0;
+  user-select: none;
+}
+
+/* --- Add Business Button --- */
+.btn.btn-primary {
+  background: var(--primary-color);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 0.7rem 1.5rem;
+  box-shadow: 0 2px 8px 0 rgb(16 185 129 / 0.08);
+  transition: background 0.18s, box-shadow 0.18s;
+}
+.btn.btn-primary:hover {
+  background: var(--primary-hover);
+  box-shadow: 0 4px 16px 0 rgb(16 185 129 / 0.12);
 } 
