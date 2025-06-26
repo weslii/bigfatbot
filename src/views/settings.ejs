@@ -116,6 +116,54 @@
             .settings-tab { width: 100%; justify-content: flex-start; }
             .settings-form .form-row { flex-direction: column; gap: 0.5rem; }
         }
+        .header-right .nav-link {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.95rem;
+            padding: 0.45rem 0.9rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.18s cubic-bezier(0.4,0,0.2,1), color 0.18s cubic-bezier(0.4,0,0.2,1);
+        }
+        .header-right .nav-link:hover, .header-right .nav-link.active {
+            background: rgba(16,185,129,0.12);
+            color: var(--primary-color);
+            box-shadow: none;
+            transform: none;
+            font-weight: 600;
+        }
+        .btn.btn-icon {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            font-size: 1.1rem;
+            background: var(--surface-color);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            transition: background 0.18s, color 0.18s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn.btn-icon:hover {
+            background: var(--primary-color);
+            color: #fff;
+            box-shadow: none;
+            transform: none;
+        }
+        .dropdown-content .dropdown-item {
+            text-decoration: none !important;
+        }
+        .dropdown-content .dropdown-item[href="/settings"] {
+            text-decoration: none !important;
+            color: var(--primary-color);
+            font-weight: 600;
+            background: none;
+        }
     </style>
 </head>
 <body>
@@ -142,7 +190,7 @@
                             <button type="submit" style="all: unset; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; width: 100%;"><i class="fas fa-sign-out-alt"></i> Logout</button>
                         </form>
                     </div>
-                </div>
+                  </div>
             </nav>
         </div>
     </header>
@@ -152,7 +200,7 @@
             <button class="settings-tab" data-tab="account"><i class="fas fa-shield-alt"></i> Account</button>
             <button class="settings-tab" data-tab="notifications"><i class="fas fa-bell"></i> Notifications</button>
             <button class="settings-tab" data-tab="businesses"><i class="fas fa-building"></i> Businesses</button>
-        </div>
+                    </div>
         <div id="settingsTabContent">
             <!-- Profile Tab -->
             <div class="settings-card tab-pane active" id="profileTab">
@@ -162,44 +210,44 @@
                         <div class="form-col">
                             <label for="fullName">Full Name *</label>
                             <input type="text" id="fullName" name="full_name" value="<%= user.full_name %>" required>
-                        </div>
+                  </div>
                         <div class="form-col">
                             <label for="email">Email Address *</label>
                             <input type="email" id="email" name="email" value="<%= user.email %>" required>
-                        </div>
+                </div>
                     </div>
                     <div class="form-row">
                         <div class="form-col">
                             <label for="phone">Phone Number</label>
                             <input type="tel" id="phone" name="phone" value="<%= user.phone || user.phone_number || '' %>">
-                        </div>
+                  </div>
                         <div class="form-col">
                             <label for="timezone">Timezone</label>
                             <select id="timezone" name="timezone">
-                                <option value="UTC" <%= (user.timezone || 'UTC') === 'UTC' ? 'selected' : '' %>>UTC</option>
-                                <option value="America/New_York" <%= (user.timezone || 'UTC') === 'America/New_York' ? 'selected' : '' %>>Eastern Time</option>
-                                <option value="America/Chicago" <%= (user.timezone || 'UTC') === 'America/Chicago' ? 'selected' : '' %>>Central Time</option>
-                                <option value="America/Denver" <%= (user.timezone || 'UTC') === 'America/Denver' ? 'selected' : '' %>>Mountain Time</option>
-                                <option value="America/Los_Angeles" <%= (user.timezone || 'UTC') === 'America/Los_Angeles' ? 'selected' : '' %>>Pacific Time</option>
-                                <option value="Europe/London" <%= (user.timezone || 'UTC') === 'Europe/London' ? 'selected' : '' %>>London</option>
-                                <option value="Europe/Paris" <%= (user.timezone || 'UTC') === 'Europe/Paris' ? 'selected' : '' %>>Paris</option>
-                                <option value="Asia/Tokyo" <%= (user.timezone || 'UTC') === 'Asia/Tokyo' ? 'selected' : '' %>>Tokyo</option>
-                                <option value="Asia/Shanghai" <%= (user.timezone || 'UTC') === 'Asia/Shanghai' ? 'selected' : '' %>>Shanghai</option>
-                            </select>
-                        </div>
+                        <option value="UTC" <%= (user.timezone || 'UTC') === 'UTC' ? 'selected' : '' %>>UTC</option>
+                        <option value="America/New_York" <%= (user.timezone || 'UTC') === 'America/New_York' ? 'selected' : '' %>>Eastern Time</option>
+                        <option value="America/Chicago" <%= (user.timezone || 'UTC') === 'America/Chicago' ? 'selected' : '' %>>Central Time</option>
+                        <option value="America/Denver" <%= (user.timezone || 'UTC') === 'America/Denver' ? 'selected' : '' %>>Mountain Time</option>
+                        <option value="America/Los_Angeles" <%= (user.timezone || 'UTC') === 'America/Los_Angeles' ? 'selected' : '' %>>Pacific Time</option>
+                        <option value="Europe/London" <%= (user.timezone || 'UTC') === 'Europe/London' ? 'selected' : '' %>>London</option>
+                        <option value="Europe/Paris" <%= (user.timezone || 'UTC') === 'Europe/Paris' ? 'selected' : '' %>>Paris</option>
+                        <option value="Asia/Tokyo" <%= (user.timezone || 'UTC') === 'Asia/Tokyo' ? 'selected' : '' %>>Tokyo</option>
+                        <option value="Asia/Shanghai" <%= (user.timezone || 'UTC') === 'Asia/Shanghai' ? 'selected' : '' %>>Shanghai</option>
+                      </select>
                     </div>
+                  </div>
                     <div class="form-group">
                         <label for="address">Address</label>
                         <textarea id="address" name="address" rows="3"><%= user.address || '' %></textarea>
-                    </div>
+                </div>
                     <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Save Profile
-                        </button>
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-save"></i> Save Profile
+                </button>
                     </div>
-                </form>
+              </form>
             </div>
-            <!-- Account Tab -->
+        <!-- Account Tab -->
             <div class="settings-card tab-pane" id="accountTab" style="display:none;">
                 <h2>Account Security</h2>
                 <form class="settings-form" id="passwordForm">
@@ -210,76 +258,76 @@
                     <div class="form-group">
                         <label for="newPassword">New Password *</label>
                         <input type="password" id="newPassword" name="new_password" required>
-                        <div class="form-text">Password must be at least 8 characters long</div>
+                      <div class="form-text">Password must be at least 8 characters long</div>
                     </div>
                     <div class="form-group">
                         <label for="confirmPassword">Confirm New Password *</label>
                         <input type="password" id="confirmPassword" name="confirm_password" required>
                     </div>
                     <div class="form-actions">
-                        <button type="submit" class="btn btn-warning">
-                            <i class="fas fa-key"></i> Change Password
-                        </button>
+                    <button type="submit" class="btn btn-warning">
+                      <i class="fas fa-key"></i> Change Password
+                    </button>
                     </div>
-                </form>
+                  </form>
                 <div class="settings-card" style="margin-top:2rem; background: var(--surface-hover);">
                     <h2 style="font-size:1.1rem; margin-bottom:1rem;">Account Information</h2>
                     <div class="settings-form">
                         <div class="form-group">
                             <label>Account ID</label>
                             <input type="text" value="<%= user.id %>" readonly>
-                        </div>
+                </div>
                         <div class="form-group">
                             <label>Member Since</label>
                             <input type="text" value="<%= new Date(user.created_at).toLocaleDateString() %>" readonly>
-                        </div>
+              </div>
                         <div class="form-group">
                             <label>Last Login</label>
                             <input type="text" value="<%= user.last_login ? new Date(user.last_login).toLocaleString() : 'Never' %>" readonly>
-                        </div>
-                        <div class="alert">
-                            <i class="fas fa-info-circle"></i>
-                            <strong>Account Status:</strong> Active
-                        </div>
-                    </div>
-                </div>
             </div>
-            <!-- Notifications Tab -->
+                        <div class="alert">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Account Status:</strong> Active
+                  </div>
+                </div>
+              </div>
+            </div>
+        <!-- Notifications Tab -->
             <div class="settings-card tab-pane" id="notificationsTab" style="display:none;">
                 <h2>Notification Preferences</h2>
                 <form class="settings-form" id="notificationsForm">
                     <div class="form-group">
                         <h4 style="font-size:1.05rem; margin-bottom:0.5rem;">Email Notifications</h4>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" id="emailNewOrders" name="email_new_orders" <%= (user.email_new_orders !== false) ? 'checked' : '' %>>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="emailNewOrders" name="email_new_orders" <%= (user.email_new_orders !== false) ? 'checked' : '' %>>
                             <label class="form-check-label" for="emailNewOrders">New order notifications</label>
-                        </div>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" id="emailDailyReports" name="email_daily_reports" <%= user.email_daily_reports ? 'checked' : '' %>>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="emailDailyReports" name="email_daily_reports" <%= user.email_daily_reports ? 'checked' : '' %>>
                             <label class="form-check-label" for="emailDailyReports">Daily order reports</label>
-                        </div>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" id="emailWeeklyReports" name="email_weekly_reports" <%= user.email_weekly_reports ? 'checked' : '' %>>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="emailWeeklyReports" name="email_weekly_reports" <%= user.email_weekly_reports ? 'checked' : '' %>>
                             <label class="form-check-label" for="emailWeeklyReports">Weekly summary reports</label>
-                        </div>
-                    </div>
+                  </div>
+                </div>
                     <div class="form-group">
                         <h4 style="font-size:1.05rem; margin-bottom:0.5rem;">WhatsApp Notifications</h4>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" id="whatsappNewOrders" name="whatsapp_new_orders" <%= (user.whatsapp_new_orders !== false) ? 'checked' : '' %>>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="whatsappNewOrders" name="whatsapp_new_orders" <%= (user.whatsapp_new_orders !== false) ? 'checked' : '' %>>
                             <label class="form-check-label" for="whatsappNewOrders">New order alerts in WhatsApp groups</label>
-                        </div>
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" id="whatsappReminders" name="whatsapp_reminders" <%= (user.whatsapp_reminders !== false) ? 'checked' : '' %>>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="whatsappReminders" name="whatsapp_reminders" <%= (user.whatsapp_reminders !== false) ? 'checked' : '' %>>
                             <label class="form-check-label" for="whatsappReminders">Pending order reminders</label>
-                        </div>
-                    </div>
+                  </div>
+                </div>
                     <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Save Preferences
-                        </button>
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-save"></i> Save Preferences
+                </button>
                     </div>
-                </form>
+              </form>
             </div>
             <!-- Businesses Tab -->
             <div class="settings-card tab-pane" id="businessesTab" style="display:none;">
@@ -292,24 +340,24 @@
                                     <div style="display:flex; align-items:center; gap:1rem;">
                                         <div style="width:40px; height:40px; background:var(--primary-color); color:white; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:1.25rem; font-weight:700;">
                                             <i class="fas fa-building"></i>
-                                        </div>
+          </div>
                                         <div style="flex:1;">
                                             <div style="font-size:1.1rem; font-weight:700; color:var(--text-primary); text-transform:capitalize;"> <%= biz.business_name %> </div>
                                             <div style="font-size:0.92rem; color:var(--text-secondary);">ID: <%= biz.business_id %></div>
-                                        </div>
+        </div>
                                         <a href="/business/<%= biz.business_id %>" class="btn btn-outline" style="font-size:0.92rem;">View</a>
-                                    </div>
+            </div>
                                 </li>
-                            <% }); %>
+                      <% }); %>
                         </ul>
                     <% } else { %>
                         <div class="alert"><i class="fas fa-info-circle"></i> You have no businesses yet.</div>
                     <% } %>
-                </div>
             </div>
+          </div>
         </div>
     </main>
-    <script>
+<script>
         // Tabs functionality
         const tabBtns = document.querySelectorAll('.settings-tab');
         const tabPanes = document.querySelectorAll('.tab-pane');
@@ -324,8 +372,8 @@
                     if (tc.id === tab + 'Tab') {
                         tc.classList.add('active');
                         tc.style.display = '';
-                    }
-                });
+    }
+  });
             });
         });
         // Profile dropdown functionality
@@ -356,7 +404,7 @@
             const moonIcon = themeToggle.querySelector('i:nth-child(2)');
             sunIcon.style.display = theme === 'light' ? 'inline' : 'none';
             moonIcon.style.display = theme === 'dark' ? 'inline' : 'none';
-        }
-    </script>
+  }
+</script> 
 </body>
 </html> 
