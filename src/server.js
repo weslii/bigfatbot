@@ -1318,11 +1318,16 @@ async function startServer() {
     app.get('/admin/users', requireAdmin, async (req, res) => {
       console.log('=== /admin/users route hit ===');
       try {
-        const users = await AdminService.getAllUsers();
+        const { name = '', email = '', phone = '' } = req.query;
+        const users = await AdminService.getAllUsersWithFilters(name, email, phone);
+        const filter = { name, email, phone };
+        // Get all unique names, emails, phones
+        const allNames = (await db.query('users').distinct('full_name')).map(u => u.full_name).filter(Boolean);
+        const allEmails = (await db.query('users').distinct('email')).map(u => u.email).filter(Boolean);
+        const allPhones = (await db.query('users').distinct('phone_number')).map(u => u.phone_number).filter(Boolean);
         const successMessage = req.session.successMessage;
-        // Clear the success message from session after displaying
         delete req.session.successMessage;
-        res.render('admin/users', { admin: req.admin, users, successMessage });
+        res.render('admin/users', { admin: req.admin, users, filter, allNames, allEmails, allPhones, successMessage });
       } catch (error) {
         logger.error('Admin users error:', error);
         res.render('error', { error: 'Failed to load users.' });

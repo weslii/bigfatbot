@@ -659,6 +659,27 @@ class AdminService {
       throw error;
     }
   }
+
+  static async getAllUsersWithFilters(name = '', email = '', phone = '') {
+    try {
+      const query = database.query('users')
+        .select('id', 'full_name', 'email', 'phone_number', 'created_at')
+        .orderBy('created_at', 'desc');
+      if (name) {
+        query.where('full_name', 'ilike', `%${name}%`);
+      }
+      if (email) {
+        query.where('email', 'ilike', `%${email}%`);
+      }
+      if (phone) {
+        query.where('phone_number', 'ilike', `%${phone}%`);
+      }
+      return await query;
+    } catch (error) {
+      logger.error('Error getting filtered users:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = AdminService; 
