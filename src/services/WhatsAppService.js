@@ -405,7 +405,7 @@ class WhatsAppService {
       logger.info('Contact object:', contact);
 
       const messageBody = message.body.toLowerCase().trim();
-      const senderName = contact.name;
+      const senderName = contact.name || contact.pushname || contact.number;
       const senderNumber = contact.number;
 
       // Handle reply-based cancellation FIRST (before command processing)
@@ -514,7 +514,7 @@ class WhatsAppService {
       logger.info('Contact object:', contact);
 
       const messageBody = message.body.toLowerCase().trim();
-      const senderName = contact.name;
+      const senderName = contact.name || contact.pushname || contact.number;
       const senderNumber = contact.number;
 
       // Handle reply-based completion
@@ -634,13 +634,32 @@ class WhatsAppService {
 
       await OrderService.updateOrderStatus(orderId, 'delivered', deliveryPerson, groupInfo.business_id);
       
-      // Send delivery confirmation to the group where delivery was marked
+      // Send delivery notification to the group where delivery was marked
       await this.client.sendMessage(groupInfo.group_id, `✅ Order #${orderId} marked as delivered by ${deliveryPerson}.`);
+      
+      // Notify the other group
+      const businessGroups = await database.query('groups')
+        .where('business_id', groupInfo.business_id)
+        .whereIn('group_type', ['sales', 'delivery'])
+        .select('group_id', 'group_type');
+      
+      for (const group of businessGroups) {
+        if (group.group_id !== groupInfo.group_id) {
+          const groupType = group.group_type === 'sales' ? 'Sales' : 'Delivery';
+          await this.client.sendMessage(group.group_id, 
+            `✅ *Order Delivered*\n\n` +
+            `*Order ID:* ${orderId}\n` +
+            `*Customer:* ${order.customer_name}\n` +
+            `*Delivered by:* ${deliveryPerson} (${groupType} Team)\n` +
+            `*Items:* ${order.items}`
+          );
+        }
+      }
       
       logger.info('Order marked as delivered', { orderId, deliveryPerson, businessId: groupInfo.business_id });
     } catch (error) {
       logger.error('Error marking order as delivered:', error);
-      await this.client.sendMessage(groupInfo.group_id, `❌ Error updating order #${orderId}. Please try again.`);
+      await this.client.sendMessage(groupInfo.group_id, `❌ Error marking order #${orderId} as delivered. Please try again.`);
     }
   }
 
