@@ -213,14 +213,15 @@ class WhatsAppService {
       let metrics = await database.query('bot_metrics').first();
       if (!metrics) {
         // Create initial metrics record
-        metrics = await database.query('bot_metrics').insert({
+        const inserted = await database.query('bot_metrics').insert({
           total_messages: 0,
           successful_messages: 0,
           failed_messages: 0,
           response_times: [],
           daily_counts: {},
           last_activity: null
-        }).returning('*').first();
+        }).returning('*');
+        metrics = inserted[0];
       }
       return metrics;
     } catch (error) {

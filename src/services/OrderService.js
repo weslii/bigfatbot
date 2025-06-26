@@ -24,7 +24,7 @@ class OrderService {
       
       const [order] = await database.query('orders')
         .insert({
-          id: orderId,
+          id: uuidv4(),
           order_id: orderId,
           customer_name: orderData.customer_name,
           customer_phone: orderData.customer_phone,
