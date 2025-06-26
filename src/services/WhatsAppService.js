@@ -309,7 +309,18 @@ class WhatsAppService {
       const dailyCounts = metrics.daily_counts || {};
       dailyCounts[today] = (dailyCounts[today] || 0) + 1;
 
-      const responseTimes = metrics.response_times || [];
+      let responseTimes = metrics.response_times;
+      if (!Array.isArray(responseTimes)) {
+        if (typeof responseTimes === 'string') {
+          try {
+            responseTimes = JSON.parse(responseTimes);
+          } catch {
+            responseTimes = [];
+          }
+        } else if (responseTimes == null) {
+          responseTimes = [];
+        }
+      }
       responseTimes.push(responseTime);
       if (responseTimes.length > 100) responseTimes.shift();
 
@@ -347,7 +358,18 @@ class WhatsAppService {
       const successRate = total > 0 ? (successful / total) * 100 : 100;
 
       // Average response time (ms)
-      const responseTimes = metrics.response_times || [];
+      let responseTimes = metrics.response_times;
+      if (!Array.isArray(responseTimes)) {
+        if (typeof responseTimes === 'string') {
+          try {
+            responseTimes = JSON.parse(responseTimes);
+          } catch {
+            responseTimes = [];
+          }
+        } else if (responseTimes == null) {
+          responseTimes = [];
+        }
+      }
       const avgResponse = responseTimes.length > 0 ? 
         responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length : 0;
 
