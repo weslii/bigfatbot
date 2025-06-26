@@ -595,8 +595,8 @@ async function startServer() {
           return res.status(400).json({ error: 'Order ID and User ID are required' });
         }
         
-        // Validate orderId format (should be numeric)
-        if (!/^\d+$/.test(orderId)) {
+        // Validate orderId format (should be a UUID)
+        if (!/^[a-fA-F0-9-]{36}$/.test(orderId)) {
           return res.status(400).json({ error: 'Invalid order ID format' });
         }
         
@@ -640,7 +640,7 @@ async function startServer() {
         }
         
         // Validate orderId format
-        if (!/^\d+$/.test(orderId)) {
+        if (!/^[a-fA-F0-9-]{36}$/.test(orderId)) {
           return res.status(400).json({ error: 'Invalid order ID format' });
         }
         
