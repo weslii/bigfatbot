@@ -255,7 +255,7 @@ class AdminService {
         .select(
           'g.business_id',
           'g.business_name',
-          database.query.raw('MIN(g.user_id) as user_id'),
+          database.query.raw('MIN(g.user_id::text) as user_id'),
           database.query.raw('MIN(g.short_code) as short_code'),
           database.query.raw('MIN(g.setup_identifier) as setup_identifier'),
           database.query.raw('MAX(g.is_active::int) = 1 as is_active'),
