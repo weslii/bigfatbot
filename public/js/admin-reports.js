@@ -56,49 +56,51 @@ async function fetchAndRenderStats() {
 function renderSummaryCards(stats) {
   const summaryCards = document.getElementById('summary-cards');
   summaryCards.innerHTML = `
-    <div class="summary-card">
-      <div class="summary-title">Total Businesses</div>
-      <div class="summary-value">${stats.totalBusinesses}</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-title">Active Businesses</div>
-      <div class="summary-value">${stats.activeBusinesses}</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-title">New Businesses</div>
-      <div class="summary-value">${stats.newBusinesses}</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-title">Total Users</div>
-      <div class="summary-value">${stats.totalUsers}</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-title">New Users</div>
-      <div class="summary-value">${stats.newUsers}</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-title">Total Orders</div>
-      <div class="summary-value">${stats.totalOrders}</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-title">New Orders</div>
-      <div class="summary-value">${stats.newOrders}</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-title">Parsing Success Rate</div>
-      <div class="summary-value">${stats.parsingSuccessRate.toFixed(2)}%</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-title">Parsing Attempts</div>
-      <div class="summary-value">${stats.parsingAttempts}</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-title">Parsing Successes</div>
-      <div class="summary-value">${stats.parsingSuccesses}</div>
-    </div>
-    <div class="summary-card">
-      <div class="summary-title">Parsing Failures</div>
-      <div class="summary-value">${stats.parsingFailures}</div>
+    <div style="display: flex; flex-wrap: wrap; gap: 0.7rem; width: 100%;">
+      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
+        <div class="summary-title" style="font-size: 0.97rem;">Total Businesses</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.totalBusinesses}</div>
+      </div>
+      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
+        <div class="summary-title" style="font-size: 0.97rem;">Active Businesses</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.activeBusinesses}</div>
+      </div>
+      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
+        <div class="summary-title" style="font-size: 0.97rem;">New Businesses</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.newBusinesses}</div>
+      </div>
+      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
+        <div class="summary-title" style="font-size: 0.97rem;">Total Users</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.totalUsers}</div>
+      </div>
+      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
+        <div class="summary-title" style="font-size: 0.97rem;">New Users</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.newUsers}</div>
+      </div>
+      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
+        <div class="summary-title" style="font-size: 0.97rem;">Total Orders</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.totalOrders}</div>
+      </div>
+      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
+        <div class="summary-title" style="font-size: 0.97rem;">New Orders</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.newOrders}</div>
+      </div>
+      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
+        <div class="summary-title" style="font-size: 0.97rem;">Parsing Success Rate</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.parsingSuccessRate.toFixed(2)}%</div>
+      </div>
+      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
+        <div class="summary-title" style="font-size: 0.97rem;">Parsing Attempts</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.parsingAttempts}</div>
+      </div>
+      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
+        <div class="summary-title" style="font-size: 0.97rem;">Parsing Successes</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.parsingSuccesses}</div>
+      </div>
+      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
+        <div class="summary-title" style="font-size: 0.97rem;">Parsing Failures</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.parsingFailures}</div>
+      </div>
     </div>
   `;
 }
@@ -106,9 +108,9 @@ function renderSummaryCards(stats) {
 function renderTotalOrdersHandledCard(stats) {
   const card = document.getElementById('total-orders-handled-card');
   card.innerHTML = `
-    <div class="summary-card" style="min-width: 180px;">
+    <div class="summary-card" style="min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
       <div class="summary-title">Total Orders Handled</div>
-      <div class="summary-value" style="font-size: 2.1rem; font-weight: 800; color: var(--primary-color);">${stats.totalOrdersAllTime}</div>
+      <div class="summary-value" style="font-size: 1.5rem; font-weight: 800; color: var(--primary-color);">${stats.totalOrdersAllTime}</div>
     </div>
   `;
 }
