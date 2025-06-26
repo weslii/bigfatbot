@@ -108,9 +108,9 @@ function renderSummaryCards(stats) {
 function renderTotalOrdersHandledCard(stats) {
   const card = document.getElementById('total-orders-handled-card');
   card.innerHTML = `
-    <div class="summary-card" style="min-width: 220px; padding: 1.2rem 2rem; font-size: 1.1rem; box-shadow: var(--shadow-lg); border-radius: 18px; background: var(--surface); border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center;">
-      <div class="summary-title" style="font-size: 1.1rem;">Total Orders Handled</div>
-      <div class="summary-value" style="font-size: 2.5rem; font-weight: 900; color: var(--primary-color); line-height: 1.1;">${stats.totalOrdersAllTime}</div>
+    <div class="summary-card" style="min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
+      <div class="summary-title">Total Orders Handled</div>
+      <div class="summary-value" style="font-size: 1.5rem; font-weight: 800; color: var(--primary-color);">${stats.totalOrdersAllTime}</div>
     </div>
   `;
 }
