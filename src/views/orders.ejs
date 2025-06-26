@@ -62,15 +62,15 @@
                     </button>
                     <div class="dropdown-content" id="exportMenu">
                         <a href="/api/export/orders?format=csv&userId=<%= userId %>&<%= new URLSearchParams(query).toString() %>" class="dropdown-item">
-                            <i class="fas fa-file-csv"></i> as CSV
+                            <i class="fas fa-file-csv"></i> Export as CSV
                         </a>
-                        <a href="/api/export/orders?format=json&userId=<%= userId %>&<%= new URLSearchParams(query).toString() %>" class="dropdown-item">
-                            <i class="fas fa-file-code"></i> as JSON
+                        <a href="/api/export/orders?format=pdf&userId=<%= userId %>&<%= new URLSearchParams(query).toString() %>" class="dropdown-item">
+                            <i class="fas fa-file-pdf"></i> Export as PDF
                         </a>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
       
         <!-- Analytics Charts -->
         <div class="charts-grid">
@@ -296,20 +296,31 @@
             }
         });
 
-        // Theme toggle
+        // Theme toggle functionality
         const themeToggle = document.getElementById('theme-toggle');
         const html = document.documentElement;
         const savedTheme = localStorage.getItem('theme') || 'light';
-        
+
         function applyTheme(theme) {
             html.setAttribute('data-theme', theme);
-            themeToggle.querySelector('i').className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
             localStorage.setItem('theme', theme);
-            if (window.charts) {
-                Object.values(window.charts).forEach(chart => {
-                    updateChartTheme(chart, theme);
-                });
+            
+            // Update theme toggle icons
+            const sunIcon = themeToggle.querySelector('.fa-sun');
+            const moonIcon = themeToggle.querySelector('.fa-moon');
+            
+            if (theme === 'dark') {
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'inline';
+            } else {
+                sunIcon.style.display = 'inline';
+                moonIcon.style.display = 'none';
             }
+
+            // Update charts theme
+            Object.values(window.charts || {}).forEach(chart => {
+                updateChartTheme(chart, theme);
+            });
         }
 
         themeToggle.addEventListener('click', () => {
@@ -507,6 +518,32 @@
             }
             chart.update();
   }
+
+        // Export dropdown functionality
+        const exportDropdown = document.getElementById('exportDropdown');
+        const exportMenu = document.getElementById('exportMenu');
+
+        exportDropdown.addEventListener('click', (e) => {
+            e.stopPropagation();
+            exportMenu.classList.toggle('show');
+        });
+
+        document.addEventListener('click', () => {
+            exportMenu.classList.remove('show');
+        });
+
+        // Profile dropdown functionality
+        const profileDropdown = document.getElementById('profileDropdown');
+        const profileMenu = document.getElementById('profileMenu');
+
+        profileDropdown.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileMenu.classList.toggle('show');
+        });
+
+        document.addEventListener('click', () => {
+            profileMenu.classList.remove('show');
+        });
 </script>
 </body>
 </html> 

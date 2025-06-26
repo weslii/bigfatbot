@@ -426,7 +426,27 @@
     .btn.btn-icon { width: 40px; height: 40px; padding: 0; font-size: 1.1rem; background: var(--surface-color); color: var(--text-secondary); border: 1px solid var(--border-color); border-radius: 8px; transition: background 0.18s, color 0.18s; display: flex; align-items: center; justify-content: center; }
     .btn.btn-icon:hover { background: var(--primary-color); color: #fff; box-shadow: none; transform: none; }
     .dropdown { position: relative; display: inline-block; }
-    .dropdown-content { display: none; position: absolute; right: 0; background: var(--surface-color); min-width: 160px; box-shadow: 0 10px 20px rgba(0,0,0,0.08); border: 1px solid var(--border-color); border-radius: 8px; z-index: 2001; margin-top: 0.5rem; padding: 0.5rem; }
+    .dropdown-content { 
+        display: none; 
+        position: absolute; 
+        right: 0; 
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        min-width: 160px; 
+        box-shadow: 0 10px 20px rgba(0,0,0,0.08); 
+        border: 1px solid var(--border-color); 
+        border-radius: 8px; 
+        z-index: 2001; 
+        margin-top: 0.5rem; 
+        padding: 0.5rem; 
+    }
+    [data-theme="dark"] .dropdown-content {
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-color: rgba(148, 163, 184, 0.2);
+    }
     .dropdown.active .dropdown-content { display: block; }
     .dropdown-item { color: var(--text-primary); padding: 0.75rem 1rem; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; border: none; background: none; width: 100%; text-align: left; cursor: pointer; transition: background 0.18s, color 0.18s; border-radius: 8px; }
     .dropdown-item:hover { background: rgba(59,130,246,0.08); color: var(--primary-color); }
