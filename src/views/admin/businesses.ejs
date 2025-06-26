@@ -154,11 +154,11 @@
             event.stopPropagation();
             const menu = btn.nextElementSibling;
             const allMenus = document.querySelectorAll('.action-menu');
-            allMenus.forEach(m => { if (m !== menu) m.style.display = 'none'; });
-            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+            allMenus.forEach(m => { if (m !== menu) m.classList.remove('open'); });
+            menu.classList.toggle('open');
             function handler(e) {
                 if (!menu.contains(e.target) && e.target !== btn) {
-                    menu.style.display = 'none';
+                    menu.classList.remove('open');
                     document.removeEventListener('click', handler);
                 }
             }

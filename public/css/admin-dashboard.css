@@ -1291,4 +1291,26 @@ body {
 a, .nav-link, .no-underline {
   text-decoration: none !important;
   border-bottom: none !important;
+}
+
+/* --- Action Menu Dropdown --- */
+.action-menu {
+  display: none;
+  min-width: 120px;
+  right: 0;
+  left: auto;
+  position: absolute;
+  z-index: 100;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow-lg);
+  animation: fadeIn 0.18s;
+}
+.action-menu.open {
+  display: block !important;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 } 
