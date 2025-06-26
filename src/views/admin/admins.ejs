@@ -1,62 +1,136 @@
-<%- include('../layout', { title: 'Manage Admins' }) %>
-
-<div class="container-fluid mt-4 pastel-blue-bg">
-  <div class="row">
-    <div class="col-12">
-      <div class="card pastel-blue-card text-dark">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <h4 class="mb-0">Admins</h4>
-          <a href="/admin/admins/add" class="btn btn-primary">Add Admin</a>
-        </div>
-        <div class="card-body">
-          <div class="table-responsive">
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th>Username</th>
-                  <th>Email</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                  <th>Last Login</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% if (admins && admins.length > 0) { %>
-                  <% admins.forEach(a => { %>
-                    <tr>
-                      <td><%= a.username %></td>
-                      <td><%= a.email %></td>
-                      <td><%= a.role %></td>
-                      <td>
-                        <span class="badge bg-<%= a.is_active ? 'success' : 'secondary' %>">
-                          <%= a.is_active ? 'Active' : 'Inactive' %>
-                        </span>
-                      </td>
-                      <td><%= a.last_login ? new Date(a.last_login).toLocaleString() : '-' %></td>
-                      <td>
-                        <a href="/admin/admins/<%= a.id %>/edit" class="btn btn-sm btn-warning">Edit</a>
-                        <form action="/admin/admins/<%= a.id %>/toggle" method="POST" style="display:inline;">
-                          <button type="submit" class="btn btn-sm btn-<%= a.is_active ? 'secondary' : 'success' %> ms-1">
-                            <%= a.is_active ? 'Deactivate' : 'Activate' %>
-                          </button>
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Admins - Admin</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/admin-dashboard.css" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="/admin/dashboard" class="logo-section">
+                    <div class="logo-icon"><i class="fas fa-user-shield"></i></div>
+                    <div class="logo-text"><span class="main-title">Admins</span></div>
+                </a>
+            </div>
+            <nav class="header-right" style="display: flex; align-items: center; gap: 0.75rem;">
+                <a href="/admin/dashboard" class="nav-link">Dashboard</a>
+                <a href="/admin/businesses" class="nav-link">Businesses</a>
+                <a href="/admin/orders" class="nav-link">Orders</a>
+                <a href="/admin/users" class="nav-link">Users</a>
+                <a href="/admin/admins" class="nav-link active">Admins</a>
+                <button class="btn btn-icon" id="theme-toggle" aria-label="Toggle Theme">
+                    <i class="fas fa-sun"></i><i class="fas fa-moon" style="display: none;"></i>
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-icon" id="profileDropdown"><i class="fas fa-user"></i></button>
+                    <div class="dropdown-content" id="profileMenu">
+                        <a href="/admin/profile" class="dropdown-item"><i class="fas fa-cog"></i> Profile</a>
+                        <form action="/admin/logout" method="post" class="dropdown-item" style="padding: 0; margin: 0;">
+                            <button type="submit" style="all: unset; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; width: 100%;"><i class="fas fa-sign-out-alt"></i> Logout</button>
                         </form>
-                        <form action="/admin/admins/<%= a.id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this admin?');">
-                          <button type="submit" class="btn btn-sm btn-danger ms-1">Delete</button>
-                        </form>
-                      </td>
-                    </tr>
-                  <% }); %>
-                <% } else { %>
-                  <tr>
-                    <td colspan="6" class="text-center">No admins found.</td>
-                  </tr>
-                <% } %>
-              </tbody>
-            </table>
-          </div>
+                    </div>
+                </div>
+            </nav>
         </div>
-      </div>
-    </div>
-  </div>
-</div> 
+    </header>
+    <main class="main-content" style="padding: 2.5rem 0; min-height: 80vh;">
+        <div class="container" style="max-width: 1100px; margin: 0 auto;">
+            <div class="content-card" style="padding: 2.2rem 2rem 1.5rem 2rem; border-radius: 18px; box-shadow: var(--shadow-lg); background: var(--surface); border: 1px solid var(--border);">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--primary-color); margin: 0;">Admins</h2>
+                    <a href="/admin/admins/add" class="btn btn-primary"><i class="fas fa-plus me-1"></i> Add Admin</a>
+                </div>
+                <div class="card-content">
+                    <% if (admins && admins.length > 0) { %>
+                    <div class="table-container" style="overflow-x: auto;">
+                        <table class="data-table" style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Last Login</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% admins.forEach(a => { %>
+                                <tr>
+                                    <td style="font-weight: 600; color: var(--text-primary);"><%= a.username %></td>
+                                    <td style="color: var(--text-secondary);"><%= a.email %></td>
+                                    <td style="color: var(--text-secondary); text-transform: capitalize;"><%= a.role %></td>
+                                    <td>
+                                        <span class="badge" style="background: <%= a.is_active ? 'var(--success)' : 'var(--border)' %>; color: <%= a.is_active ? 'white' : 'var(--text-muted)' %>; padding: 0.4em 0.9em; border-radius: 1em; font-size: 0.95em; font-weight: 600;">
+                                            <%= a.is_active ? 'Active' : 'Inactive' %>
+                                        </span>
+                                    </td>
+                                    <td style="color: var(--text-muted);"><%= a.last_login ? new Date(a.last_login).toLocaleString() : '-' %></td>
+                                    <td style="white-space: nowrap;">
+                                        <div style="display: flex; align-items: center; gap: 0.3rem;">
+                                            <a href="/admin/admins/<%= a.id %>/edit" class="btn btn-icon btn-edit" title="Edit" style="width: 2rem; height: 2rem; font-size: 1rem;"><i class="fas fa-edit"></i></a>
+                                            <form action="/admin/admins/<%= a.id %>/toggle" method="POST" style="display:inline;">
+                                                <button type="submit" class="btn btn-icon" title="<%= a.is_active ? 'Deactivate' : 'Activate' %>" style="width: 2rem; height: 2rem; font-size: 1rem; background: <%= a.is_active ? 'var(--border)' : 'var(--success)' %>; color: <%= a.is_active ? 'var(--text-muted)' : 'white' %>;">
+                                                    <i class="fas <%= a.is_active ? 'fa-user-slash' : 'fa-user-check' %>"></i>
+                                                </button>
+                                            </form>
+                                            <form action="/admin/admins/<%= a.id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this admin?');">
+                                                <button type="submit" class="btn btn-icon btn-delete" title="Delete" style="width: 2rem; height: 2rem; font-size: 1rem;"><i class="fas fa-trash"></i></button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                    <% } else { %>
+                    <div class="no-data" style="text-align: center; color: var(--text-muted); padding: 2.5rem 0; font-size: 1.1rem;">
+                        <i class="fas fa-user-shield" style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 0.5rem;"></i><br>
+                        No admins found.
+                    </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script>
+        // Profile dropdown functionality
+        const profileDropdown = document.getElementById('profileDropdown');
+        const profileMenu = document.getElementById('profileMenu');
+        const dropdownParent = profileDropdown.closest('.dropdown');
+        profileDropdown.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdownParent.classList.toggle('active');
+        });
+        document.addEventListener('click', (e) => {
+            if (!profileMenu.contains(e.target) && !profileDropdown.contains(e.target)) {
+                dropdownParent.classList.remove('active');
+            }
+        });
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+        function updateThemeIcon(theme) {
+            const sunIcon = themeToggle.querySelector('i:nth-child(1)');
+            const moonIcon = themeToggle.querySelector('i:nth-child(2)');
+            sunIcon.style.display = theme === 'light' ? 'inline' : 'none';
+            moonIcon.style.display = theme === 'dark' ? 'inline' : 'none';
+        }
+    </script>
+</body>
+</html> 

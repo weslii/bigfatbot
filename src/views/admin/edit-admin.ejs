@@ -1,45 +1,121 @@
-<%- include('../layout', { title: adminUser ? 'Edit Admin' : 'Add Admin' }) %>
-
-<div class="container mt-5 pastel-blue-bg">
-  <div class="row justify-content-center">
-    <div class="col-md-8">
-      <div class="card pastel-blue-card text-dark">
-        <div class="card-header">
-          <h4><%= adminUser ? 'Edit Admin' : 'Add Admin' %></h4>
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= adminUser ? 'Edit Admin' : 'Add Admin' %> - Admin</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/admin-dashboard.css" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="/admin/dashboard" class="logo-section">
+                    <div class="logo-icon"><i class="fas fa-user-shield"></i></div>
+                    <div class="logo-text"><span class="main-title"><%= adminUser ? 'Edit Admin' : 'Add Admin' %></span></div>
+                </a>
+            </div>
+            <nav class="header-right" style="display: flex; align-items: center; gap: 0.75rem;">
+                <a href="/admin/dashboard" class="nav-link">Dashboard</a>
+                <a href="/admin/businesses" class="nav-link">Businesses</a>
+                <a href="/admin/orders" class="nav-link">Orders</a>
+                <a href="/admin/users" class="nav-link">Users</a>
+                <a href="/admin/admins" class="nav-link active">Admins</a>
+                <button class="btn btn-icon" id="theme-toggle" aria-label="Toggle Theme">
+                    <i class="fas fa-sun"></i><i class="fas fa-moon" style="display: none;"></i>
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-icon" id="profileDropdown"><i class="fas fa-user"></i></button>
+                    <div class="dropdown-content" id="profileMenu">
+                        <a href="/admin/profile" class="dropdown-item"><i class="fas fa-cog"></i> Profile</a>
+                        <form action="/admin/logout" method="post" class="dropdown-item" style="padding: 0; margin: 0;">
+                            <button type="submit" style="all: unset; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; width: 100%;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                        </form>
+                    </div>
+                </div>
+            </nav>
         </div>
-        <div class="card-body">
-          <form action="<%= adminUser ? '/admin/admins/' + adminUser.id + '/edit' : '/admin/admins/add' %>" method="POST">
-            <div class="mb-3">
-              <label for="username" class="form-label">Username</label>
-              <input type="text" class="form-control" id="username" name="username" value="<%= adminUser ? adminUser.username : '' %>" <%= adminUser ? 'readonly' : '' %> required>
+    </header>
+    <main class="main-content" style="padding: 2.5rem 0; min-height: 80vh;">
+        <div class="container" style="max-width: 500px; margin: 0 auto;">
+            <div class="content-card" style="padding: 2.2rem 2rem 1.5rem 2rem; border-radius: 18px; box-shadow: var(--shadow-lg); background: var(--surface); border: 1px solid var(--border);">
+                <div class="card-header" style="margin-bottom: 1.5rem;">
+                    <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--primary-color); margin: 0;"><%= adminUser ? 'Edit Admin' : 'Add Admin' %></h2>
+                </div>
+                <div class="card-content">
+                    <% if (typeof error !== 'undefined' && error) { %>
+                        <div class="notification notification-error" style="margin-bottom: 1rem;"> <%= error %> </div>
+                    <% } %>
+                    <form action="<%= adminUser ? '/admin/admins/' + adminUser.id + '/edit' : '/admin/admins/add' %>" method="POST" autocomplete="off" style="display: flex; flex-direction: column; gap: 1.3rem;">
+                        <div class="form-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <label for="username" class="form-label" style="font-weight: 600; color: var(--text-primary);">Username</label>
+                            <input type="text" class="form-input" id="username" name="username" value="<%= adminUser ? adminUser.username : '' %>" <%= adminUser ? 'readonly' : '' %> required style="padding: 0.7rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-hover); color: var(--text-primary); font-size: 1rem;">
+                        </div>
+                        <div class="form-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <label for="email" class="form-label" style="font-weight: 600; color: var(--text-primary);">Email</label>
+                            <input type="email" class="form-input" id="email" name="email" value="<%= adminUser ? adminUser.email : '' %>" required style="padding: 0.7rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-hover); color: var(--text-primary); font-size: 1rem;">
+                        </div>
+                        <div class="form-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <label for="password" class="form-label" style="font-weight: 600; color: var(--text-primary);">Password <%= adminUser ? '(leave blank to keep current)' : '' %></label>
+                            <input type="password" class="form-input" id="password" name="password" <%= adminUser ? '' : 'required' %> style="padding: 0.7rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-hover); color: var(--text-primary); font-size: 1rem;">
+                        </div>
+                        <div class="form-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <label for="role" class="form-label" style="font-weight: 600; color: var(--text-primary);">Role</label>
+                            <select class="form-select" id="role" name="role" style="padding: 0.7rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-hover); color: var(--text-primary); font-size: 1rem;">
+                                <option value="admin" <%= adminUser && adminUser.role === 'admin' ? 'selected' : '' %>>Admin</option>
+                                <option value="super_admin" <%= adminUser && adminUser.role === 'super_admin' ? 'selected' : '' %>>Super Admin</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <label for="is_active" class="form-label" style="font-weight: 600; color: var(--text-primary);">Active</label>
+                            <select class="form-select" id="is_active" name="is_active" style="padding: 0.7rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-hover); color: var(--text-primary); font-size: 1rem;">
+                                <option value="true" <%= adminUser && adminUser.is_active ? 'selected' : '' %>>Active</option>
+                                <option value="false" <%= adminUser && !adminUser.is_active ? 'selected' : '' %>>Inactive</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; justify-content: flex-end; gap: 0.7rem; margin-top: 1.2rem;">
+                            <a href="/admin/admins" class="btn btn-secondary" style="min-width: 110px;">Cancel</a>
+                            <button type="submit" class="btn btn-primary" style="min-width: 110px;"><%= adminUser ? 'Save Changes' : 'Add Admin' %></button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <div class="mb-3">
-              <label for="email" class="form-label">Email</label>
-              <input type="email" class="form-control" id="email" name="email" value="<%= adminUser ? adminUser.email : '' %>" required>
-            </div>
-            <div class="mb-3">
-              <label for="password" class="form-label">Password <%= adminUser ? '(leave blank to keep current)' : '' %></label>
-              <input type="password" class="form-control" id="password" name="password" <%= adminUser ? '' : 'required' %>>
-            </div>
-            <div class="mb-3">
-              <label for="role" class="form-label">Role</label>
-              <select class="form-select" id="role" name="role">
-                <option value="admin" <%= adminUser && adminUser.role === 'admin' ? 'selected' : '' %>>Admin</option>
-                <option value="super_admin" <%= adminUser && adminUser.role === 'super_admin' ? 'selected' : '' %>>Super Admin</option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="is_active" class="form-label">Active</label>
-              <select class="form-select" id="is_active" name="is_active">
-                <option value="true" <%= adminUser && adminUser.is_active ? 'selected' : '' %>>Active</option>
-                <option value="false" <%= adminUser && !adminUser.is_active ? 'selected' : '' %>>Inactive</option>
-              </select>
-            </div>
-            <button type="submit" class="btn btn-primary"><%= adminUser ? 'Save Changes' : 'Add Admin' %></button>
-            <a href="/admin/admins" class="btn btn-secondary ms-2">Cancel</a>
-          </form>
         </div>
-      </div>
-    </div>
-  </div>
-</div> 
+    </main>
+    <script>
+        // Profile dropdown functionality
+        const profileDropdown = document.getElementById('profileDropdown');
+        const profileMenu = document.getElementById('profileMenu');
+        const dropdownParent = profileDropdown.closest('.dropdown');
+        profileDropdown.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdownParent.classList.toggle('active');
+        });
+        document.addEventListener('click', (e) => {
+            if (!profileMenu.contains(e.target) && !profileDropdown.contains(e.target)) {
+                dropdownParent.classList.remove('active');
+            }
+        });
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+        function updateThemeIcon(theme) {
+            const sunIcon = themeToggle.querySelector('i:nth-child(1)');
+            const moonIcon = themeToggle.querySelector('i:nth-child(2)');
+            sunIcon.style.display = theme === 'light' ? 'inline' : 'none';
+            moonIcon.style.display = theme === 'dark' ? 'inline' : 'none';
+        }
+    </script>
+</body>
+</html> 
