@@ -316,7 +316,10 @@ function attachToggleHandlers() {
           // Refresh the current page to show updated status
           const activeTab = document.querySelector('.tab-btn.active');
           if (activeTab && activeTab.dataset.tab === 'businesses-tab') {
-            fetchAndRenderBusinesses(1);
+            // Get current page from pagination or default to 1
+            const currentPageBtn = document.querySelector('#businesses-pagination button.active');
+            const currentPage = currentPageBtn ? parseInt(currentPageBtn.getAttribute('data-page')) : 1;
+            fetchAndRenderBusinesses(currentPage);
           }
         } else {
           alert('Failed to toggle business status');
