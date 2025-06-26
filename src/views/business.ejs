@@ -80,15 +80,6 @@
                     </div>
                     <div class="stat-value"><%= businessStats.pendingOrders %></div>
                 </div>
-                <div class="stat-card groups scroll-reveal">
-                    <div class="stat-header">
-                        <span class="stat-title">WhatsApp Groups</span>
-                        <div class="stat-icon">
-                            <i class="fas fa-comments"></i>
-                        </div>
-                    </div>
-                    <div class="stat-value"><%= businessGroups.length %></div>
-                </div>
             </div>
 
             <div class="business-page-layout">
@@ -118,6 +109,10 @@
                                 <div class="detail-value">
                                     <span class="status-badge active">Active</span>
                                 </div>
+                            </div>
+                            <div class="detail-row">
+                                <label class="detail-label">WhatsApp Groups</label>
+                                <div class="detail-value"><%= businessGroups.length %></div>
                             </div>
                         </div>
                         <div class="side-card-actions">
@@ -698,7 +693,7 @@
 /* Stats grid for business page */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem;
     margin-bottom: 2rem;
 }
@@ -753,11 +748,6 @@
 .stat-card.pending .stat-icon {
     background: rgba(245, 158, 11, 0.1);
     color: #f59e0b;
-}
-
-.stat-card.groups .stat-icon {
-    background: rgba(59, 130, 246, 0.1);
-    color: #3b82f6;
 }
 
 .stat-value {
@@ -884,6 +874,10 @@
     
     .main-content-area {
         margin-left: 0;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
     }
 }
 
