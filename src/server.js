@@ -1211,7 +1211,7 @@ async function startServer() {
     app.get('/admin/orders', requireAdmin, async (req, res) => {
       try {
         const { status, business, search } = req.query;
-        const orders = await AdminService.getAllOrdersWithDetails({ status, business, search });
+        const { orders, total } = await AdminService.getAllOrdersWithDetails({ status, business, search, limit: 1000, offset: 0 });
         // Get all businesses for the filter dropdown
         const businesses = await AdminService.getActiveBusinesses();
         res.render('admin/orders', {
