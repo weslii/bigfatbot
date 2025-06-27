@@ -258,8 +258,8 @@ async function fetchAndRenderOrders(page = 1, pageSize = 5) {
           <div class="dropdown">
             <button class="action-menu-btn"><i class="fas fa-ellipsis-h"></i></button>
             <div class="dropdown-content">
-              <a href="/admin/orders/${order.order_id}">View Details</a>
-              <a href="/admin/orders/${order.order_id}/edit">Edit</a>
+              <a href="/admin/orders/${order.id}">View Details</a>
+              <a href="/admin/orders/${order.id}/edit">Edit</a>
               <hr>
               <a href="#" class="danger">Delete Order</a>
             </div>
