@@ -104,16 +104,8 @@ class OrdersCharts {
   }
 
   getStatusData() {
-    if (this.data.statusCounts && this.data.statusCounts.length > 0) {
-      // Use the statusCounts from API
-      return {
-        labels: this.data.statusCounts.map(item => item.status.charAt(0).toUpperCase() + item.status.slice(1)),
-        values: this.data.statusCounts.map(item => Number(item.count))
-      };
-    }
-    
-    // Fallback to processing orders array
     const statusCount = {};
+    
     this.data.orders.forEach(order => {
       statusCount[order.status] = (statusCount[order.status] || 0) + 1;
     });
@@ -125,16 +117,8 @@ class OrdersCharts {
   }
 
   getBusinessData() {
-    if (this.data.ordersByBusiness && this.data.ordersByBusiness.length > 0) {
-      // Use the ordersByBusiness from API
-      return {
-        labels: this.data.ordersByBusiness.map(item => item.business_name),
-        values: this.data.ordersByBusiness.map(item => Number(item.count))
-      };
-    }
-    
-    // Fallback to processing orders array
     const businessCount = {};
+    
     this.data.orders.forEach(order => {
       businessCount[order.business_name] = (businessCount[order.business_name] || 0) + 1;
     });
@@ -146,18 +130,6 @@ class OrdersCharts {
   }
 
   getTrendData() {
-    if (this.data.recentTrends && this.data.recentTrends.length > 0) {
-      // Use the recentTrends from API
-      return {
-        labels: this.data.recentTrends.map(item => {
-          const d = new Date(item.date);
-          return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        }),
-        values: this.data.recentTrends.map(item => Number(item.count))
-      };
-    }
-    
-    // Fallback to processing orders array
     const last7Days = [];
     const today = new Date();
     
@@ -292,114 +264,34 @@ document.addEventListener('DOMContentLoaded', function() {
   if (filtersForm) {
     filtersForm.addEventListener('submit', async function(e) {
       e.preventDefault();
-      
-      // Show loading state
-      const submitBtn = this.querySelector('button[type="submit"]');
-      const originalText = submitBtn.innerHTML;
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-      
-      try {
-        const formData = new FormData(filtersForm);
-        const params = new URLSearchParams(formData);
-        
-        // Add pageSize and page if present in URL
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('pageSize')) params.set('pageSize', urlParams.get('pageSize'));
-        if (urlParams.get('page')) params.set('page', urlParams.get('page'));
-        
-        // Fetch filtered data from the new API endpoint
-        const res = await fetch('/api/orders/filtered?' + params.toString());
-        if (!res.ok) {
-          throw new Error('Failed to fetch filtered orders');
-        }
-        
-        const data = await res.json();
-        
-        // Update orders table
-        updateOrdersTable(data.orders, data.totalOrders);
-        
-        // Update charts with filtered data
-        if (window.ordersCharts) {
-          // Destroy existing charts
-          if (window.ordersCharts.charts.status) {
-            window.ordersCharts.charts.status.destroy();
-          }
-          if (window.ordersCharts.charts.business) {
-            window.ordersCharts.charts.business.destroy();
-          }
-          if (window.ordersCharts.charts.trend) {
-            window.ordersCharts.charts.trend.destroy();
-          }
-          
-          // Update chart data and reinitialize
-          window.ordersCharts.data = {
-            orders: data.orders,
-            statusCounts: data.chartData.statusCounts,
-            ordersByBusiness: data.chartData.ordersByBusiness,
-            recentTrends: data.chartData.recentTrends
-          };
-          window.ordersCharts.initialize();
-        }
-        
-        // Update URL without page reload
-        const newUrl = window.location.pathname + '?' + params.toString();
-        window.history.pushState({}, '', newUrl);
-        
-      } catch (error) {
-        console.error('Filter error:', error);
-        alert('Failed to apply filters. Please try again.');
-      } finally {
-        // Restore button state
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
+      const formData = new FormData(filtersForm);
+      const params = new URLSearchParams(formData);
+      // Optionally add pageSize and page if present in URL
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('pageSize')) params.set('pageSize', urlParams.get('pageSize'));
+      if (urlParams.get('page')) params.set('page', urlParams.get('page'));
+      // Fetch filtered HTML partial
+      const res = await fetch(window.location.pathname + '?' + params.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      if (!res.ok) return alert('Failed to fetch filtered orders');
+      const html = await res.text();
+      // Parse and update orders table and charts
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      // Replace orders table
+      const newTable = doc.querySelector('.table-container');
+      const oldTable = document.querySelector('.table-container');
+      if (newTable && oldTable) oldTable.replaceWith(newTable);
+      // Replace pagination
+      const newPagination = doc.querySelector('.pagination');
+      const oldPagination = document.querySelector('.pagination');
+      if (newPagination && oldPagination) oldPagination.replaceWith(newPagination);
+      // Replace charts data
+      if (window.ordersCharts && doc.getElementById('chartDataScript')) {
+        const newChartData = JSON.parse(doc.getElementById('chartDataScript').textContent);
+        window.ordersCharts.data = newChartData;
+        window.ordersCharts.initialize();
       }
     });
-  }
-
-  // Helper function to update orders table
-  function updateOrdersTable(orders, totalOrders) {
-    const tbody = document.querySelector('.data-table tbody');
-    if (!tbody) return;
-    
-    if (orders && orders.length > 0) {
-      tbody.innerHTML = orders.map(order => `
-        <tr>
-          <td><strong>${order.order_id}</strong></td>
-          <td><span class="business-badge">${order.business_name || 'N/A'}</span></td>
-          <td>${order.customer_name}</td>
-          <td>
-            <span class="status-badge ${order.status}">${order.status}</span>
-          </td>
-          <td>${new Date(order.created_at).toLocaleDateString()}</td>
-          <td>
-            <div class="btn-group">
-              <button class="btn btn-sm btn-outline" onclick="viewOrder('${order.id}')">
-                <i class="fas fa-eye"></i>
-              </button>
-              <button class="btn btn-sm btn-outline" onclick="editOrder('${order.id}')">
-                <i class="fas fa-edit"></i>
-              </button>
-            </div>
-          </td>
-        </tr>
-      `).join('');
-    } else {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="6" class="no-orders">
-            <i class="fas fa-box-open"></i>
-            <p>No orders found matching your criteria.</p>
-          </td>
-        </tr>
-      `;
-    }
-    
-    // Update orders count in header
-    const ordersCountElement = document.querySelector('.card-title');
-    if (ordersCountElement) {
-      ordersCountElement.innerHTML = `<i class="fas fa-box"></i> Orders (${totalOrders})`;
-    }
   }
 
   // Initialize real-time updates
