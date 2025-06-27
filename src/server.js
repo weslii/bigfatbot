@@ -447,6 +447,13 @@ async function startServer() {
           return res.redirect('/login');
         }
 
+        // Check if user is active
+        const user = await db.query('users').where('id', userId).select('is_active').first();
+        if (!user || !user.is_active) {
+          req.session.destroy();
+          return res.render('error', { error: 'Your account has been deactivated. Please contact support.' });
+        }
+
         // Updated query to get businesses with order counts
         const businessesWithOrders = await db.query('groups as g')
           .select(

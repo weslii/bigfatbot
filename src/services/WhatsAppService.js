@@ -278,6 +278,17 @@ class WhatsAppService {
         return;
       }
 
+      // Check if the user associated with this group is active
+      const user = await database.query('users')
+        .where('id', group.user_id)
+        .select('is_active')
+        .first();
+      
+      if (!user || !user.is_active) {
+        logger.info('Message from group with deactivated user:', message.from, 'User ID:', group.user_id);
+        return;
+      }
+
       // Get group info from database
       const groupInfo = group;
       

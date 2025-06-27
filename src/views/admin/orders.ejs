@@ -182,20 +182,20 @@
                                         <div class="modal-overlay" id="editOrderModal-<%= order.id %>" style="display: none;">
                                             <div class="modal-content">
                                                 <button class="close-modal" onclick="closeEditModal('<%= order.id %>')">&times;</button>
-                                                <div class="modal-header">
-                                                    <h3>Edit Order <%= order.order_id %></h3>
-                                                </div>
-                                                <div class="modal-body">
+                                                    <div class="modal-header">
+                                                        <h3>Edit Order <%= order.order_id %></h3>
+                                                    </div>
+                                                    <div class="modal-body">
                                                     <form action="/admin/orders/<%= order.id %>/edit" method="POST" class="edit-form">
                                                         <div class="form-grid">
                                                             <div class="form-group">
                                                                 <label for="status-<%= order.id %>">Status</label>
                                                                 <select id="status-<%= order.id %>" name="status" class="form-select">
-                                                                    <option value="pending" <%= order.status === 'pending' ? 'selected' : '' %>>Pending</option>
+                                                                <option value="pending" <%= order.status === 'pending' ? 'selected' : '' %>>Pending</option>
                                                                     <option value="processing" <%= order.status === 'processing' ? 'selected' : '' %>>Processing</option>
                                                                     <option value="delivered" <%= order.status === 'delivered' ? 'selected' : '' %>>Delivered</option>
-                                                                    <option value="cancelled" <%= order.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
-                                                                </select>
+                                                                <option value="cancelled" <%= order.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+                                                            </select>
                                                             </div>
                                                             
                                                             <div class="form-group full-width">
@@ -219,7 +219,7 @@
                                                             </button>
                                                         </div>
                                                     </form>
-                                                </div>
+                                                    </div>
                                             </div>
                                         </div>
                                     </td>
