@@ -149,7 +149,8 @@ class AdminService {
     try {
       const query = database.query('orders as o')
         .select(
-          'o.id as order_id',
+          'o.id',
+          'o.order_id',
           'o.status',
           'o.created_at',
           'o.updated_at',
@@ -237,20 +238,32 @@ class AdminService {
 
   static async getOrderById(orderId) {
     try {
-      return await database.query('orders as o')
+      const order = await database.query('orders as o')
         .select(
-          'o.id as order_id',
+          'o.id',
+          'o.order_id',
           'o.status',
           'o.created_at',
           'o.updated_at',
           'o.items',
           'o.customer_name',
-          'g.business_name',
-          'g.business_id'
+          'o.business_id'
         )
-        .leftJoin('groups as g', 'o.business_id', 'g.business_id')
         .where('o.id', orderId)
         .first();
+      
+      if (!order) return null;
+      
+      // Get business name separately to avoid JOIN duplicates
+      const business = await database.query('groups')
+        .select('business_name')
+        .where('business_id', order.business_id)
+        .first();
+      
+      return {
+        ...order,
+        business_name: business ? business.business_name : 'Unknown Business'
+      };
     } catch (error) {
       logger.error('Error getting order by ID:', error);
       throw error;
