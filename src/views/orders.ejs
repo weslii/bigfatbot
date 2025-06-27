@@ -213,7 +213,7 @@
                                 <% } %>
                                 <input type="hidden" name="page" value="<%= page - 1 %>">
                                 <button type="submit" class="pagination-btn <%= page <= 1 ? 'disabled' : '' %>" <%= page <= 1 ? 'disabled' : '' %>>
-                                    <i class="fas fa-chevron-left"></i>
+                                <i class="fas fa-chevron-left"></i>
                                 </button>
                             </form>
                             <% 
@@ -269,7 +269,7 @@
                                 <% } %>
                                 <input type="hidden" name="page" value="<%= page + 1 %>">
                                 <button type="submit" class="pagination-btn <%= page >= totalPages ? 'disabled' : '' %>" <%= page >= totalPages ? 'disabled' : '' %>>
-                                    <i class="fas fa-chevron-right"></i>
+                                <i class="fas fa-chevron-right"></i>
                                 </button>
                             </form>
           </nav>
@@ -396,8 +396,8 @@
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
-                const order = await response.json();
-                
+      const order = await response.json();
+      
                 let itemsHtml = 'No items listed.';
                 if (order.items) {
                     // Handle items whether it's a JSON string or array
@@ -417,20 +417,20 @@
 
                 modalBody.innerHTML = `
                     <div class="order-details">
-                        <h4>Order ID: ${order.order_id}</h4>
+                    <h4>Order ID: ${order.order_id}</h4>
                         <p><strong>Business:</strong> ${order.business_name || 'N/A'}</p>
                         <p><strong>Customer Name:</strong> ${order.customer_name || 'N/A'}</p>
                         <p><strong>Customer Phone:</strong> ${order.customer_phone || 'N/A'}</p>
                         <p><strong>Delivery Address:</strong> ${order.address || 'N/A'}</p>
-                        <p><strong>Status:</strong> <span class="status-badge ${order.status}">${order.status}</span></p>
+                    <p><strong>Status:</strong> <span class="status-badge ${order.status}">${order.status}</span></p>
                         <p><strong>Delivery Date:</strong> ${order.delivery_date ? new Date(order.delivery_date).toLocaleDateString() : 'Not set'}</p>
                         <p><strong>Delivery Person:</strong> ${order.delivery_person || 'Not assigned'}</p>
-                        <hr>
-                        <h5>Items</h5>
-                        ${itemsHtml}
-                        <hr>
+                    <hr>
+                    <h5>Items</h5>
+                    ${itemsHtml}
+                    <hr>
                         ${order.notes ? `<p><strong>Notes:</strong> ${order.notes}</p><hr>` : ''}
-                        <p><strong>Created:</strong> ${new Date(order.created_at).toLocaleString()}</p>
+                    <p><strong>Created:</strong> ${new Date(order.created_at).toLocaleString()}</p>
                         ${order.updated_at ? `<p><strong>Last Updated:</strong> ${new Date(order.updated_at).toLocaleString()}</p>` : ''}
                         ${order.updated_by ? `<p><strong>Updated By:</strong> ${order.updated_by}</p>` : ''}
                         <div class="btn-group" style="margin-top: 1rem;">
@@ -439,7 +439,7 @@
                         </div>
                     </div>
                 `;
-            } catch (error) {
+    } catch (error) {
                 console.error('Error loading order:', error);
                 modalBody.innerHTML = `<p style="color: var(--danger-color)">Failed to load order details: ${error.message}</p>`;
             }
@@ -621,6 +621,6 @@
         window.addEventListener('resize', () => {
             exportMenu.style.display = 'none';
         });
-    </script>
+</script>
 </body>
-</html>
+</html> 

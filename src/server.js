@@ -1716,45 +1716,163 @@ async function startServer() {
 
     // Helper function to generate PDF from orders
     function generateOrdersPDF(orders, res, businessName = null) {
-      const doc = new PDFDocument({ margin: 30, size: 'A4' });
+      const doc = new PDFDocument({ 
+        margin: 30, 
+        size: 'A4',
+        layout: 'portrait'
+      });
+      
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="orders${businessName ? '-' + businessName.replace(/\s+/g, '_') : ''}.pdf"`);
       doc.pipe(res);
 
-      doc.fontSize(18).text(businessName ? `Orders for ${businessName}` : 'Orders', { align: 'center' });
-      doc.moveDown();
-
-      // Table headers
-      doc.fontSize(11).font('Helvetica-Bold');
-      const headers = [
-        'Order ID', 'Business', 'Customer', 'Phone', 'Address', 'Items', 'Status', 'Delivery Date', 'Notes', 'Created At'
-      ];
-      headers.forEach((header, i) => {
-        doc.text(header, { continued: i < headers.length - 1, underline: true });
-      });
+      // Header with styling
+      doc.rect(0, 0, doc.page.width, 80).fill('#2563eb');
+      doc.fontSize(24).fillColor('white').text(businessName ? `Orders Report - ${businessName}` : 'Orders Report', 30, 25, { align: 'center' });
+      doc.fontSize(12).text(`Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`, 30, 55, { align: 'center' });
+      
+      // Reset colors
+      doc.fillColor('black');
+      
+      // Summary section
+      doc.moveDown(2);
+      doc.fontSize(16).font('Helvetica-Bold').text('Summary', { underline: true });
       doc.moveDown(0.5);
-      doc.font('Helvetica');
-
-      // Table rows
-      orders.forEach(order => {
-        const row = [
-          order.order_id || '',
-          order.business_name || '',
-          order.customer_name || '',
-          order.customer_phone || '',
-          order.address || '',
-          (typeof order.items === 'string' ? order.items : JSON.stringify(order.items)),
-          order.status || '',
-          order.delivery_date ? (typeof order.delivery_date === 'string' ? order.delivery_date : new Date(order.delivery_date).toLocaleDateString()) : '',
-          order.notes || '',
-          order.created_at ? (typeof order.created_at === 'string' ? order.created_at : new Date(order.created_at).toLocaleString()) : ''
-        ];
-        row.forEach((cell, i) => {
-          doc.text(cell, { continued: i < row.length - 1 });
-        });
-        doc.moveDown(0.5);
+      
+      const totalOrders = orders.length;
+      const statusCounts = orders.reduce((acc, order) => {
+        acc[order.status] = (acc[order.status] || 0) + 1;
+        return acc;
+      }, {});
+      
+      doc.fontSize(12).font('Helvetica');
+      doc.text(`Total Orders: ${totalOrders}`, { continued: true });
+      doc.text(`  |  `, { continued: true });
+      doc.text(`Pending: ${statusCounts.pending || 0}`, { continued: true });
+      doc.text(`  |  `, { continued: true });
+      doc.text(`Delivered: ${statusCounts.delivered || 0}`, { continued: true });
+      doc.text(`  |  `, { continued: true });
+      doc.text(`Cancelled: ${statusCounts.cancelled || 0}`);
+      
+      // Status distribution chart (simple bar chart)
+      doc.moveDown(1);
+      doc.fontSize(14).font('Helvetica-Bold').text('Status Distribution', { underline: true });
+      doc.moveDown(0.5);
+      
+      const chartWidth = 400;
+      const chartHeight = 100;
+      const chartX = 50;
+      const chartY = doc.y;
+      
+      // Draw chart background
+      doc.rect(chartX, chartY, chartWidth, chartHeight).stroke('#e5e7eb');
+      
+      // Draw bars for each status
+      const statuses = Object.keys(statusCounts);
+      const barWidth = chartWidth / statuses.length - 10;
+      const maxCount = Math.max(...Object.values(statusCounts));
+      
+      statuses.forEach((status, index) => {
+        const barHeight = (statusCounts[status] / maxCount) * (chartHeight - 20);
+        const barX = chartX + (index * (barWidth + 10)) + 5;
+        const barY = chartY + chartHeight - barHeight - 10;
+        
+        // Color coding for status
+        let color = '#6b7280';
+        if (status === 'delivered') color = '#10b981';
+        else if (status === 'pending') color = '#f59e0b';
+        else if (status === 'cancelled') color = '#ef4444';
+        
+        doc.rect(barX, barY, barWidth, barHeight).fill(color);
+        doc.fontSize(10).fillColor('white').text(statusCounts[status], barX + barWidth/2 - 10, barY + barHeight/2 - 5);
+        doc.fontSize(8).text(status, barX + barWidth/2 - 15, barY + barHeight + 5);
       });
-
+      
+      doc.fillColor('black');
+      doc.moveDown(3);
+      
+      // Orders table
+      doc.fontSize(16).font('Helvetica-Bold').text('Order Details', { underline: true });
+      doc.moveDown(0.5);
+      
+      if (orders.length === 0) {
+        doc.fontSize(12).font('Helvetica').text('No orders found for the selected criteria.');
+        doc.end();
+        return;
+      }
+      
+      // Table styling
+      const tableTop = doc.y;
+      const tableLeft = 30;
+      const tableWidth = doc.page.width - 60;
+      const colWidths = [80, 100, 80, 80, 80, 60, 80, 80]; // Adjusted column widths
+      const headers = ['Order ID', 'Customer', 'Phone', 'Business', 'Status', 'Items', 'Delivery Date', 'Created'];
+      
+      // Draw table header
+      doc.rect(tableLeft, tableTop, tableWidth, 25).fill('#f3f4f6');
+      doc.fontSize(10).font('Helvetica-Bold').fillColor('#374151');
+      
+      let currentX = tableLeft + 5;
+      headers.forEach((header, i) => {
+        doc.text(header, currentX, tableTop + 8);
+        currentX += colWidths[i];
+      });
+      
+      // Draw table rows
+      doc.fontSize(9).font('Helvetica').fillColor('black');
+      let currentY = tableTop + 25;
+      
+      orders.forEach((order, index) => {
+        // Alternate row colors
+        if (index % 2 === 0) {
+          doc.rect(tableLeft, currentY, tableWidth, 20).fill('#f9fafb');
+        }
+        
+        // Status color coding
+        let statusColor = '#6b7280';
+        if (order.status === 'delivered') statusColor = '#10b981';
+        else if (order.status === 'pending') statusColor = '#f59e0b';
+        else if (order.status === 'cancelled') statusColor = '#ef4444';
+        
+        const rowData = [
+          order.order_id || 'N/A',
+          (order.customer_name || 'N/A').substring(0, 15),
+          (order.customer_phone || 'N/A').substring(0, 12),
+          (order.business_name || 'N/A').substring(0, 15),
+          order.status || 'N/A',
+          (typeof order.items === 'string' ? order.items : JSON.stringify(order.items)).substring(0, 10) + '...',
+          order.delivery_date ? new Date(order.delivery_date).toLocaleDateString() : 'N/A',
+          order.created_at ? new Date(order.created_at).toLocaleDateString() : 'N/A'
+        ];
+        
+        currentX = tableLeft + 5;
+        rowData.forEach((cell, i) => {
+          if (i === 4) { // Status column
+            doc.fillColor(statusColor);
+          } else {
+            doc.fillColor('black');
+          }
+          doc.text(cell, currentX, currentY + 6);
+          currentX += colWidths[i];
+        });
+        
+        currentY += 20;
+        
+        // Add new page if needed
+        if (currentY > doc.page.height - 100) {
+          doc.addPage();
+          currentY = 30;
+        }
+      });
+      
+      // Footer
+      doc.fontSize(10).fillColor('#6b7280').text(
+        `Page ${doc.bufferedPageRange().count} of ${doc.bufferedPageRange().count}`,
+        30,
+        doc.page.height - 50,
+        { align: 'center' }
+      );
+      
       doc.end();
     }
 
@@ -1776,10 +1894,11 @@ async function startServer() {
         if (businessIds.length === 0) {
           return res.status(400).json({ error: 'No businesses found for this user' });
         }
-        // Build query
+        // Build query with DISTINCT to prevent duplication
         let query = db.query('orders as o')
           .join('groups as g', 'o.business_id', 'g.business_id')
           .whereIn('o.business_id', businessIds)
+          .distinct('o.id') // Prevent duplication
           .select(
             'o.*',
             'g.business_name'
@@ -1819,6 +1938,112 @@ async function startServer() {
         }
       } catch (error) {
         logger.error('Export error:', error);
+        res.status(500).json({ error: 'Failed to export orders: ' + error.message });
+      }
+    });
+
+    // Admin businesses export functionality
+    app.get('/admin/api/export/businesses', requireAdmin, async (req, res) => {
+      try {
+        const { format = 'csv', search, status } = req.query;
+        
+        // Build query for businesses
+        let query = db.query('groups as g')
+          .select(
+            'g.business_id', 
+            'g.business_name',
+            db.query.raw('MAX(g.is_active::int) = 1 as is_active'),
+            db.query.raw('MIN(u.full_name) as owner_name'),
+            db.query.raw('MIN(u.email) as owner_email'),
+            db.query.raw('COUNT(DISTINCT o.id) as total_orders'),
+            db.query.raw('MIN(g.created_at) as created_at')
+          )
+          .leftJoin('users as u', 'g.user_id', 'u.id')
+          .leftJoin('orders as o', 'g.business_id', 'o.business_id')
+          .groupBy('g.business_id', 'g.business_name');
+        
+        // Apply filters
+        if (search) {
+          query = query.where(function() {
+            this.where('g.business_name', 'like', `%${search}%`)
+              .orWhere('u.full_name', 'like', `%${search}%`)
+              .orWhere('u.email', 'like', `%${search}%`);
+          });
+        }
+        if (status) {
+          if (status === 'active') {
+            query = query.having(db.query.raw('MAX(g.is_active::int) = 1'));
+          } else if (status === 'inactive') {
+            query = query.having(db.query.raw('MAX(g.is_active::int) = 0'));
+          }
+        }
+        
+        const businesses = await query.orderBy('g.business_name');
+        
+        if (format === 'json') {
+          res.setHeader('Content-Type', 'application/json');
+          res.setHeader('Content-Disposition', 'attachment; filename="businesses.json"');
+          res.json(businesses);
+        } else if (format === 'pdf') {
+          generateBusinessesPDF(businesses, res);
+        } else {
+          // CSV format
+          const csv = generateBusinessesCSV(businesses);
+          res.setHeader('Content-Type', 'text/csv');
+          res.setHeader('Content-Disposition', 'attachment; filename="businesses.csv"');
+          res.send(csv);
+        }
+      } catch (error) {
+        logger.error('Businesses export error:', error);
+        res.status(500).json({ error: 'Failed to export businesses: ' + error.message });
+      }
+    });
+
+    // Admin orders export functionality
+    app.get('/admin/api/export/orders', requireAdmin, async (req, res) => {
+      try {
+        const { format = 'csv', status, business, search } = req.query;
+        
+        // Build query for orders with business details
+        let query = db.query('orders as o')
+          .join('groups as g', 'o.business_id', 'g.business_id')
+          .select(
+            'o.*',
+            'g.business_name'
+          );
+        
+        // Apply filters
+        if (status) {
+          query = query.where('o.status', status);
+        }
+        if (business) {
+          query = query.where('o.business_id', business);
+        }
+        if (search) {
+          query = query.where(function() {
+            this.where('o.customer_name', 'like', `%${search}%`)
+              .orWhere('o.order_id', 'like', `%${search}%`)
+              .orWhere('g.business_name', 'like', `%${search}%`);
+          });
+        }
+        
+        const orders = await query.orderBy('o.created_at', 'desc');
+        
+        if (format === 'json') {
+          res.setHeader('Content-Type', 'application/json');
+          res.setHeader('Content-Disposition', 'attachment; filename="orders.json"');
+          res.json(orders);
+        } else if (format === 'pdf') {
+          generateOrdersPDF(orders, res);
+        } else {
+          // CSV format
+          const csv = generateOrdersCSV(orders);
+          res.setHeader('Content-Type', 'text/csv');
+          res.setHeader('Content-Disposition', 'attachment; filename="orders.csv"');
+          res.send(csv);
+        }
+      } catch (error) {
+        logger.error('Admin orders export error:', error);
         res.status(500).json({ error: 'Failed to export orders: ' + error.message });
       }
     });
@@ -2059,5 +2284,189 @@ async function startServer() {
 }
 
 startServer();
+
+// Helper function to generate CSV from businesses
+function generateBusinessesCSV(businesses) {
+  const headers = ['Business ID', 'Business Name', 'Owner Name', 'Owner Email', 'Status', 'Total Orders', 'Created At'];
+  const csvRows = [headers.join(',')];
+  
+  businesses.forEach(business => {
+    const row = [
+      business.business_id || '',
+      `"${(business.business_name || '').replace(/"/g, '""')}"`,
+      `"${(business.owner_name || '').replace(/"/g, '""')}"`,
+      business.owner_email || '',
+      business.is_active ? 'Active' : 'Inactive',
+      business.total_orders || 0,
+      business.created_at ? new Date(business.created_at).toLocaleString() : ''
+    ];
+    csvRows.push(row.join(','));
+  });
+  
+  return csvRows.join('\n');
+}
+
+// Helper function to generate PDF from businesses
+function generateBusinessesPDF(businesses, res) {
+  const doc = new PDFDocument({ 
+    margin: 30, 
+    size: 'A4',
+    layout: 'portrait'
+  });
+  
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', 'attachment; filename="businesses.pdf"');
+  doc.pipe(res);
+
+  // Header with styling
+  doc.rect(0, 0, doc.page.width, 80).fill('#2563eb');
+  doc.fontSize(24).fillColor('white').text('Businesses Report', 30, 25, { align: 'center' });
+  doc.fontSize(12).text(`Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`, 30, 55, { align: 'center' });
+  
+  // Reset colors
+  doc.fillColor('black');
+  
+  // Summary section
+  doc.moveDown(2);
+  doc.fontSize(16).font('Helvetica-Bold').text('Summary', { underline: true });
+  doc.moveDown(0.5);
+  
+  const totalBusinesses = businesses.length;
+  const activeBusinesses = businesses.filter(b => b.is_active).length;
+  const totalOrders = businesses.reduce((sum, b) => sum + (parseInt(b.total_orders) || 0), 0);
+  
+  doc.fontSize(12).font('Helvetica');
+  doc.text(`Total Businesses: ${totalBusinesses}`, { continued: true });
+  doc.text(`  |  `, { continued: true });
+  doc.text(`Active: ${activeBusinesses}`, { continued: true });
+  doc.text(`  |  `, { continued: true });
+  doc.text(`Inactive: ${totalBusinesses - activeBusinesses}`, { continued: true });
+  doc.text(`  |  `, { continued: true });
+  doc.text(`Total Orders: ${totalOrders}`);
+  
+  // Status distribution chart
+  doc.moveDown(1);
+  doc.fontSize(14).font('Helvetica-Bold').text('Business Status Distribution', { underline: true });
+  doc.moveDown(0.5);
+  
+  const chartWidth = 300;
+  const chartHeight = 100;
+  const chartX = 50;
+  const chartY = doc.y;
+  
+  // Draw chart background
+  doc.rect(chartX, chartY, chartWidth, chartHeight).stroke('#e5e7eb');
+  
+  // Draw pie chart segments
+  const centerX = chartX + chartWidth / 2;
+  const centerY = chartY + chartHeight / 2;
+  const radius = Math.min(chartWidth, chartHeight) / 2 - 20;
+  
+  if (totalBusinesses > 0) {
+    const activeAngle = (activeBusinesses / totalBusinesses) * 2 * Math.PI;
+    const inactiveAngle = ((totalBusinesses - activeBusinesses) / totalBusinesses) * 2 * Math.PI;
+    
+    // Active businesses (green)
+    if (activeBusinesses > 0) {
+      doc.arc(centerX, centerY, radius, 0, activeAngle).fill('#10b981');
+    }
+    
+    // Inactive businesses (red)
+    if (totalBusinesses - activeBusinesses > 0) {
+      doc.arc(centerX, centerY, radius, activeAngle, activeAngle + inactiveAngle).fill('#ef4444');
+    }
+    
+    // Legend
+    doc.fontSize(10).fillColor('#10b981');
+    doc.rect(chartX + chartWidth + 20, chartY, 15, 15).fill('#10b981');
+    doc.fillColor('black').text(`Active (${activeBusinesses})`, chartX + chartWidth + 40, chartY + 2);
+    
+    doc.fillColor('#ef4444');
+    doc.rect(chartX + chartWidth + 20, chartY + 25, 15, 15).fill('#ef4444');
+    doc.fillColor('black').text(`Inactive (${totalBusinesses - activeBusinesses})`, chartX + chartWidth + 40, chartY + 27);
+  }
+  
+  doc.moveDown(3);
+  
+  // Businesses table
+  doc.fontSize(16).font('Helvetica-Bold').text('Business Details', { underline: true });
+  doc.moveDown(0.5);
+  
+  if (businesses.length === 0) {
+    doc.fontSize(12).font('Helvetica').text('No businesses found for the selected criteria.');
+    doc.end();
+    return;
+  }
+  
+  // Table styling
+  const tableTop = doc.y;
+  const tableLeft = 30;
+  const tableWidth = doc.page.width - 60;
+  const colWidths = [80, 120, 100, 120, 60, 80, 80]; // Adjusted column widths
+  const headers = ['Business ID', 'Business Name', 'Owner', 'Email', 'Status', 'Orders', 'Created'];
+  
+  // Draw table header
+  doc.rect(tableLeft, tableTop, tableWidth, 25).fill('#f3f4f6');
+  doc.fontSize(10).font('Helvetica-Bold').fillColor('#374151');
+  
+  let currentX = tableLeft + 5;
+  headers.forEach((header, i) => {
+    doc.text(header, currentX, tableTop + 8);
+    currentX += colWidths[i];
+  });
+  
+  // Draw table rows
+  doc.fontSize(9).font('Helvetica').fillColor('black');
+  let currentY = tableTop + 25;
+  
+  businesses.forEach((business, index) => {
+    // Alternate row colors
+    if (index % 2 === 0) {
+      doc.rect(tableLeft, currentY, tableWidth, 20).fill('#f9fafb');
+    }
+    
+    // Status color coding
+    const statusColor = business.is_active ? '#10b981' : '#ef4444';
+    
+    const rowData = [
+      business.business_id || 'N/A',
+      (business.business_name || 'N/A').substring(0, 20),
+      (business.owner_name || 'N/A').substring(0, 15),
+      (business.owner_email || 'N/A').substring(0, 20),
+      business.is_active ? 'Active' : 'Inactive',
+      business.total_orders || 0,
+      business.created_at ? new Date(business.created_at).toLocaleDateString() : 'N/A'
+    ];
+    
+    currentX = tableLeft + 5;
+    rowData.forEach((cell, i) => {
+      if (i === 4) { // Status column
+        doc.fillColor(statusColor);
+      } else {
+        doc.fillColor('black');
+      }
+      doc.text(cell, currentX, currentY + 6);
+      currentX += colWidths[i];
+    });
+    
+    currentY += 20;
+    
+    // Add new page if needed
+    if (currentY > doc.page.height - 100) {
+      doc.addPage();
+      currentY = 30;
+    }
+  });
+  
+  // Footer
+  doc.fontSize(10).fillColor('#6b7280').text(
+    `Page ${doc.bufferedPageRange().count} of ${doc.bufferedPageRange().count}`,
+    30,
+    doc.page.height - 50,
+    { align: 'center' }
+  );
+  
+  doc.end();
+}
 
 module.exports = app;

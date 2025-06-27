@@ -120,11 +120,17 @@ window.addEventListener('DOMContentLoaded', function() {
     exportBtn.addEventListener('click', function() {
       const activeTab = document.querySelector('.tab-btn.active');
       if (activeTab && activeTab.dataset.tab === 'businesses-tab') {
-        // Export businesses
-        window.open('/admin/api/businesses?export=true', '_blank');
+        // Export businesses - show format options
+        const format = prompt('Choose export format (csv, json, pdf):', 'csv');
+        if (format && ['csv', 'json', 'pdf'].includes(format.toLowerCase())) {
+          window.open(`/admin/api/export/businesses?format=${format.toLowerCase()}`, '_blank');
+        }
       } else if (activeTab && activeTab.dataset.tab === 'orders-tab') {
-        // Export orders
-        window.open('/admin/api/orders?export=true', '_blank');
+        // Export orders - show format options
+        const format = prompt('Choose export format (csv, json, pdf):', 'csv');
+        if (format && ['csv', 'json', 'pdf'].includes(format.toLowerCase())) {
+          window.open(`/admin/api/export/orders?format=${format.toLowerCase()}`, '_blank');
+        }
       }
     });
   }
