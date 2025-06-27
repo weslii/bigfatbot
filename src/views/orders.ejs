@@ -848,6 +848,13 @@
                     }
                 });
             }, 100);
+
+            // Auto-open edit modal if ?edit=ORDER_ID is present
+            const params = new URLSearchParams(window.location.search);
+            const editId = params.get('edit');
+            if (editId) {
+                editOrder(editId);
+            }
         });
 
         // Fallback: If DOMContentLoaded doesn't fire, try on window load

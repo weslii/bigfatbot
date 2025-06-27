@@ -570,13 +570,26 @@ async function startServer() {
           .whereIn('o.business_id', businessIds)
           .groupBy('o.business_id');
         
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        const recentTrends = await baseChartQuery.clone()
+        // Always return a 7-day range for trends
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        const sevenDaysAgo = new Date(today);
+        sevenDaysAgo.setDate(today.getDate() - 6);
+        const trendRaw = await baseChartQuery.clone()
           .where('o.created_at', '>=', sevenDaysAgo)
           .groupByRaw('date(o.created_at)')
           .orderByRaw('date(o.created_at)')
           .select(db.query.raw('date(o.created_at) as date'), db.query.raw('count(DISTINCT o.id) as count'));
+        // Fill in missing days with 0
+        const trendMap = {};
+        trendRaw.forEach(row => { trendMap[row.date.toISOString().slice(0,10)] = Number(row.count); });
+        const recentTrends = [];
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(sevenDaysAgo);
+          d.setDate(sevenDaysAgo.getDate() + i);
+          const key = d.toISOString().slice(0,10);
+          recentTrends.push({ date: key, count: trendMap[key] || 0 });
+        }
 
         res.render('orders', {
           title: 'Orders Management',
