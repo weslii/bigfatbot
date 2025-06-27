@@ -904,11 +904,17 @@
                     
                     // Fetch filtered data from the API endpoint
                     const res = await fetch('/api/orders/filtered?' + params.toString());
+                    console.log('Filter response status:', res.status);
+                    console.log('Filter response URL:', res.url);
+                    
                     if (!res.ok) {
-                        throw new Error('Failed to fetch filtered orders');
+                        const errorText = await res.text();
+                        console.error('Filter error response:', errorText);
+                        throw new Error(`Server error: ${res.status} - ${errorText}`);
                     }
                     
                     const data = await res.json();
+                    console.log('Filter data received:', data);
                     
                     // Update orders table
                     updateOrdersTable(data.orders, data.totalOrders);

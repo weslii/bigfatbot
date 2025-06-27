@@ -2288,9 +2288,14 @@ async function startServer() {
       try {
         const { userId, business, status, search, page = 1, pageSize = 10 } = req.query;
         
+        console.log('Filter API called with params:', { userId, business, status, search, page, pageSize });
+        
         if (!userId) {
+          console.log('No userId provided');
           return res.status(400).json({ error: 'User ID is required' });
         }
+
+        console.log('Building query conditions...');
 
         // Build query conditions
         let conditions = ['o.user_id = ?'];
@@ -2312,6 +2317,8 @@ async function startServer() {
         }
 
         const whereClause = conditions.join(' AND ');
+        console.log('Where clause:', whereClause);
+        console.log('Query params:', params);
 
         // Get filtered orders
         const ordersQuery = `
@@ -2323,8 +2330,10 @@ async function startServer() {
           LIMIT ? OFFSET ?
         `;
         
+        console.log('Executing orders query...');
         const offset = (page - 1) * pageSize;
         const orders = await db.raw(ordersQuery, [...params, pageSize, offset]);
+        console.log('Orders query completed, rows:', orders.rows.length);
 
         // Get total count
         const countQuery = `
