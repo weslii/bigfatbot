@@ -286,26 +286,6 @@ app.get('/admin/preview-dashboard', requireAdmin, async (req, res) => {
     const botMetrics = await db.query('bot_metrics').orderBy('created_at', 'desc').first();
     console.log('Bot metrics from database:', botMetrics);
     
-    // If no bot metrics exist, create some sample data
-    if (!botMetrics) {
-      console.log('No bot metrics found, creating sample data...');
-      await db.query('bot_metrics').insert({
-        total_messages: 150,
-        successful_messages: 142,
-        failed_messages: 8,
-        response_times: JSON.stringify([1200, 800, 1500, 900, 1100, 1300, 700, 1000, 1400, 950]),
-        daily_counts: JSON.stringify({
-          '2024-01-15': 25,
-          '2024-01-16': 30,
-          '2024-01-17': 28,
-          '2024-01-18': 35,
-          '2024-01-19': 32
-        }),
-        last_activity: new Date().toISOString()
-      });
-      console.log('Sample bot metrics created');
-    }
-    
     // Get recent activity
     const recentActivity = await AdminService.getRecentActivity(5);
     console.log('Recent activity:', recentActivity);
@@ -1208,26 +1188,6 @@ async function startServer() {
         // Check if there are any bot metrics in the database
         const botMetrics = await db.query('bot_metrics').orderBy('created_at', 'desc').first();
         console.log('Bot metrics from database:', botMetrics);
-        
-        // If no bot metrics exist, create some sample data
-        if (!botMetrics) {
-          console.log('No bot metrics found, creating sample data...');
-          await db.query('bot_metrics').insert({
-            total_messages: 150,
-            successful_messages: 142,
-            failed_messages: 8,
-            response_times: JSON.stringify([1200, 800, 1500, 900, 1100, 1300, 700, 1000, 1400, 950]),
-            daily_counts: JSON.stringify({
-              '2024-01-15': 25,
-              '2024-01-16': 30,
-              '2024-01-17': 28,
-              '2024-01-18': 35,
-              '2024-01-19': 32
-            }),
-            last_activity: new Date().toISOString()
-          });
-          console.log('Sample bot metrics created');
-        }
         
         // Get recent activity
         const recentActivity = await AdminService.getRecentActivity(5);
