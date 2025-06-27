@@ -680,6 +680,20 @@
             }
         }
 
+        // Parse chart data from backend
+        const chartData = <%- JSON.stringify(chartData) %>;
+        // Prepare status chart data
+        const statusLabels = ['pending', 'processing', 'delivered', 'cancelled'];
+        const statusCountsMap = {};
+        (chartData.statusCounts || []).forEach(row => { statusCountsMap[row.status] = Number(row.count); });
+        const statusData = statusLabels.map(label => statusCountsMap[label] || 0);
+        // Prepare business chart data (always all businesses)
+        const businessLabels = (chartData.ordersByBusiness || []).map(row => row.business_name);
+        const businessData = (chartData.ordersByBusiness || []).map(row => Number(row.count));
+        // Prepare trend chart data (filtered)
+        const trendLabels = (chartData.recentTrends || []).map(row => row.date);
+        const trendData = (chartData.recentTrends || []).map(row => Number(row.count));
+
         // Chart initialization
         function initCharts() {
             // Status Distribution Chart
@@ -688,9 +702,9 @@
                 window.statusChart = new Chart(statusCtx, {
                     type: 'doughnut',
                     data: {
-                        labels: ['Pending', 'Processing', 'Delivered', 'Cancelled'],
+                        labels: statusLabels.map(l => l.charAt(0).toUpperCase() + l.slice(1)),
                         datasets: [{
-                            data: [12, 19, 8, 5],
+                            data: statusData,
                             backgroundColor: [
                                 'rgba(245, 158, 11, 0.8)',
                                 'rgba(59, 130, 246, 0.8)',
@@ -732,16 +746,16 @@
                 });
             }
 
-            // Business Performance Chart
+            // Business Performance Chart (not filtered)
             const businessCtx = document.getElementById('businessChart');
             if (businessCtx) {
                 window.businessChart = new Chart(businessCtx, {
                     type: 'bar',
                     data: {
-                        labels: ['Business A', 'Business B', 'Business C', 'Business D'],
+                        labels: businessLabels,
                         datasets: [{
                             label: 'Orders',
-                            data: [65, 59, 80, 81],
+                            data: businessData,
                             backgroundColor: 'rgba(16, 185, 129, 0.8)',
                             borderColor: 'rgba(16, 185, 129, 1)',
                             borderWidth: 1
@@ -751,36 +765,23 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: {
-                                display: false
-                            },
+                            legend: { display: false },
                             title: {
                                 display: true,
                                 text: 'Orders by Business',
                                 color: getComputedStyle(document.documentElement).getPropertyValue('--text-primary'),
-                                font: {
-                                    size: 16,
-                                    weight: 'bold'
-                                }
+                                font: { size: 16, weight: 'bold' }
                             }
                         },
                         scales: {
                             y: {
                                 beginAtZero: true,
-                                ticks: {
-                                    color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary')
-                                },
-                                grid: {
-                                    color: getComputedStyle(document.documentElement).getPropertyValue('--border-color')
-                                }
+                                ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary') },
+                                grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--border-color') }
                             },
                             x: {
-                                ticks: {
-                                    color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary')
-                                },
-                                grid: {
-                                    color: getComputedStyle(document.documentElement).getPropertyValue('--border-color')
-                                }
+                                ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary') },
+                                grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--border-color') }
                             }
                         }
                     }
@@ -790,20 +791,13 @@
             // Trend Chart
             const trendCtx = document.getElementById('trendChart');
             if (trendCtx) {
-                const last7Days = [];
-                for (let i = 6; i >= 0; i--) {
-                    const date = new Date();
-                    date.setDate(date.getDate() - i);
-                    last7Days.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-                }
-
                 window.trendChart = new Chart(trendCtx, {
                     type: 'line',
                     data: {
-                        labels: last7Days,
+                        labels: trendLabels,
                         datasets: [{
                             label: 'Orders',
-                            data: [12, 19, 15, 25, 22, 30, 28],
+                            data: trendData,
                             borderColor: 'rgba(16, 185, 129, 1)',
                             backgroundColor: 'rgba(16, 185, 129, 0.1)',
                             borderWidth: 3,
@@ -815,36 +809,23 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: {
-                                display: false
-                            },
+                            legend: { display: false },
                             title: {
                                 display: true,
                                 text: 'Order Trends (Last 7 Days)',
                                 color: getComputedStyle(document.documentElement).getPropertyValue('--text-primary'),
-                                font: {
-                                    size: 16,
-                                    weight: 'bold'
-                                }
+                                font: { size: 16, weight: 'bold' }
                             }
                         },
                         scales: {
                             y: {
                                 beginAtZero: true,
-                                ticks: {
-                                    color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary')
-                                },
-                                grid: {
-                                    color: getComputedStyle(document.documentElement).getPropertyValue('--border-color')
-                                }
+                                ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary') },
+                                grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--border-color') }
                             },
                             x: {
-                                ticks: {
-                                    color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary')
-                                },
-                                grid: {
-                                    color: getComputedStyle(document.documentElement).getPropertyValue('--border-color')
-                                }
+                                ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary') },
+                                grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--border-color') }
                             }
                         }
                     }
