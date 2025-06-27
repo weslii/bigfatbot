@@ -164,6 +164,10 @@ class CacheService {
   async setOrderStats(userId, stats, ttl = 600) { // 10 minutes
     return await this.set(`stats:${userId}`, stats, ttl);
   }
+
+  async invalidateOrderStats(userId) {
+    return await this.del(`stats:${userId}`);
+  }
 }
 
 // Create singleton instance

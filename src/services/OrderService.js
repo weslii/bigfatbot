@@ -40,6 +40,20 @@ class OrderService {
       // Invalidate cache for this business
       await cacheService.invalidateBusinessOrders(businessId || orderData.business_id);
       
+      // Invalidate user's order stats cache
+      try {
+        const userBusinesses = await database.query('groups')
+          .select('user_id')
+          .where('business_id', businessId || orderData.business_id)
+          .groupBy('user_id');
+        
+        for (const business of userBusinesses) {
+          await cacheService.invalidateOrderStats(business.user_id);
+        }
+      } catch (cacheError) {
+        logger.warn('Failed to invalidate user order stats cache:', cacheError.message);
+      }
+      
       return order;
     } catch (error) {
       logger.error('Error creating order:', error);
@@ -72,6 +86,21 @@ class OrderService {
           updated_at: database.query.fn.now()
         })
         .returning('*');
+      
+      // Invalidate user's order stats cache
+      try {
+        const userBusinesses = await database.query('groups')
+          .select('user_id')
+          .where('business_id', businessId)
+          .groupBy('user_id');
+        
+        for (const business of userBusinesses) {
+          await cacheService.invalidateOrderStats(business.user_id);
+        }
+      } catch (cacheError) {
+        logger.warn('Failed to invalidate user order stats cache:', cacheError.message);
+      }
+      
       return result[0];
     } catch (error) {
       logger.error('Error updating order status:', error);
@@ -175,7 +204,8 @@ class OrderService {
         const emptyStats = {
           totalOrders: 0,
           activeOrders: 0,
-          completedOrders: 0
+          completedOrders: 0,
+          pendingOrders: 0
         };
         // Try to cache empty stats (with graceful fallback)
         try {
@@ -199,7 +229,8 @@ class OrderService {
       const result = {
         totalOrders: parseInt(stats.total_orders) || 0,
         activeOrders: parseInt(stats.active_orders) || 0,
-        completedOrders: parseInt(stats.completed_orders) || 0
+        completedOrders: parseInt(stats.completed_orders) || 0,
+        pendingOrders: parseInt(stats.active_orders) || 0
       };
 
       // Try to cache the result (with graceful fallback)
@@ -215,7 +246,8 @@ class OrderService {
       return {
         totalOrders: 0,
         activeOrders: 0,
-        completedOrders: 0
+        completedOrders: 0,
+        pendingOrders: 0
       };
     }
   }
@@ -235,12 +267,12 @@ class OrderService {
       }
 
       // Get recent orders across all user's businesses with business names
+      // Use the same approach as the orders page to avoid duplicates
       const orders = await database.query('orders as o')
         .select(
           'o.*',
-          'g.business_name'
+          database.query.raw('(SELECT business_name FROM groups WHERE business_id = o.business_id AND user_id = ? LIMIT 1) as business_name', [userId])
         )
-        .join('groups as g', 'o.business_id', 'g.business_id')
         .whereIn('o.business_id', businessIds)
         .orderBy('o.created_at', 'desc')
         .limit(limit);
