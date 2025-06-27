@@ -108,11 +108,6 @@
                                     <td style="white-space: nowrap;">
                                         <div style="display: flex; align-items: center; gap: 0.3rem;">
                                             <button type="button" class="btn btn-icon btn-edit" title="View Details" style="width: 2rem; height: 2rem; font-size: 1rem;" onclick="openViewModal('<%= order.id %>')"><i class="fas fa-eye"></i></button>
-                                            <% if (order.status !== 'completed') { %>
-                                                <form action="/admin/orders/<%= order.id %>/complete" method="POST" style="display:inline;">
-                                                    <button type="submit" class="btn btn-icon btn-edit" title="Mark as Completed" style="width: 2rem; height: 2rem; font-size: 1rem;"><i class="fas fa-check"></i></button>
-                                                </form>
-                                            <% } %>
                                             <button type="button" class="btn btn-icon btn-edit" title="Edit" style="width: 2rem; height: 2rem; font-size: 1rem;" onclick="openEditModal('<%= order.id %>')"><i class="fas fa-edit"></i></button>
                                             <form action="/admin/orders/<%= order.id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this order?');">
                                                 <button type="submit" class="btn btn-icon btn-delete" title="Delete" style="width: 2rem; height: 2rem; font-size: 1rem;"><i class="fas fa-trash"></i></button>
