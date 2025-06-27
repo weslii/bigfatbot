@@ -2283,6 +2283,144 @@ async function startServer() {
       }
     });
 
+    // AJAX endpoint for filtered orders and charts
+    app.get('/api/orders/filtered', async (req, res) => {
+      try {
+        const { userId, business, status, search, page = 1, pageSize = 10 } = req.query;
+        
+        if (!userId) {
+          return res.status(400).json({ error: 'User ID is required' });
+        }
+
+        // Build query conditions
+        let conditions = ['o.user_id = ?'];
+        let params = [userId];
+
+        if (business) {
+          conditions.push('o.business_id = ?');
+          params.push(business);
+        }
+
+        if (status) {
+          conditions.push('o.status = ?');
+          params.push(status);
+        }
+
+        if (search) {
+          conditions.push('(o.customer_name ILIKE ? OR o.order_id ILIKE ?)');
+          params.push(`%${search}%`, `%${search}%`);
+        }
+
+        const whereClause = conditions.join(' AND ');
+
+        // Get filtered orders
+        const ordersQuery = `
+          SELECT DISTINCT o.*, b.business_name 
+          FROM orders o 
+          LEFT JOIN businesses b ON o.business_id = b.business_id 
+          WHERE ${whereClause}
+          ORDER BY o.created_at DESC 
+          LIMIT ? OFFSET ?
+        `;
+        
+        const offset = (page - 1) * pageSize;
+        const orders = await db.raw(ordersQuery, [...params, pageSize, offset]);
+
+        // Get total count
+        const countQuery = `
+          SELECT COUNT(DISTINCT o.id) as total 
+          FROM orders o 
+          WHERE ${whereClause}
+        `;
+        const countResult = await db.raw(countQuery, params);
+        const totalOrders = countResult.rows[0].total;
+
+        // Get ALL businesses for the user (regardless of filters)
+        const businessesQuery = `
+          SELECT b.business_id, b.business_name, COALESCE(COUNT(o.id), 0) as order_count
+          FROM businesses b
+          LEFT JOIN orders o ON b.business_id = o.business_id AND o.user_id = ?
+          WHERE b.user_id = ?
+          GROUP BY b.business_id, b.business_name
+          ORDER BY b.business_name
+        `;
+        const businessesResult = await db.raw(businessesQuery, [userId, userId]);
+        
+        // Get chart data for filtered orders (status and trends only)
+        const chartDataQuery = `
+          SELECT 
+            o.status,
+            DATE(o.created_at) as date,
+            COUNT(DISTINCT o.id) as count
+          FROM orders o 
+          WHERE ${whereClause}
+          GROUP BY o.status, DATE(o.created_at)
+          ORDER BY date DESC
+        `;
+        
+        const chartDataResult = await db.raw(chartDataQuery, params);
+        
+        // Process chart data
+        const statusCounts = [];
+        const recentTrends = [];
+        
+        const statusMap = {};
+        const dateMap = {};
+        
+        chartDataResult.rows.forEach(row => {
+          // Status counts
+          if (!statusMap[row.status]) {
+            statusMap[row.status] = 0;
+          }
+          statusMap[row.status] += parseInt(row.count);
+          
+          // Date trends
+          if (!dateMap[row.date]) {
+            dateMap[row.date] = 0;
+          }
+          dateMap[row.date] += parseInt(row.count);
+        });
+        
+        // Convert status counts to array
+        Object.entries(statusMap).forEach(([status, count]) => {
+          statusCounts.push({ status, count });
+        });
+        
+        // Convert businesses to ordersByBusiness format
+        const ordersByBusiness = businessesResult.rows.map(biz => ({
+          business_name: biz.business_name,
+          count: parseInt(biz.order_count)
+        }));
+        
+        // Get last 7 days for trends
+        const last7Days = [];
+        const today = new Date();
+        for (let i = 6; i >= 0; i--) {
+          const date = new Date(today);
+          date.setDate(date.getDate() - i);
+          const dateStr = date.toISOString().split('T')[0];
+          last7Days.push({
+            date: dateStr,
+            count: dateMap[dateStr] || 0
+          });
+        }
+        
+        res.json({
+          orders: orders.rows,
+          totalOrders,
+          chartData: {
+            statusCounts,
+            ordersByBusiness,
+            recentTrends: last7Days
+          }
+        });
+        
+      } catch (error) {
+        logger.error('Filtered orders API error:', error);
+        res.status(500).json({ error: 'Failed to fetch filtered orders' });
+      }
+    });
+
     // Start the server
     app.listen(port, () => {
       console.log(`Server is running on port ${port}`);

@@ -305,6 +305,9 @@
     </a>
 </div>
 
+<!-- Chart data for AJAX updates -->
+<script id="chartDataScript" type="application/json"><%- JSON.stringify(chartData) %></script>
+
 <script>
         // Dropdown functionality
         function setupDropdown(buttonId, menuId) {
@@ -691,7 +694,11 @@
         const businessLabels = (chartData.ordersByBusiness || []).map(row => row.business_name);
         const businessData = (chartData.ordersByBusiness || []).map(row => Number(row.count));
         // Prepare trend chart data (filtered)
-        const trendLabels = (chartData.recentTrends || []).map(row => row.date);
+        const trendLabelsRaw = (chartData.recentTrends || []).map(row => row.date);
+        const trendLabels = trendLabelsRaw.map(dateStr => {
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        });
         const trendData = (chartData.recentTrends || []).map(row => Number(row.count));
 
         // Chart initialization
