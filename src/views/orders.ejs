@@ -854,12 +854,9 @@
 
         // Initialize charts when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
-            // Apply saved theme first
-            applyTheme(savedTheme);
-            
             initScrollReveal();
             initCharts();
-            
+            applyTheme(savedTheme);
             // Also make elements visible immediately if they're already in viewport
             setTimeout(() => {
                 const scrollRevealElements = document.querySelectorAll('.scroll-reveal:not(.visible)');
