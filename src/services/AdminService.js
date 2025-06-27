@@ -149,8 +149,7 @@ class AdminService {
     try {
       const query = database.query('orders as o')
         .select(
-          'o.id',
-          'o.order_id',
+          'o.id as order_id',
           'o.status',
           'o.created_at',
           'o.updated_at',
