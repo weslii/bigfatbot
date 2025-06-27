@@ -259,7 +259,45 @@ app.get('/admin/test-session', (req, res) => {
   });
 });
 
-
+// Debug route to test order stats directly
+app.get('/debug/order-stats/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    logger.info('DEBUG: Testing order stats for userId:', userId);
+    
+    // Test the exact same logic as getUserOrderStats
+    const userBusinesses = await db.query('groups')
+      .select('business_id')
+      .where('user_id', userId)
+      .groupBy('business_id');
+    
+    const businessIds = userBusinesses.map(b => b.business_id);
+    
+    const stats = await db.query('orders')
+      .select(
+        db.query.raw('COUNT(*) as total_orders'),
+        db.query.raw('SUM(CASE WHEN status = \'pending\' OR status = \'processing\' THEN 1 ELSE 0 END) as pending_orders'),
+        db.query.raw('SUM(CASE WHEN status = \'delivered\' THEN 1 ELSE 0 END) as completed_orders')
+      )
+      .whereIn('business_id', businessIds)
+      .first();
+    
+    res.json({
+      userId,
+      userBusinesses,
+      businessIds,
+      stats,
+      processedStats: {
+        totalOrders: parseInt(stats.total_orders) || 0,
+        completedOrders: parseInt(stats.completed_orders) || 0,
+        pendingOrders: parseInt(stats.pending_orders) || 0
+      }
+    });
+  } catch (error) {
+    logger.error('DEBUG: Error testing order stats:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Update landing page to pass userId from session
 app.get('/', (req, res) => {

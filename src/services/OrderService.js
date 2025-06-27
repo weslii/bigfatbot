@@ -180,40 +180,63 @@ class OrderService {
 
   async getUserOrderStats(userId) {
     try {
-      logger.info('[OrderStats] userId:', userId);
+      // Ensure userId is a string - fix for object conversion issue
+      const userIdString = String(userId);
+      logger.info('[OrderStats] Starting getUserOrderStats with userId:', userIdString, 'type:', typeof userIdString);
+      logger.info('[OrderStats] Original userId was:', userId, 'type:', typeof userId);
+      
+      // Clear any corrupted cache first
+      try {
+        await cacheService.invalidateOrderStats(userIdString);
+        logger.info('[OrderStats] Cleared cache for userId:', userIdString);
+      } catch (cacheError) {
+        logger.warn('Cache clear failed, proceeding:', cacheError.message);
+      }
+      
       // Try to get from cache first (with graceful fallback)
       let cachedStats = null;
       try {
-        cachedStats = await cacheService.getOrderStats(userId);
+        cachedStats = await cacheService.getOrderStats(userIdString);
+        logger.info('[OrderStats] Cache lookup result:', cachedStats);
       } catch (cacheError) {
         logger.warn('Cache get failed, proceeding without cache:', cacheError.message);
       }
-      if (cachedStats) {
+      if (cachedStats && typeof cachedStats === 'object' && cachedStats.totalOrders !== undefined) {
         logger.info('[OrderStats] Returning cached stats:', cachedStats);
         return cachedStats;
+      } else {
+        logger.info('[OrderStats] Cache miss or invalid cache data, proceeding with fresh query');
       }
+      
       // Get all business IDs for the user
+      logger.info('[OrderStats] Querying groups table for user_id:', userIdString);
       const userBusinesses = await database.query('groups')
         .select('business_id')
-        .where('user_id', userId)
+        .where('user_id', userIdString)
         .groupBy('business_id');
+      
+      logger.info('[OrderStats] Groups query result:', userBusinesses);
       const businessIds = userBusinesses.map(b => b.business_id);
-      logger.info('[OrderStats] businessIds:', businessIds);
+      logger.info('[OrderStats] Extracted businessIds:', businessIds);
+      
       if (businessIds.length === 0) {
+        logger.info('[OrderStats] No businesses found for userId:', userIdString);
         const emptyStats = {
           totalOrders: 0,
           completedOrders: 0,
           pendingOrders: 0
         };
         try {
-          await cacheService.setOrderStats(userId, emptyStats, 300);
+          await cacheService.setOrderStats(userIdString, emptyStats, 300);
         } catch (cacheError) {
           logger.warn('Cache set failed for empty stats:', cacheError.message);
         }
-        logger.info('[OrderStats] No businesses found, returning empty stats');
+        logger.info('[OrderStats] Returning empty stats');
         return emptyStats;
       }
+      
       // Get order statistics across all user's businesses
+      logger.info('[OrderStats] Querying orders table for businessIds:', businessIds);
       const stats = await database.query('orders')
         .select(
           database.query.raw('COUNT(*) as total_orders'),
@@ -222,21 +245,28 @@ class OrderService {
         )
         .whereIn('business_id', businessIds)
         .first();
-      logger.info('[OrderStats] stats result:', stats);
+      
+      logger.info('[OrderStats] Orders query raw result:', stats);
       const result = {
         totalOrders: parseInt(stats.total_orders) || 0,
         completedOrders: parseInt(stats.completed_orders) || 0,
         pendingOrders: parseInt(stats.pending_orders) || 0
       };
+      
+      logger.info('[OrderStats] Final processed result:', result);
+      
       try {
-        await cacheService.setOrderStats(userId, result, 600);
+        await cacheService.setOrderStats(userIdString, result, 600);
+        logger.info('[OrderStats] Successfully cached result');
       } catch (cacheError) {
         logger.warn('Cache set failed for user stats:', cacheError.message);
       }
-      logger.info('[OrderStats] Returning result:', result);
+      
+      logger.info('[OrderStats] Returning final result:', result);
       return result;
     } catch (error) {
-      logger.error('Error getting user order stats:', error);
+      logger.error('[OrderStats] Error in getUserOrderStats:', error);
+      logger.error('[OrderStats] Error stack:', error.stack);
       return {
         totalOrders: 0,
         completedOrders: 0,
