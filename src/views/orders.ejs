@@ -297,6 +297,9 @@
     <a href="/api/export/orders?format=csv&userId=<%= userId %>&<%= new URLSearchParams(query).toString() %>" class="dropdown-item">
         <i class="fas fa-file-csv"></i> Export as CSV
     </a>
+    <a href="/api/export/orders?format=json&userId=<%= userId %>&<%= new URLSearchParams(query).toString() %>" class="dropdown-item">
+        <i class="fas fa-file-code"></i> Export as JSON
+    </a>
     <a href="/api/export/orders?format=pdf&userId=<%= userId %>&<%= new URLSearchParams(query).toString() %>" class="dropdown-item">
         <i class="fas fa-file-pdf"></i> Export as PDF
     </a>
@@ -595,158 +598,7 @@
             }
         }
 
-        // Scroll Reveal Animation
-        document.addEventListener('DOMContentLoaded', () => {
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('visible');
-                    }
-                });
-            }, { threshold: 0.1 });
-
-            document.querySelectorAll('.scroll-reveal').forEach(el => {
-                observer.observe(el);
-            });
-
-             // Charting
-            const chartData = <%- JSON.stringify(chartData || {}) %>;
-            window.charts = {};
-
-            const isDark = savedTheme === 'dark';
-            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-            const textColor = isDark ? '#f8fafc' : '#475569';
-
-            // 1. Status Distribution Chart
-            const statusCtx = document.getElementById('statusChart');
-            if (statusCtx && chartData.statusCounts) {
-                window.charts.status = new Chart(statusCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: chartData.statusCounts.map(s => s.status),
-                        datasets: [{
-                            label: 'Order Status',
-                            data: chartData.statusCounts.map(s => s.count),
-                            backgroundColor: ['#f59e0b', '#3b82f6', '#10b981', '#ef4444'],
-                            borderColor: isDark ? '#1e293b' : '#ffffff',
-                            borderWidth: 4,
-                        }]
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: 'right', labels: { color: textColor } },
-                            title: { display: true, text: 'Order Status Distribution', color: textColor, font: { size: 16 } }
-                        }
-                    }
-                });
-            }
-
-            // 2. Orders by Business Chart
-            const businessCtx = document.getElementById('businessChart');
-            if (businessCtx && chartData.ordersByBusiness) {
-                window.charts.business = new Chart(businessCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: chartData.ordersByBusiness.map(b => b.business_name),
-                        datasets: [{
-                            label: '# of Orders',
-                            data: chartData.ordersByBusiness.map(b => b.count),
-                            backgroundColor: 'rgba(79, 70, 229, 0.8)',
-                            borderColor: 'rgba(79, 70, 229, 1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            title: { display: true, text: 'Orders per Business', color: textColor, font: { size: 16 } }
-                        },
-                        scales: { 
-                            y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor } },
-                            x: { grid: { display: false }, ticks: { color: textColor } }
-                        }
-                    }
-                });
-            }
-
-            // 3. Recent Order Trends Chart
-            const trendCtx = document.getElementById('trendChart');
-            if (trendCtx && chartData.recentTrends) {
-                const labels = Array.from({ length: 7 }, (_, i) => {
-                    const d = new Date();
-                    d.setDate(d.getDate() - i);
-                    return d;
-                }).reverse();
-
-                const dataMap = new Map(chartData.recentTrends.map(t => [new Date(t.date).toISOString().split('T')[0], parseInt(t.count, 10)]));
-                
-                const trendData = labels.map(label => {
-                    const dateString = label.toISOString().split('T')[0];
-                    return {
-                        x: label.getTime(),
-                        y: dataMap.get(dateString) || 0
-                    };
-                });
-                
-                window.charts.trends = new Chart(trendCtx, {
-                    type: 'line',
-                    data: {
-                        datasets: [{
-                            label: 'Orders',
-                            data: trendData,
-                            borderColor: '#10b981',
-                            backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                            tension: 0.3,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            title: { display: true, text: 'Orders in Last 7 Days', color: textColor, font: { size: 16 } }
-                        },
-                        scales: { 
-                            y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor } },
-                            x: { type: 'time', time: { unit: 'day', tooltipFormat: 'MMM d' }, grid: { display: false }, ticks: { color: textColor } }
-                        }
-                    }
-                });
-            }
-
-            // Initial theme setup
-            applyTheme(savedTheme);
-        });
-
-        function updateChartTheme(chart, theme) {
-            const isDark = theme === 'dark';
-            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-            const textColor = isDark ? '#f8fafc' : '#475569';
-
-            chart.options.plugins.legend.labels.color = textColor;
-            chart.options.plugins.title.color = textColor;
-
-            if (chart.options.scales) {
-                if (chart.options.scales.y) {
-                    chart.options.scales.y.grid.color = gridColor;
-                    chart.options.scales.y.ticks.color = textColor;
-                }
-                if (chart.options.scales.x) {
-                    chart.options.scales.x.ticks.color = textColor;
-                    if(chart.options.scales.x.grid) {
-                        chart.options.scales.x.grid.color = gridColor;
-                    }
-                }
-            }
-             if (chart.config.type === 'doughnut') {
-                chart.data.datasets[0].borderColor = isDark ? '#1e293b' : '#ffffff';
-            }
-            chart.update();
-  }
-
-        // Export dropdown functionality (robust, body-level)
+        // Export dropdown functionality
         const exportDropdown = document.getElementById('exportDropdown');
         const exportMenu = document.getElementById('exportMenu');
 
@@ -769,6 +621,6 @@
         window.addEventListener('resize', () => {
             exportMenu.style.display = 'none';
         });
-</script>
+    </script>
 </body>
-</html> 
+</html>

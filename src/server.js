@@ -12,6 +12,7 @@ const db = require('./config/database');
 const OrderService = require('./services/OrderService');
 const cacheService = require('./services/CacheService');
 const memoryMonitor = require('./utils/memoryMonitor');
+const PDFDocument = require('pdfkit');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -1677,54 +1678,138 @@ async function startServer() {
       }
     });
 
+    // Helper function to generate CSV from orders
+    function generateOrdersCSV(orders) {
+      const headers = [
+        'Order ID',
+        'Business',
+        'Customer Name',
+        'Customer Phone',
+        'Address',
+        'Items',
+        'Status',
+        'Delivery Date',
+        'Notes',
+        'Created At'
+      ];
+      
+      const csvRows = [headers.join(',')];
+      
+      orders.forEach(order => {
+        const row = [
+          `"${order.order_id || ''}"`,
+          `"${order.business_name || ''}"`,
+          `"${order.customer_name || ''}"`,
+          `"${order.customer_phone || ''}"`,
+          `"${order.address || ''}"`,
+          `"${order.items || ''}"`,
+          `"${order.status || ''}"`,
+          `"${order.delivery_date || ''}"`,
+          `"${order.notes || ''}"`,
+          `"${order.created_at || ''}"`
+        ];
+        csvRows.push(row.join(','));
+      });
+      
+      return csvRows.join('\n');
+    }
+
+    // Helper function to generate PDF from orders
+    function generateOrdersPDF(orders, res, businessName = null) {
+      const doc = new PDFDocument({ margin: 30, size: 'A4' });
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="orders${businessName ? '-' + businessName.replace(/\s+/g, '_') : ''}.pdf"`);
+      doc.pipe(res);
+
+      doc.fontSize(18).text(businessName ? `Orders for ${businessName}` : 'Orders', { align: 'center' });
+      doc.moveDown();
+
+      // Table headers
+      doc.fontSize(11).font('Helvetica-Bold');
+      const headers = [
+        'Order ID', 'Business', 'Customer', 'Phone', 'Address', 'Items', 'Status', 'Delivery Date', 'Notes', 'Created At'
+      ];
+      headers.forEach((header, i) => {
+        doc.text(header, { continued: i < headers.length - 1, underline: true });
+      });
+      doc.moveDown(0.5);
+      doc.font('Helvetica');
+
+      // Table rows
+      orders.forEach(order => {
+        const row = [
+          order.order_id || '',
+          order.business_name || '',
+          order.customer_name || '',
+          order.customer_phone || '',
+          order.address || '',
+          (typeof order.items === 'string' ? order.items : JSON.stringify(order.items)),
+          order.status || '',
+          order.delivery_date ? (typeof order.delivery_date === 'string' ? order.delivery_date : new Date(order.delivery_date).toLocaleDateString()) : '',
+          order.notes || '',
+          order.created_at ? (typeof order.created_at === 'string' ? order.created_at : new Date(order.created_at).toLocaleString()) : ''
+        ];
+        row.forEach((cell, i) => {
+          doc.text(cell, { continued: i < row.length - 1 });
+        });
+        doc.moveDown(0.5);
+      });
+
+      doc.end();
+    }
+
     // Export functionality
     app.get('/api/export/orders', async (req, res) => {
       try {
         const { userId, business_id, status, search, format = 'csv' } = req.query;
-        
-        if (!userId) {
+        // Get userId from session if not provided in query
+        const currentUserId = userId || (req.session && req.session.userId ? String(req.session.userId) : null);
+        if (!currentUserId) {
           return res.status(400).json({ error: 'User ID is required' });
         }
-
         // Get user's business IDs
         const userBusinesses = await db.query('groups')
-          .select('business_id')
-          .where('user_id', userId)
-          .groupBy('business_id');
-        
+          .select('business_id', 'business_name')
+          .where('user_id', currentUserId)
+          .groupBy('business_id', 'business_name');
         const businessIds = userBusinesses.map(b => b.business_id);
-        
         if (businessIds.length === 0) {
           return res.status(400).json({ error: 'No businesses found for this user' });
         }
-
         // Build query
         let query = db.query('orders as o')
           .join('groups as g', 'o.business_id', 'g.business_id')
-          .whereIn('o.business_id', businessIds);
-
+          .whereIn('o.business_id', businessIds)
+          .select(
+            'o.*',
+            'g.business_name'
+          );
         // Apply filters
         if (business_id) {
           query = query.where('o.business_id', business_id);
         }
-        
         if (status) {
           query = query.where('o.status', status);
         }
-        
         if (search) {
           query = query.where(function() {
             this.where('o.customer_name', 'like', `%${search}%`)
               .orWhere('o.order_id', 'like', `%${search}%`);
           });
         }
-
         const orders = await query.orderBy('o.created_at', 'desc');
-
         if (format === 'json') {
           res.setHeader('Content-Type', 'application/json');
           res.setHeader('Content-Disposition', 'attachment; filename="orders.json"');
           res.json(orders);
+        } else if (format === 'pdf') {
+          // Find business name if filtering by business
+          let businessName = null;
+          if (business_id) {
+            const found = userBusinesses.find(b => b.business_id === business_id);
+            if (found) businessName = found.business_name;
+          }
+          generateOrdersPDF(orders, res, businessName);
         } else {
           // CSV format
           const csv = generateOrdersCSV(orders);
@@ -1733,8 +1818,8 @@ async function startServer() {
           res.send(csv);
         }
       } catch (error) {
-        logger.error('Export orders error:', error);
-        res.status(500).json({ error: 'Failed to export orders' });
+        logger.error('Export error:', error);
+        res.status(500).json({ error: 'Failed to export orders: ' + error.message });
       }
     });
 
