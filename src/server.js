@@ -474,7 +474,7 @@ async function startServer() {
 
     app.get('/dashboard', async (req, res) => {
       try {
-        const userId = req.session && req.session.userId ? String(req.session.userId) : req.query.userId;
+        const userId = req.session && req.session.userId ? String(req.session.userId) : null;
         
         // Debug: Log dashboard access
         logger.info('GET /dashboard - Access details:', {
