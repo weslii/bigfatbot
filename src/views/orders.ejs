@@ -396,23 +396,44 @@
                 const order = await response.json();
                 
                 let itemsHtml = 'No items listed.';
-                if (order.items && order.items.length) {
-                    itemsHtml = `<ul>${order.items.map(item => `<li>${item.name} (x${item.quantity}) - $${item.price}</li>`).join('')}</ul>`;
+                if (order.items) {
+                    // Handle items whether it's a JSON string or array
+                    let items = order.items;
+                    if (typeof items === 'string') {
+                        try {
+                            items = JSON.parse(items);
+                        } catch (e) {
+                            items = [];
+                        }
+                    }
+                    
+                    if (Array.isArray(items) && items.length > 0) {
+                        itemsHtml = `<ul>${items.map(item => `<li>${item.name || item.item_name || 'Unknown Item'} (x${item.quantity || 1}) - $${item.price || 'N/A'}</li>`).join('')}</ul>`;
+                    }
                 }
 
                 modalBody.innerHTML = `
                     <div class="order-details">
                         <h4>Order ID: ${order.order_id}</h4>
                         <p><strong>Business:</strong> ${order.business_name || 'N/A'}</p>
-                        <p><strong>Customer:</strong> ${order.customer_name || 'N/A'}</p>
+                        <p><strong>Customer Name:</strong> ${order.customer_name || 'N/A'}</p>
+                        <p><strong>Customer Phone:</strong> ${order.customer_phone || 'N/A'}</p>
+                        <p><strong>Delivery Address:</strong> ${order.address || 'N/A'}</p>
                         <p><strong>Status:</strong> <span class="status-badge ${order.status}">${order.status}</span></p>
+                        <p><strong>Delivery Date:</strong> ${order.delivery_date ? new Date(order.delivery_date).toLocaleDateString() : 'Not set'}</p>
+                        <p><strong>Delivery Person:</strong> ${order.delivery_person || 'Not assigned'}</p>
                         <hr>
                         <h5>Items</h5>
                         ${itemsHtml}
                         <hr>
-                        <p><strong>Total Price:</strong> $${order.total_price || 'N/A'}</p>
+                        ${order.notes ? `<p><strong>Notes:</strong> ${order.notes}</p><hr>` : ''}
                         <p><strong>Created:</strong> ${new Date(order.created_at).toLocaleString()}</p>
                         ${order.updated_at ? `<p><strong>Last Updated:</strong> ${new Date(order.updated_at).toLocaleString()}</p>` : ''}
+                        ${order.updated_by ? `<p><strong>Updated By:</strong> ${order.updated_by}</p>` : ''}
+                        <div class="btn-group" style="margin-top: 1rem;">
+                            <button class="btn btn-primary" onclick="editOrder('${orderId}')">Edit Order</button>
+                            <button class="btn btn-secondary" onclick="closeModal('orderModal')">Close</button>
+                        </div>
                     </div>
                 `;
             } catch (error) {
@@ -421,21 +442,157 @@
             }
         }
 
-        // Enhanced edit order function
-        function editOrder(orderId) {
-            // For now, show a modal with basic edit options
+        // Complete edit order function
+        async function editOrder(orderId) {
             const modalBody = document.getElementById('orderModalBody');
-            modalBody.innerHTML = `
-                <div class="order-edit">
-                    <h4>Edit Order: ${orderId}</h4>
-                    <p>Edit functionality is being developed. For now, you can view the order details.</p>
-                    <div class="btn-group">
-                        <button class="btn btn-primary" onclick="viewOrder('${orderId}')">View Details</button>
-                        <button class="btn btn-secondary" onclick="closeModal('orderModal')">Close</button>
-                    </div>
-                </div>
-            `;
+            modalBody.innerHTML = '<p>Loading order for editing...</p>';
             openModal('orderModal');
+            
+            try {
+                const response = await fetch(`/api/orders/${orderId}?userId=<%= userId %>`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                const order = await response.json();
+                
+                // Parse items if it's a JSON string
+                let items = order.items;
+                if (typeof items === 'string') {
+                    try {
+                        items = JSON.parse(items);
+                    } catch (e) {
+                        items = [];
+                    }
+                }
+                if (!Array.isArray(items)) {
+                    items = [];
+                }
+
+                modalBody.innerHTML = `
+                    <div class="order-edit">
+                        <h4>Edit Order: ${order.order_id}</h4>
+                        <form id="editOrderForm" onsubmit="saveOrderChanges(event, '${orderId}')">
+                            <div class="form-group">
+                                <label class="form-label">Customer Name</label>
+                                <input type="text" class="form-input" name="customer_name" value="${order.customer_name || ''}" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Customer Phone</label>
+                                <input type="tel" class="form-input" name="customer_phone" value="${order.customer_phone || ''}" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Delivery Address</label>
+                                <textarea class="form-textarea" name="address" rows="3" required>${order.address || ''}</textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" name="status" required>
+                                    <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+                                    <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processing</option>
+                                    <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+                                    <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Delivery Date</label>
+                                <input type="date" class="form-input" name="delivery_date" value="${order.delivery_date || ''}">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Delivery Person</label>
+                                <input type="text" class="form-input" name="delivery_person" value="${order.delivery_person || ''}">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Items</label>
+                                <textarea class="form-textarea" name="items" rows="4" placeholder="Enter items as JSON format or plain text">${order.items || ''}</textarea>
+                                <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem; display: block;">
+                                    Enter items as JSON format (e.g., [{"name":"Item 1","quantity":2,"price":10.99}]) or plain text
+                                </small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Notes</label>
+                                <textarea class="form-textarea" name="notes" rows="3">${order.notes || ''}</textarea>
+                            </div>
+                            
+                            <div class="btn-group" style="margin-top: 1rem;">
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                                <button type="button" class="btn btn-secondary" onclick="viewOrder('${orderId}')">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading order for editing:', error);
+                modalBody.innerHTML = `<p style="color: var(--danger-color)">Failed to load order for editing: ${error.message}</p>`;
+            }
+        }
+
+        // Save order changes
+        async function saveOrderChanges(event, orderId) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+
+            const updateData = {
+                customer_name: formData.get('customer_name'),
+                customer_phone: formData.get('customer_phone'),
+                address: formData.get('address'),
+                status: formData.get('status'),
+                delivery_date: formData.get('delivery_date') || null,
+                delivery_person: formData.get('delivery_person') || null,
+                notes: formData.get('notes') || null,
+                items: formData.get('items'),
+                updated_by: '<%= userId %>',
+                userId: '<%= userId %>'
+            };
+
+            try {
+                const response = await fetch(`/api/orders/${orderId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(updateData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                
+                // Show success message and reload the page to reflect changes
+                const modalBody = document.getElementById('orderModalBody');
+                modalBody.innerHTML = `
+                    <div class="order-success">
+                        <h4>✅ Order Updated Successfully!</h4>
+                        <p>Order ${orderId} has been updated.</p>
+                        <div class="btn-group" style="margin-top: 1rem;">
+                            <button class="btn btn-primary" onclick="window.location.reload()">Refresh Page</button>
+                            <button class="btn btn-secondary" onclick="closeModal('orderModal')">Close</button>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error updating order:', error);
+                const modalBody = document.getElementById('orderModalBody');
+                modalBody.innerHTML = `
+                    <div class="order-error">
+                        <h4>❌ Error Updating Order</h4>
+                        <p style="color: var(--danger-color)">Failed to update order: ${error.message}</p>
+                        <div class="btn-group" style="margin-top: 1rem;">
+                            <button class="btn btn-primary" onclick="editOrder('${orderId}')">Try Again</button>
+                            <button class="btn btn-secondary" onclick="closeModal('orderModal')">Close</button>
+                        </div>
+                    </div>
+                `;
+            }
         }
 
         // Scroll Reveal Animation

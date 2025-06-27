@@ -237,34 +237,99 @@ body {
     padding: 1.5rem;
 }
 
-/* Form Inputs */
+/* Form Elements */
 .form-input,
-.form-select {
-    padding: 0.625rem 0.75rem;
+.form-select,
+.form-textarea {
+    width: 100%;
+    padding: 0.75rem;
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
     font-size: 0.875rem;
-    background: rgba(241, 245, 249, 0.5);
+    background: var(--surface-color);
     color: var(--text-primary);
     transition: all 0.2s;
+    font-family: inherit;
 }
 
 [data-theme="dark"] .form-input,
-[data-theme="dark"] .form-select {
-    background: rgba(30, 41, 59, 0.5);
+[data-theme="dark"] .form-select,
+[data-theme="dark"] .form-textarea {
+    background: rgba(15, 23, 42, 0.8);
+    border-color: rgba(148, 163, 184, 0.2);
 }
 
 .form-input:hover,
-.form-select:hover {
+.form-select:hover,
+.form-textarea:hover {
     border-color: var(--primary-color);
 }
 
 .form-input:focus,
-.form-select:focus {
+.form-select:focus,
+.form-textarea:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
-    background-color: var(--surface-color);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Order Edit Form Styles */
+.order-edit {
+    max-width: 100%;
+}
+
+.order-edit h4 {
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+}
+
+.order-edit .form-group {
+    margin-bottom: 1rem;
+}
+
+.order-edit .form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* Success and Error States */
+.order-success h4 {
+    color: var(--success-color);
+    margin-bottom: 1rem;
+}
+
+.order-error h4 {
+    color: var(--danger-color);
+    margin-bottom: 1rem;
+}
+
+.order-success,
+.order-error {
+    text-align: center;
+    padding: 1rem;
+}
+
+/* Modal Form Enhancements */
+.modal-body .form-group {
+    margin-bottom: 1.25rem;
+}
+
+.modal-body .btn-group {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+}
+
+.modal-body .btn-group .btn {
+    min-width: 100px;
 }
 
 /* Animations */
