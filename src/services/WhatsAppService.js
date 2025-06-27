@@ -20,6 +20,21 @@ class WhatsAppService {
   }
 
   constructor() {
+    this.client = null;
+    this.isAuthenticated = false;
+    this.latestQrDataUrl = null;
+    this.pendingSetups = new Map();
+    this.isStarting = false;
+    this.isStopping = false;
+    this.lastMessageTime = Date.now();
+    this.messageCount = 0;
+    this.maxMessageHistory = 100; // Limit message history
+    this.messageHistory = []; // Store recent messages only
+    this.cleanupInterval = null;
+    
+    // Memory optimization
+    this.setupMemoryOptimization();
+
     this.client = new Client({
       authStrategy: new LocalAuth(),
       puppeteer: {
@@ -32,40 +47,51 @@ class WhatsAppService {
           '--no-first-run',
           '--no-zygote',
           '--disable-gpu',
-          '--disable-extensions',
-          '--disable-plugins',
           '--disable-background-timer-throttling',
           '--disable-backgrounding-occluded-windows',
           '--disable-renderer-backgrounding',
           '--disable-features=TranslateUI',
           '--disable-ipc-flooding-protection',
           '--memory-pressure-off',
-          '--no-default-browser-check',
-          '--disable-default-apps',
-          '--disable-sync',
-          '--disable-translate',
-          '--hide-scrollbars',
-          '--mute-audio'
+          '--max_old_space_size=512', // Limit V8 memory
+          '--js-flags=--max-old-space-size=512'
         ],
-        defaultViewport: { width: 1024, height: 768 },
-        timeout: 60000,
-        protocolTimeout: 60000
+        defaultViewport: {
+          width: 800,
+          height: 600
+        }
       },
-      qrMaxRetries: 10,
-      qrRefreshInterval: 60000, // 60 seconds between QR refreshes
-      qrQualityOptions: {
-        quality: 0.8,
-        margin: 4,
-        scale: 8,
-        errorCorrectionLevel: 'H'
-      },
+      // Memory optimization options
+      disableWelcome: true,
+      useChrome: false, // Use system Chrome if available
+      browserArgs: [
+        '--disable-extensions',
+        '--disable-plugins',
+        '--disable-images',
+        '--disable-javascript-harmony-shipping',
+        '--disable-background-networking',
+        '--disable-default-apps',
+        '--disable-sync',
+        '--disable-translate',
+        '--hide-scrollbars',
+        '--mute-audio',
+        '--no-first-run',
+        '--safebrowsing-disable-auto-update',
+        '--disable-client-side-phishing-detection',
+        '--disable-component-update',
+        '--disable-domain-reliability',
+        '--disable-features=AudioServiceOutOfProcess',
+        '--disable-ipc-flooding-protection',
+        '--disable-background-timer-throttling',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-renderer-backgrounding',
+        '--disable-features=TranslateUI',
+        '--disable-ipc-flooding-protection',
+        '--memory-pressure-off',
+        '--max_old_space_size=512',
+        '--js-flags=--max-old-space-size=512'
+      ]
     });
-
-    // Track pending setup requests
-    this.pendingSetups = new Map();
-
-    this.latestQrDataUrl = null;
-    this.isAuthenticated = false;
 
     this.client.on('qr', async (qr) => {
       try {
@@ -125,11 +151,33 @@ class WhatsAppService {
 
   async stop() {
     try {
-      await this.client.destroy();
+      this.isStopping = true;
+      logger.info('Stopping WhatsApp service...');
+
+      // Clear cleanup interval
+      if (this.cleanupInterval) {
+        clearInterval(this.cleanupInterval);
+        this.cleanupInterval = null;
+      }
+
+      // Clear message history
+      this.messageHistory = [];
+      this.pendingSetups.clear();
+
+      // Close client if exists
+      if (this.client) {
+        await this.client.destroy();
+        this.client = null;
+      }
+
+      this.isAuthenticated = false;
+      this.latestQrDataUrl = null;
+      this.isStarting = false;
+      this.isStopping = false;
+
       logger.info('WhatsApp service stopped successfully');
     } catch (error) {
-      logger.error('Failed to stop WhatsApp service:', error);
-      throw error;
+      logger.error('Error stopping WhatsApp service:', error);
     }
   }
 
@@ -1266,6 +1314,58 @@ For help, type /help in the delivery group.
       qr: this.latestQrDataUrl,
       authenticated: this.isAuthenticated
     };
+  }
+
+  setupMemoryOptimization() {
+    // Cleanup old messages every 10 minutes (less frequent)
+    this.cleanupInterval = setInterval(() => {
+      this.cleanupMessageHistory();
+    }, 10 * 60 * 1000);
+  }
+
+  cleanupMessageHistory() {
+    // Only cleanup if we have too many messages
+    if (this.messageHistory.length > this.maxMessageHistory) {
+      const toRemove = this.messageHistory.length - this.maxMessageHistory;
+      this.messageHistory.splice(0, toRemove);
+      logger.info(`Cleaned up ${toRemove} old messages from history`);
+    }
+    
+    // Clear old pending setups (older than 2 hours - more conservative)
+    const twoHoursAgo = Date.now() - (2 * 60 * 60 * 1000);
+    for (const [token, setup] of this.pendingSetups) {
+      if (setup.createdAt && setup.createdAt < twoHoursAgo) {
+        this.pendingSetups.delete(token);
+        logger.info('Cleaned up old pending setup');
+      }
+    }
+  }
+
+  // Memory optimization method
+  async optimizeMemory() {
+    try {
+      logger.info('Performing WhatsApp service memory optimization...');
+      
+      // Clear message history (but keep recent messages)
+      if (this.messageHistory.length > 50) {
+        this.messageHistory = this.messageHistory.slice(-50);
+      }
+      
+      // Clear old pending setups (older than 2 hours)
+      const twoHoursAgo = Date.now() - (2 * 60 * 60 * 1000);
+      for (const [token, setup] of this.pendingSetups) {
+        if (setup.createdAt && setup.createdAt < twoHoursAgo) {
+          this.pendingSetups.delete(token);
+        }
+      }
+      
+      // DON'T clear browser cache - could cause WhatsApp to log out
+      // Only clear if explicitly needed and safe
+      
+      logger.info('WhatsApp service memory optimization completed');
+    } catch (error) {
+      logger.error('Error during memory optimization:', error);
+    }
   }
 }
 
