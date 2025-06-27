@@ -518,7 +518,7 @@ class AdminService {
           .first();
         totalUserOrders = parseInt(userOrders.count);
       }
-
+      
       const hasData = userBusinesses.length > 0 || totalUserOrders > 0;
 
       if (hasData) {
@@ -546,7 +546,7 @@ class AdminService {
         };
       } else {
         // User has no data - just delete user
-      await database.query('users').where('id', userId).del();
+        await database.query('users').where('id', userId).del();
         
         return {
           success: true,
@@ -558,6 +558,22 @@ class AdminService {
       }
     } catch (error) {
       logger.error('Error deleting user:', error);
+      throw error;
+    }
+  }
+
+  static async toggleUserActive(userId) {
+    try {
+      const user = await database.query('users').where('id', userId).first();
+      if (!user) {
+        throw new Error('User not found');
+      }
+      
+      const newStatus = !user.is_active;
+      await database.query('users').where('id', userId).update({ is_active: newStatus });
+      return { success: true, is_active: newStatus };
+    } catch (error) {
+      logger.error('Error toggling user active status:', error);
       throw error;
     }
   }
@@ -718,8 +734,9 @@ class AdminService {
   static async getAllUsersWithFilters(name = '', email = '', phone = '') {
     try {
       const query = database.query('users')
-        .select('id', 'full_name', 'email', 'phone_number', 'created_at')
-        .orderBy('created_at', 'desc');
+        .select('id', 'full_name', 'email', 'phone_number', 'created_at', 'is_active')
+        .orderBy('full_name');
+      
       if (name) {
         query.where('full_name', 'ilike', `%${name}%`);
       }
@@ -729,9 +746,10 @@ class AdminService {
       if (phone) {
         query.where('phone_number', 'ilike', `%${phone}%`);
       }
+      
       return await query;
     } catch (error) {
-      logger.error('Error getting filtered users:', error);
+      logger.error('Error getting all users with filters:', error);
       throw error;
     }
   }

@@ -613,8 +613,13 @@ body {
 }
 
 .status-badge.cancelled {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+  background: var(--danger);
+  color: white;
+}
+
+.status-badge.inactive {
+  background: var(--text-muted);
+  color: white;
 }
 
 .revenue {

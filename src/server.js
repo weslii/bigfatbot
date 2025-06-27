@@ -1408,8 +1408,19 @@ async function startServer() {
         res.redirect('/admin/users');
       } catch (error) {
         logger.error('Delete user error:', error);
-        // Display the specific error message from AdminService
-        res.render('error', { error: error.message || 'Failed to delete user.' });
+        req.session.errorMessage = error.message;
+        res.redirect('/admin/users');
+      }
+    });
+
+    // Toggle user active status
+    app.post('/admin/api/users/:userId/toggle', requireAdmin, async (req, res) => {
+      try {
+        const result = await AdminService.toggleUserActive(req.params.userId);
+        res.json(result);
+      } catch (error) {
+        logger.error('Toggle user active error:', error);
+        res.status(500).json({ error: 'Failed to toggle user status.' });
       }
     });
 
