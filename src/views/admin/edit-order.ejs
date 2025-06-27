@@ -1,31 +1,155 @@
-<%- include('../layout', { title: 'Edit Order' }) %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Order - Admin Dashboard</title>
+    <link rel="stylesheet" href="/css/admin-dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <i class="fab fa-whatsapp"></i>
+                </div>
+                <div class="logo-text">
+                    <a href="/admin/dashboard" class="main-title">WhatsApp Bot Admin</a>
+                    <div class="sub-title">Order Management</div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="icon-btn" id="themeToggle" title="Toggle theme">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div class="dropdown">
+                    <button class="profile-btn" id="profileDropdown">
+                        <i class="fas fa-user"></i>
+                    </button>
+                    <div class="dropdown-content" id="profileMenu">
+                        <div class="profile-info">
+                            <div class="profile-name"><%= admin.username %></div>
+                            <div class="profile-email"><%= admin.email %></div>
+                        </div>
+                        <hr>
+                        <a href="/admin/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                        <a href="/admin/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
 
-<div class="container mt-5 pastel-blue-bg">
-  <div class="row justify-content-center">
-    <div class="col-md-8">
-      <div class="card pastel-blue-card text-dark">
-        <div class="card-header">
-          <h4>Edit Order <%= order.order_id %></h4>
-        </div>
-        <div class="card-body">
-          <form action="/admin/orders/<%= order.order_id %>/edit" method="POST">
-            <div class="mb-3">
-              <label for="status" class="form-label">Status</label>
-              <select class="form-select" id="status" name="status">
-                <option value="pending" <%= order.status === 'pending' ? 'selected' : '' %>>Pending</option>
-                <option value="completed" <%= order.status === 'completed' ? 'selected' : '' %>>Completed</option>
-                <option value="cancelled" <%= order.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
-              </select>
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Breadcrumb -->
+            <div class="breadcrumb">
+                <a href="/admin/dashboard">Dashboard</a>
+                <i class="fas fa-chevron-right"></i>
+                <a href="/admin/orders">Orders</a>
+                <i class="fas fa-chevron-right"></i>
+                <span>Edit Order</span>
             </div>
-            <div class="mb-3">
-              <label for="items" class="form-label">Items (JSON)</label>
-              <textarea class="form-control" id="items" name="items" rows="2"><%= order.items %></textarea>
+
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="page-title">
+                    <h1>Edit Order</h1>
+                    <p>Update order details and status</p>
+                </div>
+                <div class="page-actions">
+                    <a href="/admin/orders" class="secondary-btn">
+                        <i class="fas fa-arrow-left"></i> Back to Orders
+                    </a>
+                </div>
             </div>
-            <button type="submit" class="btn btn-primary">Save changes</button>
-            <a href="/admin/orders" class="btn btn-secondary ms-2">Cancel</a>
-          </form>
+
+            <!-- Edit Form -->
+            <div class="content-card">
+                <div class="card-header">
+                    <div class="header-info">
+                        <h2>Order <%= order.order_id %></h2>
+                        <p>Update order information</p>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <form action="/admin/orders/<%= order.id %>/edit" method="POST" class="edit-form">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="status">Status</label>
+                                <select id="status" name="status" class="form-select">
+                                    <option value="pending" <%= order.status === 'pending' ? 'selected' : '' %>>Pending</option>
+                                    <option value="processing" <%= order.status === 'processing' ? 'selected' : '' %>>Processing</option>
+                                    <option value="delivered" <%= order.status === 'delivered' ? 'selected' : '' %>>Delivered</option>
+                                    <option value="cancelled" <%= order.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group full-width">
+                                <label for="items">Items</label>
+                                <textarea id="items" name="items" class="form-textarea" rows="4" placeholder="Enter order items..."><%= order.items %></textarea>
+                                <small class="form-help">Enter the items as plain text</small>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label for="notes">Notes</label>
+                                <textarea id="notes" name="notes" class="form-textarea" rows="3" placeholder="Add any additional notes..."><%= order.notes || '' %></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="primary-btn">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                            <a href="/admin/orders" class="secondary-btn">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  </div>
-</div> 
+    </main>
+
+    <script>
+        // Theme toggle functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('themeToggle');
+            if (themeToggle) {
+                // Set initial theme from localStorage
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    themeToggle.querySelector('i').className = 'fas fa-sun';
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    themeToggle.querySelector('i').className = 'fas fa-moon';
+                }
+                
+                themeToggle.addEventListener('click', function() {
+                    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                    document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+                    themeToggle.querySelector('i').className = isDark ? 'fas fa-moon' : 'fas fa-sun';
+                    localStorage.setItem('theme', isDark ? 'light' : 'dark');
+                });
+            }
+
+            // Profile dropdown functionality
+            const profileDropdown = document.getElementById('profileDropdown');
+            const profileMenu = document.getElementById('profileMenu');
+            if (profileDropdown && profileMenu) {
+                profileDropdown.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    profileMenu.parentElement.classList.toggle('active');
+                });
+                document.addEventListener('click', function() {
+                    profileMenu.parentElement.classList.remove('active');
+                });
+            }
+        });
+    </script>
+</body>
+</html> 
