@@ -390,38 +390,31 @@ async function fetchAndRenderAnalytics() {
     const data = await res.json();
     console.log('Analytics data received:', data);
     
-    // Only update if we have valid data (not 0 or undefined)
-    if (data && typeof data.totalBusinesses !== 'undefined' && data.totalBusinesses !== null) {
-      const businessesCard = document.querySelector('.stat-card.businesses .stat-value');
-      if (businessesCard) {
-        businessesCard.textContent = data.totalBusinesses || 0;
-        console.log('Updated businesses card:', data.totalBusinesses);
-      }
+    // Update KPI cards with real data
+    const businessesCard = document.querySelector('.stat-card.businesses .stat-value');
+    const ordersCard = document.querySelector('.stat-card.orders .stat-value');
+    const revenueCard = document.querySelector('.stat-card.revenue .stat-value');
+    const uptimeCard = document.querySelector('.stat-card.uptime .stat-value');
+    
+    if (businessesCard) {
+      businessesCard.textContent = data.totalBusinesses || 0;
+      console.log('Updated businesses card:', data.totalBusinesses);
     }
     
-    if (data && typeof data.totalOrders !== 'undefined' && data.totalOrders !== null) {
-      const ordersCard = document.querySelector('.stat-card.orders .stat-value');
-      if (ordersCard) {
-        ordersCard.textContent = data.totalOrders || 0;
-        console.log('Updated orders card:', data.totalOrders);
-      }
+    if (ordersCard) {
+      ordersCard.textContent = data.totalOrders || 0;
+      console.log('Updated orders card:', data.totalOrders);
     }
     
-    if (data && typeof data.totalRevenue !== 'undefined' && data.totalRevenue !== null) {
-      const revenueCard = document.querySelector('.stat-card.revenue .stat-value');
-      if (revenueCard) {
-        revenueCard.textContent = `$${data.totalRevenue || '0.00'}`;
-        console.log('Updated revenue card:', data.totalRevenue);
-      }
+    if (revenueCard) {
+      revenueCard.textContent = `$${data.totalRevenue || '0.00'}`;
+      console.log('Updated revenue card:', data.totalRevenue);
     }
     
-    if (data && data.botUptime) {
-      const uptimeCard = document.querySelector('.stat-card.uptime .stat-value');
-      if (uptimeCard) {
-        uptimeCard.textContent = `${parseFloat(data.botUptime).toFixed(1)}%`;
-        uptimeCard.title = `Uptime since last start: ${data.botUptimeHours} hours`;
-        console.log('Updated uptime card:', data.botUptime);
-      }
+    if (uptimeCard && data.botUptime) {
+      uptimeCard.textContent = `${parseFloat(data.botUptime).toFixed(1)}%`;
+      uptimeCard.title = `Uptime since last start: ${data.botUptimeHours} hours`;
+      console.log('Updated uptime card:', data.botUptime);
     }
     
     // Update change percentages if available
@@ -443,7 +436,7 @@ async function fetchAndRenderAnalytics() {
     console.log('Analytics update completed successfully');
   } catch (err) {
     console.error('Error fetching analytics:', err);
-    // Don't update anything if the AJAX call fails - keep the server-side values
+    // Keep existing values if fetch fails
   }
 }
 

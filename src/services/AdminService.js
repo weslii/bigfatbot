@@ -669,58 +669,27 @@ class AdminService {
 
   static async getAnalytics() {
     try {
-      console.log('AdminService.getAnalytics() called');
-      
-      // First, let's check if there are any records at all
-      const totalUsers = await database.query('users').count('* as count').first();
-      const totalGroups = await database.query('groups').count('* as count').first();
-      const totalOrders = await database.query('orders').count('* as count').first();
-      
-      console.log('Total records in database:', {
-        users: totalUsers.count,
-        groups: totalGroups.count,
-        orders: totalOrders.count
-      });
-      
-      // Check groups table structure
-      const sampleGroup = await database.query('groups').first();
-      console.log('Sample group record:', sampleGroup);
-      
-      const [userCount, businessCount, orderCount, activeOrderCount, revenueResult, statusCounts] = await Promise.all([
+      const [userCount, businessCount, orderCount, activeOrderCount, statusCounts] = await Promise.all([
         database.query('users').count('* as count').first(),
-        database.query('groups').countDistinct('business_id as count').first(),
+        database.query('groups').where('is_active', true).countDistinct('business_id as count').first(),
         database.query('orders').count('* as count').first(),
         database.query('orders').whereIn('status', ['pending', 'processing']).count('* as count').first(),
-        database.query('orders').sum('total_amount as revenue').first(),
         database.query('orders')
           .select('status')
           .count('* as count')
           .groupBy('status')
       ]);
-      
-      console.log('Raw query results:', {
-        userCount: userCount.count,
-        businessCount: businessCount.count,
-        orderCount: orderCount.count,
-        activeOrderCount: activeOrderCount.count,
-        revenueResult: revenueResult.revenue,
-        statusCounts: statusCounts
-      });
-      
       const orderStatusCounts = {};
       statusCounts.forEach(row => {
         orderStatusCounts[row.status] = parseInt(row.count);
       });
-      
       // Percentage changes
       const businessChange = await this.getPercentageChange('groups', 'is_active');
       const orderChange = await this.getPercentageChange('orders');
-      
       // Bot management metrics
       const botMetrics = await this.getBotManagementMetrics();
-      
-      const result = {
-        totalRevenue: parseFloat(revenueResult.revenue || 0).toFixed(2),
+      return {
+        totalRevenue: '0.00', // Orders table doesn't store pricing information
         totalBusinesses: parseInt(businessCount.count),
         totalOrders: parseInt(orderCount.count),
         totalUsers: parseInt(userCount.count),
@@ -730,9 +699,6 @@ class AdminService {
         orderChange,
         ...botMetrics
       };
-      
-      console.log('Final analytics result:', result);
-      return result;
     } catch (error) {
       logger.error('Error getting analytics:', error);
       throw error;
