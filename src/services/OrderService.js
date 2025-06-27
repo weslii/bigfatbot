@@ -220,17 +220,16 @@ class OrderService {
       const stats = await database.query('orders')
         .select(
           database.query.raw('COUNT(*) as total_orders'),
-          database.query.raw('SUM(CASE WHEN status = \'pending\' OR status = \'processing\' THEN 1 ELSE 0 END) as active_orders'),
-          database.query.raw('SUM(CASE WHEN status = \'delivered\' OR status = \'completed\' THEN 1 ELSE 0 END) as completed_orders')
+          database.query.raw('SUM(CASE WHEN status = \'pending\' THEN 1 ELSE 0 END) as pending_orders'),
+          database.query.raw('SUM(CASE WHEN status = \'delivered\' THEN 1 ELSE 0 END) as completed_orders')
         )
         .whereIn('business_id', businessIds)
         .first();
 
       const result = {
         totalOrders: parseInt(stats.total_orders) || 0,
-        activeOrders: parseInt(stats.active_orders) || 0,
         completedOrders: parseInt(stats.completed_orders) || 0,
-        pendingOrders: parseInt(stats.active_orders) || 0
+        pendingOrders: parseInt(stats.pending_orders) || 0
       };
 
       // Try to cache the result (with graceful fallback)
