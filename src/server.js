@@ -384,6 +384,15 @@ async function startServer() {
         if (!user) {
           return res.render('login', { error: 'Invalid email or password' });
         }
+        
+        // Debug: Log user object details
+        logger.info('POST /login - User found:', {
+          id: user.id,
+          idType: typeof user.id,
+          email: user.email,
+          fullName: user.full_name
+        });
+        
         // Check password (assume password is stored as hash, if not, compare plain text)
         const bcrypt = require('bcryptjs');
         const isValid = user.password_hash
@@ -400,13 +409,33 @@ async function startServer() {
           logger.error('POST /login - Headers:', req.headers);
           return res.render('login', { error: 'Session error. Please try again or contact support.' });
         }
-        req.session.userId = user.id;
+        
+        // Ensure userId is a string
+        const userIdString = String(user.id);
+        req.session.userId = userIdString;
+        
+        // Debug: Log session setting
+        logger.info('POST /login - Setting session userId:', {
+          originalId: user.id,
+          originalType: typeof user.id,
+          stringId: userIdString,
+          stringType: typeof userIdString
+        });
+        
         req.session.save((err) => {
           if (err) {
             logger.error('Error saving session:', err);
             return res.render('login', { error: 'Login failed. Please try again.' });
           }
-          res.redirect(`/dashboard?userId=${user.id}`);
+          
+          // Debug: Log session after save
+          logger.info('POST /login - Session saved successfully:', {
+            sessionId: req.sessionID,
+            userId: req.session.userId,
+            userIdType: typeof req.session.userId
+          });
+          
+          res.redirect(`/dashboard?userId=${userIdString}`);
         });
       } catch (error) {
         logger.error('User login error:', error);
@@ -446,6 +475,17 @@ async function startServer() {
     app.get('/dashboard', async (req, res) => {
       try {
         const userId = req.session && req.session.userId ? String(req.session.userId) : req.query.userId;
+        
+        // Debug: Log dashboard access
+        logger.info('GET /dashboard - Access details:', {
+          sessionUserId: req.session ? req.session.userId : 'no session',
+          sessionUserIdType: req.session ? typeof req.session.userId : 'no session',
+          queryUserId: req.query.userId,
+          queryUserIdType: typeof req.query.userId,
+          finalUserId: userId,
+          finalUserIdType: typeof userId
+        });
+        
         if (!userId) {
           return res.redirect('/login');
         }
@@ -463,11 +503,25 @@ async function startServer() {
           .where('g.user_id', userId)
           .groupBy('g.business_id', 'g.business_name');
         
+        // Debug: Log businesses found
+        logger.info('GET /dashboard - Businesses found:', {
+          userId: userId,
+          businessCount: businessesWithOrders.length,
+          businesses: businessesWithOrders.map(b => ({ id: b.business_id, name: b.business_name }))
+        });
+        
         const [groups, orderStats, recentOrders] = await Promise.all([
           RegistrationService.getUserGroups(userId),
           OrderService.getUserOrderStats(userId),
           OrderService.getUserRecentOrders(userId, 5)
         ]);
+        
+        // Debug: Log order stats result
+        logger.info('GET /dashboard - Order stats result:', {
+          userId: userId,
+          orderStats: orderStats,
+          recentOrdersCount: recentOrders.length
+        });
         
         res.render('dashboard', { 
           groups, 
