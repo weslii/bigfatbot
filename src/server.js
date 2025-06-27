@@ -445,7 +445,7 @@ async function startServer() {
 
     app.get('/dashboard', async (req, res) => {
       try {
-        const userId = req.session ? req.session.userId : req.query.userId;
+        const userId = req.session && req.session.userId ? String(req.session.userId) : req.query.userId;
         if (!userId) {
           return res.redirect('/login');
         }
@@ -484,7 +484,7 @@ async function startServer() {
 
     // Add new business for existing users
     app.get('/add-business', (req, res) => {
-      const userId = req.session ? req.session.userId : req.query.userId;
+      const userId = req.session && req.session.userId ? String(req.session.userId) : req.query.userId;
       if (!userId) {
         return res.redirect('/register');
       }
@@ -493,7 +493,7 @@ async function startServer() {
 
     app.post('/add-business', async (req, res) => {
       try {
-        const userId = req.session ? req.session.userId : null;
+        const userId = req.session && req.session.userId ? String(req.session.userId) : null;
         const { businessName } = req.body;
         logger.info('Add business for userId:', userId);
         if (!userId) {
@@ -504,9 +504,9 @@ async function startServer() {
         res.redirect(`/setup-group?businessId=${result.businessId}&userId=${userId}`);
       } catch (error) {
         logger.error('Add business error:', error);
-        res.render('add-business', { 
+        res.render('add-business', {
           error: 'Failed to add business. Please try again.',
-          userId: req.session ? req.session.userId : null
+          userId: req.session && req.session.userId ? String(req.session.userId) : null
         });
       }
     });
@@ -514,7 +514,7 @@ async function startServer() {
     // Orders page for users
     app.get('/orders', async (req, res) => {
       try {
-        const userId = req.session.userId;
+        const userId = req.session && req.session.userId ? String(req.session.userId) : null;
         if (!userId) {
           return res.redirect('/login');
         }
