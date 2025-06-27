@@ -621,6 +621,42 @@
         window.addEventListener('resize', () => {
             exportMenu.style.display = 'none';
         });
+
+        // Scroll reveal functionality
+        function initScrollReveal() {
+            const scrollRevealElements = document.querySelectorAll('.scroll-reveal');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            });
+            
+            scrollRevealElements.forEach(element => {
+                observer.observe(element);
+            });
+        }
+
+        // Initialize scroll reveal when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            initScrollReveal();
+            
+            // Also make elements visible immediately if they're already in viewport
+            setTimeout(() => {
+                const scrollRevealElements = document.querySelectorAll('.scroll-reveal');
+                scrollRevealElements.forEach(element => {
+                    const rect = element.getBoundingClientRect();
+                    if (rect.top < window.innerHeight && rect.bottom > 0) {
+                        element.classList.add('visible');
+                    }
+                });
+            }, 100);
+        });
 </script>
 </body>
 </html> 
