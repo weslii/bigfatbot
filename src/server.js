@@ -259,46 +259,6 @@ app.get('/admin/test-session', (req, res) => {
   });
 });
 
-// Debug route to test order stats directly
-app.get('/debug/order-stats/:userId', async (req, res) => {
-  try {
-    const { userId } = req.params;
-    logger.info('DEBUG: Testing order stats for userId:', userId);
-    
-    // Test the exact same logic as getUserOrderStats
-    const userBusinesses = await db.query('groups')
-      .select('business_id')
-      .where('user_id', userId)
-      .groupBy('business_id');
-    
-    const businessIds = userBusinesses.map(b => b.business_id);
-    
-    const stats = await db.query('orders')
-      .select(
-        db.query.raw('COUNT(*) as total_orders'),
-        db.query.raw('SUM(CASE WHEN status = \'pending\' OR status = \'processing\' THEN 1 ELSE 0 END) as pending_orders'),
-        db.query.raw('SUM(CASE WHEN status = \'delivered\' THEN 1 ELSE 0 END) as completed_orders')
-      )
-      .whereIn('business_id', businessIds)
-      .first();
-    
-    res.json({
-      userId,
-      userBusinesses,
-      businessIds,
-      stats,
-      processedStats: {
-        totalOrders: parseInt(stats.total_orders) || 0,
-        completedOrders: parseInt(stats.completed_orders) || 0,
-        pendingOrders: parseInt(stats.pending_orders) || 0
-      }
-    });
-  } catch (error) {
-    logger.error('DEBUG: Error testing order stats:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
 // Update landing page to pass userId from session
 app.get('/', (req, res) => {
   res.render('preview-landing');
@@ -408,11 +368,6 @@ async function startServer() {
 
     app.post('/login', async (req, res) => {
       const { email, password } = req.body;
-      logger.info('POST /login - Request received');
-      logger.info('POST /login - Session:', req.session);
-      logger.info('POST /login - Session ID:', req.sessionID);
-      logger.info('POST /login - Cookies:', req.cookies);
-      logger.info('POST /login - Headers:', req.headers);
       if (!email || !password) {
         return res.render('login', { error: 'Email and password are required' });
       }
@@ -422,14 +377,6 @@ async function startServer() {
         if (!user) {
           return res.render('login', { error: 'Invalid email or password' });
         }
-        
-        // Debug: Log user object details
-        logger.info('POST /login - User found:', {
-          id: user.id,
-          idType: typeof user.id,
-          email: user.email,
-          fullName: user.full_name
-        });
         
         // Check password (assume password is stored as hash, if not, compare plain text)
         const bcrypt = require('bcryptjs');
@@ -441,10 +388,6 @@ async function startServer() {
         }
         if (!req.session) {
           logger.error('Session is undefined during login');
-          logger.error('POST /login - Session:', req.session);
-          logger.error('POST /login - Session ID:', req.sessionID);
-          logger.error('POST /login - Cookies:', req.cookies);
-          logger.error('POST /login - Headers:', req.headers);
           return res.render('login', { error: 'Session error. Please try again or contact support.' });
         }
         
@@ -452,26 +395,11 @@ async function startServer() {
         const userIdString = String(user.id);
         req.session.userId = userIdString;
         
-        // Debug: Log session setting
-        logger.info('POST /login - Setting session userId:', {
-          originalId: user.id,
-          originalType: typeof user.id,
-          stringId: userIdString,
-          stringType: typeof userIdString
-        });
-        
         req.session.save((err) => {
           if (err) {
             logger.error('Error saving session:', err);
             return res.render('login', { error: 'Login failed. Please try again.' });
           }
-          
-          // Debug: Log session after save
-          logger.info('POST /login - Session saved successfully:', {
-            sessionId: req.sessionID,
-            userId: req.session.userId,
-            userIdType: typeof req.session.userId
-          });
           
           res.redirect(`/dashboard?userId=${userIdString}`);
         });
@@ -514,16 +442,6 @@ async function startServer() {
       try {
         const userId = req.session && req.session.userId ? String(req.session.userId) : null;
         
-        // Debug: Log dashboard access
-        logger.info('GET /dashboard - Access details:', {
-          sessionUserId: req.session ? req.session.userId : 'no session',
-          sessionUserIdType: req.session ? typeof req.session.userId : 'no session',
-          queryUserId: req.query.userId,
-          queryUserIdType: typeof req.query.userId,
-          finalUserId: userId,
-          finalUserIdType: typeof userId
-        });
-        
         if (!userId) {
           return res.redirect('/login');
         }
@@ -541,29 +459,15 @@ async function startServer() {
           .where('g.user_id', userId)
           .groupBy('g.business_id', 'g.business_name');
         
-        // Debug: Log businesses found
-        logger.info('GET /dashboard - Businesses found:', {
-          userId: userId,
-          businessCount: businessesWithOrders.length,
-          businesses: businessesWithOrders.map(b => ({ id: b.business_id, name: b.business_name }))
-        });
-        
         const [groups, orderStats, recentOrders] = await Promise.all([
           RegistrationService.getUserGroups(userId),
           OrderService.getUserOrderStats(userId),
           OrderService.getUserRecentOrders(userId, 5)
         ]);
         
-        // Debug: Log order stats result
-        logger.info('GET /dashboard - Order stats result:', {
-          userId: userId,
-          orderStats: orderStats,
-          recentOrdersCount: recentOrders.length
-        });
-        
         res.render('dashboard', { 
           groups, 
-          businesses: businessesWithOrders, // Pass the new data
+          businesses: businessesWithOrders,
           userId, 
           orderStats, 
           recentOrders 
