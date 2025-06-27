@@ -626,6 +626,9 @@
         function initScrollReveal() {
             const scrollRevealElements = document.querySelectorAll('.scroll-reveal');
             
+            // If no elements found, nothing to do
+            if (scrollRevealElements.length === 0) return;
+            
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
@@ -640,6 +643,13 @@
             scrollRevealElements.forEach(element => {
                 observer.observe(element);
             });
+            
+            // Fallback: If IntersectionObserver is not supported, make all elements visible
+            if (!window.IntersectionObserver) {
+                scrollRevealElements.forEach(element => {
+                    element.classList.add('visible');
+                });
+            }
         }
 
         // Initialize scroll reveal when DOM is loaded
@@ -648,7 +658,7 @@
             
             // Also make elements visible immediately if they're already in viewport
             setTimeout(() => {
-                const scrollRevealElements = document.querySelectorAll('.scroll-reveal');
+                const scrollRevealElements = document.querySelectorAll('.scroll-reveal:not(.visible)');
                 scrollRevealElements.forEach(element => {
                     const rect = element.getBoundingClientRect();
                     if (rect.top < window.innerHeight && rect.bottom > 0) {
@@ -656,6 +666,17 @@
                     }
                 });
             }, 100);
+        });
+
+        // Fallback: If DOMContentLoaded doesn't fire, try on window load
+        window.addEventListener('load', function() {
+            const scrollRevealElements = document.querySelectorAll('.scroll-reveal:not(.visible)');
+            if (scrollRevealElements.length > 0) {
+                // If elements are still not visible, make them visible as a last resort
+                scrollRevealElements.forEach(element => {
+                    element.classList.add('visible');
+                });
+            }
         });
 </script>
 </body>

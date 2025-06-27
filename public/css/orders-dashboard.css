@@ -396,20 +396,6 @@ body {
     transform: translateY(0);
 }
 
-/* Fallback: Make elements visible after 2 seconds if JavaScript fails */
-@media (prefers-reduced-motion: no-preference) {
-    .scroll-reveal {
-        animation: fallback-reveal 2s ease-out forwards;
-    }
-}
-
-@keyframes fallback-reveal {
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
 /* Chart Container */
 .chart-container {
     position: relative;
