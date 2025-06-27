@@ -82,11 +82,15 @@ window.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', function() {
       if (btn.dataset.tab === 'businesses-tab') fetchAndRenderBusinesses(1);
-      if (btn.dataset.tab === 'orders-tab') fetchAndRenderOrders(1);
+      if (btn.dataset.tab === 'orders-tab') {
+        fetchAndRenderOrders(1);
+        fetchAndRenderAnalytics(); // Refresh analytics when viewing orders
+      }
     });
   });
   // Initial load
   fetchAndRenderBusinesses(1);
+  fetchAndRenderAnalytics(); // Load analytics on page load
 
   // Header search for businesses
   const searchInput = document.getElementById('searchInput');
@@ -221,7 +225,7 @@ async function fetchAndRenderBusinesses(page = 1, pageSize = 10) {
   }
 }
 
-async function fetchAndRenderOrders(page = 1, pageSize = 10) {
+async function fetchAndRenderOrders(page = 1, pageSize = 5) {
   const tableBody = document.querySelector('#orders-tab .data-table tbody');
   const pagination = document.getElementById('orders-pagination');
   if (!tableBody) return;
@@ -282,6 +286,7 @@ async function fetchAndRenderOrders(page = 1, pageSize = 10) {
     // Re-attach dropdown logic
     attachDropdownLogic();
   } catch (err) {
+    console.error('Error fetching orders:', err);
     tableBody.innerHTML = '<tr><td colspan="6">Failed to load orders.</td></tr>';
     if (pagination) pagination.innerHTML = '';
   }
@@ -379,20 +384,59 @@ if (ordersFilterForm) {
 // --- Real Analytics Fetch ---
 async function fetchAndRenderAnalytics() {
   try {
+    console.log('Fetching analytics data...');
     const res = await fetch('/admin/api/analytics');
-    if (!res.ok) throw new Error('Not logged in or API error');
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
     const data = await res.json();
-    // Update cards with real data (keep revenue static)
-    document.querySelector('.stat-card.businesses .stat-value').textContent = data.totalBusinesses;
-    document.querySelector('.stat-card.orders .stat-value').textContent = data.totalOrders;
-    // Update bot uptime
+    console.log('Analytics data received:', data);
+    
+    // Update KPI cards with real data
+    const businessesCard = document.querySelector('.stat-card.businesses .stat-value');
+    const ordersCard = document.querySelector('.stat-card.orders .stat-value');
+    const revenueCard = document.querySelector('.stat-card.revenue .stat-value');
     const uptimeCard = document.querySelector('.stat-card.uptime .stat-value');
+    
+    if (businessesCard) {
+      businessesCard.textContent = data.totalBusinesses || 0;
+      console.log('Updated businesses card:', data.totalBusinesses);
+    }
+    
+    if (ordersCard) {
+      ordersCard.textContent = data.totalOrders || 0;
+      console.log('Updated orders card:', data.totalOrders);
+    }
+    
+    if (revenueCard) {
+      revenueCard.textContent = `$${data.totalRevenue || '0.00'}`;
+      console.log('Updated revenue card:', data.totalRevenue);
+    }
+    
     if (uptimeCard && data.botUptime) {
       uptimeCard.textContent = `${parseFloat(data.botUptime).toFixed(1)}%`;
       uptimeCard.title = `Uptime since last start: ${data.botUptimeHours} hours`;
+      console.log('Updated uptime card:', data.botUptime);
     }
+    
+    // Update change percentages if available
+    const businessChange = document.querySelector('.stat-card.businesses .stat-change');
+    const orderChange = document.querySelector('.stat-card.orders .stat-change');
+    
+    if (businessChange && typeof data.businessChange !== 'undefined') {
+      const changeText = (data.businessChange > 0 ? '+' : '') + data.businessChange.toFixed(1) + '% from last month';
+      businessChange.textContent = changeText;
+      businessChange.className = `stat-change ${data.businessChange >= 0 ? 'positive' : 'negative'}`;
+    }
+    
+    if (orderChange && typeof data.orderChange !== 'undefined') {
+      const changeText = (data.orderChange > 0 ? '+' : '') + data.orderChange.toFixed(1) + '% from last month';
+      orderChange.textContent = changeText;
+      orderChange.className = `stat-change ${data.orderChange >= 0 ? 'positive' : 'negative'}`;
+    }
+    
+    console.log('Analytics update completed successfully');
   } catch (err) {
-    // fallback: do nothing, keep mock data
+    console.error('Error fetching analytics:', err);
+    // Keep existing values if fetch fails
   }
 }
 

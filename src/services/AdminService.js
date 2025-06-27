@@ -145,49 +145,71 @@ class AdminService {
     }
   }
 
-  static async getAllOrdersWithDetails({ status, business, search, limit = 10, offset = 0 } = {}) {
+  static async getAllOrdersWithDetails({ status, business, search, limit = 5, offset = 0 } = {}) {
     try {
       const query = database.query('orders as o')
         .select(
-          'o.id as order_id',
+          'o.id',
+          'o.order_id',
           'o.status',
           'o.created_at',
           'o.updated_at',
           'o.items',
           'o.customer_name',
-          'g.business_name',
-          'g.business_id'
+          'o.business_id'
         )
-        .leftJoin('groups as g', 'o.business_id', 'g.business_id')
         .orderBy('o.created_at', 'desc')
         .limit(limit)
         .offset(offset);
+      
       if (status) {
         query.where('o.status', status);
       }
       if (business) {
-        query.where('g.business_id', business);
+        query.where('o.business_id', business);
       }
       if (search) {
         query.where(function() {
           this.where('o.customer_name', 'ilike', `%${search}%`)
-              .orWhere('o.id', 'ilike', `%${search}%`);
+              .orWhere('o.order_id', 'ilike', `%${search}%`);
         });
       }
+      
       const orders = await query;
+      
+      // Get business names for the orders
+      const businessIds = [...new Set(orders.map(order => order.business_id))];
+      const businessNames = {};
+      if (businessIds.length > 0) {
+        const businesses = await database.query('groups')
+          .select('business_id', 'business_name')
+          .whereIn('business_id', businessIds)
+          .distinct('business_id');
+        
+        businesses.forEach(biz => {
+          businessNames[biz.business_id] = biz.business_name;
+        });
+      }
+      
+      // Add business names to orders
+      const ordersWithBusinessNames = orders.map(order => ({
+        ...order,
+        business_name: businessNames[order.business_id] || 'Unknown Business'
+      }));
+      
       // Get total count for pagination
-      const countQuery = database.query('orders as o')
-        .leftJoin('groups as g', 'o.business_id', 'g.business_id');
+      const countQuery = database.query('orders as o');
       if (status) countQuery.where('o.status', status);
-      if (business) countQuery.where('g.business_id', business);
+      if (business) countQuery.where('o.business_id', business);
       if (search) {
         countQuery.where(function() {
           this.where('o.customer_name', 'ilike', `%${search}%`)
-              .orWhere('o.id', 'ilike', `%${search}%`);
+              .orWhere('o.order_id', 'ilike', `%${search}%`);
         });
       }
       const [{ count }] = await countQuery.count('o.id as count');
-      return { orders, total: parseInt(count) };
+      
+      return { orders: ordersWithBusinessNames, total: parseInt(count) };
     } catch (error) {
       logger.error('Error getting all orders with details:', error);
       throw error;
