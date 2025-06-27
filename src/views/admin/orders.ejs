@@ -107,44 +107,124 @@
                                     <td style="color: var(--text-muted);"><%= new Date(order.created_at).toLocaleString() %></td>
                                     <td style="white-space: nowrap;">
                                         <div style="display: flex; align-items: center; gap: 0.3rem;">
-                                            <a href="/admin/orders/<%= order.order_id %>" class="btn btn-icon btn-edit" title="View Details" style="width: 2rem; height: 2rem; font-size: 1rem;"><i class="fas fa-eye"></i></a>
+                                            <button type="button" class="btn btn-icon btn-edit" title="View Details" style="width: 2rem; height: 2rem; font-size: 1rem;" onclick="openViewModal('<%= order.id %>')"><i class="fas fa-eye"></i></button>
                                             <% if (order.status !== 'completed') { %>
-                                                <form action="/admin/orders/<%= order.order_id %>/complete" method="POST" style="display:inline;">
+                                                <form action="/admin/orders/<%= order.id %>/complete" method="POST" style="display:inline;">
                                                     <button type="submit" class="btn btn-icon btn-edit" title="Mark as Completed" style="width: 2rem; height: 2rem; font-size: 1rem;"><i class="fas fa-check"></i></button>
                                                 </form>
                                             <% } %>
-                                            <button type="button" class="btn btn-icon btn-edit" title="Edit" style="width: 2rem; height: 2rem; font-size: 1rem;" onclick="openEditModal('<%= order.order_id %>')"><i class="fas fa-edit"></i></button>
-                                            <form action="/admin/orders/<%= order.order_id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this order?');">
+                                            <button type="button" class="btn btn-icon btn-edit" title="Edit" style="width: 2rem; height: 2rem; font-size: 1rem;" onclick="openEditModal('<%= order.id %>')"><i class="fas fa-edit"></i></button>
+                                            <form action="/admin/orders/<%= order.id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this order?');">
                                                 <button type="submit" class="btn btn-icon btn-delete" title="Delete" style="width: 2rem; height: 2rem; font-size: 1rem;"><i class="fas fa-trash"></i></button>
                                             </form>
                                         </div>
+                                        <!-- View Details Modal -->
+                                        <div class="modal-overlay" id="viewOrderModal-<%= order.id %>" style="display: none;">
+                                            <div class="modal-content">
+                                                <button class="close-modal" onclick="closeViewModal('<%= order.id %>')">&times;</button>
+                                                <div class="modal-header">
+                                                    <h3>Order Details</h3>
+                                                </div>
+                                                <div class="modal-body" id="viewOrderBody-<%= order.id %>">
+                                                    <div class="order-details">
+                                                        <div class="detail-row">
+                                                            <div class="detail-label">Order ID:</div>
+                                                            <div class="detail-value"><%= order.order_id %></div>
+                                                        </div>
+                                                        <div class="detail-row">
+                                                            <div class="detail-label">Business:</div>
+                                                            <div class="detail-value"><%= order.business_name %></div>
+                                                        </div>
+                                                        <div class="detail-row">
+                                                            <div class="detail-label">Customer:</div>
+                                                            <div class="detail-value"><%= order.customer_name %></div>
+                                                        </div>
+                                                        <div class="detail-row">
+                                                            <div class="detail-label">Phone:</div>
+                                                            <div class="detail-value"><%= order.customer_phone %></div>
+                                                        </div>
+                                                        <div class="detail-row">
+                                                            <div class="detail-label">Status:</div>
+                                                            <div class="detail-value">
+                                                                <span class="status-badge <%= order.status %>"><%= order.status %></span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="detail-row">
+                                                            <div class="detail-label">Items:</div>
+                                                            <div class="detail-value"><%= order.items %></div>
+                                                        </div>
+                                                        <div class="detail-row">
+                                                            <div class="detail-label">Address:</div>
+                                                            <div class="detail-value"><%= order.address %></div>
+                                                        </div>
+                                                        <div class="detail-row">
+                                                            <div class="detail-label">Delivery Date:</div>
+                                                            <div class="detail-value"><%= order.delivery_date ? new Date(order.delivery_date).toLocaleDateString() : 'N/A' %></div>
+                                                        </div>
+                                                        <div class="detail-row">
+                                                            <div class="detail-label">Delivery Person:</div>
+                                                            <div class="detail-value"><%= order.delivery_person || 'N/A' %></div>
+                                                        </div>
+                                                        <div class="detail-row">
+                                                            <div class="detail-label">Created:</div>
+                                                            <div class="detail-value"><%= new Date(order.created_at).toLocaleString() %></div>
+                                                        </div>
+                                                        <div class="detail-row">
+                                                            <div class="detail-label">Updated:</div>
+                                                            <div class="detail-value"><%= new Date(order.updated_at).toLocaleString() %></div>
+                                                        </div>
+                                                        <% if (order.notes) { %>
+                                                        <div class="detail-row">
+                                                            <div class="detail-label">Notes:</div>
+                                                            <div class="detail-value"><%= order.notes %></div>
+                                                        </div>
+                                                        <% } %>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                         <!-- Edit Modal -->
-                                        <div class="modal-overlay" id="editOrderModal-<%= order.order_id %>" style="display: none;">
-                                            <div class="modal-content" style="max-width: 420px;">
-                                                <form action="/admin/orders/<%= order.order_id %>/edit" method="POST">
-                                                    <div class="modal-header">
-                                                        <h3>Edit Order <%= order.order_id %></h3>
-                                                        <button type="button" class="btn btn-icon" onclick="closeEditModal('<%= order.order_id %>')" aria-label="Close"><i class="fas fa-times"></i></button>
-                                                    </div>
-                                                    <div class="modal-body">
-                                                        <div class="mb-3">
-                                                            <label for="status-<%= order.order_id %>" class="form-label">Status</label>
-                                                            <select class="form-select" id="status-<%= order.order_id %>" name="status">
-                                                                <option value="pending" <%= order.status === 'pending' ? 'selected' : '' %>>Pending</option>
-                                                                <option value="completed" <%= order.status === 'completed' ? 'selected' : '' %>>Completed</option>
-                                                                <option value="cancelled" <%= order.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
-                                                            </select>
+                                        <div class="modal-overlay" id="editOrderModal-<%= order.id %>" style="display: none;">
+                                            <div class="modal-content">
+                                                <button class="close-modal" onclick="closeEditModal('<%= order.id %>')">&times;</button>
+                                                <div class="modal-header">
+                                                    <h3>Edit Order <%= order.order_id %></h3>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <form action="/admin/orders/<%= order.id %>/edit" method="POST" class="edit-form">
+                                                        <div class="form-grid">
+                                                            <div class="form-group">
+                                                                <label for="status-<%= order.id %>">Status</label>
+                                                                <select id="status-<%= order.id %>" name="status" class="form-select">
+                                                                    <option value="pending" <%= order.status === 'pending' ? 'selected' : '' %>>Pending</option>
+                                                                    <option value="processing" <%= order.status === 'processing' ? 'selected' : '' %>>Processing</option>
+                                                                    <option value="delivered" <%= order.status === 'delivered' ? 'selected' : '' %>>Delivered</option>
+                                                                    <option value="cancelled" <%= order.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+                                                                </select>
+                                                            </div>
+                                                            
+                                                            <div class="form-group full-width">
+                                                                <label for="items-<%= order.id %>">Items</label>
+                                                                <textarea id="items-<%= order.id %>" name="items" class="form-textarea" rows="4" placeholder="Enter order items..."><%= order.items %></textarea>
+                                                                <small class="form-help">Enter the items as plain text</small>
+                                                            </div>
+
+                                                            <div class="form-group full-width">
+                                                                <label for="notes-<%= order.id %>">Notes</label>
+                                                                <textarea id="notes-<%= order.id %>" name="notes" class="form-textarea" rows="3" placeholder="Add any additional notes..."><%= order.notes || '' %></textarea>
+                                                            </div>
                                                         </div>
-                                                        <div class="mb-3">
-                                                            <label for="items-<%= order.order_id %>" class="form-label">Items (JSON)</label>
-                                                            <textarea class="form-control" id="items-<%= order.order_id %>" name="items" rows="2"><%= order.items %></textarea>
+
+                                                        <div class="form-actions">
+                                                            <button type="submit" class="primary-btn">
+                                                                <i class="fas fa-save"></i> Save Changes
+                                                            </button>
+                                                            <button type="button" class="secondary-btn" onclick="closeEditModal('<%= order.id %>')">
+                                                                <i class="fas fa-times"></i> Cancel
+                                                            </button>
                                                         </div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" onclick="closeEditModal('<%= order.order_id %>')">Close</button>
-                                                        <button type="submit" class="btn btn-primary">Save changes</button>
-                                                    </div>
-                                                </form>
+                                                    </form>
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
@@ -203,6 +283,19 @@
         function closeEditModal(orderId) {
             document.getElementById('editOrderModal-' + orderId).style.display = 'none';
         }
+        function openViewModal(orderId) {
+            document.getElementById('viewOrderModal-' + orderId).style.display = 'flex';
+        }
+        function closeViewModal(orderId) {
+            document.getElementById('viewOrderModal-' + orderId).style.display = 'none';
+        }
+        
+        // Close modals when clicking outside
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal-overlay')) {
+                e.target.style.display = 'none';
+            }
+        });
     </script>
 </body>
 </html> 
