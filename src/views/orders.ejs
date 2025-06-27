@@ -430,20 +430,9 @@
       const order = await response.json();
       
                 let itemsHtml = 'No items listed.';
-                if (order.items) {
-                    // Handle items whether it's a JSON string or array
-                    let items = order.items;
-                    if (typeof items === 'string') {
-                        try {
-                            items = JSON.parse(items);
-                        } catch (e) {
-                            items = [];
-                        }
-                    }
-                    
-                    if (Array.isArray(items) && items.length > 0) {
-                        itemsHtml = `<ul>${items.map(item => `<li>${item.name || item.item_name || 'Unknown Item'} (x${item.quantity || 1}) - $${item.price || 'N/A'}</li>`).join('')}</ul>`;
-                    }
+                if (order.items && order.items.trim()) {
+                    // Items are stored as plain text, so display them directly
+                    itemsHtml = `<div class="items-text">${order.items.replace(/\n/g, '<br>')}</div>`;
                 }
 
                 modalBody.innerHTML = `
@@ -489,18 +478,8 @@
                 }
                 const order = await response.json();
                 
-                // Parse items if it's a JSON string
-                let items = order.items;
-                if (typeof items === 'string') {
-                    try {
-                        items = JSON.parse(items);
-                    } catch (e) {
-                        items = [];
-                    }
-                }
-                if (!Array.isArray(items)) {
-                    items = [];
-                }
+                // Items are stored as plain text, so no JSON parsing needed
+                const itemsText = order.items || '';
 
                 modalBody.innerHTML = `
                     <div class="order-edit">
@@ -543,9 +522,9 @@
                             
                             <div class="form-group">
                                 <label class="form-label">Items</label>
-                                <textarea class="form-textarea" name="items" rows="4" placeholder="Enter items as JSON format or plain text">${order.items || ''}</textarea>
+                                <textarea class="form-textarea" name="items" rows="4" placeholder="Enter items as plain text">${itemsText}</textarea>
                                 <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem; display: block;">
-                                    Enter items as JSON format (e.g., [{"name":"Item 1","quantity":2,"price":10.99}]) or plain text
+                                    Enter items as plain text (e.g., "2x Pizza Margherita, 1x Coke")
                                 </small>
                             </div>
                             
