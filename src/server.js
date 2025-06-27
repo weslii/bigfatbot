@@ -2212,6 +2212,20 @@ async function startServer() {
       }
     });
 
+    // Individual order details API
+    app.get('/admin/api/orders/:orderId', requireAdmin, async (req, res) => {
+      try {
+        const order = await AdminService.getOrderById(req.params.orderId);
+        if (!order) {
+          return res.status(404).json({ error: 'Order not found' });
+        }
+        res.json(order);
+      } catch (error) {
+        logger.error('API order details error:', error);
+        res.status(500).json({ error: 'Failed to load order details.' });
+      }
+    });
+
     // Analytics API endpoint
     app.get('/admin/api/analytics', requireAdmin, async (req, res) => {
       try {

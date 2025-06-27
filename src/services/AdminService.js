@@ -156,6 +156,11 @@ class AdminService {
           'o.updated_at',
           'o.items',
           'o.customer_name',
+          'o.customer_phone',
+          'o.address',
+          'o.delivery_date',
+          'o.delivery_person',
+          'o.notes',
           'o.business_id'
         )
         .orderBy('o.created_at', 'desc')
@@ -247,6 +252,11 @@ class AdminService {
           'o.updated_at',
           'o.items',
           'o.customer_name',
+          'o.customer_phone',
+          'o.address',
+          'o.delivery_date',
+          'o.delivery_person',
+          'o.notes',
           'o.business_id'
         )
         .where('o.id', orderId)

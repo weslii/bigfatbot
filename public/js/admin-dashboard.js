@@ -258,7 +258,7 @@ async function fetchAndRenderOrders(page = 1, pageSize = 5) {
           <div class="dropdown">
             <button class="action-menu-btn"><i class="fas fa-ellipsis-h"></i></button>
             <div class="dropdown-content">
-              <a href="/admin/orders/${order.id}">View Details</a>
+              <a href="#" class="view-order-details" data-order-id="${order.id}">View Details</a>
               <a href="/admin/orders/${order.id}/edit">Edit</a>
               <hr>
               <a href="#" class="danger">Delete Order</a>
@@ -820,4 +820,141 @@ async function refreshBotStatus() {
   } catch (error) {
     console.error('Failed to refresh bot status:', error);
   }
-} 
+}
+
+// Order Details Modal Functions
+function showOrderDetailsModal(orderId) {
+  const modal = document.getElementById('order-details-modal');
+  const modalBody = document.getElementById('order-details-body');
+  
+  if (!modal || !modalBody) {
+    console.error('Order details modal elements not found');
+    return;
+  }
+  
+  // Show loading state
+  modalBody.innerHTML = '<div class="loading">Loading order details...</div>';
+  modal.style.display = 'flex';
+  
+  // Fetch order details
+  fetchOrderDetails(orderId);
+}
+
+function closeOrderDetailsModal() {
+  const modal = document.getElementById('order-details-modal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+async function fetchOrderDetails(orderId) {
+  const modalBody = document.getElementById('order-details-body');
+  
+  try {
+    const response = await fetch(`/admin/api/orders/${orderId}`);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const order = await response.json();
+    
+    // Format the order details
+    const orderDetails = `
+      <div class="order-details">
+        <div class="detail-row">
+          <div class="detail-label">Order ID:</div>
+          <div class="detail-value">${order.order_id || 'N/A'}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Business:</div>
+          <div class="detail-value">${order.business_name || 'N/A'}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Customer:</div>
+          <div class="detail-value">${order.customer_name || 'N/A'}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Phone:</div>
+          <div class="detail-value">${order.customer_phone || 'N/A'}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Status:</div>
+          <div class="detail-value">
+            <span class="status-badge ${order.status}">${order.status || 'N/A'}</span>
+          </div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Items:</div>
+          <div class="detail-value">${order.items || 'No items listed'}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Address:</div>
+          <div class="detail-value">${order.address || 'N/A'}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Delivery Date:</div>
+          <div class="detail-value">${order.delivery_date ? new Date(order.delivery_date).toLocaleDateString() : 'N/A'}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Delivery Person:</div>
+          <div class="detail-value">${order.delivery_person || 'N/A'}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Created:</div>
+          <div class="detail-value">${order.created_at ? new Date(order.created_at).toLocaleString() : 'N/A'}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Updated:</div>
+          <div class="detail-value">${order.updated_at ? new Date(order.updated_at).toLocaleString() : 'N/A'}</div>
+        </div>
+        ${order.notes ? `
+        <div class="detail-row">
+          <div class="detail-label">Notes:</div>
+          <div class="detail-value">${order.notes}</div>
+        </div>
+        ` : ''}
+      </div>
+    `;
+    
+    modalBody.innerHTML = orderDetails;
+    
+  } catch (error) {
+    console.error('Error fetching order details:', error);
+    modalBody.innerHTML = `
+      <div class="error-message">
+        <i class="fas fa-exclamation-triangle"></i>
+        Failed to load order details. Please try again.
+      </div>
+    `;
+  }
+}
+
+// Attach order details modal event listeners
+document.addEventListener('DOMContentLoaded', function() {
+  // Close modal when clicking outside or on close button
+  const orderDetailsModal = document.getElementById('order-details-modal');
+  const closeOrderDetailsBtn = document.getElementById('close-order-details-modal');
+  
+  if (orderDetailsModal) {
+    orderDetailsModal.addEventListener('click', function(e) {
+      if (e.target === orderDetailsModal) {
+        closeOrderDetailsModal();
+      }
+    });
+  }
+  
+  if (closeOrderDetailsBtn) {
+    closeOrderDetailsBtn.addEventListener('click', closeOrderDetailsModal);
+  }
+  
+  // Attach click handlers for view order details links
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('view-order-details')) {
+      e.preventDefault();
+      const orderId = e.target.getAttribute('data-order-id');
+      if (orderId) {
+        showOrderDetailsModal(orderId);
+      }
+    }
+  });
+}); 
