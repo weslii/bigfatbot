@@ -242,7 +242,24 @@
                                                 <tr>
                                                     <td><strong><%= order.order_id %></strong></td>
                                                     <td><%= order.customer_name %></td>
-                                                    <td><%= order.items ? order.items.length : 0 %> items</td>
+                                                    <td>
+                                                        <% 
+                                                        let itemsDisplay = '';
+                                                        if (order.items) {
+                                                            try {
+                                                                const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
+                                                                if (Array.isArray(items)) {
+                                                                    itemsDisplay = items.map(item => item.name || item).join(', ');
+                                                                } else {
+                                                                    itemsDisplay = order.items;
+                                                                }
+                                                            } catch (e) {
+                                                                itemsDisplay = order.items;
+                                                            }
+                                                        }
+                                                        %>
+                                                        <%= itemsDisplay || 'No items' %>
+                                                    </td>
                                                     <td>
                                                         <span class="status-badge <%= order.status %>">
                                                             <%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %>
@@ -250,9 +267,14 @@
                                                     </td>
                                                     <td><%= new Date(order.created_at).toLocaleDateString() %></td>
                                                     <td>
-                                                        <button class="btn btn-sm btn-outline" onclick="viewOrder('<%= order.id %>')">
-                                                            <i class="fas fa-eye"></i>
-                                                        </button>
+                                                        <div class="action-buttons">
+                                                            <button class="btn btn-sm btn-outline" onclick="viewOrder('<%= order.id %>')" title="View Details">
+                                                                <i class="fas fa-eye"></i>
+                                                            </button>
+                                                            <button class="btn btn-sm btn-primary" onclick="editOrder('<%= order.id %>')" title="Edit Order">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             <% }); %>
@@ -367,6 +389,9 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="closeModal('orderDetailsModal')">Close</button>
+                <button type="button" class="btn btn-primary" id="editOrderBtn" style="display: none;">
+                    <i class="fas fa-edit"></i> Edit Order
+                </button>
             </div>
         </div>
     </div>
@@ -912,6 +937,26 @@
     .stats-grid {
         grid-template-columns: 1fr;
     }
+    
+    .action-buttons {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .action-buttons .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .order-details-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .order-details-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+    }
 }
 
 /* Modal styles with blur effect */
@@ -981,6 +1026,172 @@
     color: var(--text-secondary);
     font-size: 1rem;
     margin-top: 0.25rem;
+}
+
+/* Action buttons styling */
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.action-buttons .btn {
+    padding: 0.375rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+/* Status badges styling */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: capitalize;
+    letter-spacing: 0.025em;
+}
+
+.status-badge.pending {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.status-badge.delivered {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.status-badge.cancelled {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.status-badge.processing {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+/* Order details modal styling */
+.order-details-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.order-details-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.order-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--primary-color), #10b981);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+}
+
+.order-header-info h4 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.order-header-info p {
+    margin: 0.25rem 0 0 0;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.order-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.order-detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.order-detail-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.order-detail-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.order-detail-value {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.notes-box {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.75rem;
+    font-style: italic;
+}
+
+/* Items list styling */
+.items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.item-card {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.item-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.item-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.item-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.item-quantity {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    background: var(--background-color);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 500;
 }
 </style>
 
@@ -1306,6 +1517,7 @@
                 
                 const modal = document.getElementById('orderDetailsModal');
                 const content = document.getElementById('orderDetailsContent');
+                const editBtn = document.getElementById('editOrderBtn');
                 
                 let items = [];
                 try {
@@ -1315,78 +1527,85 @@
                 }
                 
                 content.innerHTML = `
-                    <div class="details-grid">
-                        <div class="detail-item">
-                            <label class="detail-label">Order ID</label>
-                            <div class="detail-value">${order.order_id}</div>
-                        </div>
-                        <div class="detail-item">
-                            <label class="detail-label">Business</label>
-                            <div class="detail-value">${order.business_name}</div>
-                        </div>
-                        <div class="detail-item">
-                            <label class="detail-label">Status</label>
-                            <div class="detail-value">
-                                <span class="status-badge ${order.status}">${order.status}</span>
+                    <div class="order-details-content">
+                        <div class="order-details-header">
+                            <div class="order-avatar">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <div class="order-header-info">
+                                <h4>Order #${order.order_id}</h4>
+                                <p>${order.business_name}</p>
                             </div>
                         </div>
-                        <div class="detail-item">
-                            <label class="detail-label">Created</label>
-                            <div class="detail-value">${new Date(order.created_at).toLocaleString()}</div>
-                        </div>
-                        <div class="detail-item">
-                            <label class="detail-label">Customer Name</label>
-                            <div class="detail-value">${order.customer_name}</div>
-                        </div>
-                        <div class="detail-item">
-                            <label class="detail-label">Customer Phone</label>
-                            <div class="detail-value">${order.customer_phone}</div>
-                        </div>
-                    </div>
-                    <div class="detail-item full-width">
-                        <label class="detail-label">Address</label>
-                        <div class="detail-value">${order.address}</div>
-                    </div>
-                    <div class="detail-item full-width">
-                        <label class="detail-label">Order Items</label>
-                        <div class="detail-value">
-                            <div class="table-container">
-                                <table class="data-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Item</th>
-                                            <th>Quantity</th>
-                                            <th>Price</th>
-                                            <th>Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        ${items.map(item => `
-                                            <tr>
-                                                <td>${item.name || item}</td>
-                                                <td>${item.quantity || 1}</td>
-                                                <td>$${item.price || '0.00'}</td>
-                                                <td>$${((item.price || 0) * (item.quantity || 1)).toFixed(2)}</td>
-                                            </tr>
-                                        `).join('')}
-                                    </tbody>
-                                </table>
+                        
+                        <div class="order-details-grid">
+                            <div class="order-detail-item">
+                                <label class="order-detail-label">Status</label>
+                                <div class="order-detail-value">
+                                    <span class="status-badge ${order.status}">${order.status}</span>
+                                </div>
+                            </div>
+                            <div class="order-detail-item">
+                                <label class="order-detail-label">Created</label>
+                                <div class="order-detail-value">${new Date(order.created_at).toLocaleString()}</div>
+                            </div>
+                            <div class="order-detail-item">
+                                <label class="order-detail-label">Customer Name</label>
+                                <div class="order-detail-value">${order.customer_name}</div>
+                            </div>
+                            <div class="order-detail-item">
+                                <label class="order-detail-label">Customer Phone</label>
+                                <div class="order-detail-value">${order.customer_phone}</div>
                             </div>
                         </div>
-                    </div>
-                    ${order.notes ? `
-                        <div class="detail-item full-width">
-                            <label class="detail-label">Notes</label>
-                            <div class="detail-value">${order.notes}</div>
+                        
+                        <div class="order-detail-item full-width">
+                            <label class="order-detail-label">Delivery Address</label>
+                            <div class="order-detail-value">${order.address || 'No address provided'}</div>
                         </div>
-                    ` : ''}
+                        
+                        <div class="order-detail-item full-width">
+                            <label class="order-detail-label">Order Items</label>
+                            <div class="order-detail-value">
+                                <div class="items-list">
+                                    ${items.map(item => `
+                                        <div class="item-card">
+                                            <div class="item-info">
+                                                <div class="item-name">${item.name || item}</div>
+                                                <div class="item-quantity">Qty: ${item.quantity || 1}</div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${order.notes ? `
+                            <div class="order-detail-item full-width">
+                                <label class="order-detail-label">Notes</label>
+                                <div class="order-detail-value notes-box">${order.notes}</div>
+                            </div>
+                        ` : ''}
+                    </div>
                 `;
+                
+                // Show edit button and set up click handler
+                editBtn.style.display = 'inline-flex';
+                editBtn.onclick = () => editOrder(orderId);
                 
                 modal.classList.add('show');
             })
             .catch(error => {
                 alert('Error loading order details: ' + error.message);
             });
+    }
+
+    function editOrder(orderId) {
+        // Close the current modal
+        closeModal('orderDetailsModal');
+        
+        // Redirect to the orders page with edit mode
+        window.location.href = `/orders?business=<%= business.business_id %>&edit=${orderId}`;
     }
 
     function exportBusinessOrders(format = 'csv') {
