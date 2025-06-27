@@ -180,6 +180,7 @@ class OrderService {
 
   async getUserOrderStats(userId) {
     try {
+      logger.info('[OrderStats] userId:', userId);
       // Try to get from cache first (with graceful fallback)
       let cachedStats = null;
       try {
@@ -187,64 +188,57 @@ class OrderService {
       } catch (cacheError) {
         logger.warn('Cache get failed, proceeding without cache:', cacheError.message);
       }
-      
       if (cachedStats) {
+        logger.info('[OrderStats] Returning cached stats:', cachedStats);
         return cachedStats;
       }
-
       // Get all business IDs for the user
       const userBusinesses = await database.query('groups')
         .select('business_id')
         .where('user_id', userId)
         .groupBy('business_id');
-
       const businessIds = userBusinesses.map(b => b.business_id);
-
+      logger.info('[OrderStats] businessIds:', businessIds);
       if (businessIds.length === 0) {
         const emptyStats = {
           totalOrders: 0,
-          activeOrders: 0,
           completedOrders: 0,
           pendingOrders: 0
         };
-        // Try to cache empty stats (with graceful fallback)
         try {
           await cacheService.setOrderStats(userId, emptyStats, 300);
         } catch (cacheError) {
           logger.warn('Cache set failed for empty stats:', cacheError.message);
         }
+        logger.info('[OrderStats] No businesses found, returning empty stats');
         return emptyStats;
       }
-
       // Get order statistics across all user's businesses
       const stats = await database.query('orders')
         .select(
           database.query.raw('COUNT(*) as total_orders'),
-          database.query.raw('SUM(CASE WHEN status = \'pending\' THEN 1 ELSE 0 END) as pending_orders'),
+          database.query.raw('SUM(CASE WHEN status = \'pending\' OR status = \'processing\' THEN 1 ELSE 0 END) as pending_orders'),
           database.query.raw('SUM(CASE WHEN status = \'delivered\' THEN 1 ELSE 0 END) as completed_orders')
         )
         .whereIn('business_id', businessIds)
         .first();
-
+      logger.info('[OrderStats] stats result:', stats);
       const result = {
         totalOrders: parseInt(stats.total_orders) || 0,
         completedOrders: parseInt(stats.completed_orders) || 0,
         pendingOrders: parseInt(stats.pending_orders) || 0
       };
-
-      // Try to cache the result (with graceful fallback)
       try {
         await cacheService.setOrderStats(userId, result, 600);
       } catch (cacheError) {
         logger.warn('Cache set failed for user stats:', cacheError.message);
       }
-      
+      logger.info('[OrderStats] Returning result:', result);
       return result;
     } catch (error) {
       logger.error('Error getting user order stats:', error);
       return {
         totalOrders: 0,
-        activeOrders: 0,
         completedOrders: 0,
         pendingOrders: 0
       };
