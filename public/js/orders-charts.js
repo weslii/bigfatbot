@@ -270,184 +270,29 @@ document.addEventListener('DOMContentLoaded', function() {
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('pageSize')) params.set('pageSize', urlParams.get('pageSize'));
       if (urlParams.get('page')) params.set('page', urlParams.get('page'));
-      
-      try {
-        // Fetch filtered data as JSON
-        const res = await fetch(window.location.pathname + '?' + params.toString(), { 
-          headers: { 'X-Requested-With': 'XMLHttpRequest' } 
-        });
-        if (!res.ok) throw new Error('Failed to fetch filtered orders');
-        const data = await res.json();
-        
-        // Update orders table
-        updateOrdersTable(data.orders, data.totalOrders);
-        
-        // Update pagination
-        updatePagination(data.page, data.totalPages, data.totalOrders, data.pageSize, params);
-        
-        // Update charts
-        if (window.ordersCharts) {
-          window.ordersCharts.data = data.chartData;
-          window.ordersCharts.initialize();
-        }
-        
-        // Update URL without page reload
-        const newUrl = window.location.pathname + '?' + params.toString();
-        window.history.pushState({}, '', newUrl);
-        
-      } catch (error) {
-        console.error('Filter error:', error);
-        alert('Failed to apply filters. Please try again.');
+      // Fetch filtered HTML partial
+      const res = await fetch(window.location.pathname + '?' + params.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      if (!res.ok) return alert('Failed to fetch filtered orders');
+      const html = await res.text();
+      // Parse and update orders table and charts
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      // Replace orders table
+      const newTable = doc.querySelector('.table-container');
+      const oldTable = document.querySelector('.table-container');
+      if (newTable && oldTable) oldTable.replaceWith(newTable);
+      // Replace pagination
+      const newPagination = doc.querySelector('.pagination');
+      const oldPagination = document.querySelector('.pagination');
+      if (newPagination && oldPagination) oldPagination.replaceWith(newPagination);
+      // Replace charts data
+      if (window.ordersCharts && doc.getElementById('chartDataScript')) {
+        const newChartData = JSON.parse(doc.getElementById('chartDataScript').textContent);
+        window.ordersCharts.data = newChartData;
+        window.ordersCharts.initialize();
       }
     });
   }
-
-  // Helper function to update orders table
-  function updateOrdersTable(orders, totalOrders) {
-    const tbody = document.querySelector('.data-table tbody');
-    const ordersCount = document.querySelector('.card-title');
-    
-    if (!tbody) return;
-    
-    // Update orders count
-    if (ordersCount) {
-      ordersCount.innerHTML = `<i class="fas fa-box"></i> Orders (${totalOrders})`;
-    }
-    
-    // Clear existing rows
-    tbody.innerHTML = '';
-    
-    if (orders && orders.length > 0) {
-      orders.forEach(order => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td><strong>${order.order_id}</strong></td>
-          <td><span class="business-badge">${order.business_name}</span></td>
-          <td>${order.customer_name}</td>
-          <td><span class="status-badge ${order.status}">${order.status}</span></td>
-          <td>${new Date(order.created_at).toLocaleDateString()}</td>
-          <td>
-            <div class="btn-group">
-              <button class="btn btn-sm btn-outline" onclick="viewOrder('${order.id}')">
-                <i class="fas fa-eye"></i>
-              </button>
-              <button class="btn btn-sm btn-outline" onclick="editOrder('${order.id}')">
-                <i class="fas fa-edit"></i>
-              </button>
-            </div>
-          </td>
-        `;
-        tbody.appendChild(row);
-      });
-    } else {
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td colspan="6" class="no-orders">
-          <i class="fas fa-box-open"></i>
-          <p>No orders found matching your criteria.</p>
-        </td>
-      `;
-      tbody.appendChild(row);
-    }
-  }
-
-  // Helper function to update pagination
-  function updatePagination(currentPage, totalPages, totalOrders, pageSize, params) {
-    const paginationContainer = document.querySelector('.pagination');
-    if (!paginationContainer || totalPages <= 1) {
-      if (paginationContainer) paginationContainer.remove();
-      return;
-    }
-    
-    const startItem = (currentPage - 1) * pageSize + 1;
-    const endItem = Math.min(currentPage * pageSize, totalOrders);
-    
-    let paginationHTML = `
-      <div class="pagination-info">
-        Showing ${startItem} to ${endItem} of ${totalOrders} orders
-      </div>
-      <nav class="pagination-nav">
-    `;
-    
-    // Previous button
-    paginationHTML += `
-      <button class="pagination-btn ${currentPage <= 1 ? 'disabled' : ''}" 
-              ${currentPage <= 1 ? 'disabled' : ''} 
-              onclick="changePage(${currentPage - 1})">
-        <i class="fas fa-chevron-left"></i>
-      </button>
-    `;
-    
-    // Page numbers
-    const maxPagesToShow = 5;
-    let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
-    let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
-    if (endPage - startPage + 1 < maxPagesToShow) {
-      startPage = Math.max(1, endPage - maxPagesToShow + 1);
-    }
-    
-    if (startPage > 1) {
-      paginationHTML += `<button class="pagination-btn" onclick="changePage(1)">1</button>`;
-      if (startPage > 2) paginationHTML += `<span class="pagination-btn disabled">...</span>`;
-    }
-    
-    for (let i = startPage; i <= endPage; i++) {
-      paginationHTML += `
-        <button class="pagination-btn ${i === currentPage ? 'active' : ''}" 
-                onclick="changePage(${i})">${i}</button>
-      `;
-    }
-    
-    if (endPage < totalPages) {
-      if (endPage < totalPages - 1) paginationHTML += `<span class="pagination-btn disabled">...</span>`;
-      paginationHTML += `<button class="pagination-btn" onclick="changePage(${totalPages})">${totalPages}</button>`;
-    }
-    
-    // Next button
-    paginationHTML += `
-      <button class="pagination-btn ${currentPage >= totalPages ? 'disabled' : ''}" 
-              ${currentPage >= totalPages ? 'disabled' : ''} 
-              onclick="changePage(${currentPage + 1})">
-        <i class="fas fa-chevron-right"></i>
-      </button>
-    </nav>`;
-    
-    paginationContainer.innerHTML = paginationHTML;
-  }
-
-  // Global function for pagination
-  window.changePage = async function(page) {
-    const formData = new FormData(document.getElementById('filtersForm'));
-    const params = new URLSearchParams(formData);
-    params.set('page', page);
-    
-    // Add pageSize if present
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('pageSize')) params.set('pageSize', urlParams.get('pageSize'));
-    
-    try {
-      const res = await fetch(window.location.pathname + '?' + params.toString(), { 
-        headers: { 'X-Requested-With': 'XMLHttpRequest' } 
-      });
-      if (!res.ok) throw new Error('Failed to fetch page');
-      const data = await res.json();
-      
-      updateOrdersTable(data.orders, data.totalOrders);
-      updatePagination(data.page, data.totalPages, data.totalOrders, data.pageSize, params);
-      
-      if (window.ordersCharts) {
-        window.ordersCharts.data = data.chartData;
-        window.ordersCharts.initialize();
-      }
-      
-      const newUrl = window.location.pathname + '?' + params.toString();
-      window.history.pushState({}, '', newUrl);
-      
-    } catch (error) {
-      console.error('Page change error:', error);
-      alert('Failed to load page. Please try again.');
-    }
-  };
 
   // Initialize real-time updates
   if (window.chartData && window.chartData.userId) {

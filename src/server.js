@@ -557,65 +557,38 @@ async function startServer() {
         // Chart Data - Use the same approach to avoid duplicates
         const baseChartQuery = db.query('orders as o')
           .whereIn('o.business_id', businessIds);
-
-        // Apply same filters to chart data
-        let chartQuery = baseChartQuery.clone();
-        if (business) {
-          chartQuery = chartQuery.where('o.business_id', business);
-        }
-        if (status) {
-          chartQuery = chartQuery.where('o.status', status);
-        }
-        if (search) {
-          chartQuery = chartQuery.where(function() {
-            this.where('o.customer_name', 'ilike', `%${search}%`)
-              .orWhere('o.order_id', 'ilike', `%${search}%`);
-          });
-        }
-
-        // Get status counts for filtered data
-        const statusCounts = await chartQuery.clone()
-          .select('o.status', db.query.raw('COUNT(DISTINCT o.id) as count'))
-          .groupBy('o.status');
-
-        // Get orders by business for filtered data
-        const ordersByBusiness = await chartQuery.clone()
+        
+        const statusCounts = await baseChartQuery.clone()
+          .groupBy('o.status')
+          .select('o.status', db.query.raw('count(DISTINCT o.id) as count'));
+        
+        const ordersByBusiness = await db.query('orders as o')
           .select(
             db.query.raw('(SELECT business_name FROM groups WHERE business_id = o.business_id AND user_id = ? LIMIT 1) as business_name', [userId]),
-            db.query.raw('COUNT(DISTINCT o.id) as count')
+            db.query.raw('count(DISTINCT o.id) as count')
           )
+          .whereIn('o.business_id', businessIds)
           .groupBy('o.business_id');
-
-        // Get recent trends (last 7 days) for filtered data
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
         
-        const recentTrends = await chartQuery.clone()
-          .select(
-            db.query.raw('DATE(o.created_at) as date'),
-            db.query.raw('COUNT(DISTINCT o.id) as count')
-          )
+        // Always return a 7-day range for trends
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        const sevenDaysAgo = new Date(today);
+        sevenDaysAgo.setDate(today.getDate() - 6);
+        const trendRaw = await baseChartQuery.clone()
           .where('o.created_at', '>=', sevenDaysAgo)
-          .groupBy(db.query.raw('DATE(o.created_at)'))
-          .orderBy(db.query.raw('DATE(o.created_at)'));
-
-        // Check if this is an AJAX request
-        const isAjax = req.headers['x-requested-with'] === 'XMLHttpRequest';
-        
-        if (isAjax) {
-          // Return only the necessary data for AJAX updates
-          return res.json({
-            orders,
-            totalOrders,
-            totalPages,
-            page: parseInt(page, 10),
-            pageSize: parseInt(pageSize, 10),
-            chartData: {
-              statusCounts,
-              ordersByBusiness,
-              recentTrends
-            }
-          });
+          .groupByRaw('date(o.created_at)')
+          .orderByRaw('date(o.created_at)')
+          .select(db.query.raw('date(o.created_at) as date'), db.query.raw('count(DISTINCT o.id) as count'));
+        // Fill in missing days with 0
+        const trendMap = {};
+        trendRaw.forEach(row => { trendMap[row.date.toISOString().slice(0,10)] = Number(row.count); });
+        const recentTrends = [];
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(sevenDaysAgo);
+          d.setDate(sevenDaysAgo.getDate() + i);
+          const key = d.toISOString().slice(0,10);
+          recentTrends.push({ date: key, count: trendMap[key] || 0 });
         }
 
         res.render('orders', {
