@@ -358,9 +358,37 @@
             }
 
             // Update charts theme
-            Object.values(window.charts || {}).forEach(chart => {
-                updateChartTheme(chart, theme);
-            });
+            updateChartThemes(theme);
+        }
+
+        function updateChartThemes(theme) {
+            const textColor = theme === 'dark' ? '#f8fafc' : '#1e293b';
+            const gridColor = theme === 'dark' ? 'rgba(148, 163, 184, 0.2)' : 'rgba(226, 232, 240, 1)';
+            
+            // Update existing charts if they exist
+            if (window.statusChart) {
+                window.statusChart.options.plugins.title.color = textColor;
+                window.statusChart.options.plugins.legend.labels.color = textColor;
+                window.statusChart.update();
+            }
+            
+            if (window.businessChart) {
+                window.businessChart.options.plugins.title.color = textColor;
+                window.businessChart.options.scales.y.ticks.color = textColor;
+                window.businessChart.options.scales.x.ticks.color = textColor;
+                window.businessChart.options.scales.y.grid.color = gridColor;
+                window.businessChart.options.scales.x.grid.color = gridColor;
+                window.businessChart.update();
+            }
+            
+            if (window.trendChart) {
+                window.trendChart.options.plugins.title.color = textColor;
+                window.trendChart.options.scales.y.ticks.color = textColor;
+                window.trendChart.options.scales.x.ticks.color = textColor;
+                window.trendChart.options.scales.y.grid.color = gridColor;
+                window.trendChart.options.scales.x.grid.color = gridColor;
+                window.trendChart.update();
+            }
         }
 
         themeToggle.addEventListener('click', () => {
@@ -652,9 +680,185 @@
             }
         }
 
-        // Initialize scroll reveal when DOM is loaded
+        // Chart initialization
+        function initCharts() {
+            // Status Distribution Chart
+            const statusCtx = document.getElementById('statusChart');
+            if (statusCtx) {
+                window.statusChart = new Chart(statusCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Pending', 'Processing', 'Delivered', 'Cancelled'],
+                        datasets: [{
+                            data: [12, 19, 8, 5],
+                            backgroundColor: [
+                                'rgba(245, 158, 11, 0.8)',
+                                'rgba(59, 130, 246, 0.8)',
+                                'rgba(16, 185, 129, 0.8)',
+                                'rgba(239, 68, 68, 0.8)'
+                            ],
+                            borderColor: [
+                                'rgba(245, 158, 11, 1)',
+                                'rgba(59, 130, 246, 1)',
+                                'rgba(16, 185, 129, 1)',
+                                'rgba(239, 68, 68, 1)'
+                            ],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    color: getComputedStyle(document.documentElement).getPropertyValue('--text-primary'),
+                                    padding: 20,
+                                    usePointStyle: true
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Order Status Distribution',
+                                color: getComputedStyle(document.documentElement).getPropertyValue('--text-primary'),
+                                font: {
+                                    size: 16,
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Business Performance Chart
+            const businessCtx = document.getElementById('businessChart');
+            if (businessCtx) {
+                window.businessChart = new Chart(businessCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Business A', 'Business B', 'Business C', 'Business D'],
+                        datasets: [{
+                            label: 'Orders',
+                            data: [65, 59, 80, 81],
+                            backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: 'Orders by Business',
+                                color: getComputedStyle(document.documentElement).getPropertyValue('--text-primary'),
+                                font: {
+                                    size: 16,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary')
+                                },
+                                grid: {
+                                    color: getComputedStyle(document.documentElement).getPropertyValue('--border-color')
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary')
+                                },
+                                grid: {
+                                    color: getComputedStyle(document.documentElement).getPropertyValue('--border-color')
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Trend Chart
+            const trendCtx = document.getElementById('trendChart');
+            if (trendCtx) {
+                const last7Days = [];
+                for (let i = 6; i >= 0; i--) {
+                    const date = new Date();
+                    date.setDate(date.getDate() - i);
+                    last7Days.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+                }
+
+                window.trendChart = new Chart(trendCtx, {
+                    type: 'line',
+                    data: {
+                        labels: last7Days,
+                        datasets: [{
+                            label: 'Orders',
+                            data: [12, 19, 15, 25, 22, 30, 28],
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: 'Order Trends (Last 7 Days)',
+                                color: getComputedStyle(document.documentElement).getPropertyValue('--text-primary'),
+                                font: {
+                                    size: 16,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary')
+                                },
+                                grid: {
+                                    color: getComputedStyle(document.documentElement).getPropertyValue('--border-color')
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary')
+                                },
+                                grid: {
+                                    color: getComputedStyle(document.documentElement).getPropertyValue('--border-color')
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Initialize charts when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
+            // Apply saved theme first
+            applyTheme(savedTheme);
+            
             initScrollReveal();
+            initCharts();
             
             // Also make elements visible immediately if they're already in viewport
             setTimeout(() => {
