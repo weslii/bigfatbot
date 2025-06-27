@@ -472,6 +472,22 @@ body {
 .pagination-nav {
     display: flex;
     gap: 0.25rem;
+    align-items: center;
+}
+
+.pagination-nav form {
+    display: inline;
+    margin: 0;
+    padding: 0;
+}
+
+.pagination-nav form button {
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    color: inherit;
 }
 
 .pagination-btn {
@@ -483,21 +499,43 @@ body {
     border-radius: var(--radius);
     font-size: 0.875rem;
     transition: all 0.2s;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 36px;
+    font-weight: 500;
+    box-shadow: var(--shadow-sm);
 }
 
 .pagination-btn:hover:not(.disabled) {
     background: var(--background-color);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-color);
 }
 
 .pagination-btn.active {
     background: var(--primary-color);
     color: white;
     border-color: var(--primary-color);
+    font-weight: 600;
+    box-shadow: var(--shadow-md);
 }
 
 .pagination-btn.disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    pointer-events: none;
+    box-shadow: none;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+    box-shadow: none;
 }
 
 /* Action Buttons */
@@ -691,6 +729,19 @@ body {
     .pagination {
         flex-direction: column;
         align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .pagination-nav {
+        flex-wrap: wrap;
+        gap: 0.125rem;
+    }
+
+    .pagination-btn {
+        min-width: 36px;
+        height: 32px;
+        font-size: 0.8125rem;
+        padding: 0.375rem 0.5rem;
     }
 }
 

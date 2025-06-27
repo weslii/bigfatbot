@@ -205,10 +205,17 @@
                             Showing <%= (page - 1) * pageSize + 1 %> to <%= Math.min(page * pageSize, totalOrders) %> of <%= totalOrders %> orders
           </div>
                         <nav class="pagination-nav">
-                            <a href="?<%= new URLSearchParams({ ...query, page: page - 1 }).toString() %>" 
-                               class="pagination-btn <%= page <= 1 ? 'disabled' : '' %>">
-                                <i class="fas fa-chevron-left"></i>
-                            </a>
+                            <form method="GET" style="display: inline;">
+                                <% for(let key in query) { %>
+                                    <% if (key !== 'page') { %>
+                                        <input type="hidden" name="<%= key %>" value="<%= query[key] %>">
+                                    <% } %>
+                                <% } %>
+                                <input type="hidden" name="page" value="<%= page - 1 %>">
+                                <button type="submit" class="pagination-btn <%= page <= 1 ? 'disabled' : '' %>" <%= page <= 1 ? 'disabled' : '' %>>
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                            </form>
                             <% 
                                 const maxPagesToShow = 5;
                                 let startPage = Math.max(1, page - Math.floor(maxPagesToShow / 2));
@@ -218,23 +225,53 @@
                                 }
                             %>
               <% if (startPage > 1) { %>
-                                <a href="?<%= new URLSearchParams({ ...query, page: 1 }).toString() %>" class="pagination-btn">1</a>
+                                <form method="GET" style="display: inline;">
+                                    <% for(let key in query) { %>
+                                        <% if (key !== 'page') { %>
+                                            <input type="hidden" name="<%= key %>" value="<%= query[key] %>">
+                                        <% } %>
+                                    <% } %>
+                                    <input type="hidden" name="page" value="1">
+                                    <button type="submit" class="pagination-btn">1</button>
+                                </form>
                                 <% if (startPage > 2) { %><span class="pagination-btn disabled">...</span><% } %>
               <% } %>
 
                             <% for(let i = startPage; i <= endPage; i++) { %>
-                                <a href="?<%= new URLSearchParams({ ...query, page: i }).toString() %>" 
-                                   class="pagination-btn <%= i === page ? 'active' : '' %>"><%= i %></a>
+                                <form method="GET" style="display: inline;">
+                                    <% for(let key in query) { %>
+                                        <% if (key !== 'page') { %>
+                                            <input type="hidden" name="<%= key %>" value="<%= query[key] %>">
+                                        <% } %>
+                                    <% } %>
+                                    <input type="hidden" name="page" value="<%= i %>">
+                                    <button type="submit" class="pagination-btn <%= i === page ? 'active' : '' %>"><%= i %></button>
+                                </form>
               <% } %>
 
               <% if (endPage < totalPages) { %>
                                 <% if (endPage < totalPages - 1) { %><span class="pagination-btn disabled">...</span><% } %>
-                                <a href="?<%= new URLSearchParams({ ...query, page: totalPages }).toString() %>" class="pagination-btn"><%= totalPages %></a>
+                                <form method="GET" style="display: inline;">
+                                    <% for(let key in query) { %>
+                                        <% if (key !== 'page') { %>
+                                            <input type="hidden" name="<%= key %>" value="<%= query[key] %>">
+                                        <% } %>
+                                    <% } %>
+                                    <input type="hidden" name="page" value="<%= totalPages %>">
+                                    <button type="submit" class="pagination-btn"><%= totalPages %></button>
+                                </form>
                 <% } %>
-                            <a href="?<%= new URLSearchParams({ ...query, page: page + 1 }).toString() %>" 
-                               class="pagination-btn <%= page >= totalPages ? 'disabled' : '' %>">
-                                <i class="fas fa-chevron-right"></i>
-                            </a>
+                            <form method="GET" style="display: inline;">
+                                <% for(let key in query) { %>
+                                    <% if (key !== 'page') { %>
+                                        <input type="hidden" name="<%= key %>" value="<%= query[key] %>">
+                                    <% } %>
+                                <% } %>
+                                <input type="hidden" name="page" value="<%= page + 1 %>">
+                                <button type="submit" class="pagination-btn <%= page >= totalPages ? 'disabled' : '' %>" <%= page >= totalPages ? 'disabled' : '' %>>
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </form>
           </nav>
         </div>
       <% } %>
@@ -332,40 +369,73 @@
         function openModal(modalId) { document.getElementById(modalId).classList.add('show'); }
         function closeModal(modalId) { document.getElementById(modalId).classList.remove('show'); }
 
+        // Profile dropdown functionality
+        const profileDropdown = document.getElementById('profileDropdown');
+        const profileMenu = document.getElementById('profileMenu');
+        const dropdownParent = profileDropdown.closest('.dropdown');
+        profileDropdown.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdownParent.classList.toggle('active');
+        });
+        document.addEventListener('click', (e) => {
+            if (!profileMenu.contains(e.target) && !profileDropdown.contains(e.target)) {
+                dropdownParent.classList.remove('active');
+            }
+        });
+
+        // Enhanced view order function
         async function viewOrder(orderId) {
             const modalBody = document.getElementById('orderModalBody');
             modalBody.innerHTML = '<p>Loading order details...</p>';
             openModal('orderModal');
             try {
                 const response = await fetch(`/api/orders/${orderId}?userId=<%= userId %>`);
-                if (!response.ok) throw new Error('Failed to fetch');
-      const order = await response.json();
-      
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                const order = await response.json();
+                
                 let itemsHtml = 'No items listed.';
                 if (order.items && order.items.length) {
                     itemsHtml = `<ul>${order.items.map(item => `<li>${item.name} (x${item.quantity}) - $${item.price}</li>`).join('')}</ul>`;
                 }
 
                 modalBody.innerHTML = `
-                    <h4>Order ID: ${order.order_id}</h4>
-                    <p><strong>Business:</strong> ${order.business_name}</p>
-                    <p><strong>Customer:</strong> ${order.customer_name}</p>
-                    <p><strong>Status:</strong> <span class="status-badge ${order.status}">${order.status}</span></p>
-                    <hr>
-                    <h5>Items</h5>
-                    ${itemsHtml}
-                    <hr>
-                    <p><strong>Total Price:</strong> $${order.total_price}</p>
-                    <p><strong>Created:</strong> ${new Date(order.created_at).toLocaleString()}</p>
+                    <div class="order-details">
+                        <h4>Order ID: ${order.order_id}</h4>
+                        <p><strong>Business:</strong> ${order.business_name || 'N/A'}</p>
+                        <p><strong>Customer:</strong> ${order.customer_name || 'N/A'}</p>
+                        <p><strong>Status:</strong> <span class="status-badge ${order.status}">${order.status}</span></p>
+                        <hr>
+                        <h5>Items</h5>
+                        ${itemsHtml}
+                        <hr>
+                        <p><strong>Total Price:</strong> $${order.total_price || 'N/A'}</p>
+                        <p><strong>Created:</strong> ${new Date(order.created_at).toLocaleString()}</p>
+                        ${order.updated_at ? `<p><strong>Last Updated:</strong> ${new Date(order.updated_at).toLocaleString()}</p>` : ''}
+                    </div>
                 `;
-    } catch (error) {
-                modalBody.innerHTML = '<p style="color: var(--danger-color)">Failed to load order details.</p>';
+            } catch (error) {
+                console.error('Error loading order:', error);
+                modalBody.innerHTML = `<p style="color: var(--danger-color)">Failed to load order details: ${error.message}</p>`;
             }
         }
 
+        // Enhanced edit order function
         function editOrder(orderId) {
-            // Redirect to a future edit page or open a more complex modal
-            alert('Edit functionality coming soon for order: ' + orderId);
+            // For now, show a modal with basic edit options
+            const modalBody = document.getElementById('orderModalBody');
+            modalBody.innerHTML = `
+                <div class="order-edit">
+                    <h4>Edit Order: ${orderId}</h4>
+                    <p>Edit functionality is being developed. For now, you can view the order details.</p>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="viewOrder('${orderId}')">View Details</button>
+                        <button class="btn btn-secondary" onclick="closeModal('orderModal')">Close</button>
+                    </div>
+                </div>
+            `;
+            openModal('orderModal');
         }
 
         // Scroll Reveal Animation
@@ -541,20 +611,6 @@
 
         window.addEventListener('resize', () => {
             exportMenu.style.display = 'none';
-        });
-
-        // Profile dropdown functionality
-        const profileDropdown = document.getElementById('profileDropdown');
-        const profileMenu = document.getElementById('profileMenu');
-        const dropdownParent = profileDropdown.closest('.dropdown');
-        profileDropdown.addEventListener('click', (e) => {
-            e.stopPropagation();
-            dropdownParent.classList.toggle('active');
-        });
-        document.addEventListener('click', (e) => {
-            if (!profileMenu.contains(e.target) && !profileDropdown.contains(e.target)) {
-                dropdownParent.classList.remove('active');
-            }
         });
 </script>
 </body>

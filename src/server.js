@@ -453,8 +453,8 @@ async function startServer() {
         // Updated query to get businesses with order counts
         const businessesWithOrders = await db.query('groups as g')
           .select(
-            'g.business_id',
-            'g.business_name',
+            'g.business_id', 
+            'g.business_name', 
             db.query.raw('MIN(g.created_at) as created_at'),
             db.query.raw('MAX(g.is_active::int) as is_active'),
             db.query.raw('COUNT(DISTINCT o.id) as order_count')
@@ -521,10 +521,17 @@ async function startServer() {
 
         const { business, status, search, page = 1, pageSize = 10 } = req.query;
 
+        // Get user's business IDs first to avoid duplicates
+        const userBusinesses = await db.query('groups')
+          .select('business_id', 'business_name')
+          .where('user_id', userId)
+          .groupBy('business_id', 'business_name');
+        
+        const businessIds = userBusinesses.map(b => b.business_id);
+
         let query = db.query('orders as o')
-          .join('groups as g', 'o.business_id', 'g.business_id')
-          .where('g.user_id', userId)
-          .select('o.*', 'g.business_name');
+          .whereIn('o.business_id', businessIds)
+          .select('o.*', db.query.raw('(SELECT business_name FROM groups WHERE business_id = o.business_id AND user_id = ? LIMIT 1) as business_name', [userId]));
 
         if (business) {
           query.where('o.business_id', business);
@@ -548,13 +555,23 @@ async function startServer() {
           .limit(pageSize)
           .offset((page - 1) * pageSize);
           
-        const businesses = await db.query('groups').where({ user_id: userId }).distinct('business_id', 'business_name');
+        const businesses = userBusinesses;
 
-        // Chart Data
-        const baseChartQuery = db.query('orders as o').join('groups as g', 'o.business_id', 'g.business_id').where('g.user_id', userId);
+        // Chart Data - Use the same approach to avoid duplicates
+        const baseChartQuery = db.query('orders as o')
+          .whereIn('o.business_id', businessIds);
         
-        const statusCounts = await baseChartQuery.clone().groupBy('o.status').select('o.status', db.query.raw('count(*) as count'));
-        const ordersByBusiness = await baseChartQuery.clone().groupBy('g.business_name').select('g.business_name', db.query.raw('count(*) as count'));
+        const statusCounts = await baseChartQuery.clone()
+          .groupBy('o.status')
+          .select('o.status', db.query.raw('count(DISTINCT o.id) as count'));
+        
+        const ordersByBusiness = await db.query('orders as o')
+          .select(
+            db.query.raw('(SELECT business_name FROM groups WHERE business_id = o.business_id AND user_id = ? LIMIT 1) as business_name', [userId]),
+            db.query.raw('count(DISTINCT o.id) as count')
+          )
+          .whereIn('o.business_id', businessIds)
+          .groupBy('o.business_id');
         
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -562,7 +579,7 @@ async function startServer() {
           .where('o.created_at', '>=', sevenDaysAgo)
           .groupByRaw('date(o.created_at)')
           .orderByRaw('date(o.created_at)')
-          .select(db.query.raw('date(o.created_at) as date'), db.query.raw('count(*) as count'));
+          .select(db.query.raw('date(o.created_at) as date'), db.query.raw('count(DISTINCT o.id) as count'));
 
         res.render('orders', {
           title: 'Orders Management',
