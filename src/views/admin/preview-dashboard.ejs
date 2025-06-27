@@ -290,36 +290,31 @@
                     </div>
                     <div class="card-content">
                         <div class="activity-feed">
-                            <div class="activity-item">
-                                <div class="activity-icon business">
-                                    <i class="fas fa-building"></i>
+                            <% if (recentActivity && recentActivity.length > 0) { %>
+                                <% recentActivity.forEach(activity => { %>
+                                    <div class="activity-item">
+                                        <div class="activity-icon <%= activity.type %>">
+                                            <i class="fas fa-<%= activity.icon %>"></i>
+                                        </div>
+                                        <div class="activity-content">
+                                            <div class="activity-title"><%= activity.title %></div>
+                                            <div class="activity-description"><%= activity.description %></div>
+                                            <div class="activity-time"><%= new Date(activity.time).toLocaleString() %></div>
+                                        </div>
+                                    </div>
+                                <% }); %>
+                            <% } else { %>
+                                <div class="activity-item">
+                                    <div class="activity-icon system">
+                                        <i class="fas fa-info-circle"></i>
+                                    </div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">No recent activity</div>
+                                        <div class="activity-description">No recent orders, registrations, or system events</div>
+                                        <div class="activity-time">Just now</div>
+                                    </div>
                                 </div>
-                                <div class="activity-content">
-                                    <div class="activity-title">New business registered</div>
-                                    <div class="activity-description">Pizza Palace joined the platform</div>
-                                    <div class="activity-time">2 hours ago</div>
-                                </div>
-                            </div>
-                            <div class="activity-item">
-                                <div class="activity-icon orders">
-                                    <i class="fas fa-box"></i>
-                                </div>
-                                <div class="activity-content">
-                                    <div class="activity-title">High order volume</div>
-                                    <div class="activity-description">500+ orders processed today</div>
-                                    <div class="activity-time">4 hours ago</div>
-                                </div>
-                            </div>
-                            <div class="activity-item">
-                                <div class="activity-icon system">
-                                    <i class="fas fa-bolt"></i>
-                                </div>
-                                <div class="activity-content">
-                                    <div class="activity-title">Bot maintenance</div>
-                                    <div class="activity-description">System updated successfully</div>
-                                    <div class="activity-time">6 hours ago</div>
-                                </div>
-                            </div>
+                            <% } %>
                         </div>
                     </div>
                 </div>

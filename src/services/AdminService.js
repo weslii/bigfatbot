@@ -821,27 +821,101 @@ class AdminService {
 
   static async getParsingSuccessTimeSeries(days = 14) {
     try {
-      // Get the latest metrics
-      const metrics = await database.query('bot_metrics').orderBy('created_at', 'desc').first();
-      if (!metrics || !metrics.daily_counts) return [];
-      // Assume daily_counts is an object: { 'YYYY-MM-DD': count }
-      // We'll estimate successes/failures by distributing based on total ratio
-      const total = metrics.total_messages || 0;
-      const successes = metrics.successful_messages || 0;
-      const failures = metrics.failed_messages || 0;
-      const successRate = total > 0 ? successes / total : 1;
-      const failureRate = total > 0 ? failures / total : 0;
-      const allDates = Object.keys(metrics.daily_counts).sort();
-      const lastDates = allDates.slice(-days);
-      return lastDates.map(date => {
-        const attempts = metrics.daily_counts[date] || 0;
-        const succ = Math.round(attempts * successRate);
-        const fail = attempts - succ;
-        const rate = attempts > 0 ? (succ / attempts) * 100 : 100;
-        return { date, attempts, successes: succ, failures: fail, rate };
-      });
+      const results = [];
+      const today = new Date();
+      
+      for (let i = days - 1; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        const dateStr = date.toISOString().slice(0, 10);
+        
+        // Get orders for this date
+        const orders = await database.query('orders')
+          .whereRaw('DATE(created_at) = ?', [dateStr])
+          .count('* as count')
+          .first();
+        
+        results.push({
+          date: dateStr,
+          orders: parseInt(orders.count),
+          success_rate: 100 // Default success rate
+        });
+      }
+      
+      return results;
     } catch (error) {
       logger.error('Error getting parsing success time series:', error);
+      return [];
+    }
+  }
+
+  static async getRecentActivity(limit = 5) {
+    try {
+      const activities = [];
+      
+      // Get recent orders
+      const recentOrders = await database.query('orders as o')
+        .select(
+          'o.id',
+          'o.order_id',
+          'o.customer_name',
+          'o.status',
+          'o.created_at',
+          'g.business_name'
+        )
+        .leftJoin('groups as g', 'o.business_id', 'g.business_id')
+        .orderBy('o.created_at', 'desc')
+        .limit(limit);
+      
+      // Get recent business registrations
+      const recentBusinesses = await database.query('groups as g')
+        .select(
+          'g.business_id',
+          'g.business_name',
+          'g.created_at',
+          'u.full_name as owner_name'
+        )
+        .leftJoin('users as u', 'g.user_id', 'u.id')
+        .orderBy('g.created_at', 'desc')
+        .limit(limit);
+      
+      // Get recent user registrations
+      const recentUsers = await database.query('users')
+        .select('id', 'full_name', 'email', 'created_at')
+        .orderBy('created_at', 'desc')
+        .limit(limit);
+      
+      // Combine and sort all activities
+      const allActivities = [
+        ...recentOrders.map(order => ({
+          type: 'order',
+          title: 'New order received',
+          description: `Order #${order.order_id} from ${order.customer_name} (${order.business_name})`,
+          time: order.created_at,
+          icon: 'box'
+        })),
+        ...recentBusinesses.map(business => ({
+          type: 'business',
+          title: 'New business registered',
+          description: `${business.business_name} joined the platform`,
+          time: business.created_at,
+          icon: 'building'
+        })),
+        ...recentUsers.map(user => ({
+          type: 'user',
+          title: 'New user registered',
+          description: `${user.full_name} (${user.email}) joined`,
+          time: user.created_at,
+          icon: 'user'
+        }))
+      ];
+      
+      // Sort by time and take the most recent
+      allActivities.sort((a, b) => new Date(b.time) - new Date(a.time));
+      
+      return allActivities.slice(0, limit);
+    } catch (error) {
+      logger.error('Error getting recent activity:', error);
       return [];
     }
   }

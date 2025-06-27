@@ -796,8 +796,11 @@ body {
 }
 
 .activity-icon.system {
-  background: rgba(245, 158, 11, 0.1);
-  color: var(--warning);
+  background: var(--warning);
+}
+
+.activity-icon.user {
+  background: var(--secondary-color);
 }
 
 .activity-title {
