@@ -86,8 +86,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 3.5rem;
+  height: 3.5rem;
   border-radius: var(--radius);
   background: linear-gradient(135deg, #10b981, #14b8a6);
   color: white;
