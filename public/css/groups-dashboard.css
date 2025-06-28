@@ -706,4 +706,67 @@ select:hover, input:hover, .form-select:hover, .form-input:hover {
 [data-theme="dark"] h3,
 [data-theme="dark"] h5 {
     color: #fff !important;
+}
+
+/* Mobile Responsive Header */
+@media (max-width: 768px) {
+    .header-content {
+        padding: 0 1rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .header-left {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .logo-text .main-title {
+        font-size: 1.2rem;
+    }
+
+    .header-right {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-top: 0.5rem;
+    }
+
+    .nav-link {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.6rem;
+    }
+
+    .btn.btn-icon {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-content {
+        padding: 0 0.75rem;
+    }
+
+    .header-right {
+        gap: 0.25rem;
+    }
+
+    .nav-link {
+        font-size: 0.75rem;
+        padding: 0.3rem 0.5rem;
+    }
+
+    .btn.btn-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 0.9rem;
+    }
+
+    .logo-text .main-title {
+        font-size: 1.1rem;
+    }
 } 
