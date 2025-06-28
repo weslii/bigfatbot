@@ -668,6 +668,199 @@
             font-size: 0.8rem;
         }
     }
+
+    /* Mobile responsive fixes for dashboard specific components */
+    @media (max-width: 768px) {
+        /* Tabs container mobile fixes */
+        .tabs-container {
+            overflow-x: hidden;
+            width: 100%;
+        }
+        
+        .tabs-header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: stretch;
+        }
+        
+        .tabs-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            min-width: 120px;
+            white-space: nowrap;
+            font-size: 0.9rem;
+            padding: 0.75rem 1rem;
+        }
+        
+        .tabs-actions {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        /* Quick actions card mobile fixes */
+        .sidebar .content-card {
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+        
+        .quick-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .quick-action-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            border-radius: 12px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .quick-action-btn:hover {
+            background: var(--hover-bg);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+        
+        /* Recent activity card mobile fixes */
+        .activity-feed {
+            max-width: 100%;
+            overflow: hidden;
+        }
+        
+        .activity-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 12px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            margin-bottom: 0.75rem;
+            min-width: 0;
+        }
+        
+        .activity-content {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+        }
+        
+        .activity-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .activity-description {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .activity-time {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        /* Dashboard layout mobile fixes */
+        .dashboard-layout {
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .main-panel {
+            order: 1;
+        }
+        
+        .sidebar {
+            order: 2;
+            width: 100%;
+        }
+        
+        /* Content cards mobile fixes */
+        .content-card {
+            overflow: hidden;
+            width: 100%;
+        }
+        
+        .card-header {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: stretch;
+        }
+        
+        .header-info h2 {
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .header-info p {
+            font-size: 0.9rem;
+        }
+        
+        .primary-btn {
+            align-self: stretch;
+            text-align: center;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .tab-btn {
+            font-size: 0.85rem;
+            padding: 0.6rem 0.8rem;
+            min-width: 100px;
+        }
+        
+        .quick-action-btn {
+            font-size: 0.9rem;
+            padding: 0.8rem;
+        }
+        
+        .activity-item {
+            padding: 0.8rem;
+        }
+        
+        .activity-title {
+            font-size: 0.95rem;
+        }
+        
+        .activity-description {
+            font-size: 0.85rem;
+        }
+        
+        .activity-time {
+            font-size: 0.75rem;
+        }
+    }
     </style>
     <script>
     // Theme toggle functionality
