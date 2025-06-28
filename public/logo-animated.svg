@@ -1,0 +1,54 @@
+<svg width="200" height="80" viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="greenGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2ECC71;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#27AE60;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Animation definitions -->
+    <style>
+      .chat-bubble {
+        animation: chatPulse 3s ease-in-out infinite;
+      }
+      .chat-bubble:nth-child(1) { animation-delay: 0s; }
+      .chat-bubble:nth-child(2) { animation-delay: 0.5s; }
+      .chat-bubble:nth-child(3) { animation-delay: 1s; }
+      
+      @keyframes chatPulse {
+        0%, 70%, 100% { transform: scale(1); opacity: inherit; }
+        35% { transform: scale(1.1); opacity: 1; }
+      }
+      
+      .novi-text {
+        animation: textGlow 2s ease-in-out infinite;
+      }
+      
+      @keyframes textGlow {
+        0%, 100% { filter: drop-shadow(0 0 2px rgba(46, 204, 113, 0.3)); }
+        50% { filter: drop-shadow(0 0 8px rgba(46, 204, 113, 0.6)); }
+      }
+    </style>
+  </defs>
+  
+  <!-- Animated Chat Stack Icon -->
+  <g transform="translate(10, 20)">
+    <!-- Chat Bubble 1 (back) -->
+    <rect class="chat-bubble" x="0" y="0" width="20" height="16" rx="8" ry="8" fill="#2ECC71" opacity="0.6"/>
+    
+    <!-- Chat Bubble 2 (middle) -->
+    <rect class="chat-bubble" x="8" y="8" width="20" height="16" rx="8" ry="8" fill="#2ECC71" opacity="0.8"/>
+    
+    <!-- Chat Bubble 3 (front) -->
+    <rect class="chat-bubble" x="16" y="16" width="20" height="16" rx="8" ry="8" fill="#2ECC71" opacity="1"/>
+  </g>
+  
+  <!-- Animated Novi Text -->
+  <text class="novi-text" x="60" y="45" font-family="Poppins, Arial, sans-serif" font-size="32" font-weight="600" fill="#2C3E50">
+    novi
+  </text>
+  
+  <!-- Tagline -->
+  <text x="60" y="65" font-family="Inter, Arial, sans-serif" font-size="12" fill="#7f8c8d">
+    Smart Commerce Suite
+  </text>
+</svg> 

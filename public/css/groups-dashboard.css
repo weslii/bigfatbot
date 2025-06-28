@@ -99,7 +99,6 @@ body {
 .logo-icon {
     width: 40px;
     height: 40px;
-    background: linear-gradient(135deg, #25d366, #128c7e);
     border-radius: var(--radius);
     display: flex;
     align-items: center;
