@@ -593,6 +593,126 @@
         .tab-content {
             padding: 1rem;
         }
+
+        /* Dashboard Layout Mobile Optimization */
+        .dashboard-layout {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .main-panel {
+            width: 100%;
+            order: 1;
+        }
+
+        .sidebar {
+            width: 100%;
+            order: 2;
+        }
+
+        /* Stats Grid Mobile Optimization */
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .stat-card {
+            padding: 1rem;
+        }
+
+        .stat-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .stat-title {
+            font-size: 0.875rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+        }
+
+        /* Quick Actions Mobile Optimization */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .quick-action-btn {
+            padding: 0.75rem;
+            font-size: 0.875rem;
+            text-align: center;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .quick-action-btn i {
+            font-size: 1.25rem;
+        }
+
+        /* Recent Activity Mobile Optimization */
+        .activity-feed {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            padding: 0.75rem;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .activity-icon {
+            width: 32px;
+            height: 32px;
+            font-size: 0.875rem;
+        }
+
+        .activity-content {
+            width: 100%;
+        }
+
+        .activity-title {
+            font-size: 0.875rem;
+        }
+
+        .activity-description {
+            font-size: 0.8125rem;
+        }
+
+        .activity-time {
+            font-size: 0.75rem;
+        }
+
+        /* Tabs Mobile Optimization */
+        .tabs-header {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .tabs-nav {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 0.5rem;
+        }
+
+        .tab-btn {
+            white-space: nowrap;
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        /* Empty Placeholder Mobile Optimization */
+        .empty-placeholder {
+            padding: 2rem 1rem;
+            text-align: center;
+            font-size: 0.875rem;
+        }
     }
 
     @media (max-width: 480px) {
@@ -639,6 +759,70 @@
 
         .tab-content {
             padding: 0.75rem;
+        }
+
+        /* Stats Grid Small Mobile */
+        .stats-grid {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+
+        .stat-card {
+            padding: 0.75rem;
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+        }
+
+        /* Quick Actions Small Mobile */
+        .quick-actions {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+
+        .quick-action-btn {
+            padding: 0.5rem;
+            font-size: 0.8125rem;
+        }
+
+        .quick-action-btn i {
+            font-size: 1rem;
+        }
+
+        /* Activity Feed Small Mobile */
+        .activity-item {
+            padding: 0.5rem;
+        }
+
+        .activity-icon {
+            width: 28px;
+            height: 28px;
+            font-size: 0.75rem;
+        }
+
+        .activity-title {
+            font-size: 0.8125rem;
+        }
+
+        .activity-description {
+            font-size: 0.75rem;
+        }
+
+        .activity-time {
+            font-size: 0.6875rem;
+        }
+
+        /* Tabs Small Mobile */
+        .tab-btn {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.8125rem;
+        }
+
+        /* Empty Placeholder Small Mobile */
+        .empty-placeholder {
+            padding: 1.5rem 0.75rem;
+            font-size: 0.8125rem;
         }
     }
     </style>
