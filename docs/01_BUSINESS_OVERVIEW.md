@@ -1,7 +1,7 @@
 # Novi - Smart Commerce Suite
 
 <div align="center">
-  <img src="../public/logo.svg" alt="Novi Logo" width="200" style="margin: 20px 0;">
+  <img src="https://via.placeholder.com/200x80/2ECC71/FFFFFF?text=novi" alt="Novi Logo" style="margin: 20px 0;">
   <p><em>Where WhatsApp meets intelligent commerce</em></p>
 </div>
 
@@ -212,13 +212,6 @@ Novi is more than just a tool — it's your business ally. We automatically conv
 
 ### **Our Visual Identity**
 Novi's logo features a distinctive chat stack design that represents the seamless flow of conversations into commerce. The fresh green color (#2ECC71) harmonizes perfectly with WhatsApp's interface, making our platform feel native and familiar.
-
-**Logo Usage:**
-- Use the main Novi logo (`public/logo.svg`) for web, print, and presentations.
-- Use the icon-only version (`public/logo-icon.svg`) for app icons, favicons, and WhatsApp profile images.
-- For dark backgrounds, use (`public/logo-dark.svg`).
-
-> For marketing and business materials, always maintain clear space around the logo and use the provided SVGs for best quality.
 
 ### **Brand Values**
 - **Smart:** Intelligent automation that works for you

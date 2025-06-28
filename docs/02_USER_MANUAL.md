@@ -1,7 +1,7 @@
 # Novi User Manual
 
 <div align="center">
-  <img src="../public/logo.svg" alt="Novi Logo" width="200" style="margin: 20px 0;">
+  <img src="https://via.placeholder.com/200x80/2ECC71/FFFFFF?text=novi" alt="Novi Logo" style="margin: 20px 0;">
   <p><em>Your complete guide to smart commerce on WhatsApp</em></p>
 </div>
 
@@ -472,16 +472,6 @@ We're here to help you succeed with Novi. Contact us anytime:
 - Personalized training sessions
 - Ongoing support
 - Regular feature updates
-
----
-
-## 📢 Using the Novi Logo
-
-- Use `public/logo.svg` for web, print, and presentations.
-- Use `public/logo-icon.svg` for app icons, favicons, and WhatsApp profile images.
-- For dark backgrounds, use `public/logo-dark.svg`.
-
-> Always maintain clear space around the logo and use the SVGs for best quality in all business and marketing materials.
 
 ---
 
