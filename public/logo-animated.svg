@@ -23,14 +23,14 @@
   
   <!-- Animated Chat Stack Icon -->
   <g transform="translate(10, 20)">
-    <!-- Chat Bubble 1 (back) -->
-    <rect class="chat-bubble" x="0" y="0" width="16" height="12" rx="6" ry="6" fill="#2ECC71" opacity="0.6"/>
+    <!-- Chat Bubble 1 (back) - with tail -->
+    <path class="chat-bubble" d="M0 3 Q0 0 3 0 L13 0 Q16 0 16 3 L16 9 Q16 12 13 12 L3 12 Q0 12 0 9 L0 3 M0 9 L3 12 L3 15 L6 12 L13 12" fill="#2ECC71" opacity="0.6"/>
     
-    <!-- Chat Bubble 2 (middle) -->
-    <rect class="chat-bubble" x="6" y="6" width="16" height="12" rx="6" ry="6" fill="#2ECC71" opacity="0.8"/>
+    <!-- Chat Bubble 2 (middle) - with tail -->
+    <path class="chat-bubble" d="M6 9 Q6 6 9 6 L19 6 Q22 6 22 9 L22 15 Q22 18 19 18 L9 18 Q6 18 6 15 L6 9 M6 15 L9 18 L9 21 L12 18 L19 18" fill="#2ECC71" opacity="0.8"/>
     
-    <!-- Chat Bubble 3 (front) -->
-    <rect class="chat-bubble" x="12" y="12" width="16" height="12" rx="6" ry="6" fill="#2ECC71" opacity="1"/>
+    <!-- Chat Bubble 3 (front) - with tail -->
+    <path class="chat-bubble" d="M12 15 Q12 12 15 12 L25 12 Q28 12 28 15 L28 21 Q28 24 25 24 L15 24 Q12 24 12 21 L12 15 M12 21 L15 24 L15 27 L18 24 L25 24" fill="#2ECC71" opacity="1"/>
   </g>
   
   <!-- Novi Text (no glow animation) -->

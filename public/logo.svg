@@ -8,14 +8,14 @@
   
   <!-- Chat Stack Icon -->
   <g transform="translate(10, 20)">
-    <!-- Chat Bubble 1 (back) -->
-    <rect x="0" y="0" width="20" height="16" rx="8" ry="8" fill="#2ECC71" opacity="0.6"/>
+    <!-- Chat Bubble 1 (back) - with tail -->
+    <path d="M0 4 Q0 0 4 0 L16 0 Q20 0 20 4 L20 12 Q20 16 16 16 L4 16 Q0 16 0 12 L0 4 M0 12 L4 16 L4 20 L8 16 L16 16" fill="#2ECC71" opacity="0.6"/>
     
-    <!-- Chat Bubble 2 (middle) -->
-    <rect x="8" y="8" width="20" height="16" rx="8" ry="8" fill="#2ECC71" opacity="0.8"/>
+    <!-- Chat Bubble 2 (middle) - with tail -->
+    <path d="M8 12 Q8 8 12 8 L24 8 Q28 8 28 12 L28 20 Q28 24 24 24 L12 24 Q8 24 8 20 L8 12 M8 20 L12 24 L12 28 L16 24 L24 24" fill="#2ECC71" opacity="0.8"/>
     
-    <!-- Chat Bubble 3 (front) -->
-    <rect x="16" y="16" width="20" height="16" rx="8" ry="8" fill="#2ECC71" opacity="1"/>
+    <!-- Chat Bubble 3 (front) - with tail -->
+    <path d="M16 20 Q16 16 20 16 L32 16 Q36 16 36 20 L36 28 Q36 32 32 32 L20 32 Q16 32 16 28 L16 20 M16 28 L20 32 L20 36 L24 32 L32 32" fill="#2ECC71" opacity="1"/>
   </g>
   
   <!-- Novi Text -->
