@@ -89,6 +89,7 @@ body {
   width: 2.5rem;
   height: 2.5rem;
   border-radius: var(--radius);
+  background: linear-gradient(135deg, #10b981, #14b8a6);
   color: white;
   font-size: 1.25rem;
   box-shadow: var(--shadow);
