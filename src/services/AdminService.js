@@ -417,8 +417,8 @@ class AdminService {
   static async editBusiness(businessId, data) {
     try {
       const updateData = {
-        business_name: data.business_name,
-        user_id: data.user_id
+          business_name: data.business_name,
+          user_id: data.user_id
       };
       
       // Only update is_active if it's explicitly provided
@@ -518,7 +518,7 @@ class AdminService {
           .first();
         totalUserOrders = parseInt(userOrders.count);
       }
-      
+
       const hasData = userBusinesses.length > 0 || totalUserOrders > 0;
 
       if (hasData) {
@@ -546,7 +546,7 @@ class AdminService {
         };
       } else {
         // User has no data - just delete user
-        await database.query('users').where('id', userId).del();
+      await database.query('users').where('id', userId).del();
         
         return {
           success: true,

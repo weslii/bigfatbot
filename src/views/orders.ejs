@@ -477,7 +477,7 @@
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 const order = await response.json();
-                
+
                 // Items are stored as plain text, so no JSON parsing needed
                 const itemsText = order.items || '';
 
@@ -551,7 +551,7 @@
             event.preventDefault();
             const form = event.target;
             const formData = new FormData(form);
-
+                
             const updateData = {
                 customer_name: formData.get('customer_name'),
                 customer_phone: formData.get('customer_phone'),
@@ -606,7 +606,7 @@
                     </div>
                 `;
             }
-        }
+  }
 
         // Export dropdown functionality
         const exportDropdown = document.getElementById('exportDropdown');
