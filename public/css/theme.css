@@ -1,6 +1,6 @@
 /* Theme Variables */
 :root {
-  --primary: #25D366;
+  --primary: #10b981;
   --secondary: #1aefb4;
   --accent: #b388ff;
   --bg-light: #e3f0ff;
@@ -9,7 +9,7 @@
   --card-bg-dark: rgba(24,28,36,0.7);
   --text-light: #1a237e;
   --text-dark: #f8f9fa;
-  --gradient: linear-gradient(135deg, #25D366 0%, #1aefb4 50%, #b388ff 100%);
+  --gradient: linear-gradient(135deg, #10b981 0%, #1aefb4 50%, #b388ff 100%);
 }
 .theme-dark {
   --bg: var(--bg-dark);
