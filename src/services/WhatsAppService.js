@@ -70,10 +70,10 @@ class WhatsAppService {
         '--disable-images',
         '--disable-javascript-harmony-shipping',
         '--disable-background-networking',
-        '--disable-default-apps',
-        '--disable-sync',
-        '--disable-translate',
-        '--hide-scrollbars',
+          '--disable-default-apps',
+          '--disable-sync',
+          '--disable-translate',
+          '--hide-scrollbars',
         '--mute-audio',
         '--no-first-run',
         '--safebrowsing-disable-auto-update',
@@ -166,7 +166,7 @@ class WhatsAppService {
 
       // Close client if exists
       if (this.client) {
-        await this.client.destroy();
+      await this.client.destroy();
         this.client = null;
       }
 

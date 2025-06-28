@@ -518,7 +518,7 @@ async function startServer() {
         res.redirect(`/setup-group?businessId=${result.businessId}&userId=${userId}`);
       } catch (error) {
         logger.error('Add business error:', error);
-        res.render('add-business', {
+        res.render('add-business', { 
           error: 'Failed to add business. Please try again.',
           userId: req.session && req.session.userId ? String(req.session.userId) : null
         });
@@ -1199,13 +1199,13 @@ async function startServer() {
         const uptimeHours = uptimeMs / (1000 * 60 * 60);
         
         const stats = {
-          totalRevenue: '45,231.89', // Keep static as requested
-          totalBusinesses: analytics.totalBusinesses,
-          totalOrders: analytics.totalOrders,
-          botUptime: '100.0',
-          botUptimeHours: uptimeHours.toFixed(2),
-          businessChange: analytics.businessChange,
-          orderChange: analytics.orderChange,
+            totalRevenue: '45,231.89', // Keep static as requested
+            totalBusinesses: analytics.totalBusinesses,
+            totalOrders: analytics.totalOrders,
+            botUptime: '100.0',
+            botUptimeHours: uptimeHours.toFixed(2),
+            businessChange: analytics.businessChange,
+            orderChange: analytics.orderChange,
           connectionStatus: analytics.status || 'disconnected',
           phoneNumber: analytics.number || 'Not connected',
           lastActivity: analytics.lastActivity || new Date().toISOString(),
@@ -2083,9 +2083,9 @@ async function startServer() {
               .orWhere('g.business_name', 'like', `%${search}%`);
           });
         }
-        
+
         const orders = await query.orderBy('o.created_at', 'desc');
-        
+
         if (format === 'json') {
           res.setHeader('Content-Type', 'application/json');
           res.setHeader('Content-Disposition', 'attachment; filename="orders.json"');

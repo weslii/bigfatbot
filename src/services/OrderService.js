@@ -200,15 +200,15 @@ class OrderService {
       if (cachedStats && typeof cachedStats === 'object' && cachedStats.totalOrders !== undefined) {
         return cachedStats;
       }
-      
+
       // Get all business IDs for the user
       const userBusinesses = await database.query('groups')
         .select('business_id')
         .where('user_id', userIdString)
         .groupBy('business_id');
-      
+
       const businessIds = userBusinesses.map(b => b.business_id);
-      
+
       if (businessIds.length === 0) {
         const emptyStats = {
           totalOrders: 0,
@@ -222,7 +222,7 @@ class OrderService {
         }
         return emptyStats;
       }
-      
+
       // Get order statistics across all user's businesses
       const stats = await database.query('orders')
         .select(
@@ -232,13 +232,13 @@ class OrderService {
         )
         .whereIn('business_id', businessIds)
         .first();
-      
+
       const result = {
         totalOrders: parseInt(stats.total_orders) || 0,
         completedOrders: parseInt(stats.completed_orders) || 0,
         pendingOrders: parseInt(stats.pending_orders) || 0
       };
-      
+
       try {
         await cacheService.setOrderStats(userIdString, result, 600);
       } catch (cacheError) {

@@ -820,7 +820,7 @@ async function refreshBotStatus() {
   } catch (error) {
     console.error('Failed to refresh bot status:', error);
   }
-}
+} 
 
 // Order Details Modal Functions
 function showOrderDetailsModal(orderId) {
