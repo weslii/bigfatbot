@@ -24,22 +24,25 @@
   <!-- Animated Chat Stack Icon -->
   <g transform="translate(10, 20)">
     <!-- Chat Bubble 1 (back) - most transparent -->
-    <rect class="chat-bubble" x="0" y="0" width="16" height="12" rx="6" ry="6" fill="#2ECC71" opacity="0.3"/>
+    <path class="chat-bubble" d="M7,0h4.5c3.8,0,7,3.2,7,7l0,0c0,3.8-3.2,7-7,7H7c-1.2,0-2.4,0-3.6,0c-1,0-2.5,0.1-3.1-0.7C-0.1,13.2,0,12,0,10.8
+		c0-1.3,0-2.5,0-3.5l0,0C0,3.2,3.2,0,7,0z" fill="#2ECC71" opacity="0.3"/>
     
     <!-- Chat Bubble 2 (middle) - medium transparency -->
-    <rect class="chat-bubble" x="6" y="6" width="16" height="12" rx="6" ry="6" fill="#2ECC71" opacity="0.6"/>
+    <path class="chat-bubble" d="M14,7h4.5c3.8,0,7,3.2,7,7l0,0c0,3.8-3.2,7-7,7h-4.5c-1.2,0-2.4,0-3.6,0c-1,0-2.5,0.1-3.1-0.7C6.9,20.2,7,19,7,17.8
+		c0-1.3,0-2.5,0-3.5l0,0C7,10.2,10.2,7,14,7z" fill="#2ECC71" opacity="0.6"/>
     
     <!-- Chat Bubble 3 (front) - least transparent -->
-    <rect class="chat-bubble" x="12" y="12" width="16" height="12" rx="6" ry="6" fill="#2ECC71" opacity="0.9"/>
+    <path class="chat-bubble" d="M21,14h4.5c3.8,0,7,3.2,7,7l0,0c0,3.8-3.2,7-7,7h-4.5c-1.2,0-2.4,0-3.6,0c-1,0-2.5,0.1-3.1-0.7
+		C13.9,27.2,14,26,14,24.8c0-1.3,0-2.5,0-3.5l0,0C14,17.2,17.2,14,21,14z" fill="#2ECC71" opacity="0.9"/>
   </g>
   
   <!-- Novi Text (no glow animation) -->
-  <text x="60" y="45" font-family="Poppins, Arial, sans-serif" font-size="32" font-weight="600" fill="#2C3E50">
+  <text x="60" y="45" font-family="Poppins, Arial, sans-serif" font-size="32" font-weight="600" fill="#2C3E50" class="logo-text">
     novi
   </text>
   
   <!-- Tagline -->
-  <text x="60" y="65" font-family="Inter, Arial, sans-serif" font-size="12" fill="#7f8c8d">
+  <text x="60" y="65" font-family="Inter, Arial, sans-serif" font-size="12" fill="#7f8c8d" class="logo-tagline">
     Smart Commerce Suite
   </text>
 </svg> 

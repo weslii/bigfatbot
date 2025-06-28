@@ -1162,4 +1162,13 @@ body {
 [data-theme="dark"] .order-edit .form-select:focus,
 [data-theme="dark"] .order-edit .form-textarea:focus {
     background: rgba(15, 23, 42, 0.95);
+}
+
+/* Dark mode logo styling */
+[data-theme="dark"] .logo-text {
+  fill: white !important;
+}
+
+[data-theme="dark"] .logo-tagline {
+  fill: #bdc3c7 !important;
 } 

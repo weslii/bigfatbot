@@ -903,4 +903,13 @@ select:hover, input:hover, .form-select:hover, .form-input:hover {
     .kpi-card {
         padding: 0.75rem;
     }
+}
+
+/* Dark mode logo styling */
+[data-theme="dark"] .logo-text {
+  fill: white !important;
+}
+
+[data-theme="dark"] .logo-tagline {
+  fill: #bdc3c7 !important;
 } 
