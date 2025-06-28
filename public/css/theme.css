@@ -194,13 +194,4 @@ input:focus, select:focus, textarea:focus {
 }
 ::-webkit-scrollbar-track {
   background: #e3f0ff !important;
-}
-
-/* Dark mode logo styling */
-[data-theme="dark"] .logo-text {
-  fill: white !important;
-}
-
-[data-theme="dark"] .logo-tagline {
-  fill: #bdc3c7 !important;
 } 

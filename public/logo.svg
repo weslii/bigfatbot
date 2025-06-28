@@ -22,12 +22,12 @@
   </g>
   
   <!-- Novi Text -->
-  <text x="60" y="45" font-family="Poppins, Arial, sans-serif" font-size="32" font-weight="600" fill="#2C3E50" class="logo-text">
+  <text x="60" y="45" font-family="Poppins, Arial, sans-serif" font-size="32" font-weight="600" fill="#2C3E50">
     novi
   </text>
   
   <!-- Tagline -->
-  <text x="60" y="65" font-family="Inter, Arial, sans-serif" font-size="12" fill="#7f8c8d" class="logo-tagline">
+  <text x="60" y="65" font-family="Inter, Arial, sans-serif" font-size="12" fill="#7f8c8d">
     Smart Commerce Suite
   </text>
 </svg> 
