@@ -520,6 +520,127 @@
             font-size: 1.1rem;
         }
     }
+
+    /* Mobile responsive cards and tables */
+    @media (max-width: 768px) {
+        .main-content {
+            padding: 1rem;
+        }
+
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+        }
+
+        .content-card {
+            margin: 1rem 0;
+            border-radius: 12px;
+        }
+
+        .card-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .data-table {
+            min-width: 600px;
+            font-size: 0.875rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.75rem 0.5rem;
+            white-space: nowrap;
+        }
+
+        .kpi-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .kpi-card {
+            padding: 1rem;
+        }
+
+        .business-info {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .business-avatar {
+            width: 40px;
+            height: 40px;
+            font-size: 0.875rem;
+        }
+
+        .tab-content {
+            padding: 1rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .main-content {
+            padding: 0.75rem;
+        }
+
+        .page-title {
+            font-size: 1.25rem;
+        }
+
+        .content-card {
+            margin: 0.5rem 0;
+            border-radius: 8px;
+        }
+
+        .card-header {
+            padding: 0.75rem;
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+        }
+
+        .data-table {
+            min-width: 500px;
+            font-size: 0.8125rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.5rem 0.25rem;
+        }
+
+        .kpi-card {
+            padding: 0.75rem;
+        }
+
+        .business-avatar {
+            width: 32px;
+            height: 32px;
+            font-size: 0.75rem;
+        }
+
+        .tab-content {
+            padding: 0.75rem;
+        }
+    }
     </style>
     <script>
     // Theme toggle functionality
