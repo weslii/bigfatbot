@@ -872,6 +872,11 @@
             .container {
                 padding: 0 1rem;
             }
+            
+            /* Hero logo mobile optimization */
+            #theme-logo-hero {
+                height: 160px !important;
+            }
         }
 
         @media (max-width: 480px) {
@@ -902,6 +907,11 @@
 
             .container {
                 padding: 0 0.75rem;
+            }
+            
+            /* Hero logo mobile optimization for smaller screens */
+            #theme-logo-hero {
+                height: 120px !important;
             }
         }
     </style>
@@ -1127,11 +1137,8 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-logo">
-                    <div class="footer-logo-icon">
-                        <!-- Removed WhatsApp icon -->
-                    </div>
                     <div class="footer-logo-text">
-                        <img id="theme-logo-footer" src="/logo.svg" alt="Novi Logo" style="height:32px;vertical-align:middle;">
+                        <img id="theme-logo-footer" src="/logo.svg" alt="Novi Logo" style="height:40px;vertical-align:middle;">
                     </div>
                 </div>
                 <div class="footer-links">

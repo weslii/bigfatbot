@@ -119,6 +119,7 @@ async function generateIcons() {
         icons: manifestIcons
     };
 
+    
     const manifestPath = path.join(__dirname, '..', 'public', 'manifest.json');
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
     console.log('✅ Generated: manifest.json');
