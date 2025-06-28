@@ -1,0 +1,24 @@
+
+<svg width="310" height="310" viewBox="0 0 310 310" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2ECC71;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#27AE60;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background Circle -->
+  <circle cx="155" cy="155" r="139.5" fill="url(#iconGradient)" stroke="#2ECC71" stroke-width="9.299999999999999"/>
+  
+  <!-- Chat Stack Icon -->
+  <g transform="translate(77.5, 77.5)">
+    <!-- Chat Bubble 1 (back) -->
+    <rect x="0" y="0" width="38.75" height="29.0625" rx="14.53125" ry="14.53125" fill="white" opacity="0.6"/>
+    
+    <!-- Chat Bubble 2 (middle) -->
+    <rect x="14.53125" y="14.53125" width="38.75" height="29.0625" rx="14.53125" ry="14.53125" fill="white" opacity="0.8"/>
+    
+    <!-- Chat Bubble 3 (front) -->
+    <rect x="29.0625" y="29.0625" width="38.75" height="29.0625" rx="14.53125" ry="14.53125" fill="white" opacity="1"/>
+  </g>
+</svg>
