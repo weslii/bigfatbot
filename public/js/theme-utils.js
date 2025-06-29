@@ -21,10 +21,19 @@ class ThemeManager {
     }
 
     /**
-     * Get saved theme from localStorage or default to 'light'
+     * Get saved theme from localStorage or detect system theme
      */
     getSavedTheme() {
-        return localStorage.getItem('theme') || 'light';
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            return savedTheme;
+        }
+        
+        // Detect system theme if no saved preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            return 'dark';
+        }
+        return 'light';
     }
 
     /**
