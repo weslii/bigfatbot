@@ -340,12 +340,7 @@
             }
         });
 
-        
-
-            // Update charts theme
-            updateChartThemes(theme);
-        }
-
+        // Update charts theme
         function updateChartThemes(theme) {
             const textColor = theme === 'dark' ? '#f8fafc' : '#1e293b';
             const gridColor = theme === 'dark' ? 'rgba(148, 163, 184, 0.2)' : 'rgba(226, 232, 240, 1)';
@@ -376,10 +371,7 @@
             }
         }
 
-        themeToggle.addEventListener('click', () => {
-            const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-            applyTheme(newTheme);
-        });
+        // Theme toggle is handled by theme-utils.js
 
         // Modal functionality
         function openModal(modalId) { document.getElementById(modalId).classList.add('show'); }
@@ -634,6 +626,12 @@
             
             scrollRevealElements.forEach(element => {
                 observer.observe(element);
+                
+                // Immediately make elements visible if they're already in the viewport
+                const rect = element.getBoundingClientRect();
+                if (rect.top < window.innerHeight && rect.bottom > 0) {
+                    element.classList.add('visible');
+                }
             });
             
             // Fallback: If IntersectionObserver is not supported, make all elements visible
@@ -803,20 +801,19 @@
 
         // Initialize charts when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize theme manager first
+            if (window.themeManager) {
+                const currentTheme = window.themeManager.getCurrentTheme();
+                // Update charts theme
+                updateChartThemes(currentTheme);
+            }
+            
+            // Initialize scroll reveal
             initScrollReveal();
+            
+            // Initialize charts
             initCharts();
-            applyTheme(savedTheme);
-            // Also make elements visible immediately if they're already in viewport
-            setTimeout(() => {
-                const scrollRevealElements = document.querySelectorAll('.scroll-reveal:not(.visible)');
-                scrollRevealElements.forEach(element => {
-                    const rect = element.getBoundingClientRect();
-                    if (rect.top < window.innerHeight && rect.bottom > 0) {
-                        element.classList.add('visible');
-                    }
-                });
-            }, 100);
-
+            
             // Auto-open edit modal if ?edit=ORDER_ID is present
             const params = new URLSearchParams(window.location.search);
             const editId = params.get('edit');
