@@ -1194,6 +1194,7 @@ body {
     -webkit-overflow-scrolling: touch;
     border-radius: var(--radius);
     border: 1px solid var(--border);
+    margin: 0 -0.25rem;
   }
 
   .data-table {
@@ -1204,6 +1205,16 @@ body {
   .data-table th,
   .data-table td {
     padding: 0.4rem 0.2rem;
+  }
+
+  .data-table th {
+    font-size: 0.7rem !important;
+    padding: 0.4rem 0.2rem !important;
+  }
+
+  .data-table td {
+    font-size: 0.7rem !important;
+    padding: 0.4rem 0.2rem !important;
   }
 
   /* Mobile responsive cards */
@@ -1977,4 +1988,46 @@ a, .nav-link, .no-underline {
     width: 100%;
     justify-content: center;
   }
+}
+
+/* Make business info more compact on mobile */
+.business-info {
+  gap: 0.5rem !important;
+}
+
+.business-avatar {
+  width: 2rem !important;
+  height: 2rem !important;
+  font-size: 0.8rem !important;
+}
+
+.business-name {
+  font-size: 0.8rem !important;
+}
+
+/* Make status badges smaller on mobile */
+.status-badge {
+  padding: 0.2rem 0.5rem !important;
+  font-size: 0.7rem !important;
+}
+
+/* Even more compact business info for very small screens */
+.business-info {
+  gap: 0.3rem !important;
+}
+
+.business-avatar {
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+  font-size: 0.7rem !important;
+}
+
+.business-name {
+  font-size: 0.7rem !important;
+}
+
+/* Even smaller status badges for very small screens */
+.status-badge {
+  padding: 0.15rem 0.4rem !important;
+  font-size: 0.65rem !important;
 } 
