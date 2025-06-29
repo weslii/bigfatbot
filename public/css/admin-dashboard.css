@@ -521,12 +521,16 @@ body {
 /* Table Styles */
 .table-container {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
 }
 
 .data-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 1rem;
+  font-size: 0.875rem;
 }
 
 .data-table th {
@@ -1197,26 +1201,25 @@ body {
   }
 
   .data-table {
-    min-width: 500px;
-    font-size: 0.8rem;
+    width: 100%;
+    font-size: 0.7rem;
   }
 
   .data-table th,
   .data-table td {
-    padding: 0.5rem 0.4rem !important;
-    white-space: nowrap;
+    padding: 0.4rem 0.2rem !important;
   }
 
-  /* Override original table padding for mobile */
+  /* Override original table padding for very small screens */
   .data-table th {
-    padding: 0.5rem 0.4rem !important;
-    font-size: 0.8rem !important;
+    padding: 0.4rem 0.2rem !important;
+    font-size: 0.7rem !important;
   }
 
   .data-table td {
-    padding: 0.5rem 0.4rem !important;
-    font-size: 0.8rem !important;
-    line-height: 1.3 !important;
+    padding: 0.4rem 0.2rem !important;
+    font-size: 0.7rem !important;
+    line-height: 1.2 !important;
   }
 
   /* Mobile responsive cards */
