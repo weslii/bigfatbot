@@ -1003,6 +1003,27 @@ body {
         width: 100%;
         justify-content: center;
     }
+
+    /* Mobile responsive charts */
+    .charts-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .chart-card {
+        padding: 1rem;
+        min-height: 250px;
+    }
+
+    .trend-chart-card {
+        padding: 1rem;
+        min-height: 250px;
+    }
+
+    .chart-container {
+        min-height: 200px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1041,6 +1062,49 @@ body {
         height: 32px;
         font-size: 0.8rem;
         padding: 0.4rem;
+    }
+
+    /* Mobile responsive charts for very small screens */
+    .charts-grid {
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .chart-card {
+        padding: 0.75rem;
+        min-height: 200px;
+    }
+
+    .trend-chart-card {
+        padding: 0.75rem;
+        min-height: 200px;
+    }
+
+    .chart-container {
+        min-height: 150px;
+    }
+}
+
+/* Tablet responsive charts */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .charts-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+        margin-bottom: 1.75rem;
+    }
+
+    .chart-card {
+        padding: 1.25rem;
+        min-height: 280px;
+    }
+
+    .trend-chart-card {
+        padding: 1.25rem;
+        min-height: 280px;
+    }
+
+    .chart-container {
+        min-height: 220px;
     }
 }
 
