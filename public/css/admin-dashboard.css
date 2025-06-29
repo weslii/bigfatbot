@@ -556,6 +556,7 @@ body {
   vertical-align: middle;
   font-size: 0.875rem;
   line-height: 1.5;
+  white-space: nowrap;
 }
 
 .business-info {
@@ -1210,6 +1211,7 @@ body {
 
   .data-table {
     width: 100%;
+    min-width: 450px;
     font-size: 0.7rem;
   }
 
@@ -1481,6 +1483,7 @@ body {
   }
   .data-table {
     font-size: 0.7rem;
+    min-width: 400px;
   }
   .data-table th,
   .data-table td {
