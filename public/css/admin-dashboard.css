@@ -291,7 +291,7 @@ body {
 /* Stats Grid */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -471,7 +471,7 @@ body {
   background: var(--surface);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  width: 100%;
+  overflow: hidden;
 }
 
 .card-header {
@@ -521,16 +521,12 @@ body {
 /* Table Styles */
 .table-container {
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
 }
 
 .data-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 1rem;
-  font-size: 0.875rem;
 }
 
 .data-table th {
@@ -548,32 +544,6 @@ body {
   vertical-align: middle;
   font-size: 0.875rem;
   line-height: 1.5;
-}
-
-/* Ensure tables have minimum width on larger screens for proper column spacing */
-@media (min-width: 768px) {
-  .data-table {
-    min-width: 600px;
-  }
-}
-
-.data-table th {
-  text-align: left;
-  padding: 0.75rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
-}
-
-.data-table td {
-  padding: 1.25rem 1.25rem;
-  border-bottom: 1px solid var(--border-light);
-  vertical-align: middle;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  white-space: nowrap;
 }
 
 .business-info {
@@ -1220,62 +1190,53 @@ body {
 
   /* Mobile responsive tables */
   .table-container {
-    overflow-x: auto !important;
+    overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     border-radius: var(--radius);
     border: 1px solid var(--border);
-    max-width: 100% !important;
-    width: 100% !important;
   }
 
   .data-table {
-    width: 100%;
-    font-size: 0.7rem;
+    min-width: 600px;
+    font-size: 0.875rem;
   }
 
   .data-table th,
   .data-table td {
-    padding: 0.4rem 0.2rem !important;
-    min-width: 120px !important;
-  }
-
-  /* Override original table padding for very small screens */
-  .data-table th {
-    padding: 0.4rem 0.2rem !important;
-    font-size: 0.7rem !important;
-    min-width: 120px !important;
-  }
-
-  .data-table td {
-    padding: 0.4rem 0.2rem !important;
-    font-size: 0.7rem !important;
-    line-height: 1.2 !important;
+    padding: 0.75rem 0.5rem;
+    white-space: nowrap;
   }
 
   /* Mobile responsive cards */
   .content-card {
-    padding: 0.5rem;
-    margin: 0 0.15rem 0.5rem 0.15rem;
+    margin: 0 0.5rem 1rem 0.5rem;
+    border-radius: var(--radius);
   }
 
   .card-header {
-    padding: 0.5rem;
-    gap: 0.4rem;
+    padding: 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .header-info h2 {
+    font-size: 1.25rem;
   }
 
   .card-content {
-    padding: 0.5rem;
+    padding: 1rem;
   }
 
   /* Mobile responsive stats grid */
   .stats-grid {
-    gap: 0.5rem;
-    margin: 0 0.15rem 0.75rem 0.15rem;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin: 0 0.5rem 1rem 0.5rem;
   }
 
   .stat-card {
-    padding: 0.75rem;
+    padding: 1rem;
   }
 
   /* Mobile responsive tabs */
@@ -1292,11 +1253,9 @@ body {
   }
 
   .tab-btn {
-    flex: 1 !important;
-    min-width: 80px !important;
-    white-space: nowrap !important;
-    font-size: 0.9rem !important;
-    padding: 0.75rem 1rem !important;
+    white-space: nowrap;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
   }
 
   /* Mobile responsive bot management */
@@ -1307,12 +1266,12 @@ body {
 
   /* Mobile responsive main content */
   .main-content {
-    padding: 0.75rem 0.25rem;
+    padding: 1rem 0.5rem;
   }
 
   /* Mobile responsive container */
   .container {
-    padding: 0.75rem 0.25rem;
+    padding: 0 0.5rem;
   }
 
   /* Page header mobile fixes */
@@ -1370,7 +1329,7 @@ body {
   
   .tab-btn {
     flex: 1 !important;
-    min-width: 80px !important;
+    min-width: 120px !important;
     white-space: nowrap !important;
     font-size: 0.9rem !important;
     padding: 0.75rem 1rem !important;
@@ -1384,29 +1343,28 @@ body {
   
   /* Quick actions card mobile fixes with higher specificity */
   .sidebar .content-card {
-    margin-bottom: 0.75rem !important;
+    margin-bottom: 1rem !important;
     overflow: hidden !important;
-    padding: 0.75rem !important;
   }
   
   .quick-actions {
     display: flex !important;
     flex-direction: column !important;
-    gap: 0.5rem !important;
+    gap: 0.75rem !important;
   }
   
   .quick-action-btn {
     display: flex !important;
     align-items: center !important;
-    gap: 0.5rem !important;
-    padding: 0.75rem !important;
-    border-radius: 8px !important;
+    gap: 0.75rem !important;
+    padding: 1rem !important;
+    border-radius: 12px !important;
     background: var(--surface) !important;
     border: 1px solid var(--border) !important;
     color: var(--text-primary) !important;
     text-decoration: none !important;
     transition: all 0.2s !important;
-    font-size: 0.85rem !important;
+    font-size: 0.95rem !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
@@ -1415,7 +1373,7 @@ body {
   .quick-action-btn:hover {
     background: var(--surface-hover) !important;
     border-color: var(--primary-color) !important;
-    transform: translateY(-1px) !important;
+    transform: translateY(-2px) !important;
   }
   
   /* Recent activity card mobile fixes with higher specificity */
@@ -1426,12 +1384,12 @@ body {
   
   .activity-item {
     display: flex !important;
-    gap: 0.75rem !important;
-    padding: 0.75rem !important;
-    border-radius: 8px !important;
+    gap: 1rem !important;
+    padding: 1rem !important;
+    border-radius: 12px !important;
     background: var(--surface) !important;
     border: 1px solid var(--border) !important;
-    margin-bottom: 0.5rem !important;
+    margin-bottom: 0.75rem !important;
     min-width: 0 !important;
   }
   
@@ -1442,28 +1400,34 @@ body {
   }
   
   .activity-title {
-    font-size: 0.85rem !important;
     font-weight: 600 !important;
     color: var(--text-primary) !important;
     margin-bottom: 0.25rem !important;
-    line-height: 1.3 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
   
   .activity-description {
-    font-size: 0.75rem !important;
     color: var(--text-secondary) !important;
+    font-size: 0.9rem !important;
     margin-bottom: 0.25rem !important;
-    line-height: 1.3 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
   
   .activity-time {
-    font-size: 0.7rem !important;
     color: var(--text-muted) !important;
-    line-height: 1.2 !important;
+    font-size: 0.8rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
   
   /* Content cards mobile fixes with higher specificity */
   .content-card {
+    overflow: hidden !important;
     width: 100% !important;
   }
   
@@ -1492,7 +1456,8 @@ body {
 
 @media (max-width: 480px) {
   .qr-image {
-    max-width: 200px;
+    width: 200px;
+    height: 200px;
   }
   .qr-modal-header {
     padding: 1rem;
@@ -1501,72 +1466,82 @@ body {
     padding: 1rem;
   }
   .data-table {
-    font-size: 0.7rem;
+    font-size: 0.75rem;
   }
   .data-table th,
   .data-table td {
-    padding: 0.3rem 0.2rem;
+    padding: 0.5rem 0.25rem;
   }
   .content-card {
-    padding: 0.5rem;
+    padding: 1rem;
   }
   .card-header {
-    padding: 0.5rem;
+    padding: 1rem;
   }
   .card-content {
-    padding: 0.5rem;
+    padding: 1rem;
   }
   .stats-grid {
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 0.4rem;
+    gap: 0.75rem;
   }
   .stat-card {
-    padding: 0.75rem;
+    padding: 1rem;
   }
   .tab-btn {
-    min-width: 75px !important;
-    font-size: 0.8rem !important;
-    padding: 0.5rem 0.75rem !important;
+    font-size: 0.8rem;
+    padding: 0.6rem 0.8rem;
+    min-width: 100px;
   }
   .main-content {
-    padding: 0.5rem 0.25rem;
+    padding: 1rem;
   }
   .container {
-    padding: 0.5rem 0.25rem;
+    padding: 1rem;
   }
+
+  /* Dashboard specific small screen fixes with higher specificity */
   .quick-action-btn {
-    padding: 0.6rem !important;
-    font-size: 0.8rem !important;
-  }
-  .activity-item {
-    padding: 0.6rem !important;
-  }
-  .activity-title {
-    font-size: 0.8rem !important;
-  }
-  .activity-description {
-    font-size: 0.7rem !important;
-  }
-  .activity-time {
-    font-size: 0.65rem !important;
-  }
-  .tabs-nav {
-    gap: 0.3rem !important;
-  }
-  .tab-btn {
-    min-width: 70px !important;
-    font-size: 0.75rem !important;
-    padding: 0.5rem 0.6rem !important;
-  }
-  .header-info h2 {
-    font-size: 1.1rem !important;
-  }
-  .header-info p {
-    font-size: 0.8rem !important;
-  }
-  .primary-btn {
-    padding: 0.6rem 0.8rem !important;
     font-size: 0.9rem !important;
+    padding: 0.8rem !important;
+  }
+  
+  .activity-item {
+    padding: 0.8rem !important;
+  }
+  
+  .activity-title {
+    font-size: 0.95rem !important;
+  }
+  
+  .activity-description {
+    font-size: 0.85rem !important;
+  }
+  
+  .activity-time {
+    font-size: 0.75rem !important;
+  }
+  
+  .tabs-nav {
+    gap: 0.25rem !important;
+  }
+  
+  .tab-btn {
+    min-width: 90px !important;
+    font-size: 0.8rem !important;
+    padding: 0.5rem 0.7rem !important;
+  }
+  
+  .header-info h2 {
+    font-size: 1.15rem !important;
+  }
+  
+  .header-info p {
+    font-size: 0.85rem !important;
+  }
+  
+  .primary-btn {
+    font-size: 0.9rem !important;
+    padding: 0.7rem 0.9rem !important;
   }
 }
 
@@ -2009,20 +1984,4 @@ a, .nav-link, .no-underline {
     width: 100%;
     justify-content: center;
   }
-}
-
-/* Mobile responsive business info */
-.business-info {
-  gap: 0.5rem !important;
-}
-
-.business-avatar {
-  width: 2rem !important;
-  height: 2rem !important;
-  font-size: 0.9rem !important;
-}
-
-.business-name a {
-  font-size: 1rem !important;
-  line-height: 1.2 !important;
 } 
