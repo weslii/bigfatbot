@@ -96,20 +96,23 @@ class ThemeManager {
         
         if (!themeToggle) return;
 
-        // Update button icons
-        const sunIcon = themeToggle.querySelector('.fa-sun') || 
-                       themeToggle.querySelector('i:nth-child(1)') ||
-                       themeToggle.querySelector('i');
-        const moonIcon = themeToggle.querySelector('.fa-moon') || 
-                        themeToggle.querySelector('i:nth-child(2)');
+        // Find both sun and moon icons
+        const sunIcon = themeToggle.querySelector('.fa-sun');
+        const moonIcon = themeToggle.querySelector('.fa-moon');
 
         if (sunIcon && moonIcon) {
-            // Dual icon setup
-            sunIcon.style.display = this.currentTheme === 'light' ? 'none' : 'inline-block';
-            moonIcon.style.display = this.currentTheme === 'dark' ? 'none' : 'inline-block';
-        } else if (sunIcon) {
-            // Single icon setup
-            sunIcon.className = this.currentTheme === 'light' ? 'fas fa-sun' : 'fas fa-moon';
+            // Dual icon setup - toggle visibility
+            if (this.currentTheme === 'light') {
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'inline-block';
+            } else {
+                sunIcon.style.display = 'inline-block';
+                moonIcon.style.display = 'none';
+            }
+        } else if (sunIcon || moonIcon) {
+            // Single icon setup - change the class
+            const icon = sunIcon || moonIcon;
+            icon.className = this.currentTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
         }
 
         // Update aria-label
