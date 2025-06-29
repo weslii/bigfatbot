@@ -57,12 +57,19 @@ class ThemeManager {
      * Update logo based on current theme
      */
     updateLogo() {
-        const logo = document.getElementById('theme-logo');
-        if (logo) {
-            logo.src = this.currentTheme === 'dark' 
-                ? '/logo-animated-dark.svg' 
-                : '/logo-animated.svg';
-        }
+        const logos = document.querySelectorAll('.theme-logo');
+        logos.forEach(logo => {
+            // Determine which logo variant to use based on the original src
+            if (logo.src.includes('logo-animated')) {
+                logo.src = this.currentTheme === 'dark'
+                    ? '/logo-animated-dark.svg'
+                    : '/logo-animated.svg';
+            } else if (logo.src.includes('logo-dark') || logo.src.includes('logo.svg')) {
+                logo.src = this.currentTheme === 'dark'
+                    ? '/logo-dark.svg'
+                    : '/logo.svg';
+            }
+        });
     }
 
     /**
