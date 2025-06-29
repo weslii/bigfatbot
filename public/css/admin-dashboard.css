@@ -1203,7 +1203,7 @@ body {
 
   /* Mobile responsive tables */
   .table-container {
-    overflow-x: auto;
+    overflow-x: auto !important;
     -webkit-overflow-scrolling: touch;
     border-radius: var(--radius);
     border: 1px solid var(--border);
@@ -1218,12 +1218,14 @@ body {
   .data-table th,
   .data-table td {
     padding: 0.4rem 0.2rem !important;
+    min-width: 120px !important;
   }
 
   /* Override original table padding for very small screens */
   .data-table th {
     padding: 0.4rem 0.2rem !important;
     font-size: 0.7rem !important;
+    min-width: 120px !important;
   }
 
   .data-table td {
@@ -1444,7 +1446,6 @@ body {
   
   /* Content cards mobile fixes with higher specificity */
   .content-card {
-    overflow: hidden !important;
     width: 100% !important;
   }
   
