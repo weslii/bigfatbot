@@ -37,26 +37,6 @@ window.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // Theme toggle logic
-  const themeToggle = document.getElementById('themeToggle');
-  if (themeToggle) {
-    // Set initial theme from localStorage
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-      document.documentElement.setAttribute('data-theme', 'dark');
-      themeToggle.querySelector('i').className = 'fas fa-sun';
-    } else {
-      document.documentElement.setAttribute('data-theme', 'light');
-      themeToggle.querySelector('i').className = 'fas fa-moon';
-    }
-    themeToggle.addEventListener('click', function() {
-      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
-      themeToggle.querySelector('i').className = isDark ? 'fas fa-moon' : 'fas fa-sun';
-      localStorage.setItem('theme', isDark ? 'light' : 'dark');
-    });
-  }
-
   // Notification button logic
   const notificationBtn = document.getElementById('notificationBtn');
   if (notificationBtn) {

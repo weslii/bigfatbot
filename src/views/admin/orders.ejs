@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Orders</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="icon" href="/logo-icon copy.svg">
     <link href="/css/admin-dashboard.css" rel="stylesheet">
 </head>
 <body>
@@ -252,25 +253,7 @@
                 dropdownParent.classList.remove('active');
             }
         });
-        // Theme toggle functionality
-        const themeToggle = document.getElementById('theme-toggle');
-        const html = document.documentElement;
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        html.setAttribute('data-theme', savedTheme);
-        updateThemeIcon(savedTheme);
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateThemeIcon(newTheme);
-        });
-        function updateThemeIcon(theme) {
-            const sunIcon = themeToggle.querySelector('i:nth-child(1)');
-            const moonIcon = themeToggle.querySelector('i:nth-child(2)');
-            sunIcon.style.display = theme === 'light' ? 'inline' : 'none';
-            moonIcon.style.display = theme === 'dark' ? 'inline' : 'none';
-        }
+        
         // Edit modal logic
         function openEditModal(orderId) {
             document.getElementById('editOrderModal-' + orderId).style.display = 'flex';
@@ -292,5 +275,6 @@
             }
         });
     </script>
+    <script src="/js/theme-utils.js"></script>
 </body>
 </html> 

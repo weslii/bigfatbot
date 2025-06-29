@@ -6,6 +6,7 @@
     <title><%= business ? business.business_name : 'Add Business' %> - Novi</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="/css/groups-dashboard.css">
+    <link rel="icon" href="/logo-icon copy.svg">
 </head>
 <body>
     <header class="header">
@@ -1441,34 +1442,9 @@
 }
 </style>
 
+<script src="/js/theme-utils.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Theme toggle
-        const themeToggle = document.getElementById('theme-toggle');
-        const html = document.documentElement;
-        const sunIcon = themeToggle.querySelector('.fa-sun');
-        const moonIcon = themeToggle.querySelector('.fa-moon');
-
-        function applyTheme(theme) {
-            html.setAttribute('data-theme', theme);
-            if (theme === 'dark') {
-                sunIcon.style.display = 'none';
-                moonIcon.style.display = 'inline-block';
-            } else {
-                sunIcon.style.display = 'inline-block';
-                moonIcon.style.display = 'none';
-            }
-        }
-
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        applyTheme(savedTheme);
-
-        themeToggle.addEventListener('click', () => {
-            const newTheme = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-            localStorage.setItem('theme', newTheme);
-            applyTheme(newTheme);
-        });
-
         // Dropdown functionality
         function setupDropdown(buttonId, menuId) {
             const dropdownBtn = document.getElementById(buttonId);
