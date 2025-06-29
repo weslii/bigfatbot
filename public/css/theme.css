@@ -76,6 +76,18 @@ body {
   h1, h2, h4, h5 {
     font-size: 1.2em !important;
   }
+  /* Hero logo responsive scaling */
+  .hero .theme-logo {
+    height: 160px !important;
+    max-width: 100% !important;
+    width: auto !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero .theme-logo {
+    height: 120px !important;
+  }
 }
 
 body.pastel-blue-bg {
