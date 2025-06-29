@@ -104,12 +104,12 @@ class ThemeManager {
                         themeToggle.querySelector('i:nth-child(2)');
 
         if (sunIcon && moonIcon) {
-            // Dual icon setup - show the icon for the theme we can switch TO
-            sunIcon.style.display = this.currentTheme === 'dark' ? 'inline-block' : 'none';
-            moonIcon.style.display = this.currentTheme === 'light' ? 'inline-block' : 'none';
+            // Dual icon setup
+            sunIcon.style.display = this.currentTheme === 'light' ? 'none' : 'inline-block';
+            moonIcon.style.display = this.currentTheme === 'dark' ? 'none' : 'inline-block';
         } else if (sunIcon) {
-            // Single icon setup - show the icon for the theme we can switch TO
-            sunIcon.className = this.currentTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            // Single icon setup
+            sunIcon.className = this.currentTheme === 'light' ? 'fas fa-sun' : 'fas fa-moon';
         }
 
         // Update aria-label
