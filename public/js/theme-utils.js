@@ -52,10 +52,12 @@ class ThemeManager {
     }
 
     /**
-     * Update favicon based on current theme
+     * Update favicon based on system theme (always follows system)
      */
     updateFavicon() {
-        const faviconPath = this.currentTheme === 'dark' 
+        // Always check system theme for favicon, regardless of user preference
+        const isSystemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const faviconPath = isSystemDark 
             ? '/logo-icon copy white.svg' 
             : '/logo-icon copy.svg';
         
@@ -166,7 +168,10 @@ class ThemeManager {
             const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
             
             mediaQuery.addEventListener('change', (e) => {
-                // Only auto-switch if user hasn't manually set a preference
+                // Always update favicon when system theme changes
+                this.updateFavicon();
+                
+                // Only auto-switch page theme if user hasn't manually set a preference
                 if (!localStorage.getItem('theme')) {
                     const systemTheme = e.matches ? 'dark' : 'light';
                     this.applyTheme(systemTheme);
