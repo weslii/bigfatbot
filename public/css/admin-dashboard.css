@@ -515,7 +515,9 @@ body {
 }
 
 .card-content {
-  padding: 1.5rem;
+  padding: 0.5rem;
+  max-width: 100% !important;
+  overflow: hidden !important;
 }
 
 /* Table Styles */
@@ -524,13 +526,13 @@ body {
   -webkit-overflow-scrolling: touch;
   border-radius: var(--radius);
   border: 1px solid var(--border);
+  max-width: 100% !important;
+  width: 100% !important;
 }
 
 .data-table {
   width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
-  font-size: 0.875rem;
+  font-size: 0.7rem;
 }
 
 /* Ensure tables have minimum width on larger screens for proper column spacing */
@@ -1207,11 +1209,12 @@ body {
     -webkit-overflow-scrolling: touch;
     border-radius: var(--radius);
     border: 1px solid var(--border);
+    max-width: 100% !important;
+    width: 100% !important;
   }
 
   .data-table {
     width: 100%;
-    min-width: 450px;
     font-size: 0.7rem;
   }
 
@@ -1484,7 +1487,6 @@ body {
   }
   .data-table {
     font-size: 0.7rem;
-    min-width: 400px;
   }
   .data-table th,
   .data-table td {
