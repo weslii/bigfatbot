@@ -472,6 +472,11 @@ body {
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   overflow: hidden;
+  margin: 0 0.5rem 1rem 0.5rem;
+  border-radius: var(--radius);
+  max-width: 350px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .card-header {
@@ -1216,6 +1221,9 @@ body {
   .content-card {
     margin: 0 0.5rem 1rem 0.5rem;
     border-radius: var(--radius);
+    max-width: 350px;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .card-header {
