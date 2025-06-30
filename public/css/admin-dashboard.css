@@ -1201,6 +1201,7 @@ body {
     max-width: 100%;
     width: 100%;
     max-width: 370px;
+    min-width: 370px;
     margin-left: auto;
     margin-right: auto;
     padding: 0 0.125rem;
