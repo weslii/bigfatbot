@@ -472,10 +472,6 @@ body {
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   overflow: hidden;
-  margin: 0 0.25rem 1rem 0.25rem;
-  max-width: 380px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 .card-header {
@@ -519,7 +515,7 @@ body {
 }
 
 .card-content {
-  padding: 0.5rem;
+  padding: 1.5rem;
 }
 
 /* Table Styles */
@@ -1198,37 +1194,23 @@ body {
     -webkit-overflow-scrolling: touch;
     border-radius: var(--radius);
     border: 1px solid var(--border);
-    max-width: 100%;
-    width: 100%;
-    max-width: 370px;
-    min-width: 370px;
-    margin-left: auto;
-    margin-right: auto;
-    padding: 0 0.125rem;
   }
 
   .data-table {
     min-width: 600px;
     font-size: 0.875rem;
-    width: 100%;
-    table-layout: auto;
-    margin: 0;
   }
 
   .data-table th,
   .data-table td {
     padding: 0.75rem 0.5rem;
     white-space: nowrap;
-    min-width: 120px;
   }
 
   /* Mobile responsive cards */
   .content-card {
-    margin: 0 0.125rem 0.5rem 0.125rem;
+    margin: 0 0.5rem 1rem 0.5rem;
     border-radius: var(--radius);
-    max-width: 380px;
-    margin-left: auto;
-    margin-right: auto;
   }
 
   .card-header {
@@ -1243,7 +1225,7 @@ body {
   }
 
   .card-content {
-    padding: 0.25rem 0.125rem;
+    padding: 1rem;
   }
 
   /* Mobile responsive stats grid */
@@ -1260,10 +1242,8 @@ body {
   /* Mobile responsive tabs */
   .tabs-header {
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 1rem;
     align-items: stretch;
-    margin-bottom: 0.25rem;
-    padding: 0 0.125rem;
   }
 
   .tabs-nav {
@@ -1286,7 +1266,7 @@ body {
 
   /* Mobile responsive main content */
   .main-content {
-    padding: 0.5rem 0.125rem;
+    padding: 1rem 0.5rem;
   }
 
   /* Mobile responsive container */
@@ -1562,40 +1542,6 @@ body {
   .primary-btn {
     font-size: 0.9rem !important;
     padding: 0.7rem 0.9rem !important;
-  }
-
-  /* Enhanced table responsive rules for very small screens */
-  .table-container {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    border-radius: var(--radius) !important;
-    border: 1px solid var(--border) !important;
-    max-width: 100% !important;
-    width: 100% !important;
-  }
-
-  .data-table {
-    min-width: 500px !important;
-    font-size: 0.75rem !important;
-    width: 100% !important;
-    table-layout: auto !important;
-  }
-
-  .data-table th,
-  .data-table td {
-    padding: 0.5rem 0.25rem !important;
-    white-space: nowrap !important;
-    min-width: 80px !important;
-    font-size: 0.75rem !important;
-  }
-
-  /* Ensure business info doesn't break layout */
-  .business-info {
-    min-width: 120px !important;
-  }
-
-  .business-name {
-    font-size: 0.75rem !important;
   }
 }
 
@@ -2038,11 +1984,4 @@ a, .nav-link, .no-underline {
     width: 100%;
     justify-content: center;
   }
-}
-
-/* Ensure table doesn't expand beyond container */
-.card-content .table-container {
-  max-width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
 } 
