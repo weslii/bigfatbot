@@ -1194,17 +1194,22 @@ body {
     -webkit-overflow-scrolling: touch;
     border-radius: var(--radius);
     border: 1px solid var(--border);
+    max-width: 100%;
+    width: 100%;
   }
 
   .data-table {
     min-width: 600px;
     font-size: 0.875rem;
+    width: 100%;
+    table-layout: auto;
   }
 
   .data-table th,
   .data-table td {
     padding: 0.75rem 0.5rem;
     white-space: nowrap;
+    min-width: 100px;
   }
 
   /* Mobile responsive cards */
@@ -1277,7 +1282,6 @@ body {
   /* Page header mobile fixes */
   .page-header {
     flex-direction: column;
-    align-items: flex-start;
     gap: 1rem;
   }
   .page-actions {
@@ -1467,29 +1471,26 @@ body {
     padding: 1rem;
   }
   .data-table {
-    min-width: 500px;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
   }
   .data-table th,
   .data-table td {
     padding: 0.5rem 0.25rem;
   }
   .content-card {
-    margin: 0 0.25rem 0.75rem 0.25rem;
-    padding: 0.75rem;
+    padding: 1rem;
   }
   .card-header {
-    padding: 0.75rem;
+    padding: 1rem;
   }
   .card-content {
-    padding: 0.75rem;
+    padding: 1rem;
   }
   .stats-grid {
     gap: 0.75rem;
-    margin: 0 0.25rem 0.75rem 0.25rem;
   }
   .stat-card {
-    padding: 0.75rem;
+    padding: 1rem;
   }
   .tab-btn {
     font-size: 0.8rem;
@@ -1497,10 +1498,10 @@ body {
     min-width: 100px;
   }
   .main-content {
-    padding: 0.75rem 0.25rem;
+    padding: 1rem;
   }
   .container {
-    padding: 0.75rem 0.25rem;
+    padding: 1rem;
   }
 
   /* Dashboard specific small screen fixes with higher specificity */
@@ -1546,6 +1547,40 @@ body {
   .primary-btn {
     font-size: 0.9rem !important;
     padding: 0.7rem 0.9rem !important;
+  }
+
+  /* Enhanced table responsive rules for very small screens */
+  .table-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    border-radius: var(--radius) !important;
+    border: 1px solid var(--border) !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .data-table {
+    min-width: 500px !important;
+    font-size: 0.75rem !important;
+    width: 100% !important;
+    table-layout: auto !important;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0.5rem 0.25rem !important;
+    white-space: nowrap !important;
+    min-width: 80px !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* Ensure business info doesn't break layout */
+  .business-info {
+    min-width: 120px !important;
+  }
+
+  .business-name {
+    font-size: 0.75rem !important;
   }
 }
 
@@ -1990,15 +2025,9 @@ a, .nav-link, .no-underline {
   }
 }
 
-.page-header {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1rem;
-}
-.page-title {
-  font-size: 1.25rem;
-}
-.page-actions {
-  width: 100%;
-  justify-content: flex-start;
+/* Ensure table doesn't expand beyond container */
+.card-content .table-container {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
 } 
