@@ -33,7 +33,7 @@
                 <button class="btn btn-icon" id="theme-toggle" aria-label="Toggle Theme">
                     <i class="fas fa-sun"></i>
                     <i class="fas fa-moon"></i>
-                </button>
+            </button>
                 <div class="dropdown">
                     <button class="btn btn-icon" id="profileDropdown">
                         <i class="fas fa-user"></i>
@@ -340,7 +340,7 @@
             }
         });
 
-        // Update charts theme
+            // Update charts theme
         function updateChartThemes(theme) {
             const textColor = theme === 'dark' ? '#f8fafc' : '#1e293b';
             const gridColor = theme === 'dark' ? 'rgba(148, 163, 184, 0.2)' : 'rgba(226, 232, 240, 1)';
@@ -813,7 +813,7 @@
             
             // Initialize charts
             initCharts();
-            
+
             // Auto-open edit modal if ?edit=ORDER_ID is present
             const params = new URLSearchParams(window.location.search);
             const editId = params.get('edit');
