@@ -1203,6 +1203,7 @@ body {
     max-width: 370px;
     margin-left: auto;
     margin-right: auto;
+    padding: 0 0.125rem;
   }
 
   .data-table {
@@ -1210,6 +1211,7 @@ body {
     font-size: 0.875rem;
     width: 100%;
     table-layout: auto;
+    margin: 0;
   }
 
   .data-table th,
@@ -1221,7 +1223,7 @@ body {
 
   /* Mobile responsive cards */
   .content-card {
-    margin: 0 0.25rem 0.5rem 0.25rem;
+    margin: 0 0.125rem 0.5rem 0.125rem;
     border-radius: var(--radius);
     max-width: 380px;
     margin-left: auto;
@@ -1240,7 +1242,7 @@ body {
   }
 
   .card-content {
-    padding: 0.25rem;
+    padding: 0.25rem 0.125rem;
   }
 
   /* Mobile responsive stats grid */
@@ -1260,6 +1262,7 @@ body {
     gap: 0.5rem;
     align-items: stretch;
     margin-bottom: 0.25rem;
+    padding: 0 0.125rem;
   }
 
   .tabs-nav {
@@ -1282,7 +1285,7 @@ body {
 
   /* Mobile responsive main content */
   .main-content {
-    padding: 0.5rem 0.5rem;
+    padding: 0.5rem 0.125rem;
   }
 
   /* Mobile responsive container */
