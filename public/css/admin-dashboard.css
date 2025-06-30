@@ -472,8 +472,7 @@ body {
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   overflow: hidden;
-  margin: 0 0.5rem 1rem 0.5rem;
-  border-radius: var(--radius);
+  margin: 0 0.25rem 1rem 0.25rem;
   max-width: 350px;
   margin-left: auto;
   margin-right: auto;
@@ -1204,7 +1203,6 @@ body {
     max-width: 350px;
     margin-left: auto;
     margin-right: auto;
-    padding: 0.25rem;
   }
 
   .data-table {
@@ -1223,7 +1221,7 @@ body {
 
   /* Mobile responsive cards */
   .content-card {
-    margin: 0 0.5rem 1rem 0.5rem;
+    margin: 0 0.25rem 1rem 0.25rem;
     border-radius: var(--radius);
   }
 
