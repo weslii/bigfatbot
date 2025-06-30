@@ -1197,7 +1197,7 @@ body {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     border-radius: var(--radius);
-    border: 1px solid var(--border);
+    border: 0.25px solid var(--border);
     max-width: 100%;
     width: 100%;
     max-width: 350px;
