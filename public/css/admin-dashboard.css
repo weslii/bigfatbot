@@ -1277,6 +1277,7 @@ body {
   /* Page header mobile fixes */
   .page-header {
     flex-direction: column;
+    align-items: flex-start;
     gap: 1rem;
   }
   .page-actions {
@@ -1466,26 +1467,29 @@ body {
     padding: 1rem;
   }
   .data-table {
-    font-size: 0.75rem;
+    min-width: 500px;
+    font-size: 0.8rem;
   }
   .data-table th,
   .data-table td {
     padding: 0.5rem 0.25rem;
   }
   .content-card {
-    padding: 1rem;
+    margin: 0 0.25rem 0.75rem 0.25rem;
+    padding: 0.75rem;
   }
   .card-header {
-    padding: 1rem;
+    padding: 0.75rem;
   }
   .card-content {
-    padding: 1rem;
+    padding: 0.75rem;
   }
   .stats-grid {
     gap: 0.75rem;
+    margin: 0 0.25rem 0.75rem 0.25rem;
   }
   .stat-card {
-    padding: 1rem;
+    padding: 0.75rem;
   }
   .tab-btn {
     font-size: 0.8rem;
@@ -1493,10 +1497,10 @@ body {
     min-width: 100px;
   }
   .main-content {
-    padding: 1rem;
+    padding: 0.75rem 0.25rem;
   }
   .container {
-    padding: 1rem;
+    padding: 0.75rem 0.25rem;
   }
 
   /* Dashboard specific small screen fixes with higher specificity */
@@ -1984,4 +1988,17 @@ a, .nav-link, .no-underline {
     width: 100%;
     justify-content: center;
   }
+}
+
+.page-header {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+}
+.page-title {
+  font-size: 1.25rem;
+}
+.page-actions {
+  width: 100%;
+  justify-content: flex-start;
 } 
