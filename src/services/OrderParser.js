@@ -112,12 +112,12 @@ class OrderParser {
         logger.warn('Order rejected: missing or invalid phone number', { phoneNumber });
         return null;
       }
-      // 2. Require address confidence score >= 3
+      // 2. Require address confidence score >= 2
       let addressConfidence = 0;
       if (address) {
         addressConfidence = this.calculatePatternScore(address, this.addressPatterns);
       }
-      if (!address || addressConfidence < 3) {
+      if (!address || addressConfidence < 2) {
         logger.warn('Order rejected: address confidence too low', { address, addressConfidence });
         return null;
       }

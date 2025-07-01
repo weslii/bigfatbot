@@ -546,7 +546,7 @@ class WhatsAppService {
         // Only send error message if message contains BOTH a valid phone number AND high-confidence address
         const hasValidPhone = OrderParser.extractPhoneNumbers(message.body).some(num => OrderParser.isValidPhoneNumber(num));
         const addressConfidence = OrderParser.calculatePatternScore(message.body, OrderParser.addressPatterns);
-        if ((hasValidPhone && addressConfidence >= 3) && !message.body.startsWith('/')) {
+        if ((hasValidPhone && addressConfidence >= 2) && !message.body.startsWith('/')) {
           await this.client.sendMessage(groupInfo.group_id, 
             '❌ Could not process order. Please ensure your message includes:\n' +
             '• Customer name\n' +
