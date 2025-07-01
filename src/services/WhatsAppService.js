@@ -543,8 +543,10 @@ class WhatsAppService {
           businessId: groupInfo.business_id 
         });
         
-        // Only send error message if it looks like an order attempt
-        if (message.body.length > 20 && !message.body.startsWith('/')) {
+        // Only send error message if message contains a valid phone number or high-confidence address
+        const hasValidPhone = OrderParser.extractPhoneNumbers(message.body).some(num => OrderParser.isValidPhoneNumber(num));
+        const addressConfidence = OrderParser.calculatePatternScore(message.body, OrderParser.addressPatterns);
+        if ((hasValidPhone || addressConfidence >= 2) && !message.body.startsWith('/')) {
           await this.client.sendMessage(groupInfo.group_id, 
             '❌ Could not process order. Please ensure your message includes:\n' +
             '• Customer name\n' +
