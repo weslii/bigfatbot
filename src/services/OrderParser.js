@@ -6,7 +6,7 @@ class OrderParser {
     /\d+.*(?:street|road|avenue|lane|close|way|estate|island|mainland)/i,
     /(?:no\.|number)\s*\d+/i,
     /\d+[,\s]/, // Starts with number and comma/space
-    /.{20,}/, // Longer text likely to be address
+    // /.{20,}/, // Removed: too broad, matches any long text
     // Lagos Areas
     /(?:lekki|ikoyi|ajah|victoria|island|mainland|surulere|yaba|ikeja|ogba|maryland|ogudu|ojota|ketu|magodo|oshodi|apapa|festac|amowo|odogunyan|ikorodu|badagry|ejigbo|ikotun|agidingbi|sangotedo|abraham|adesa|abijo|agungi|ajah|akodo|badore|banana|ikate|ilaje|ilasan|jakande|langbasa|osborne|sangotedo|vitoria)/i,
     // Common Estate Names
@@ -112,12 +112,12 @@ class OrderParser {
         logger.warn('Order rejected: missing or invalid phone number', { phoneNumber });
         return null;
       }
-      // 2. Require address confidence score >= 2
+      // 2. Require address confidence score >= 3
       let addressConfidence = 0;
       if (address) {
         addressConfidence = this.calculatePatternScore(address, this.addressPatterns);
       }
-      if (!address || addressConfidence < 2) {
+      if (!address || addressConfidence < 3) {
         logger.warn('Order rejected: address confidence too low', { address, addressConfidence });
         return null;
       }
