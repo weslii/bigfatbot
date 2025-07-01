@@ -112,12 +112,27 @@ class OrderParser {
         logger.warn('Order rejected: missing or invalid phone number', { phoneNumber });
         return null;
       }
-      // 2. Require address confidence score >= 2
+      // 2. Require address confidence score >= 2, or fallback if address is at least two words and contains a known city
       let addressConfidence = 0;
+      let addressIsValid = false;
       if (address) {
         addressConfidence = this.calculatePatternScore(address, this.addressPatterns);
+        if (addressConfidence >= 2) {
+          addressIsValid = true;
+        } else {
+          // Fallback: check for at least two words and known city
+          const knownCities = [
+            'lagos','abuja','port harcourt','kano','ibadan','benin','kaduna','jos','enugu','owerri','uyo','warri','onitsha','awka','aba','calabar','osogbo','ilorin','minna','maiduguri','yola','bauchi','makurdi','gombe','sokoto','zaria','ekiti','ogun','ondo','anambra','imo','edo','delta','kogi','kwara','niger','plateau','taraba','adamawa','borno','zamfara','kebbi','kastina','jigawa','nasarawa','bayelsa','ebonyi','cross river','akwa ibom','abia','ekpoma','nyanya'
+          ];
+          const addressWords = address.trim().split(/\s+/);
+          const addressLower = address.toLowerCase();
+          if (addressWords.length >= 2 && knownCities.some(city => addressLower.includes(city))) {
+            addressIsValid = true;
+            addressConfidence = 2; // treat as valid for threshold
+          }
+        }
       }
-      if (!address || addressConfidence < 2) {
+      if (!address || !addressIsValid) {
         logger.warn('Order rejected: address confidence too low', { address, addressConfidence });
         return null;
       }
