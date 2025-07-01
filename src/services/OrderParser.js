@@ -106,6 +106,23 @@ class OrderParser {
         if (!notes && unlabeledData.notes) notes = unlabeledData.notes;
       }
 
+      // --- STRICTER CHECKS ---
+      // 1. Require a valid phone number
+      if (!phoneNumber || !this.isValidPhoneNumber(phoneNumber)) {
+        logger.warn('Order rejected: missing or invalid phone number', { phoneNumber });
+        return null;
+      }
+      // 2. Require address confidence score >= 2
+      let addressConfidence = 0;
+      if (address) {
+        addressConfidence = this.calculatePatternScore(address, this.addressPatterns);
+      }
+      if (!address || addressConfidence < 2) {
+        logger.warn('Order rejected: address confidence too low', { address, addressConfidence });
+        return null;
+      }
+      // --- END STRICTER CHECKS ---
+
       // Validate required fields
       if (!customerName || !phoneNumber || !address || !items) {
         logger.warn('Incomplete order data parsed', { customerName, phoneNumber, address, items });
