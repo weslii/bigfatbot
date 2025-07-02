@@ -12,7 +12,7 @@ nixPkgs = [
   "libgbm",
   "alsa-lib",
   "pango",
-  "libXScrnSaver",
+  "libxss",
   "libxshmfence",
   "mesa",
   "cairo"
