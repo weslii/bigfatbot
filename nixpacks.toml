@@ -6,7 +6,6 @@ nixPkgs = [
   "cups",
   "libdrm",
   "libxkbcommon",
-  "libxrandr",
   "libgbm",
   "alsa-lib",
   "pango",
