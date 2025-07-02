@@ -10,7 +10,6 @@ nixPkgs = [
   "alsa-lib",
   "pango",
   "libxss",
-  "libxshmfence",
   "mesa",
   "cairo"
 ] 
