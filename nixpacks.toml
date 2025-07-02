@@ -10,7 +10,7 @@ nixPkgs = [
   "libXdamage",
   "libXrandr",
   "libgbm",
-  "alsaLib",
+  "alsa-lib",
   "pango",
   "libXScrnSaver",
   "libxshmfence",
