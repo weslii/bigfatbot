@@ -534,6 +534,7 @@ class WhatsAppService {
     }
   }
 
+  // This method provides bot statistics for the admin dashboard, including daily messages, response time, and parsing rates.
   async getBotMetrics() {
     try {
       const metrics = await this.loadMetrics();
