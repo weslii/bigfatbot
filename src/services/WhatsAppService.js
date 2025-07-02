@@ -468,6 +468,12 @@ class WhatsAppService {
       const metrics = await this.loadMetrics();
       if (!metrics) return;
 
+      // ---
+      // DAILY MESSAGE COUNTING FOR ADMIN DASHBOARD:
+      // Each time a message is processed, increment the count for today's date in metrics.daily_counts.
+      // This is used to display the 'Daily Messages' metric in the admin dashboard.
+      // ---
+
       const today = new Date().toISOString().slice(0, 10);
       const dailyCounts = metrics.daily_counts || {};
       dailyCounts[today] = (dailyCounts[today] || 0) + 1;
