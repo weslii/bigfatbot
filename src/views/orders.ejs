@@ -90,7 +90,7 @@
                 </h3>
             </div>
             <div class="card-content">
-                <form class="filters-form" id="filtersForm">
+                <form class="filters-form" id="filtersForm" onsubmit="handleFilterSubmit(event)">
             <input type="hidden" name="userId" value="<%= userId %>">
             
                     <div class="form-group">
@@ -123,8 +123,23 @@
             </div>
 
                     <div class="form-group">
+                        <label class="form-label" for="startDateFilter">Start Date</label>
+                        <input type="date" class="form-input" name="startDate" id="startDateFilter"
+                               value="<%= startDate ?? '' %>">
+            </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="endDateFilter">End Date</label>
+                        <input type="date" class="form-input" name="endDate" id="endDateFilter"
+                               value="<%= endDate ?? '' %>">
+            </div>
+
+                    <div class="form-group">
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-search"></i> Apply
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="clearFilters()">
+                            <i class="fas fa-times"></i> Clear
                         </button>
             </div>
           </form>
@@ -135,11 +150,11 @@
         <div class="content-card scroll-reveal">
             <div class="card-header">
                 <h3 class="card-title">
-                    <i class="fas fa-box"></i> Orders (<%= totalOrders %>)
+                    <i class="fas fa-box"></i> Orders (<span id="orders-count"><%= totalOrders %></span>)
                 </h3>
                 <div class="header-actions-right">
                     <form id="pageSizeForm" class="d-flex align-items-center">
-                        <select class="form-select" style="width: auto;" name="pageSize" onchange="document.getElementById('pageSizeForm').submit()">
+                        <select class="form-select" style="width: auto;" name="pageSize">
               <option value="10" <%= pageSize == 10 ? 'selected' : '' %>>10 per page</option>
               <option value="25" <%= pageSize == 25 ? 'selected' : '' %>>25 per page</option>
               <option value="50" <%= pageSize == 50 ? 'selected' : '' %>>50 per page</option>
@@ -178,11 +193,14 @@
                                         <td><%= new Date(order.created_at).toLocaleDateString() %></td>
                                         <td>
                                             <div class="btn-group">
-                                                <button class="btn btn-sm btn-outline" onclick="viewOrder('<%= order.id %>')">
+                                                <button class="btn btn-sm btn-outline" onclick="viewOrder('<%= order.id %>')" title="View Order">
                             <i class="fas fa-eye"></i>
                           </button>
-                                                <button class="btn btn-sm btn-outline" onclick="editOrder('<%= order.id %>')">
+                                                <button class="btn btn-sm btn-outline" onclick="editOrder('<%= order.id %>')" title="Edit Order">
                             <i class="fas fa-edit"></i>
+                          </button>
+                                                <button class="btn btn-sm btn-outline btn-danger" onclick="deleteOrder('<%= order.id %>', '<%= order.order_id %>')" title="Delete Order">
+                            <i class="fas fa-trash"></i>
                           </button>
                         </div>
                       </td>
@@ -694,8 +712,11 @@
                                 position: 'bottom',
                                 labels: {
                                     color: getComputedStyle(document.documentElement).getPropertyValue('--text-primary'),
-                                    padding: 20,
-                                    usePointStyle: true
+                                    padding: 15,
+                                    usePointStyle: true,
+                                    font: {
+                                        size: window.innerWidth < 768 ? 11 : 12
+                                    }
                                 }
                             },
                             title: {
@@ -703,7 +724,7 @@
                                 text: 'Order Status Distribution',
                                 color: getComputedStyle(document.documentElement).getPropertyValue('--text-primary'),
                                 font: {
-                                    size: 16,
+                                    size: window.innerWidth < 768 ? 14 : 16,
                                     weight: 'bold'
                                 }
                             }
@@ -736,17 +757,30 @@
                                 display: true,
                                 text: 'Orders by Business',
                                 color: getComputedStyle(document.documentElement).getPropertyValue('--text-primary'),
-                                font: { size: 16, weight: 'bold' }
+                                font: { 
+                                    size: window.innerWidth < 768 ? 14 : 16, 
+                                    weight: 'bold' 
+                                }
                             }
                         },
                         scales: {
                             y: {
                                 beginAtZero: true,
-                                ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary') },
+                                ticks: { 
+                                    color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary'),
+                                    font: {
+                                        size: window.innerWidth < 768 ? 10 : 12
+                                    }
+                                },
                                 grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--border-color') }
                             },
                             x: {
-                                ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary') },
+                                ticks: { 
+                                    color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary'),
+                                    font: {
+                                        size: window.innerWidth < 768 ? 10 : 12
+                                    }
+                                },
                                 grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--border-color') }
                             }
                         }
@@ -780,17 +814,30 @@
                                 display: true,
                                 text: 'Order Trends (Last 7 Days)',
                                 color: getComputedStyle(document.documentElement).getPropertyValue('--text-primary'),
-                                font: { size: 16, weight: 'bold' }
+                                font: { 
+                                    size: window.innerWidth < 768 ? 14 : 16, 
+                                    weight: 'bold' 
+                                }
                             }
                         },
                         scales: {
                             y: {
                                 beginAtZero: true,
-                                ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary') },
+                                ticks: { 
+                                    color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary'),
+                                    font: {
+                                        size: window.innerWidth < 768 ? 10 : 12
+                                    }
+                                },
                                 grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--border-color') }
                             },
                             x: {
-                                ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary') },
+                                ticks: { 
+                                    color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary'),
+                                    font: {
+                                        size: window.innerWidth < 768 ? 10 : 12
+                                    }
+                                },
                                 grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--border-color') }
                             }
                         }
@@ -814,6 +861,10 @@
             // Initialize charts
             initCharts();
 
+            // Initialize AJAX functionality
+            initializePaginationListeners();
+            initializePageSizeListener();
+
             // Auto-open edit modal if ?edit=ORDER_ID is present
             const params = new URLSearchParams(window.location.search);
             const editId = params.get('edit');
@@ -832,7 +883,325 @@
                 });
             }
         });
+
+        // Clear filters function
+        function clearFilters() {
+            // Redirect to orders page without any query parameters
+            window.location.href = '/orders';
+        }
+
+        // AJAX filtering and pagination
+        function loadOrders(params = {}) {
+            const url = new URL('/orders', window.location.origin);
+            
+            // Add current parameters
+            Object.keys(params).forEach(key => {
+                if (params[key] !== '' && params[key] !== null && params[key] !== undefined) {
+                    url.searchParams.set(key, params[key]);
+                }
+            });
+
+            // Show loading state
+            const tableBody = document.querySelector('.data-table tbody');
+            const tableContainer = document.querySelector('.table-container');
+            
+            if (tableBody) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="loading-orders">
+                            <div style="text-align: center; padding: 2rem;">
+                                <i class="fas fa-spinner fa-spin" style="font-size: 1.5rem; color: var(--primary-color);"></i>
+                                <p style="margin-top: 1rem; color: var(--text-secondary);">Loading orders...</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            // Fetch orders via AJAX
+            fetch(url.toString())
+                .then(response => response.text())
+                .then(html => {
+                    // Create a temporary div to parse the HTML
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = html;
+                    
+                    // Extract the table body content
+                    const newTableBody = tempDiv.querySelector('.data-table tbody');
+                    const newPagination = tempDiv.querySelector('.pagination');
+                    const newOrderCount = tempDiv.querySelector('#orders-count');
+                    
+                    // Update the table
+                    if (newTableBody && tableBody) {
+                        tableBody.innerHTML = newTableBody.innerHTML;
+                    }
+                    
+                    // Update pagination
+                    const currentPagination = document.querySelector('.pagination');
+                    if (newPagination && currentPagination) {
+                        currentPagination.innerHTML = newPagination.innerHTML;
+                    }
+                    
+                    // Update order count
+                    const currentOrderCount = document.querySelector('#orders-count');
+                    if (newOrderCount && currentOrderCount) {
+                        currentOrderCount.textContent = newOrderCount.textContent;
+                    }
+                    
+                    // Update URL without page refresh
+                    window.history.pushState({}, '', url.toString());
+                    
+                    // Reinitialize any necessary event listeners
+                    initializePaginationListeners();
+                })
+                .catch(error => {
+                    console.error('Error loading orders:', error);
+                    if (tableBody) {
+                        tableBody.innerHTML = `
+                            <tr>
+                                <td colspan="6" class="error-loading">
+                                    <div style="text-align: center; padding: 2rem; color: var(--danger-color);">
+                                        <i class="fas fa-exclamation-triangle" style="font-size: 1.5rem;"></i>
+                                        <p style="margin-top: 1rem;">Error loading orders. Please try again.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                });
+        }
+
+        // Handle form submission with AJAX
+        function handleFilterSubmit(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const params = {};
+            
+            // Convert FormData to object
+            for (let [key, value] of formData.entries()) {
+                if (value !== '') {
+                    params[key] = value;
+                }
+            }
+            
+            // Reset to page 1 when filtering
+            params.page = 1;
+            
+            loadOrders(params);
+        }
+
+        // Initialize pagination event listeners
+        function initializePaginationListeners() {
+            const paginationForms = document.querySelectorAll('.pagination-nav form');
+            paginationForms.forEach(form => {
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    
+                    const formData = new FormData(this);
+                    const params = {};
+                    
+                    // Get current filter values
+                    const filterForm = document.getElementById('filtersForm');
+                    const filterFormData = new FormData(filterForm);
+                    
+                    // Add current filters
+                    for (let [key, value] of filterFormData.entries()) {
+                        if (value !== '') {
+                            params[key] = value;
+                        }
+                    }
+                    
+                    // Add pagination parameters
+                    for (let [key, value] of formData.entries()) {
+                        params[key] = value;
+                    }
+                    
+                    loadOrders(params);
+                });
+            });
+        }
+
+        // Initialize page size form listener
+        function initializePageSizeListener() {
+            const pageSizeForm = document.getElementById('pageSizeForm');
+            if (pageSizeForm) {
+                pageSizeForm.addEventListener('change', function(event) {
+                    event.preventDefault();
+                    
+                    const formData = new FormData(this);
+                    const params = {};
+                    
+                    // Get current filter values
+                    const filterForm = document.getElementById('filtersForm');
+                    const filterFormData = new FormData(filterForm);
+                    
+                    // Add current filters
+                    for (let [key, value] of filterFormData.entries()) {
+                        if (value !== '') {
+                            params[key] = value;
+                        }
+                    }
+                    
+                    // Add page size parameter
+                    for (let [key, value] of formData.entries()) {
+                        params[key] = value;
+                    }
+                    
+                    // Reset to page 1 when changing page size
+                    params.page = 1;
+                    
+                    loadOrders(params);
+                });
+            }
+        }
+
+        // Delete order functionality
+        let orderToDelete = null;
+
+        function deleteOrder(orderId, orderNumber) {
+            orderToDelete = orderId;
+            document.getElementById('deleteOrderId').textContent = orderNumber;
+            document.getElementById('deleteModal').classList.add('show');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('show');
+            orderToDelete = null;
+            
+            // Reset delete button state
+            const deleteBtn = document.querySelector('#deleteModal .btn-danger');
+            if (deleteBtn) {
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete Order';
+                deleteBtn.disabled = false;
+            }
+        }
+
+        function confirmDelete() {
+            if (!orderToDelete) return;
+
+            // Show loading state
+            const deleteBtn = document.querySelector('#deleteModal .btn-danger');
+            if (!deleteBtn) return;
+            
+            deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+            deleteBtn.disabled = true;
+
+            // Send delete request
+            fetch(`/api/orders/${orderToDelete}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userId: '<%= userId %>'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Close modal (this will reset the button state)
+                    closeDeleteModal();
+                    
+                    // Show success message
+                    showNotification('Order deleted successfully', 'success');
+                    
+                    // Reload current page to reflect changes
+                    const currentParams = new URLSearchParams(window.location.search);
+                    loadOrders(Object.fromEntries(currentParams));
+                } else {
+                    throw new Error(data.error || 'Failed to delete order');
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting order:', error);
+                showNotification('Failed to delete order: ' + error.message, 'error');
+                
+                // Reset button state
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete Order';
+                deleteBtn.disabled = false;
+            });
+        }
+
+        // Notification system
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+                <button class="notification-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            // Add to page
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('deleteModal');
+            if (event.target === modal) {
+                closeDeleteModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeDeleteModal();
+            }
+        });
+
+        // Add this function globally to allow manual updates if needed
+        function updateOrdersCount(newCount) {
+            const countSpan = document.getElementById('orders-count');
+            if (countSpan) {
+                countSpan.textContent = newCount;
+            }
+        }
 </script>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-exclamation-triangle" style="color: var(--danger-color);"></i>
+                    Confirm Delete
+                </h3>
+                <button class="close-modal" onclick="closeDeleteModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete order <strong id="deleteOrderId"></strong>?</p>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 1rem;">
+                    This action cannot be undone. The order and all its associated data will be permanently removed.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button class="btn btn-danger" onclick="confirmDelete()">
+                    <i class="fas fa-trash"></i> Delete Order
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="/js/theme-utils.js"></script>
 </body>
 </html> 

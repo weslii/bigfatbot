@@ -21,7 +21,7 @@ const SchedulerService = require('./services/SchedulerService');
 // --- Health check endpoint for Railway worker ---
 const express = require('express');
 const healthApp = express();
-const HEALTH_PORT = process.env.PORT || 3000;
+const HEALTH_PORT = process.env.BOT_PORT || 3001;
 
 healthApp.get('/health', (req, res) => {
   res.status(200).send('ok');

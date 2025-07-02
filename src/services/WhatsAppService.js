@@ -7,6 +7,7 @@ const RegistrationService = require('./RegistrationService');
 const OrderService = require('./OrderService');
 const MessageService = require('./MessageService');
 const OrderParser = require('./OrderParser');
+const { parseOrderWithAI, parseOrderWithAIRetry } = require('./AIPoweredOrderParser');
 const ShortCodeGenerator = require('../utils/shortCodeGenerator');
 
 class WhatsAppService {
@@ -114,26 +115,46 @@ class WhatsAppService {
     });
 
     this.client.on('ready', () => {
+      logger.info('=== CLIENT READY EVENT FIRED ===');
       this.isAuthenticated = true;
       this.latestQrDataUrl = null;
       logger.info('WhatsApp client is ready');
+      logger.info('isAuthenticated set to:', this.isAuthenticated);
+      
+      // Store connection status in database for cross-process access
+      this.storeConnectionStatus('connected', this.client.info?.wid?.user);
     });
 
     this.client.on('authenticated', () => {
+      logger.info('=== CLIENT AUTHENTICATED EVENT FIRED ===');
       this.isAuthenticated = true;
       this.latestQrDataUrl = null;
       logger.info('WhatsApp client is authenticated');
+      logger.info('isAuthenticated set to:', this.isAuthenticated);
+      
+      // Store connection status in database for cross-process access
+      this.storeConnectionStatus('authenticated', this.client.info?.wid?.user);
     });
 
     this.client.on('auth_failure', (error) => {
+      logger.info('=== CLIENT AUTH FAILURE EVENT FIRED ===');
       this.isAuthenticated = false;
       logger.error('WhatsApp authentication failed:', error);
+      logger.info('isAuthenticated set to:', this.isAuthenticated);
+      
+      // Store connection status in database for cross-process access
+      this.storeConnectionStatus('auth_failure', null);
     });
 
     this.client.on('disconnected', (reason) => {
+      logger.info('=== CLIENT DISCONNECTED EVENT FIRED ===');
       this.isAuthenticated = false;
       this.latestQrDataUrl = null;
       logger.warn('WhatsApp client disconnected:', reason);
+      logger.info('isAuthenticated set to:', this.isAuthenticated);
+      
+      // Store connection status in database for cross-process access
+      this.storeConnectionStatus('disconnected', null);
     });
 
     this.client.on('message', this.handleMessage.bind(this));
@@ -141,10 +162,15 @@ class WhatsAppService {
 
   async start() {
     try {
+      // Store initial connecting status
+      await this.storeConnectionStatus('connecting', null);
+      
       await this.client.initialize();
       logger.info('WhatsApp service started successfully');
     } catch (error) {
       logger.error('Failed to start WhatsApp service:', error);
+      // Store error status
+      await this.storeConnectionStatus('error', null);
       throw error;
     }
   }
@@ -153,6 +179,9 @@ class WhatsAppService {
     try {
       this.isStopping = true;
       logger.info('Stopping WhatsApp service...');
+
+      // Store stopping status
+      await this.storeConnectionStatus('stopping', null);
 
       // Clear cleanup interval
       if (this.cleanupInterval) {
@@ -175,9 +204,14 @@ class WhatsAppService {
       this.isStarting = false;
       this.isStopping = false;
 
+      // Store stopped status
+      await this.storeConnectionStatus('disconnected', null);
+
       logger.info('WhatsApp service stopped successfully');
     } catch (error) {
       logger.error('Error stopping WhatsApp service:', error);
+      // Store error status
+      await this.storeConnectionStatus('error', null);
     }
   }
 
@@ -225,22 +259,45 @@ class WhatsAppService {
 
   async checkAuthenticationStatus() {
     try {
-      // Check if client is authenticated
-      if (this.client.info && this.client.info.wid) {
-        this.isAuthenticated = true;
-        this.latestQrDataUrl = null;
-        return {
-          success: true,
-          authenticated: true,
-          message: 'WhatsApp bot restarted successfully with existing authentication.',
-          phoneNumber: this.client.info.wid.user
-        };
-      } else {
+      // First check if client exists
+      if (!this.client) {
+        logger.info('Authentication check: Client not initialized');
         this.isAuthenticated = false;
         return {
           success: true,
           authenticated: false,
-          message: 'WhatsApp bot restarted but requires authentication. Please use the QR code to authenticate.',
+          message: 'WhatsApp client not initialized.',
+          needsQrCode: true
+        };
+      }
+
+      // Check if client is authenticated using both flags
+      if (this.isAuthenticated && this.client.info && this.client.info.wid) {
+        logger.info('Authentication check: Client is authenticated', {
+          phoneNumber: this.client.info.wid.user,
+          name: this.client.info.pushname
+        });
+        return {
+          success: true,
+          authenticated: true,
+          message: 'WhatsApp bot is authenticated and connected.',
+          phoneNumber: this.client.info.wid.user
+        };
+      } else if (this.isAuthenticated && (!this.client.info || !this.client.info.wid)) {
+        logger.info('Authentication check: Authenticated but client info not available yet');
+        return {
+          success: true,
+          authenticated: true,
+          message: 'WhatsApp bot is authenticated but still connecting.',
+          phoneNumber: 'Connecting...'
+        };
+      } else {
+        logger.info('Authentication check: Not authenticated');
+        this.isAuthenticated = false;
+        return {
+          success: true,
+          authenticated: false,
+          message: 'WhatsApp bot requires authentication. Please use the QR code to authenticate.',
           needsQrCode: true
         };
       }
@@ -258,18 +315,33 @@ class WhatsAppService {
 
   async loadMetrics() {
     try {
-      let metrics = await database.query('bot_metrics').first();
+      let metrics = await database.query('bot_metrics').select('*').first();
       if (!metrics) {
         // Create initial metrics record
         const inserted = await database.query('bot_metrics').insert({
           total_messages: 0,
           successful_messages: 0,
           failed_messages: 0,
-          response_times: [],
-          daily_counts: {},
+          response_times: JSON.stringify([]),
+          daily_counts: JSON.stringify({}),
           last_activity: null
         }).returning('*');
         metrics = inserted[0];
+      }
+      // Parse JSON fields if they come as strings
+      if (typeof metrics.response_times === 'string') {
+        try {
+          metrics.response_times = JSON.parse(metrics.response_times);
+        } catch {
+          metrics.response_times = [];
+        }
+      }
+      if (typeof metrics.daily_counts === 'string') {
+        try {
+          metrics.daily_counts = JSON.parse(metrics.daily_counts);
+        } catch {
+          metrics.daily_counts = {};
+        }
       }
       return metrics;
     } catch (error) {
@@ -280,17 +352,49 @@ class WhatsAppService {
 
   async saveMetrics(metrics) {
     try {
-      await database.query('bot_metrics')
-        .where('id', metrics.id)
-        .update({
-          total_messages: metrics.total_messages,
-          successful_messages: metrics.successful_messages,
-          failed_messages: metrics.failed_messages,
-          response_times: metrics.response_times,
-          daily_counts: metrics.daily_counts,
-          last_activity: metrics.last_activity,
-          updated_at: new Date()
-        });
+      // logger.info('[saveMetrics] saving metrics:', metrics);
+      // Ensure response_times is a valid array and serialize it properly
+      let responseTimes = metrics.response_times;
+      if (!Array.isArray(responseTimes)) {
+        responseTimes = [];
+      }
+      // Ensure daily_counts is a valid object
+      let dailyCounts = metrics.daily_counts;
+      if (typeof dailyCounts !== 'object' || dailyCounts === null) {
+        dailyCounts = {};
+      }
+      // Validate and clean the data before saving
+      const cleanMetrics = {
+        total_messages: parseInt(metrics.total_messages) || 0,
+        successful_messages: parseInt(metrics.successful_messages) || 0,
+        failed_messages: parseInt(metrics.failed_messages) || 0,
+        response_times: JSON.stringify(responseTimes),
+        daily_counts: JSON.stringify(dailyCounts),
+        last_activity: metrics.last_activity || new Date(),
+        updated_at: new Date(),
+        parsing_attempts: parseInt(metrics.parsing_attempts) || 0,
+        parsing_successes: parseInt(metrics.parsing_successes) || 0,
+        parsing_failures: parseInt(metrics.parsing_failures) || 0,
+        filtered_messages: parseInt(metrics.filtered_messages) || 0,
+        ai_parsed_orders: parseInt(metrics.ai_parsed_orders) || 0,
+        pattern_parsed_orders: parseInt(metrics.pattern_parsed_orders) || 0
+      };
+      // logger.info('[saveMetrics] cleanMetrics to update:', cleanMetrics);
+      if (!metrics.id) {
+        // logger.warn('[saveMetrics] No metrics.id found when saving metrics. Attempting fallback update.');
+        // Fallback: update the first row if only one exists
+        const allRows = await database.query('bot_metrics').select('id');
+        // logger.info('[saveMetrics] allRows:', allRows);
+        if (allRows.length === 1) {
+          // logger.info('[saveMetrics] Updating row with id:', allRows[0].id);
+          await database.query('bot_metrics').where('id', allRows[0].id).update(cleanMetrics);
+        } else {
+          // logger.error('[saveMetrics] Could not update bot_metrics: no id and multiple rows exist.');
+        }
+      } else {
+        // logger.info('[saveMetrics] Updating row with id:', metrics.id);
+        await database.query('bot_metrics').where('id', metrics.id).update(cleanMetrics);
+      }
     } catch (error) {
       logger.error('Error saving bot metrics:', error);
     }
@@ -355,11 +459,11 @@ class WhatsAppService {
       logger.error('Error handling message:', error);
     } finally {
       // Update metrics in database
-      await this.updateMetrics(success, Date.now() - start);
+      await this.updateMetrics({success, responseTime: Date.now() - start, attemptedParsing: false, filteredOut: false});
     }
   }
 
-  async updateMetrics(success, responseTime) {
+  async updateMetrics({success, responseTime, attemptedParsing, filteredOut, parsedWith}) {
     try {
       const metrics = await this.loadMetrics();
       if (!metrics) return;
@@ -371,28 +475,53 @@ class WhatsAppService {
       let responseTimes = metrics.response_times;
       if (!Array.isArray(responseTimes)) {
         if (typeof responseTimes === 'string') {
-          try {
-            responseTimes = JSON.parse(responseTimes);
-          } catch {
-            responseTimes = [];
-          }
-        } else if (responseTimes == null) {
-          responseTimes = [];
-        }
+          try { responseTimes = JSON.parse(responseTimes); } catch { responseTimes = []; }
+        } else if (responseTimes && typeof responseTimes === 'object') {
+          try { responseTimes = Object.values(responseTimes); } catch { responseTimes = []; }
+        } else { responseTimes = []; }
       }
+      if (!Array.isArray(responseTimes)) responseTimes = [];
       responseTimes.push(responseTime);
       if (responseTimes.length > 100) responseTimes.shift();
 
+      // New metrics for parsing performance
+      const parsing_attempts = (metrics.parsing_attempts || 0) + (attemptedParsing ? 1 : 0);
+      const parsing_successes = (metrics.parsing_successes || 0) + (attemptedParsing && success ? 1 : 0);
+      const parsing_failures = (metrics.parsing_failures || 0) + (attemptedParsing && !success ? 1 : 0);
+      const filtered_messages = (metrics.filtered_messages || 0) + (filteredOut ? 1 : 0);
+      // New: Track AI and pattern-matching parsed orders
+      const ai_parsed_orders = (metrics.ai_parsed_orders || 0) + (parsedWith === 'AI' ? 1 : 0);
+      const pattern_parsed_orders = (metrics.pattern_parsed_orders || 0) + (parsedWith === 'pattern-matching' ? 1 : 0);
+
+      // Update per-day parsing metrics in parsing_metrics_by_day
+      let parsingMetricsByDay = metrics.parsing_metrics_by_day;
+      if (typeof parsingMetricsByDay === 'string') {
+        try { parsingMetricsByDay = JSON.parse(parsingMetricsByDay); } catch { parsingMetricsByDay = {}; }
+      }
+      if (!parsingMetricsByDay || typeof parsingMetricsByDay !== 'object') parsingMetricsByDay = {};
+      if (!parsingMetricsByDay[today]) parsingMetricsByDay[today] = { attempts: 0, successes: 0, failures: 0 };
+      if (attemptedParsing) {
+        parsingMetricsByDay[today].attempts += 1;
+        if (success) parsingMetricsByDay[today].successes += 1;
+        else parsingMetricsByDay[today].failures += 1;
+      }
+
       const updatedMetrics = {
         ...metrics,
-        total_messages: metrics.total_messages + 1,
-        successful_messages: metrics.successful_messages + (success ? 1 : 0),
-        failed_messages: metrics.failed_messages + (success ? 0 : 1),
+        total_messages: (metrics.total_messages || 0) + 1,
+        successful_messages: (metrics.successful_messages || 0) + (success ? 1 : 0),
+        failed_messages: (metrics.failed_messages || 0) + (success ? 0 : 1),
         response_times: responseTimes,
         daily_counts: dailyCounts,
-        last_activity: new Date()
+        last_activity: new Date(),
+        parsing_attempts,
+        parsing_successes,
+        parsing_failures,
+        filtered_messages,
+        ai_parsed_orders,
+        pattern_parsed_orders,
+        parsing_metrics_by_day: parsingMetricsByDay
       };
-
       await this.saveMetrics(updatedMetrics);
     } catch (error) {
       logger.error('Error updating metrics:', error);
@@ -407,42 +536,39 @@ class WhatsAppService {
           lastActivity: null,
           messageSuccessRate: 100,
           avgResponseTime: 0,
-          dailyMessages: 0
+          dailyMessages: 0,
+          parsingSuccessRate: 100,
+          parsingAttempts: 0,
+          filteredMessages: 0
         };
       }
-
-      // Calculate success rate
-      const total = metrics.total_messages;
-      const successful = metrics.successful_messages;
-      const successRate = total > 0 ? (successful / total) * 100 : 100;
-
+      // Calculate parsing success rate based on parsing attempts
+      const attempts = metrics.parsing_attempts || 0;
+      const successes = metrics.parsing_successes || 0;
+      const parsingSuccessRate = attempts > 0 ? (successes / attempts) * 100 : 100;
       // Average response time (ms)
       let responseTimes = metrics.response_times;
       if (!Array.isArray(responseTimes)) {
         if (typeof responseTimes === 'string') {
-          try {
-            responseTimes = JSON.parse(responseTimes);
-          } catch {
-            responseTimes = [];
-          }
-        } else if (responseTimes == null) {
-          responseTimes = [];
-        }
+          try { responseTimes = JSON.parse(responseTimes); } catch { responseTimes = []; }
+        } else if (responseTimes && typeof responseTimes === 'object') {
+          try { responseTimes = Object.values(responseTimes); } catch { responseTimes = []; }
+        } else { responseTimes = []; }
       }
-      const avgResponse = responseTimes.length > 0 ? 
-        responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length : 0;
-
+      if (!Array.isArray(responseTimes)) responseTimes = [];
+      const avgResponse = responseTimes.length > 0 ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length : 0;
       // Daily messages (average over last 7 days)
       const dailyCounts = metrics.daily_counts || {};
       const days = Object.keys(dailyCounts).sort().slice(-7);
-      const dailyAvg = days.length > 0 ? 
-        days.map(d => dailyCounts[d]).reduce((a, b) => a + b, 0) / days.length : 0;
-
+      const dailyAvg = days.length > 0 ? days.map(d => dailyCounts[d]).reduce((a, b) => a + b, 0) / days.length : 0;
       return {
         lastActivity: metrics.last_activity,
-        messageSuccessRate: successRate,
+        messageSuccessRate: (metrics.total_messages ? (metrics.successful_messages / metrics.total_messages) * 100 : 100),
         avgResponseTime: avgResponse,
-        dailyMessages: dailyAvg
+        dailyMessages: dailyAvg,
+        parsingSuccessRate,
+        parsingAttempts: attempts,
+        filteredMessages: metrics.filtered_messages || 0
       };
     } catch (error) {
       logger.error('Error getting bot metrics:', error);
@@ -450,116 +576,150 @@ class WhatsAppService {
         lastActivity: null,
         messageSuccessRate: 100,
         avgResponseTime: 0,
-        dailyMessages: 0
+        dailyMessages: 0,
+        parsingSuccessRate: 100,
+        parsingAttempts: 0,
+        filteredMessages: 0
       };
     }
   }
 
   async handleSalesGroupMessage(message, contact, groupInfo) {
     try {
-      // Skip if message is from bot itself
       if (contact.isMe) return;
-
-      // Debug log for contact object
-      logger.info('Contact object:', contact);
-
-      const messageBody = message.body.toLowerCase().trim();
+      logger.info('[DEBUG] typeof message.body:', typeof message.body, 'sample:', JSON.stringify(message.body).slice(0, 200));
+      let messageText;
+      if (typeof message.body === 'string') {
+        messageText = message.body;
+      } else if (Buffer.isBuffer(message.body)) {
+        messageText = message.body.toString('utf8');
+      } else if (Array.isArray(message.body)) {
+        messageText = message.body.join('');
+      } else if (typeof message.body === 'object' && message.body !== null) {
+        const values = Object.values(message.body);
+        if (values.every(v => typeof v === 'string' && v.length === 1)) {
+          messageText = values.join('');
+        } else if (values.length === 1 && typeof values[0] === 'string') {
+          messageText = values[0];
+        } else {
+          messageText = JSON.stringify(message.body);
+        }
+      } else {
+        messageText = String(message.body);
+      }
+      const messageBody = messageText.toLowerCase().trim();
+      logger.info('[handleSalesGroupMessage] Incoming message body:', messageText);
       const senderName = contact.name || contact.pushname || contact.number;
       const senderNumber = contact.number;
-
-      // Handle reply-based cancellation FIRST (before command processing)
       if (message.hasQuotedMsg && messageBody === 'cancel') {
         await this.handleReplyCancellation(message, senderName, senderNumber, groupInfo);
         return;
       }
-
-      // Handle commands in sales group
       if (messageBody.startsWith('/')) {
-        // Handle report commands
-        if (messageBody === '/daily') {
-          await this.sendDailyReport(groupInfo);
-          return;
-        }
-        else if (messageBody === '/pending') {
-          await this.sendPendingOrders(groupInfo);
-          return;
-        }
-        else if (messageBody === '/weekly') {
-          await this.sendWeeklyReport(groupInfo);
-          return;
-        }
-        else if (messageBody === '/monthly') {
-          await this.sendMonthlyReport(groupInfo);
-          return;
-        }
-        else if (messageBody === '/help') {
-          await this.sendHelpMessage(groupInfo);
-          return;
-        }
-        // Handle order cancellation in sales group
-        else if (messageBody.startsWith('cancel #')) {
-          const orderId = messageBody.replace('cancel #', '').trim();
-          await this.cancelOrder(orderId, senderName, senderNumber, groupInfo);
-          return;
-        }
+        if (messageBody === '/daily') { await this.sendDailyReport(groupInfo); return; }
+        else if (messageBody === '/pending') { await this.sendPendingOrders(groupInfo); return; }
+        else if (messageBody === '/weekly') { await this.sendWeeklyReport(groupInfo); return; }
+        else if (messageBody === '/monthly') { await this.sendMonthlyReport(groupInfo); return; }
+        else if (messageBody === '/help') { await this.sendHelpMessage(groupInfo); return; }
+        else if (messageBody.startsWith('cancel #')) { const orderId = messageBody.replace('cancel #', '').trim(); await this.cancelOrder(orderId, senderName, senderNumber, groupInfo); return; }
       }
-
-      // Handle regular order parsing
-      const orderData = OrderParser.parseOrder(message.body, contact.name || contact.number);
-      
-      if (orderData) {
-        // Add business_id to order data
-        orderData.business_id = groupInfo.business_id;
-        
-        const order = await OrderService.createOrder(groupInfo.business_id, orderData);
-        const deliveryConfirmation = MessageService.formatOrderConfirmation(order);
-        const salesConfirmation = MessageService.formatSalesConfirmation(order);
-        
-        // Get delivery group for this business
-        const deliveryGroup = await database.query('groups')
-          .where('business_id', groupInfo.business_id)
-          .where('group_type', 'delivery')
-          .first();
-
-        if (deliveryGroup) {
-          // Send detailed confirmation to delivery group
-          await this.client.sendMessage(deliveryGroup.group_id, deliveryConfirmation);
-        }
-        
-        // Send simplified confirmation to sales group
-        await this.client.sendMessage(groupInfo.group_id, salesConfirmation);
-        
-        logger.info('Order processed and confirmations sent', { 
-          orderId: order.id,
-          businessId: groupInfo.business_id,
-          customerName: orderData.customer_name,
-          items: orderData.items
+      let orderData = null;
+      let attemptedParsing = false;
+      let filteredOut = false;
+      const likelyOrder = this.isLikelyOrder(messageText);
+      logger.info('[handleSalesGroupMessage] isLikelyOrder:', likelyOrder);
+      if (likelyOrder) {
+        attemptedParsing = true;
+        let sentProcessingMsg = false;
+        let aiTimedOut = false;
+        const aiOrder = await parseOrderWithAIRetry(messageText, {
+          maxRetries: 3,
+          retryDelayMs: 5000,
+          slowThresholdMs: 5000,
+          onSlow: async () => {
+            if (!sentProcessingMsg) {
+              sentProcessingMsg = true;
+              await this.client.sendMessage(groupInfo.group_id, '⏳ Processing your order, please wait a moment...');
+            }
+          }
         });
+        orderData = aiOrder;
+        let parsedWith = null;
+        if (orderData) {
+          if (orderData.delivery_date) {
+            const parsedDate = OrderParser.parseDate(orderData.delivery_date);
+            orderData.delivery_date = parsedDate.normalized || null;
+            orderData.delivery_date_raw = parsedDate.raw || null;
+          }
+          parsedWith = 'AI';
+        } else {
+          // If AI parser failed, check if it was due to timeout (all retries failed)
+          aiTimedOut = true;
+          orderData = OrderParser.parseOrder(messageText, contact.name || contact.number);
+          if (orderData) {
+            parsedWith = 'pattern-matching';
+          } else if (aiTimedOut) {
+            // Only send error if AI timed out and pattern matching also failed
+            await this.client.sendMessage(groupInfo.group_id,
+              '❌ Could not process order. Please ensure your message is in the correct format:\n' +
+              'Name: John Doe\n' +
+              'Phone no: 08012345678\n' +
+              'Address: 123 Lekki Phase 1, Lagos\n' +
+              '2 Cakes, 1 Pizza\n' +
+              'To be delivered on the 23rd.'
+            );
+          }
+        }
+        logger.info('[handleSalesGroupMessage] attemptedParsing:', attemptedParsing, 'parsedWith:', parsedWith, 'orderData:', orderData);
+        if (orderData && parsedWith) {
+          logger.info(`Order parsed using ${parsedWith} parser`, {
+            orderId: orderData.order_id,
+            businessId: groupInfo.business_id,
+            customerName: orderData.customer_name,
+            items: orderData.items
+          });
+        }
+        if (attemptedParsing) {
+          if (orderData) {
+            orderData.business_id = groupInfo.business_id;
+            const order = await OrderService.createOrder(groupInfo.business_id, orderData);
+            const deliveryConfirmation = MessageService.formatOrderConfirmation(order);
+            const salesConfirmation = MessageService.formatSalesConfirmation(order);
+            const deliveryGroup = await database.query('groups')
+              .where('business_id', groupInfo.business_id)
+              .where('group_type', 'delivery')
+              .first();
+            if (deliveryGroup) {
+              await this.client.sendMessage(deliveryGroup.group_id, deliveryConfirmation);
+            }
+            await this.client.sendMessage(groupInfo.group_id, salesConfirmation);
+            logger.info('[handleSalesGroupMessage] Calling updateMetrics for successful parse', { attemptedParsing, filteredOut, parsedWith });
+            await this.updateMetrics({success: true, responseTime: Date.now() - message.timestamp, attemptedParsing, filteredOut, parsedWith});
+          } else {
+            const hasValidPhone = OrderParser.extractPhoneNumbers(messageText).some(num => OrderParser.isValidPhoneNumber(num));
+            const addressConfidence = OrderParser.calculatePatternScore(messageText, OrderParser.addressPatterns);
+            if ((hasValidPhone && addressConfidence >= 2) && !messageBody.startsWith('/')) {
+              await this.client.sendMessage(groupInfo.group_id, 
+                '❌ Could not process order. Please ensure your message includes:\n' +
+                '• Customer name\n' +
+                '• Phone number\n' +
+                '• Delivery address\n' +
+                '• Order items\n\n' +
+                'Example format:\n' +
+                'John Doe\n' +
+                '08012345678\n' +
+                '123 Lekki Phase 1, Lagos\n' +
+                '2 Cakes, 1 Pizza'
+              );
+            }
+            logger.info('[handleSalesGroupMessage] Calling updateMetrics for failed parse', { attemptedParsing, filteredOut, parsedWith: null });
+            await this.updateMetrics({success: false, responseTime: Date.now() - message.timestamp, attemptedParsing, filteredOut, parsedWith: null});
+          }
+        }
       } else {
-        // Enhanced error message for failed parsing
-        logger.warn('Order parsing failed', { 
-          messageBody: message.body.substring(0, 100) + '...',
-          senderName: contact.name || contact.number,
-          businessId: groupInfo.business_id 
-        });
-        
-        // Only send error message if message contains BOTH a valid phone number AND high-confidence address
-        const hasValidPhone = OrderParser.extractPhoneNumbers(message.body).some(num => OrderParser.isValidPhoneNumber(num));
-        const addressConfidence = OrderParser.calculatePatternScore(message.body, OrderParser.addressPatterns);
-        if ((hasValidPhone && addressConfidence >= 2) && !message.body.startsWith('/')) {
-          await this.client.sendMessage(groupInfo.group_id, 
-            '❌ Could not process order. Please ensure your message includes:\n' +
-            '• Customer name\n' +
-            '• Phone number\n' +
-            '• Delivery address\n' +
-            '• Order items\n\n' +
-            'Example format:\n' +
-            'John Doe\n' +
-            '08012345678\n' +
-            '123 Lekki Phase 1, Lagos\n' +
-            '2 Cakes, 1 Pizza'
-          );
-        }
+        filteredOut = true;
+        logger.info('[handleSalesGroupMessage] Not a likely order. Calling updateMetrics', { attemptedParsing, filteredOut, parsedWith: null });
+        await this.updateMetrics({success: false, responseTime: Date.now() - message.timestamp, attemptedParsing, filteredOut, parsedWith: null});
       }
     } catch (error) {
       logger.error('Error handling sales group message:', error);
@@ -1246,19 +1406,59 @@ For help, type /help in the delivery group.
 
   async getBotInfo() {
     try {
-      if (!this.client.info) {
+      logger.info('=== getBotInfo() called ===');
+      
+      // Get connection status from database (works across processes)
+      const connectionStatus = await this.getConnectionStatus();
+      logger.info('Database connection status:', connectionStatus);
+      
+      // Map database status to bot info
+      switch (connectionStatus.status) {
+        case 'connected':
+        case 'authenticated':
+          return {
+            number: connectionStatus.phoneNumber || 'Connected',
+            name: 'WhatsApp Bot',
+            status: 'connected'
+          };
+        case 'connecting':
+          return {
+            number: 'Connecting...',
+            name: 'Bot connecting',
+            status: 'connecting'
+          };
+        case 'stopping':
+          return {
+            number: 'Stopping...',
+            name: 'Bot stopping',
+            status: 'stopping'
+          };
+        case 'auth_failure':
+          return {
+            number: 'Authentication failed',
+            name: 'Bot authentication failed',
+            status: 'auth_failure'
+          };
+        case 'error':
+          return {
+            number: 'Error occurred',
+            name: 'Bot error',
+            status: 'error'
+          };
+        case 'disconnected':
+          return {
+            number: 'Disconnected',
+            name: 'Bot disconnected',
+            status: 'disconnected'
+          };
+        case 'unknown':
+        default:
         return {
           number: 'Not connected',
           name: 'Bot not ready',
           status: 'disconnected'
         };
       }
-
-      return {
-        number: this.client.info.wid.user,
-        name: this.client.info.pushname || 'WhatsApp Bot',
-        status: 'connected'
-      };
     } catch (error) {
       logger.error('Error getting bot info:', error);
       return {
@@ -1266,6 +1466,87 @@ For help, type /help in the delivery group.
         name: 'WhatsApp Bot',
         status: 'error'
       };
+    }
+  }
+
+  async refreshAuthenticationStatus() {
+    try {
+      logger.info('=== refreshAuthenticationStatus() called ===');
+      logger.info('Client exists:', !!this.client);
+      logger.info('Client info exists:', !!(this.client && this.client.info));
+      logger.info('Client info details:', this.client && this.client.info ? {
+        hasWid: !!this.client.info.wid,
+        widUser: this.client.info.wid?.user,
+        pushname: this.client.info.pushname
+      } : 'No client info');
+      
+      // Check if client exists and has info
+      if (this.client && this.client.info && this.client.info.wid) {
+        this.isAuthenticated = true;
+        logger.info('Authentication status refreshed: Authenticated', {
+          phoneNumber: this.client.info.wid.user
+        });
+      } else if (this.client && !this.client.info) {
+        // Client exists but no info yet - might be connecting
+        logger.info('Authentication status refreshed: Client connecting');
+      } else {
+        // No client or client not ready
+        this.isAuthenticated = false;
+        logger.info('Authentication status refreshed: Not authenticated');
+      }
+    } catch (error) {
+      logger.error('Error refreshing authentication status:', error);
+      this.isAuthenticated = false;
+    }
+  }
+
+  async forceCheckAuthentication() {
+    try {
+      logger.info('=== forceCheckAuthentication() called ===');
+      
+      if (!this.client) {
+        logger.info('No client available');
+        return false;
+      }
+
+      // Try to get client info directly
+      try {
+        const info = this.client.info;
+        logger.info('Direct client.info check:', info);
+        
+        if (info && info.wid && info.wid.user) {
+          this.isAuthenticated = true;
+          logger.info('Force check: Client is authenticated', {
+            phoneNumber: info.wid.user,
+            name: info.pushname
+          });
+          return true;
+        }
+      } catch (infoError) {
+        logger.error('Error getting client.info:', infoError);
+      }
+
+      // Try to check if client is ready
+      try {
+        const isReady = this.client.pupPage && !this.client.pupPage.isClosed();
+        logger.info('Client page ready check:', isReady);
+        
+        if (isReady) {
+          // If page is ready but no info, might still be connecting
+          logger.info('Force check: Client page is ready but no info yet');
+          return false;
+        }
+      } catch (readyError) {
+        logger.error('Error checking client readiness:', readyError);
+      }
+
+      this.isAuthenticated = false;
+      logger.info('Force check: Client not authenticated');
+      return false;
+    } catch (error) {
+      logger.error('Error in forceCheckAuthentication:', error);
+      this.isAuthenticated = false;
+      return false;
     }
   }
 
@@ -1308,6 +1589,123 @@ For help, type /help in the delivery group.
     } catch (error) {
       logger.error('Error in fallback order ID extraction:', error);
       return null;
+    }
+  }
+
+  isLikelyOrder(messageText) {
+    try {
+      const text = messageText.toLowerCase().trim();
+      // New: If message contains 'name', 'phone', and 'address', always treat as likely order
+      if (text.includes('name') && text.includes('phone') && text.includes('address')) {
+        return true;
+      }
+      
+      // Skip very short messages (likely greetings, thanks, etc.)
+      if (text.length < 20) {
+        return false;
+      }
+      
+      // Skip messages that are clearly not orders
+      const nonOrderPatterns = [
+        /^(hi|hello|hey|good morning|good afternoon|good evening|thanks|thank you|ok|okay|yes|no)$/i,
+        /^(how are you|how's it going|what's up|sup)$/i,
+        /^(bye|goodbye|see you|talk to you later)$/i,
+        /^(lol|haha|😊|😄|👍|👋|🙏)$/i,
+        /^(test|testing)$/i,
+        /^(help|support|assist)$/i,
+        // Status inquiry patterns
+        /\b(how far|status|update|sent|delivered|shipped|track|tracking|where|when|did you|have you|is it|are you)\b/i,
+        // Question patterns about existing orders
+        /\b(did you send|did you deliver|have you sent|have you delivered|is it sent|is it delivered|where is|when will|what about)\b/i,
+        // General inquiry patterns
+        /\b(what about|what happened|what's the|any update|any news|any progress)\b/i
+      ];
+      
+      for (const pattern of nonOrderPatterns) {
+        if (pattern.test(text)) {
+          return false;
+        }
+      }
+      
+      // Look for order indicators
+      const orderIndicators = [
+        // Phone numbers (Nigerian format) - strong indicator
+        /\b(\+?234|0)[789][01]\d{8}\b/,
+        /\b\d{11}\b/,
+        
+        // Customer name patterns (multiple words that could be names) - strong indicator
+        /\b[A-Z][a-z]+\s+[A-Z][a-z]+\b/,
+        
+        // Specific order request patterns - strong indicator
+        /\b(i want|i need|i would like|please order|can i order|i'd like to order|i want to order|i need to order)\b/i,
+        
+        // Address indicators - medium indicator
+        /\b(address|location|deliver to|send to|house|street|road|avenue|close|drive|way|estate|phase|area|zone)\b/i,
+        
+        // Specific food items - medium indicator
+        /\b(cake|cakes|pizza|food|bread|pastry|pastries|drink|drinks|juice|water|soda)\b/i,
+        
+        // Quantity indicators - medium indicator
+        /\b\d+\s*(piece|pieces|pack|packs|kg|kilos|gram|grams|litre|litres|bottle|bottles|box|boxes|dozen|dozens)\b/i,
+        
+        // Price indicators - medium indicator
+        /\b(price|cost|amount|total|naira|₦|naira|dollar|\$|pound|£)\b/i,
+        
+        // Delivery date/time - weak indicator
+        /\b(deliver|delivery|date|time|when|today|tomorrow|next)\b/i
+      ];
+      
+      // Score order indicators with different weights
+      let score = 0;
+      
+      // Strong indicators (worth 3 points each)
+      const strongIndicators = [
+        /\b(\+?234|0)[789][01]\d{8}\b/,
+        /\b\d{11}\b/,
+        /\b[A-Z][a-z]+\s+[A-Z][a-z]+\b/,
+        /\b(i want|i need|i would like|please order|can i order|i'd like to order|i want to order|i need to order)\b/i
+      ];
+      
+      // Medium indicators (worth 2 points each)
+      const mediumIndicators = [
+        /\b(address|location|deliver to|send to|house|street|road|avenue|close|drive|way|estate|phase|area|zone)\b/i,
+        /\b(cake|cakes|pizza|food|bread|pastry|pastries|drink|drinks|juice|water|soda)\b/i,
+        /\b\d+\s*(piece|pieces|pack|packs|kg|kilos|gram|grams|litre|litres|bottle|bottles|box|boxes|dozen|dozens)\b/i,
+        /\b(price|cost|amount|total|naira|₦|naira|dollar|\$|pound|£)\b/i
+      ];
+      
+      // Weak indicators (worth 1 point each)
+      const weakIndicators = [
+        /\b(deliver|delivery|date|time|when|today|tomorrow|next)\b/i
+      ];
+      
+      // Calculate weighted score
+      for (const indicator of strongIndicators) {
+        if (indicator.test(text)) {
+          score += 3;
+        }
+      }
+      
+      for (const indicator of mediumIndicators) {
+        if (indicator.test(text)) {
+          score += 2;
+        }
+      }
+      
+      for (const indicator of weakIndicators) {
+        if (indicator.test(text)) {
+          score += 1;
+        }
+      }
+      
+      // Message is likely an order if it has a score of 4 or higher
+      // or if it's longer than 80 characters and has a score of 2 or higher
+      return score >= 4 || (text.length > 80 && score >= 2);
+      
+    } catch (error) {
+      logger.error('Error in isLikelyOrder check:', error);
+      // If there's an error, be conservative and assume it might be an order
+      return true;
     }
   }
 
@@ -1367,6 +1765,63 @@ For help, type /help in the delivery group.
       logger.info('WhatsApp service memory optimization completed');
     } catch (error) {
       logger.error('Error during memory optimization:', error);
+    }
+  }
+
+  async storeConnectionStatus(status, phoneNumber) {
+    try {
+      // First, try to update existing record
+      const updated = await database.query('bot_connection_status')
+        .where('id', 1)
+        .update({
+          status,
+          phone_number: phoneNumber,
+          updated_at: new Date()
+        });
+      
+      // If no record was updated, insert a new one
+      if (updated === 0) {
+        await database.query('bot_connection_status')
+          .insert({
+            id: 1,
+            status,
+            phone_number: phoneNumber,
+            updated_at: new Date()
+          });
+      }
+      
+      logger.info('Connection status stored in database:', { status, phoneNumber });
+    } catch (error) {
+      logger.error('Error storing connection status:', error);
+    }
+  }
+
+  async getConnectionStatus() {
+    try {
+      const status = await database.query('bot_connection_status')
+        .where('id', 1)
+        .first();
+      
+      if (status) {
+        return {
+          status: status.status,
+          phoneNumber: status.phone_number,
+          lastUpdated: status.updated_at
+        };
+      }
+      
+      return {
+        status: 'unknown',
+        phoneNumber: null,
+        lastUpdated: null
+      };
+    } catch (error) {
+      logger.error('Error getting connection status:', error);
+      return {
+        status: 'error',
+        phoneNumber: null,
+        lastUpdated: null
+      };
     }
   }
 }

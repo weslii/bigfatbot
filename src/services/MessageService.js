@@ -11,18 +11,16 @@ class MessageService {
       message += `*Phone:* ${order.customer_phone}\n`;
       message += `*Address:* ${order.address}\n`;
       message += `*Items:* ${order.items}\n`;
-      
       if (order.delivery_date) {
         message += `*Delivery Date:* ${moment(order.delivery_date).format('DD/MM/YYYY')}\n`;
+      } else if (order.delivery_date_raw) {
+        message += `*Delivery Date:* ${order.delivery_date_raw}\n`;
       }
-      
       if (order.notes) {
         message += `\n*Notes:* ${order.notes}\n`;
       }
-      
       message += `\n💡 *To mark as delivered:* Reply "done" to this message or type "done #${order.order_id}"`;
       message += `\n💡 *To cancel order:* Reply "cancel" to this message or type "cancel #${order.order_id}"`;
-      
       return message;
     } catch (error) {
       logger.error('Error formatting order confirmation:', error);
@@ -38,17 +36,15 @@ class MessageService {
       message += `*Phone:* ${order.customer_phone}\n`;
       message += `*Address:* ${order.address}\n`;
       message += `*Items:* ${order.items}\n`;
-      
       if (order.delivery_date) {
         message += `*Delivery Date:* ${moment(order.delivery_date).format('DD/MM/YYYY')}\n`;
+      } else if (order.delivery_date_raw) {
+        message += `*Delivery Date:* ${order.delivery_date_raw}\n`;
       }
-      
       if (order.notes) {
         message += `\n*Notes:* ${order.notes}\n`;
       }
-      
       message += `\n💡 *To cancel order:* Reply "cancel" to this message or type "cancel #${order.order_id}"`;
-      
       return message;
     } catch (error) {
       logger.error('Error formatting sales confirmation:', error);

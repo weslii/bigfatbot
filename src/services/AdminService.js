@@ -712,8 +712,55 @@ class AdminService {
       // Percentage changes
       const businessChange = await this.getPercentageChange('groups', 'is_active');
       const orderChange = await this.getPercentageChange('orders');
-      // Bot management metrics
-      const botMetrics = await this.getBotManagementMetrics();
+      
+      // Get real bot metrics from database
+      const botMetrics = await database.query('bot_metrics').orderBy('created_at', 'desc').first();
+      
+      // Calculate real bot performance metrics
+      let messageSuccessRate = 100;
+      let avgResponseTime = 0;
+      let dailyMessages = 0;
+      let lastActivity = null;
+      
+      if (botMetrics) {
+        const total = parseInt(botMetrics.total_messages) || 0;
+        const successful = parseInt(botMetrics.successful_messages) || 0;
+        messageSuccessRate = total > 0 ? (successful / total) * 100 : 100;
+        
+        // Parse response times
+        let responseTimes = botMetrics.response_times;
+        if (typeof responseTimes === 'string') {
+          try {
+            responseTimes = JSON.parse(responseTimes);
+          } catch {
+            responseTimes = [];
+          }
+        }
+        if (Array.isArray(responseTimes) && responseTimes.length > 0) {
+          avgResponseTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
+        }
+        
+        // Calculate daily messages from daily_counts
+        let dailyCounts = botMetrics.daily_counts;
+        if (typeof dailyCounts === 'string') {
+          try {
+            dailyCounts = JSON.parse(dailyCounts);
+          } catch {
+            dailyCounts = {};
+          }
+        }
+        if (dailyCounts && typeof dailyCounts === 'object') {
+          const today = new Date().toISOString().slice(0, 10);
+          dailyMessages = dailyCounts[today] || 0;
+        }
+        
+        lastActivity = botMetrics.last_activity;
+      }
+      
+      // Get bot connection status
+      const botService = WhatsAppService.getInstance();
+      const botInfo = await botService.getBotInfo();
+      
       return {
         totalRevenue: '0.00', // Orders table doesn't store pricing information
         totalBusinesses: parseInt(businessCount.count),
@@ -723,7 +770,12 @@ class AdminService {
         orderStatusCounts,
         businessChange,
         orderChange,
-        ...botMetrics
+        status: botInfo.status || 'disconnected',
+        number: botInfo.number || 'Not connected',
+        lastActivity: lastActivity || new Date().toISOString(),
+        messageSuccessRate: Math.round(messageSuccessRate * 100) / 100, // Round to 2 decimal places
+        avgResponseTime: Math.round(avgResponseTime), // Round to nearest integer
+        dailyMessages: parseInt(dailyMessages)
       };
     } catch (error) {
       logger.error('Error getting analytics:', error);
@@ -791,11 +843,18 @@ class AdminService {
 
       // Parsing success rate (from bot_metrics)
       const metrics = await database.query('bot_metrics').orderBy('created_at', 'desc').first();
-      let parsingSuccessRate = 100, parsingAttempts = 0, parsingSuccesses = 0, parsingFailures = 0;
+      let parsingSuccessRate = 100, parsingAttempts = 0, parsingSuccesses = 0, parsingFailures = 0, filteredMessages = 0;
+      let aiParsedOrders = 0, patternParsedOrders = 0, aiParsedPercent = 0, patternParsedPercent = 0;
       if (metrics) {
-        parsingAttempts = metrics.total_messages;
-        parsingSuccesses = metrics.successful_messages;
-        parsingFailures = metrics.failed_messages;
+        parsingAttempts = metrics.parsing_attempts || 0;
+        parsingSuccesses = metrics.parsing_successes || 0;
+        parsingFailures = metrics.parsing_failures || 0;
+        filteredMessages = metrics.filtered_messages || 0;
+        aiParsedOrders = metrics.ai_parsed_orders || 0;
+        patternParsedOrders = metrics.pattern_parsed_orders || 0;
+        const totalParsed = aiParsedOrders + patternParsedOrders;
+        aiParsedPercent = totalParsed > 0 ? (aiParsedOrders / totalParsed) * 100 : 0;
+        patternParsedPercent = totalParsed > 0 ? (patternParsedOrders / totalParsed) * 100 : 0;
         parsingSuccessRate = parsingAttempts > 0 ? (parsingSuccesses / parsingAttempts) * 100 : 100;
       }
 
@@ -811,7 +870,12 @@ class AdminService {
         parsingSuccessRate,
         parsingAttempts,
         parsingSuccesses,
-        parsingFailures
+        parsingFailures,
+        filteredMessages,
+        aiParsedOrders,
+        patternParsedOrders,
+        aiParsedPercent,
+        patternParsedPercent
       };
     } catch (error) {
       logger.error('Error getting report stats:', error);
@@ -823,25 +887,29 @@ class AdminService {
     try {
       const results = [];
       const today = new Date();
-      
+      // Get the latest bot_metrics row (should have the JSON field)
+      const metrics = await database.query('bot_metrics').orderBy('created_at', 'desc').first();
+      let parsingMetricsByDay = {};
+      if (metrics && metrics.parsing_metrics_by_day) {
+        if (typeof metrics.parsing_metrics_by_day === 'string') {
+          try { parsingMetricsByDay = JSON.parse(metrics.parsing_metrics_by_day); } catch { parsingMetricsByDay = {}; }
+        } else {
+          parsingMetricsByDay = metrics.parsing_metrics_by_day;
+        }
+      }
       for (let i = days - 1; i >= 0; i--) {
         const date = new Date(today);
         date.setDate(today.getDate() - i);
         const dateStr = date.toISOString().slice(0, 10);
-        
-        // Get orders for this date
-        const orders = await database.query('orders')
-          .whereRaw('DATE(created_at) = ?', [dateStr])
-          .count('* as count')
-          .first();
-        
-        results.push({
-          date: dateStr,
-          orders: parseInt(orders.count),
-          success_rate: 100 // Default success rate
-        });
+        let rate = 100;
+        if (parsingMetricsByDay[dateStr]) {
+          const { attempts, successes } = parsingMetricsByDay[dateStr];
+          rate = attempts > 0 ? (successes / attempts) * 100 : 100;
+        } else {
+          rate = 0; // No data for this day
+        }
+        results.push({ date: dateStr, rate });
       }
-      
       return results;
     } catch (error) {
       logger.error('Error getting parsing success time series:', error);

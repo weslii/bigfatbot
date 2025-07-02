@@ -139,4 +139,18 @@ function wait(ms) {
 }
 
 // Run the test
-testMemoryUsage().catch(console.error); 
+testMemoryUsage().catch(console.error);
+
+(async () => {
+  const service = WhatsAppService.getInstance();
+  console.log('Manually incrementing bot_metrics columns for test...');
+  await service.updateMetrics({
+    success: true,
+    responseTime: 500,
+    attemptedParsing: true,
+    filteredOut: false,
+    parsedWith: 'AI'
+  });
+  console.log('Done. Check your database and logs for changes.');
+  process.exit(0);
+})(); 

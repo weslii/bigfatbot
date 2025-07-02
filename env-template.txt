@@ -1,0 +1,29 @@
+# Railway Database Configuration
+DATABASE_URL=postgresql://postgres:ehLqJYUypSJDpRhJBTMQbnBKJVlMeJYm@caboose.proxy.rlwy.net:50551/railway
+
+# Railway Redis Configuration
+REDIS_URL=redis://default:SGoinMrYnADUlsyXornWqQTGqcvdcfxu@maglev.proxy.rlwy.net:23247
+
+# Session Configuration
+SESSION_SECRET=2eae3131d8c69d48c2a73a2d683c9b554afe1bbd4b3da618488d52d1de49fac5
+
+# Application Configuration
+NODE_ENV=development
+PORT=3000
+
+# Logging
+LOG_LEVEL=info
+
+# WhatsApp Bot Configuration (if needed)
+WHATSAPP_SESSION_PATH=./sessions
+
+# Feature Flags
+ENABLE_NEW_PARSER=true
+ENABLE_ANALYTICS=true
+ENABLE_TRACKING=true
+
+# OpenAI API Key
+OPENAI_API_KEY=your-openai-api-key-here
+
+# Bot Port
+BOT_PORT=3001 

@@ -101,6 +101,18 @@ function renderSummaryCards(stats) {
         <div class="summary-title" style="font-size: 0.97rem;">Parsing Failures</div>
         <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.parsingFailures}</div>
       </div>
+      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
+        <div class="summary-title" style="font-size: 0.97rem;">Filtered Messages</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.filteredMessages}</div>
+      </div>
+      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem; background: #e0f2fe;">
+        <div class="summary-title" style="font-size: 0.97rem;">AI Parsed Orders</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.aiParsedOrders} <span style='font-size:0.95rem; color:#0ea5e9;'>(${stats.aiParsedPercent.toFixed(1)}%)</span></div>
+      </div>
+      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem; background: #fef9c3;">
+        <div class="summary-title" style="font-size: 0.97rem;">Pattern Parsed Orders</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.patternParsedOrders} <span style='font-size:0.95rem; color:#f59e0b;'>(${stats.patternParsedPercent.toFixed(1)}%)</span></div>
+      </div>
     </div>
   `;
 }
@@ -132,6 +144,9 @@ function exportStatsAsCSV() {
     ['Parsing Attempts', stats.parsingAttempts],
     ['Parsing Successes', stats.parsingSuccesses],
     ['Parsing Failures', stats.parsingFailures],
+    ['Filtered Messages', stats.filteredMessages],
+    ['AI Parsed Orders', stats.aiParsedOrders + ' (' + stats.aiParsedPercent.toFixed(1) + '%)'],
+    ['Pattern Parsed Orders', stats.patternParsedOrders + ' (' + stats.patternParsedPercent.toFixed(1) + '%)'],
   ];
   const csv = rows.map(r => r.map(x => '"' + String(x).replace(/"/g, '""') + '"').join(',')).join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
@@ -339,12 +354,12 @@ function renderParsingPieChart(stats) {
   parsingPieChart = new Chart(ctx, {
     type: 'pie',
     data: {
-      labels: ['Successes', 'Failures'],
+      labels: ['AI Parsed', 'Pattern Parsed'],
       datasets: [{
-        data: [stats.parsingSuccesses, stats.parsingFailures],
+        data: [stats.aiParsedOrders, stats.patternParsedOrders],
         backgroundColor: [
-          'rgba(75, 192, 192, 0.7)',
-          'rgba(255, 99, 132, 0.7)'
+          'rgba(14, 165, 233, 0.7)', // blue for AI
+          'rgba(245, 158, 11, 0.7)'  // yellow for pattern
         ]
       }]
     },

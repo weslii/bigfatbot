@@ -533,7 +533,7 @@ async function startServer() {
           return res.redirect('/login');
         }
 
-        const { business, status, search, page = 1, pageSize = 10 } = req.query;
+        const { business, status, search, startDate = '', endDate = '', page = 1, pageSize = 10 } = req.query;
 
         // Get user's business IDs first to avoid duplicates
         const userBusinesses = await db.query('groups')
@@ -558,6 +558,19 @@ async function startServer() {
             this.where('o.customer_name', 'ilike', `%${search}%`)
               .orWhere('o.order_id', 'ilike', `%${search}%`);
           });
+        }
+        
+        // Date filtering
+        if (startDate) {
+          const startDateTime = new Date(startDate);
+          startDateTime.setHours(0, 0, 0, 0);
+          query.where('o.created_at', '>=', startDateTime);
+        }
+        
+        if (endDate) {
+          const endDateTime = new Date(endDate);
+          endDateTime.setHours(23, 59, 59, 999);
+          query.where('o.created_at', '<=', endDateTime);
         }
 
         const totalCountResult = await query.clone().clearSelect().count('o.id as count').first();
@@ -619,6 +632,8 @@ async function startServer() {
           selectedBusiness: business,
           selectedStatus: status,
           search,
+          startDate,
+          endDate,
           userId,
           query: req.query,
           chartData: {
@@ -723,6 +738,57 @@ async function startServer() {
       } catch (error) {
         logger.error('Update order status error:', error);
         res.status(500).json({ error: 'Failed to update order status' });
+      }
+    });
+
+    // Delete order endpoint
+    app.delete('/api/orders/:orderId', async (req, res) => {
+      try {
+        const { orderId } = req.params;
+        const { userId } = req.body;
+        
+        // Input validation
+        if (!orderId || !userId) {
+          return res.status(400).json({ error: 'Order ID and User ID are required' });
+        }
+        
+        // Validate orderId format (should be a UUID)
+        if (!/^[a-fA-F0-9-]{36}$/.test(orderId)) {
+          return res.status(400).json({ error: 'Invalid order ID format' });
+        }
+        
+        // Get user's business IDs to ensure they can only delete their orders
+        const userBusinesses = await db.query('groups')
+          .select('business_id')
+          .where('user_id', userId)
+          .groupBy('business_id');
+        
+        const businessIds = userBusinesses.map(b => b.business_id);
+        
+        // Check if order exists and belongs to user
+        const order = await db.query('orders')
+          .where('id', orderId)
+          .whereIn('business_id', businessIds)
+          .first();
+        
+        if (!order) {
+          return res.status(404).json({ error: 'Order not found' });
+        }
+        
+        // Delete the order
+        const result = await db.query('orders')
+          .where('id', orderId)
+          .whereIn('business_id', businessIds)
+          .del();
+        
+        if (result === 0) {
+          return res.status(404).json({ error: 'Order not found' });
+        }
+        
+        res.json({ success: true, message: 'Order deleted successfully' });
+      } catch (error) {
+        logger.error('Delete order error:', error);
+        res.status(500).json({ error: 'Failed to delete order' });
       }
     });
 
@@ -1193,7 +1259,7 @@ async function startServer() {
         const recentActivity = await AdminService.getRecentActivity(5);
         console.log('Recent activity:', recentActivity);
         
-        // Calculate uptime
+        // Calculate uptime based on bot start time
         const now = Date.now();
         const uptimeMs = now - botStartTime;
         const uptimeHours = uptimeMs / (1000 * 60 * 60);
@@ -1202,16 +1268,16 @@ async function startServer() {
             totalRevenue: '45,231.89', // Keep static as requested
             totalBusinesses: analytics.totalBusinesses,
             totalOrders: analytics.totalOrders,
-            botUptime: '100.0',
+            botUptime: '100.0', // Always 100% since last restart
             botUptimeHours: uptimeHours.toFixed(2),
             businessChange: analytics.businessChange,
             orderChange: analytics.orderChange,
-          connectionStatus: analytics.status || 'disconnected',
-          phoneNumber: analytics.number || 'Not connected',
-          lastActivity: analytics.lastActivity || new Date().toISOString(),
-          messageSuccessRate: analytics.messageSuccessRate || 100,
-          avgResponseTime: analytics.avgResponseTime || 0,
-          dailyMessages: analytics.dailyMessages || 0
+            connectionStatus: analytics.status || 'disconnected',
+            phoneNumber: analytics.number || 'Not connected',
+            lastActivity: analytics.lastActivity || new Date().toISOString(),
+            messageSuccessRate: analytics.messageSuccessRate || 100,
+            avgResponseTime: analytics.avgResponseTime || 0,
+            dailyMessages: analytics.dailyMessages || 0
         };
         
         console.log('Stats being passed to template:', stats);

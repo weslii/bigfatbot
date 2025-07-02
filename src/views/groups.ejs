@@ -258,7 +258,7 @@
                                 <small>Add this WhatsApp number to your group as an admin:</small><br>
                                 <div style="background: rgba(59, 130, 246, 0.1); padding: 0.75rem; border-radius: 8px; margin: 0.5rem 0; display: flex; justify-content: space-between; align-items: center;">
                                     <code id="botNumber" style="color: var(--info-color); font-weight: 600;">Loading...</code>
-                                    <button type="button" class="btn btn-sm" onclick="copyBotNumber()" style="background: var(--info-color); color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem;">Copy</button>
+                                    <button type="button" class="btn btn-sm" onclick="copyBotNumber(event)" style="background: var(--info-color); color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem;">Copy</button>
                                 </div>
                             </li>
                             <li style="margin-bottom: 0.75rem;">
@@ -266,7 +266,7 @@
                                 <small>In your WhatsApp group, type this command:</small><br>
                                 <div style="background: rgba(59, 130, 246, 0.1); padding: 0.75rem; border-radius: 8px; margin: 0.5rem 0; display: flex; justify-content: space-between; align-items: center;">
                                     <code id="setupCommand" style="color: var(--info-color); font-weight: 600;">Select a business first</code>
-                                    <button type="button" class="btn btn-sm" onclick="copySetupCommand()" style="background: var(--info-color); color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem;">Copy</button>
+                                    <button type="button" class="btn btn-sm" onclick="copySetupCommand(event)" style="background: var(--info-color); color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem;">Copy</button>
                                 </div>
                             </li>
                             <li style="margin-bottom: 0.75rem;">
@@ -476,7 +476,7 @@
             }
 
             // Copy Bot Number
-            window.copyBotNumber = function() {
+            window.copyBotNumber = function(event) {
                 const botNumber = document.querySelector('#botNumber').textContent;
                 if (botNumber === 'Loading...' || botNumber === 'Not available' || botNumber === 'Error loading') {
                     alert('Bot number not available yet. Please try again in a moment.');
@@ -492,8 +492,8 @@
             }
 
             // Copy Setup Command
-            window.copySetupCommand = function() {
-                const command = document.querySelector('code').textContent;
+            window.copySetupCommand = function(event) {
+                const command = document.querySelector('#setupCommand').textContent;
                 navigator.clipboard.writeText(command).then(() => {
                     const button = event.target;
                     button.textContent = 'Copied!';

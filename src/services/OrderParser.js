@@ -578,23 +578,24 @@ class OrderParser {
   static parseDate(dateStr) {
     try {
       const moment = require('moment');
-      
-      // Handle natural language expressions
+      let normalized = null;
+      let raw = dateStr;
+      if (!dateStr) return { normalized: null, raw: null };
       const lowerDateStr = dateStr.toLowerCase().trim();
-      
       // Today/Tomorrow variations
       if (/today|now|tonight/i.test(lowerDateStr)) {
-        return moment().format('YYYY-MM-DD');
+        normalized = moment().format('YYYY-MM-DD');
+        return { normalized, raw };
       }
       if (/tomorrow|next day/i.test(lowerDateStr)) {
-        return moment().add(1, 'day').format('YYYY-MM-DD');
+        normalized = moment().add(1, 'day').format('YYYY-MM-DD');
+        return { normalized, raw };
       }
-      
       // Next week variations
       if (/next week/i.test(lowerDateStr)) {
-        return moment().add(1, 'week').format('YYYY-MM-DD');
+        normalized = moment().add(1, 'week').format('YYYY-MM-DD');
+        return { normalized, raw };
       }
-      
       // Days of the week
       const daysOfWeek = {
         'monday': 1, 'mon': 1,
@@ -605,90 +606,90 @@ class OrderParser {
         'saturday': 6, 'sat': 6,
         'sunday': 0, 'sun': 0
       };
-      
       for (const [day, value] of Object.entries(daysOfWeek)) {
         if (lowerDateStr.includes(day)) {
           const currentDay = moment().day();
           const targetDay = value;
           let daysToAdd = targetDay - currentDay;
-          if (daysToAdd <= 0) daysToAdd += 7; // If the day has passed this week, get next week's
-          return moment().add(daysToAdd, 'days').format('YYYY-MM-DD');
+          if (daysToAdd <= 0) daysToAdd += 7;
+          normalized = moment().add(daysToAdd, 'days').format('YYYY-MM-DD');
+          return { normalized, raw };
         }
       }
-      
       // Handle "in X days/weeks"
       const inDaysMatch = lowerDateStr.match(/in\s+(\d+)\s+days?/i);
       if (inDaysMatch) {
-        return moment().add(parseInt(inDaysMatch[1]), 'days').format('YYYY-MM-DD');
+        normalized = moment().add(parseInt(inDaysMatch[1]), 'days').format('YYYY-MM-DD');
+        return { normalized, raw };
       }
-      
       const inWeeksMatch = lowerDateStr.match(/in\s+(\d+)\s+weeks?/i);
       if (inWeeksMatch) {
-        return moment().add(parseInt(inWeeksMatch[1]), 'weeks').format('YYYY-MM-DD');
+        normalized = moment().add(parseInt(inWeeksMatch[1]), 'weeks').format('YYYY-MM-DD');
+        return { normalized, raw };
       }
-      
       // Handle "next month"
       if (/next month/i.test(lowerDateStr)) {
-        return moment().add(1, 'month').format('YYYY-MM-DD');
+        normalized = moment().add(1, 'month').format('YYYY-MM-DD');
+        return { normalized, raw };
       }
-      
       // Handle "end of month"
       if (/end of month/i.test(lowerDateStr)) {
-        return moment().endOf('month').format('YYYY-MM-DD');
+        normalized = moment().endOf('month').format('YYYY-MM-DD');
+        return { normalized, raw };
       }
-      
       // Handle "beginning of month"
       if (/beginning of month|start of month/i.test(lowerDateStr)) {
-        return moment().startOf('month').format('YYYY-MM-DD');
+        normalized = moment().startOf('month').format('YYYY-MM-DD');
+        return { normalized, raw };
       }
-      
       // Try to parse various date formats
       const formats = [
-        'DD/MM/YYYY',
-        'MM/DD/YYYY',
-        'YYYY-MM-DD',
-        'DD-MM-YYYY',
-        'DD.MM.YYYY',
-        'MMM DD, YYYY',
-        'DD MMM YYYY',
-        'MMMM DD, YYYY',
-        'DD MMMM YYYY',
-        'DD/MM/YY',
-        'MM/DD/YY',
-        'YY-MM-DD',
-        // Add month-first formats
-        'MMMM D YYYY',
-        'MMMM Do YYYY',
-        'MMM D YYYY',
-        'MMM Do YYYY'
+        'DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD', 'DD-MM-YYYY', 'DD.MM.YYYY',
+        'MMM DD, YYYY', 'DD MMM YYYY', 'MMMM DD, YYYY', 'DD MMMM YYYY',
+        'DD/MM/YY', 'MM/DD/YY', 'YY-MM-DD', 'MMMM D YYYY', 'MMMM Do YYYY',
+        'MMM D YYYY', 'MMM Do YYYY'
       ];
-      
       for (const format of formats) {
         const parsed = moment(dateStr, format, true);
         if (parsed.isValid()) {
-          return parsed.format('YYYY-MM-DD');
+          normalized = parsed.format('YYYY-MM-DD');
+          return { normalized, raw };
         }
       }
-      
       // Try to parse dates with ordinal indicators (1st, 2nd, 3rd, etc.)
-      const ordinalMatch = dateStr.match(/(\d+)(?:st|nd|rd|th)\s+([A-Za-z]+)(?:\s+(\d{4}))?/i);
+      const ordinalMatch = dateStr.match(/(\d+)(?:st|nd|rd|th)(?:\s+of)?\s+([A-Za-z]+)(?:\s+(\d{4}))?/i);
       if (ordinalMatch) {
         const day = ordinalMatch[1];
         const month = ordinalMatch[2];
         const year = ordinalMatch[3] || moment().year();
-        const dateStr = `${day} ${month} ${year}`;
-        const parsed = moment(dateStr, 'D MMMM YYYY', true);
+        const dateStr2 = `${day} ${month} ${year}`;
+        const parsed = moment(dateStr2, ['D MMMM YYYY', 'D MMM YYYY'], true);
         if (parsed.isValid()) {
-          return parsed.format('YYYY-MM-DD');
+          normalized = parsed.format('YYYY-MM-DD');
+          return { normalized, raw };
         }
       }
-      
-      return null;
+      // Handle just "23rd", "1st", etc. (assume current or next month)
+      const dayOnlyMatch = dateStr.match(/^(\d+)(?:st|nd|rd|th)?$/i);
+      if (dayOnlyMatch) {
+        const day = parseInt(dayOnlyMatch[1]);
+        const now = moment();
+        let candidate = moment({ year: now.year(), month: now.month(), day });
+        if (!candidate.isValid() || candidate.isBefore(now, 'day')) {
+          candidate = moment({ year: now.year(), month: now.month() + 1, day });
+        }
+        if (candidate.isValid()) {
+          normalized = candidate.format('YYYY-MM-DD');
+          return { normalized, raw };
+      }
+      }
+      return { normalized: null, raw };
     } catch (error) {
       logger.error('Error parsing date:', error);
-      return null;
+      return { normalized: null, raw: dateStr };
     }
   }
 }
 
 module.exports = OrderParser;
+module.exports.parseOrder = OrderParser.parseOrder;
