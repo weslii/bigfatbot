@@ -774,7 +774,7 @@ class AdminService {
         number: botInfo.number || 'Not connected',
         lastActivity: lastActivity || new Date().toISOString(),
         messageSuccessRate: Math.round(messageSuccessRate * 100) / 100, // Round to 2 decimal places
-        avgResponseTime: Math.round(avgResponseTime), // Round to nearest integer
+        avgResponseTime: Math.round((avgResponseTime / 1000) * 10) / 10, // Convert ms to seconds, round to 1 decimal
         dailyMessages: parseInt(dailyMessages)
       };
     } catch (error) {

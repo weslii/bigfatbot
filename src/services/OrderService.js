@@ -6,27 +6,40 @@ const { v4: uuidv4 } = require('uuid');
 class OrderService {
   async createOrder(businessId, orderData) {
     try {
-      // Generate simple order ID: YYYYMMDD-XXX format
+      // Generate a random 3-letter uppercase code
+      function randomCode() {
+        return Math.random().toString(36).substring(2, 5).toUpperCase();
+      }
+
+      let orderId, serialNumber = '001', maxRetries = 5, attempt = 0, todayOrder;
       const today = new Date();
       const dateStr = today.getFullYear().toString() + 
                      (today.getMonth() + 1).toString().padStart(2, '0') + 
                      today.getDate().toString().padStart(2, '0');
-      
-      // Get the max serial number for today's orders for this business
-      const todayOrder = await database.query('orders')
-        .where('business_id', businessId)
-        .where('order_id', 'like', `${dateStr}-%`)
-        .orderBy('order_id', 'desc')
-        .first();
-
-      let serialNumber = '001';
-      if (todayOrder && todayOrder.order_id) {
-        const parts = todayOrder.order_id.split('-');
-        if (parts.length === 2 && !isNaN(parts[1])) {
-          serialNumber = (parseInt(parts[1], 10) + 1).toString().padStart(3, '0');
+      let code;
+      while (attempt < maxRetries) {
+        code = randomCode();
+        // Get the max serial number for today's orders for this code
+        todayOrder = await database.query('orders')
+          .where('order_id', 'like', `${code}-${dateStr}-%`)
+          .orderBy('order_id', 'desc')
+          .first();
+        serialNumber = '001';
+        if (todayOrder && todayOrder.order_id) {
+          const parts = todayOrder.order_id.split('-');
+          if (parts.length === 3 && !isNaN(parts[2])) {
+            serialNumber = (parseInt(parts[2], 10) + 1).toString().padStart(3, '0');
+          }
         }
+        orderId = `${code}-${dateStr}-${serialNumber}`;
+        // Check if this orderId already exists
+        const exists = await database.query('orders').where('order_id', orderId).first();
+        if (!exists) break;
+        attempt++;
       }
-      const orderId = `${dateStr}-${serialNumber}`;
+      if (attempt === maxRetries) {
+        throw new Error('Failed to generate unique order ID after multiple attempts');
+      }
       
       const [order] = await database.query('orders')
         .insert({
