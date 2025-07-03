@@ -207,10 +207,10 @@
                                     <div class="metric-item">
                                         <div class="metric-header">
                                             <span>Response Time</span>
-                                            <span class="metric-value"><%= stats && typeof stats.avgResponseTime !== 'undefined' ? (stats.avgResponseTime / 1000).toFixed(2) + 's avg' : 'N/A' %></span>
+                                            <span class="metric-value"><%= stats && typeof stats.avgResponseTime !== 'undefined' ? stats.avgResponseTime.toFixed(2) + 's avg' : 'N/A' %></span>
                                         </div>
                                         <div class="progress-bar">
-                                            <div class="progress-fill" style="width: <%= stats && typeof stats.avgResponseTime !== 'undefined' ? Math.min((stats.avgResponseTime / 2000) * 100, 100).toFixed(1) : 0 %>%;"></div>
+                                            <div class="progress-fill" style="width: <%= stats && typeof stats.avgResponseTime !== 'undefined' ? Math.min((stats.avgResponseTime / 2) * 100, 100).toFixed(1) : 0 %>%;"></div>
                                         </div>
                                     </div>
                                     <div class="metric-item">

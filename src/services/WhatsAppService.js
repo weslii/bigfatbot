@@ -597,10 +597,12 @@ class WhatsAppService {
   }
 
   async handleSalesGroupMessage(message, contact, groupInfo) {
+    const start = Date.now();
     try {
       // Ignore old messages (older than 45 seconds)
       const msgTimestampMs = message.timestamp > 1e12 ? message.timestamp : message.timestamp * 1000;
-      if (Date.now() - msgTimestampMs > 45000) {
+      const msgAgeMs = Date.now() - msgTimestampMs;
+      if (msgAgeMs > 45000) {
         logger.info('Ignoring old message (over 45s):', msgTimestampMs, message.body);
         return;
       }
@@ -717,7 +719,7 @@ class WhatsAppService {
             }
             await this.client.sendMessage(groupInfo.group_id, salesConfirmation);
             logger.info('[handleSalesGroupMessage] Calling updateMetrics for successful parse', { attemptedParsing, filteredOut, parsedWith });
-            await this.updateMetrics({success: true, responseTime: Date.now() - message.timestamp, attemptedParsing, filteredOut, parsedWith});
+            await this.updateMetrics({success: true, responseTime: Date.now() - start, attemptedParsing, filteredOut, parsedWith});
           } else {
             const hasValidPhone = OrderParser.extractPhoneNumbers(messageText).some(num => OrderParser.isValidPhoneNumber(num));
             const addressConfidence = OrderParser.calculatePatternScore(messageText, OrderParser.addressPatterns);
@@ -738,13 +740,13 @@ class WhatsAppService {
               }
             }
             logger.info('[handleSalesGroupMessage] Calling updateMetrics for failed parse', { attemptedParsing, filteredOut, parsedWith: null });
-            await this.updateMetrics({success: false, responseTime: Date.now() - message.timestamp, attemptedParsing, filteredOut, parsedWith: null});
+            await this.updateMetrics({success: false, responseTime: Date.now() - start, attemptedParsing, filteredOut, parsedWith: null});
           }
         }
       } else {
         filteredOut = true;
         logger.info('[handleSalesGroupMessage] Not a likely order. Calling updateMetrics', { attemptedParsing, filteredOut, parsedWith: null });
-        await this.updateMetrics({success: false, responseTime: Date.now() - message.timestamp, attemptedParsing, filteredOut, parsedWith: null});
+        await this.updateMetrics({success: false, responseTime: Date.now() - start, attemptedParsing, filteredOut, parsedWith: null});
       }
     } catch (error) {
       logger.error('Error handling sales group message:', error);
@@ -752,10 +754,12 @@ class WhatsAppService {
   }
 
   async handleDeliveryGroupMessage(message, contact, groupInfo) {
+    const start = Date.now();
     try {
       // Ignore old messages (older than 45 seconds)
       const msgTimestampMs = message.timestamp > 1e12 ? message.timestamp : message.timestamp * 1000;
-      if (Date.now() - msgTimestampMs > 45000) {
+      const msgAgeMs = Date.now() - msgTimestampMs;
+      if (msgAgeMs > 45000) {
         logger.info('Ignoring old message (over 45s):', msgTimestampMs, message.body);
         return;
       }
@@ -804,6 +808,9 @@ class WhatsAppService {
       }
     } catch (error) {
       logger.error('Error handling delivery group message:', error);
+    } finally {
+      // Update metrics in database
+      await this.updateMetrics({success: true, responseTime: Date.now() - start, attemptedParsing: false, filteredOut: false});
     }
   }
 
