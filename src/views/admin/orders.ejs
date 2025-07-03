@@ -66,6 +66,14 @@
                         <label for="search" class="form-label" style="font-weight: 600; color: var(--text-primary);">Search (Customer or Order ID)</label>
                         <input type="text" class="form-control" id="search" name="search" value="<%= filter && filter.search ? filter.search : '' %>" placeholder="Search..." style="width: 100%; padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-hover); color: var(--text-primary);">
                     </div>
+                    <div style="flex: 1 1 180px; min-width: 160px;">
+                        <label for="date_from" class="form-label" style="font-weight: 600; color: var(--text-primary);">Date From</label>
+                        <input type="date" class="form-control" id="date_from" name="date_from" value="<%= filter && filter.date_from ? filter.date_from : '' %>" style="width: 100%; padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-hover); color: var(--text-primary);">
+                    </div>
+                    <div style="flex: 1 1 180px; min-width: 160px;">
+                        <label for="date_to" class="form-label" style="font-weight: 600; color: var(--text-primary);">Date To</label>
+                        <input type="date" class="form-control" id="date_to" name="date_to" value="<%= filter && filter.date_to ? filter.date_to : '' %>" style="width: 100%; padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-hover); color: var(--text-primary);">
+                    </div>
                     <div style="flex: 0 0 140px; min-width: 120px; align-self: flex-end;">
                         <button type="submit" class="btn btn-primary w-100" style="width: 100%;">Filter/Search</button>
                     </div>
@@ -230,6 +238,7 @@
                             </tbody>
                         </table>
                     </div>
+                    <div id="orders-pagination" class="pagination"></div>
                     <% } else { %>
                     <div class="no-data" style="text-align: center; color: var(--text-muted); padding: 2.5rem 0; font-size: 1.1rem;">
                         <i class="fas fa-receipt" style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 0.5rem;"></i><br>
@@ -240,6 +249,31 @@
             </div>
         </div>
     </main>
+    <!-- Reusable Order Details Modal for AJAX -->
+    <div class="modal-overlay" id="ajaxViewOrderModal" style="display: none;">
+      <div class="modal-content">
+        <button class="close-modal" onclick="closeAjaxViewModal()">&times;</button>
+        <div class="modal-header">
+          <h3>Order Details</h3>
+        </div>
+        <div class="modal-body" id="ajaxViewOrderBody">
+          <!-- Order details will be loaded here -->
+        </div>
+      </div>
+    </div>
+    <!-- Reusable Edit Order Modal for AJAX -->
+    <div class="modal-overlay" id="ajaxEditOrderModal" style="display: none;">
+      <div class="modal-content">
+        <button class="close-modal" onclick="closeAjaxEditModal()">&times;</button>
+        <div class="modal-header">
+          <h3>Edit Order</h3>
+        </div>
+        <div class="modal-body" id="ajaxEditOrderBody">
+          <!-- Edit form will be loaded here -->
+        </div>
+      </div>
+    </div>
+    <script src="/js/admin-orders.js"></script>
     <script>
         // Profile dropdown functionality
         const profileDropdown = document.getElementById('profileDropdown');

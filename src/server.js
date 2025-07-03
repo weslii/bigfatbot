@@ -2313,15 +2313,58 @@ async function startServer() {
     // Paginated API for orders
     app.get('/admin/api/orders', requireAdmin, async (req, res) => {
       try {
-        const page = parseInt(req.query.page) || 1;
-        const pageSize = parseInt(req.query.pageSize) || 10;
+        let { page = 1, pageSize = 10, status, business, search, date_from, date_to } = req.query;
+        page = parseInt(page, 10) || 1;
+        pageSize = parseInt(pageSize, 10) || 10;
         const offset = (page - 1) * pageSize;
-        const { status, business, search } = req.query;
-        const { orders, total } = await AdminService.getAllOrdersWithDetails({ status, business, search, limit: pageSize, offset });
-        res.json({ orders, total });
+
+        let query = db.query('orders as o')
+          .join('groups as g', 'o.business_id', 'g.business_id')
+          .select('o.*', 'g.business_name');
+
+        if (status) query = query.where('o.status', status);
+        if (business) query = query.where('o.business_id', business);
+        if (search) {
+          query = query.where(function() {
+            this.where('o.customer_name', 'like', `%${search}%`)
+              .orWhere('o.order_id', 'like', `%${search}%`);
+          });
+        }
+        if (date_from) query = query.where('o.created_at', '>=', date_from);
+        if (date_to) query = query.where('o.created_at', '<=', date_to + ' 23:59:59');
+
+        // Count query (no joins, just filters)
+        let countQuery = db.query('orders as o');
+        if (status) countQuery = countQuery.where('o.status', status);
+        if (business) countQuery = countQuery.where('o.business_id', business);
+        if (search) {
+          countQuery = countQuery.where(function() {
+            this.where('o.customer_name', 'like', `%${search}%`)
+              .orWhere('o.order_id', 'like', `%${search}%`);
+          });
+        }
+        if (date_from) countQuery = countQuery.where('o.created_at', '>=', date_from);
+        if (date_to) countQuery = countQuery.where('o.created_at', '<=', date_to + ' 23:59:59');
+        const totalOrdersResult = await countQuery.countDistinct('o.id as count').first();
+        const totalOrders = parseInt(totalOrdersResult.count) || 0;
+        const totalPages = Math.ceil(totalOrders / pageSize) || 1;
+
+        const orders = await query
+          .distinct('o.id')
+          .orderBy('o.created_at', 'desc')
+          .limit(pageSize)
+          .offset(offset);
+
+        res.json({
+          success: true,
+          orders,
+          page,
+          totalPages,
+          totalOrders
+        });
       } catch (error) {
-        logger.error('API orders error:', error);
-        res.status(500).json({ error: 'Failed to load orders.' });
+        logger.error('Admin API orders error:', error);
+        res.status(500).json({ success: false, error: 'Failed to fetch orders' });
       }
     });
 
