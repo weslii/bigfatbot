@@ -42,6 +42,7 @@ class RegistrationService {
         .select('groups.*', 'users.full_name as user_name')
         .join('users', 'groups.user_id', 'users.id')
         .where('groups.user_id', userId)
+        .whereNot('groups.group_type', 'main')
         .orderBy(['groups.business_name', 'groups.group_type']);
 
       return groups;

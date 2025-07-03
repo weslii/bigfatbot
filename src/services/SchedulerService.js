@@ -41,9 +41,8 @@ class SchedulerService {
     try {
       // Get all active groups
       const groups = await database.query('groups')
-        .select('groups.*', 'businesses.name as business_name')
-        .join('businesses', 'groups.business_id', 'businesses.id')
-        .where('groups.is_active', true);
+        .select('*')
+        .where('is_active', true);
 
       for (const group of groups) {
         // Get today's orders for this business
@@ -68,9 +67,8 @@ class SchedulerService {
     try {
       // Get all active groups
       const groups = await database.query('groups')
-        .select('groups.*', 'businesses.name as business_name')
-        .join('businesses', 'groups.business_id', 'businesses.id')
-        .where('groups.is_active', true);
+        .select('*')
+        .where('is_active', true);
 
       for (const group of groups) {
         // Get pending orders for this business

@@ -22,7 +22,7 @@ async function parseOrderWithAI(message) {
       console.log('[AI Parser] Parsed response is not an object, returning null');
       return null;
     }
-    const requiredFields = ['customer_name', 'customer_phone', 'address', 'items'];
+    const requiredFields = ['customer_name', 'customer_phone', 'address'];
     for (const field of requiredFields) {
       if (!parsed[field]) {
         console.log(`[AI Parser] Missing required field: ${field}, returning null`);

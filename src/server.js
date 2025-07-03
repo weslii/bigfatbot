@@ -115,10 +115,10 @@ async function initializeSession() {
     // Add session debugging middleware with more details
     app.use((req, res, next) => {
       if (req.path.startsWith('/admin')) {
-        console.log('Session middleware - Path:', req.path);
-        console.log('Session middleware - Session ID:', req.sessionID);
-        console.log('Session middleware - Session data:', req.session);
-        console.log('Session middleware - Cookie:', req.session.cookie);
+        // console.log('Session middleware - Path:', req.path);
+        // console.log('Session middleware - Session ID:', req.sessionID);
+        // console.log('Session middleware - Session data:', req.session);
+        // console.log('Session middleware - Cookie:', req.session.cookie);
       }
       next();
     });
@@ -141,22 +141,22 @@ async function initializeSession() {
 
 // Admin authentication middleware
 const requireAdmin = async (req, res, next) => {
-  console.log('requireAdmin middleware - Session:', req.session);
-  console.log('requireAdmin middleware - Session ID:', req.sessionID);
-  console.log('requireAdmin middleware - Session adminId:', req.session ? req.session.adminId : undefined);
-  console.log('requireAdmin middleware - Session isAuthenticated:', req.session ? req.session.isAuthenticated : undefined);
+  // console.log('requireAdmin middleware - Session:', req.session);
+  // console.log('requireAdmin middleware - Session ID:', req.sessionID);
+  // console.log('requireAdmin middleware - Session adminId:', req.session ? req.session.adminId : undefined);
+  // console.log('requireAdmin middleware - Session isAuthenticated:', req.session ? req.session.isAuthenticated : undefined);
   
   if (!req.session || !req.session.adminId || !req.session.isAuthenticated) {
-    console.log('requireAdmin middleware - Authentication failed');
+    // console.log('requireAdmin middleware - Authentication failed');
     return res.redirect('/admin/login');
   }
   
   try {
     const admin = await AdminService.getAdminById(req.session.adminId);
-    console.log('requireAdmin middleware - Admin lookup result:', admin);
+    // console.log('requireAdmin middleware - Admin lookup result:', admin);
     
     if (!admin || !admin.is_active) {
-      console.log('requireAdmin middleware - Admin not found or inactive');
+      // console.log('requireAdmin middleware - Admin not found or inactive');
       req.session.destroy((err) => {
         if (err) {
           console.error('Error destroying session:', err);
@@ -248,9 +248,9 @@ app.get('/admin/debug-session', async (req, res) => {
 
 // Debug route to test session without authentication
 app.get('/admin/test-session', (req, res) => {
-  console.log('=== /admin/test-session route hit ===');
-  console.log('Session ID:', req.sessionID);
-  console.log('Session data:', req.session);
+  // console.log('=== /admin/test-session route hit ===');
+  // console.log('Session ID:', req.sessionID);
+  // console.log('Session data:', req.session);
   res.json({
     message: 'Session test route hit',
     sessionId: req.sessionID,
@@ -280,15 +280,15 @@ app.get('/admin/preview-dashboard', requireAdmin, async (req, res) => {
   try {
     // Get real analytics data
     const analytics = await AdminService.getAnalytics();
-    console.log('Analytics data:', analytics);
+    // console.log('Analytics data:', analytics);
     
     // Check if there are any bot metrics in the database
     const botMetrics = await db.query('bot_metrics').orderBy('created_at', 'desc').first();
-    console.log('Bot metrics from database:', botMetrics);
+    // console.log('Bot metrics from database:', botMetrics);
     
     // Get recent activity
     const recentActivity = await AdminService.getRecentActivity(5);
-    console.log('Recent activity:', recentActivity);
+    // console.log('Recent activity:', recentActivity);
     
     // Calculate uptime
     const now = Date.now();
@@ -892,6 +892,7 @@ async function startServer() {
         // Get user's groups
         const groups = await db.query('groups')
           .where('user_id', userId)
+          .whereNot('group_type', 'main')
           .orderBy('created_at', 'desc');
 
         res.render('groups', {
@@ -1176,8 +1177,8 @@ async function startServer() {
 
     // Admin routes
     app.get('/admin/login', (req, res) => {
-      console.log('GET /admin/login - Session:', req.session);
-      console.log('GET /admin/login - Session ID:', req.sessionID);
+      // console.log('GET /admin/login - Session:', req.session);
+      // console.log('GET /admin/login - Session ID:', req.sessionID);
       if (req.session && req.session.adminId) {
         return res.redirect('/admin/dashboard');
       }
@@ -1187,9 +1188,9 @@ async function startServer() {
     app.post('/admin/login', async (req, res) => {
       try {
         const { username, password } = req.body;
-        console.log('POST /admin/login - Attempting login for:', username);
-        console.log('POST /admin/login - Session ID before login:', req.sessionID);
-        console.log('POST /admin/login - Session data before login:', req.session);
+        // console.log('POST /admin/login - Attempting login for:', username);
+        // console.log('POST /admin/login - Session ID before login:', req.sessionID);
+        // console.log('POST /admin/login - Session data before login:', req.session);
         
         if (!username || !password) {
           return res.render('admin/login', { error: 'Username and password are required' });
@@ -1198,11 +1199,11 @@ async function startServer() {
         const admin = await AdminService.authenticate(username, password);
         
         if (!admin) {
-          console.log('POST /admin/login - Invalid credentials for:', username);
+          // console.log('POST /admin/login - Invalid credentials for:', username);
           return res.render('admin/login', { error: 'Invalid credentials' });
         }
 
-        console.log('POST /admin/login - Login successful for:', username);
+        // console.log('POST /admin/login - Login successful for:', username);
 
         // Set session data directly before save
         req.session.adminId = admin.id;
@@ -1221,12 +1222,12 @@ async function startServer() {
             return res.render('admin/login', { error: 'Login failed' });
           }
 
-          console.log('Session saved successfully:', {
-            sessionId: req.sessionID,
-            adminId: req.session.adminId,
-            admin: req.session.admin,
-            isAuthenticated: req.session.isAuthenticated
-          });
+          // console.log('Session saved successfully:', {
+          //   sessionId: req.sessionID,
+          //   adminId: req.session.adminId,
+          //   admin: req.session.admin,
+          //   isAuthenticated: req.session.isAuthenticated
+          // });
 
           // Verify session was saved
           if (!req.session.adminId) {
@@ -1244,20 +1245,20 @@ async function startServer() {
 
     app.get('/admin/dashboard', requireAdmin, async (req, res) => {
       try {
-        console.log('GET /admin/dashboard - Session ID:', req.sessionID);
-        console.log('GET /admin/dashboard - Session data:', req.session);
+        // console.log('GET /admin/dashboard - Session ID:', req.sessionID);
+        // console.log('GET /admin/dashboard - Session data:', req.session);
         
         // Get real analytics data
         const analytics = await AdminService.getAnalytics();
-        console.log('Analytics data:', analytics);
+        // console.log('Analytics data:', analytics);
         
         // Check if there are any bot metrics in the database
         const botMetrics = await db.query('bot_metrics').orderBy('created_at', 'desc').first();
-        console.log('Bot metrics from database:', botMetrics);
+        // console.log('Bot metrics from database:', botMetrics);
         
         // Get recent activity
         const recentActivity = await AdminService.getRecentActivity(5);
-        console.log('Recent activity:', recentActivity);
+        // console.log('Recent activity:', recentActivity);
         
         // Calculate uptime based on bot start time
         const now = Date.now();
@@ -1280,7 +1281,7 @@ async function startServer() {
             dailyMessages: analytics.dailyMessages || 0
         };
         
-        console.log('Stats being passed to template:', stats);
+        // console.log('Stats being passed to template:', stats);
         
         res.render('admin/preview-dashboard', {
           admin: req.admin,
@@ -1367,7 +1368,7 @@ async function startServer() {
 
     // Admin: Manage Businesses
     app.get('/admin/businesses', requireAdmin, async (req, res) => {
-      console.log('=== /admin/businesses route hit ===');
+      // console.log('=== /admin/businesses route hit ===');
       try {
         const { business_name = '', owner = '', status = '' } = req.query;
         const { businesses } = await AdminService.getAllBusinessesWithOwners(1000, 0, '', business_name, owner, status);
@@ -1447,7 +1448,7 @@ async function startServer() {
     
     // Admin: Manage Users
     app.get('/admin/users', requireAdmin, async (req, res) => {
-      console.log('=== /admin/users route hit ===');
+      // console.log('=== /admin/users route hit ===');
       try {
         const { name = '', email = '', phone = '' } = req.query;
         const users = await AdminService.getAllUsersWithFilters(name, email, phone);
@@ -1525,7 +1526,7 @@ async function startServer() {
 
     // Admin: Manage Admins
     app.get('/admin/admins', requireAdmin, async (req, res) => {
-      console.log('=== /admin/admins route hit ===');
+      // console.log('=== /admin/admins route hit ===');
       try {
         const admins = await AdminService.getAllAdmins();
         res.render('admin/admins', { admin: req.admin, admins });
@@ -2292,9 +2293,11 @@ async function startServer() {
             'g.business_name',
             db.query.raw('MAX(g.is_active::int) = 1 as is_active'),
             db.query.raw('MIN(u.full_name) as owner_name'),
-            db.query.raw('MIN(u.email) as owner_email')
+            db.query.raw('MIN(u.email) as owner_email'),
+            db.query.raw('COUNT(DISTINCT o.id) as order_count')
           )
           .leftJoin('users as u', 'g.user_id', 'u.id')
+          .leftJoin('orders as o', 'g.business_id', 'o.business_id')
           .groupBy('g.business_id', 'g.business_name')
           .orderBy('g.business_name')
           .limit(pageSize)
@@ -2409,10 +2412,10 @@ async function startServer() {
 
     // Start the server
     app.listen(port, () => {
-      console.log(`Server is running on port ${port}`);
-      console.log('SESSION_SECRET is set:', !!process.env.SESSION_SECRET);
-      console.log('NODE_ENV:', process.env.NODE_ENV);
-      console.log('RAILWAY_PUBLIC_DOMAIN:', process.env.RAILWAY_PUBLIC_DOMAIN);
+      // console.log(`Server is running on port ${port}`);
+      // console.log('SESSION_SECRET is set:', !!process.env.SESSION_SECRET);
+      // console.log('NODE_ENV:', process.env.NODE_ENV);
+      // console.log('RAILWAY_PUBLIC_DOMAIN:', process.env.RAILWAY_PUBLIC_DOMAIN);
     });
   } catch (err) {
     console.error('Failed to start server:', err);

@@ -139,7 +139,7 @@ class OrderParser {
       // --- END STRICTER CHECKS ---
 
       // Validate required fields
-      if (!customerName || !phoneNumber || !address || !items) {
+      if (!customerName || !phoneNumber || !address) {
         logger.warn('Incomplete order data parsed', { customerName, phoneNumber, address, items });
         return null;
       }
@@ -148,7 +148,7 @@ class OrderParser {
         customer_name: customerName.trim(),
         customer_phone: phoneNumber.trim(),
         address: address.trim(),
-        items: items.trim(),
+        items: items ? items.trim() : null,
         delivery_date: deliveryDate,
         notes: notes,
         added_by: senderName

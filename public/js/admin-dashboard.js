@@ -164,7 +164,7 @@ async function fetchAndRenderBusinesses(page = 1, pageSize = 10) {
           </div>
         </td>
         <td><span class="status-badge ${biz.is_active ? 'active' : 'inactive'}">${biz.is_active ? 'Active' : 'Inactive'}</span></td>
-        <td>-</td>
+        <td>${typeof biz.order_count !== 'undefined' ? biz.order_count : '-'}</td>
         <td>
           <div class="dropdown">
             <button class="action-menu-btn"><i class="fas fa-ellipsis-h"></i></button>

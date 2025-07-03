@@ -12,14 +12,20 @@ class OrderService {
                      (today.getMonth() + 1).toString().padStart(2, '0') + 
                      today.getDate().toString().padStart(2, '0');
       
-      // Get today's order count for this business to generate serial number
-      const todayOrders = await database.query('orders')
+      // Get the max serial number for today's orders for this business
+      const todayOrder = await database.query('orders')
         .where('business_id', businessId)
-        .where('created_at', '>=', database.query.raw('DATE(NOW())'))
-        .count('* as count')
+        .where('order_id', 'like', `${dateStr}-%`)
+        .orderBy('order_id', 'desc')
         .first();
-      
-      const serialNumber = (parseInt(todayOrders.count) + 1).toString().padStart(3, '0');
+
+      let serialNumber = '001';
+      if (todayOrder && todayOrder.order_id) {
+        const parts = todayOrder.order_id.split('-');
+        if (parts.length === 2 && !isNaN(parts[1])) {
+          serialNumber = (parseInt(parts[1], 10) + 1).toString().padStart(3, '0');
+        }
+      }
       const orderId = `${dateStr}-${serialNumber}`;
       
       const [order] = await database.query('orders')
@@ -29,7 +35,7 @@ class OrderService {
           customer_name: orderData.customer_name,
           customer_phone: orderData.customer_phone,
           address: orderData.address,
-          items: orderData.items,
+          items: orderData.items || null,
           delivery_date: orderData.delivery_date,
           notes: orderData.notes,
           status: 'pending',

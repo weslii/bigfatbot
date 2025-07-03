@@ -426,7 +426,12 @@ class WhatsAppService {
         .first();
 
       if (!group) {
-        logger.info('Message from unknown group:', message.from);
+        // logger.info('Message from unknown group:', message.from);
+        return;
+      }
+
+      if (!group.is_active) {
+        logger.info('Message from deactivated group:', message.from);
         return;
       }
 
@@ -593,8 +598,13 @@ class WhatsAppService {
 
   async handleSalesGroupMessage(message, contact, groupInfo) {
     try {
+      // Ignore old messages (older than 45 seconds)
+      const msgTimestampMs = message.timestamp > 1e12 ? message.timestamp : message.timestamp * 1000;
+      if (Date.now() - msgTimestampMs > 45000) {
+        logger.info('Ignoring old message (over 45s):', msgTimestampMs, message.body);
+        return;
+      }
       if (contact.isMe) return;
-      logger.info('[DEBUG] typeof message.body:', typeof message.body, 'sample:', JSON.stringify(message.body).slice(0, 200));
       let messageText;
       if (typeof message.body === 'string') {
         messageText = message.body;
@@ -615,7 +625,6 @@ class WhatsAppService {
         messageText = String(message.body);
       }
       const messageBody = messageText.toLowerCase().trim();
-      logger.info('[handleSalesGroupMessage] Incoming message body:', messageText);
       const senderName = contact.name || contact.pushname || contact.number;
       const senderNumber = contact.number;
       if (message.hasQuotedMsg && messageBody === 'cancel') {
@@ -650,17 +659,23 @@ class WhatsAppService {
             }
           }
         });
-        orderData = aiOrder;
         let parsedWith = null;
-        if (orderData) {
-          if (orderData.delivery_date) {
-            const parsedDate = OrderParser.parseDate(orderData.delivery_date);
-            orderData.delivery_date = parsedDate.normalized || null;
-            orderData.delivery_date_raw = parsedDate.raw || null;
+        let aiMissingFields = false;
+        if (aiOrder && !aiOrder.__missingFields) {
+          // AI parser succeeded
+          if (aiOrder.delivery_date) {
+            const parsedDate = OrderParser.parseDate(aiOrder.delivery_date);
+            aiOrder.delivery_date = parsedDate.normalized || null;
+            aiOrder.delivery_date_raw = parsedDate.raw || null;
           }
+          orderData = aiOrder;
           parsedWith = 'AI';
+        } else if (aiOrder && aiOrder.__missingFields) {
+          // AI parser failed due to missing fields; do not call pattern parser
+          aiMissingFields = true;
+          orderData = null;
         } else {
-          // If AI parser failed, check if it was due to timeout (all retries failed)
+          // AI parser failed due to timeout or error; call pattern parser
           aiTimedOut = true;
           orderData = OrderParser.parseOrder(messageText, contact.name || contact.number);
           if (orderData) {
@@ -677,7 +692,6 @@ class WhatsAppService {
             );
           }
         }
-        logger.info('[handleSalesGroupMessage] attemptedParsing:', attemptedParsing, 'parsedWith:', parsedWith, 'orderData:', orderData);
         if (orderData && parsedWith) {
           logger.info(`Order parsed using ${parsedWith} parser`, {
             orderId: orderData.order_id,
@@ -735,6 +749,12 @@ class WhatsAppService {
 
   async handleDeliveryGroupMessage(message, contact, groupInfo) {
     try {
+      // Ignore old messages (older than 45 seconds)
+      const msgTimestampMs = message.timestamp > 1e12 ? message.timestamp : message.timestamp * 1000;
+      if (Date.now() - msgTimestampMs > 45000) {
+        logger.info('Ignoring old message (over 45s):', msgTimestampMs, message.body);
+        return;
+      }
       // Skip if message is from bot itself
       if (contact.isMe) return;
 

@@ -6,7 +6,7 @@ exports.up = function(knex) {
     table.string('customer_name', 255).notNullable();
     table.string('customer_phone', 20).notNullable();
     table.text('address').notNullable();
-    table.text('items').notNullable();
+    table.text('items').nullable();
     table.date('delivery_date');
     table.string('status', 50).notNullable().defaultTo('pending');
     table.string('delivery_person', 255);
