@@ -642,6 +642,7 @@ class WhatsAppService {
       let orderData = null;
       let attemptedParsing = false;
       let filteredOut = false;
+      let errorMessageSent = false; // Track if error message has been sent
       const likelyOrder = this.isLikelyOrder(messageText);
       logger.info('[handleSalesGroupMessage] isLikelyOrder:', likelyOrder);
       if (likelyOrder) {
@@ -690,6 +691,7 @@ class WhatsAppService {
               '2 Cakes, 1 Pizza\n' +
               'To be delivered on the 23rd.'
             );
+            errorMessageSent = true;
           }
         }
         if (orderData && parsedWith) {
@@ -720,18 +722,20 @@ class WhatsAppService {
             const hasValidPhone = OrderParser.extractPhoneNumbers(messageText).some(num => OrderParser.isValidPhoneNumber(num));
             const addressConfidence = OrderParser.calculatePatternScore(messageText, OrderParser.addressPatterns);
             if ((hasValidPhone && addressConfidence >= 2) && !messageBody.startsWith('/')) {
-              await this.client.sendMessage(groupInfo.group_id, 
-                '❌ Could not process order. Please ensure your message includes:\n' +
-                '• Customer name\n' +
-                '• Phone number\n' +
-                '• Delivery address\n' +
-                '• Order items\n\n' +
-                'Example format:\n' +
-                'John Doe\n' +
-                '08012345678\n' +
-                '123 Lekki Phase 1, Lagos\n' +
-                '2 Cakes, 1 Pizza'
-              );
+              if (!errorMessageSent) {
+                await this.client.sendMessage(groupInfo.group_id, 
+                  '❌ Could not process order. Please ensure your message includes:\n' +
+                  '• Customer name\n' +
+                  '• Phone number\n' +
+                  '• Delivery address\n' +
+                  '• Order items\n\n' +
+                  'Example format:\n' +
+                  'John Doe\n' +
+                  '08012345678\n' +
+                  '123 Lekki Phase 1, Lagos\n' +
+                  '2 Cakes, 1 Pizza'
+                );
+              }
             }
             logger.info('[handleSalesGroupMessage] Calling updateMetrics for failed parse', { attemptedParsing, filteredOut, parsedWith: null });
             await this.updateMetrics({success: false, responseTime: Date.now() - message.timestamp, attemptedParsing, filteredOut, parsedWith: null});
