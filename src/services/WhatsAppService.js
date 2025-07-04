@@ -874,8 +874,9 @@ class WhatsAppService {
 
   async markOrderAsDelivered(orderId, deliveryPerson, groupInfo) {
     try {
+      // Debug log for order lookup
+      logger.info(`[markOrderAsDelivered] Looking up order`, { orderId, businessId: groupInfo.business_id });
       const order = await OrderService.getOrderById(orderId, groupInfo.business_id);
-      
       if (!order) {
         await this.client.sendMessage(groupInfo.group_id, `❌ Order #${orderId} not found.`);
         return;
@@ -905,8 +906,9 @@ class WhatsAppService {
 
   async cancelOrder(orderId, cancelledBy, cancelledByNumber, groupInfo) {
     try {
+      // Debug log for order lookup
+      logger.info(`[cancelOrder] Looking up order`, { orderId, businessId: groupInfo.business_id });
       const order = await OrderService.getOrderById(orderId, groupInfo.business_id);
-      
       if (!order) {
         await this.client.sendMessage(groupInfo.group_id, `❌ Order #${orderId} not found.`);
         return;
@@ -1590,18 +1592,21 @@ For help, type /help in the delivery group.
 
   extractOrderIdFromMessage(messageText) {
     try {
-      // Look for order ID pattern: YYYYMMDD-XXX
-      const orderIdMatch = messageText.match(/(\d{8}-\d{3})/);
+      // Look for new order ID pattern: XXX-YYYYMMDD-XXX (where XXX is alphanumeric)
+      const orderIdMatch = messageText.match(/([A-Z0-9]{3}-\d{8}-\d{3})/);
       if (orderIdMatch) {
         return orderIdMatch[1];
       }
-      
+      // Fallback: old pattern (just in case)
+      const oldOrderIdMatch = messageText.match(/(\d{8}-\d{3})/);
+      if (oldOrderIdMatch) {
+        return oldOrderIdMatch[1];
+      }
       // Also look for "Order ID:" pattern
       const orderIdPattern = messageText.match(/Order ID:\s*([^\n]+)/);
       if (orderIdPattern) {
         return orderIdPattern[1].trim();
       }
-      
       return null;
     } catch (error) {
       logger.error('Error extracting order ID from message:', error);
@@ -1611,18 +1616,21 @@ For help, type /help in the delivery group.
 
   fallbackExtractOrderId(messageText) {
     try {
-      // Look for order ID pattern: YYYYMMDD-XXX
-      const orderIdMatch = messageText.match(/(\d{8}-\d{3})/);
+      // Look for new order ID pattern: XXX-YYYYMMDD-XXX (where XXX is alphanumeric)
+      const orderIdMatch = messageText.match(/([A-Z0-9]{3}-\d{8}-\d{3})/);
       if (orderIdMatch) {
         return orderIdMatch[1];
       }
-      
+      // Fallback: old pattern (just in case)
+      const oldOrderIdMatch = messageText.match(/(\d{8}-\d{3})/);
+      if (oldOrderIdMatch) {
+        return oldOrderIdMatch[1];
+      }
       // Also look for "Order ID:" pattern
       const orderIdPattern = messageText.match(/Order ID:\s*([^\n]+)/);
       if (orderIdPattern) {
         return orderIdPattern[1].trim();
       }
-      
       return null;
     } catch (error) {
       logger.error('Error in fallback order ID extraction:', error);
