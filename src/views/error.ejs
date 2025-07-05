@@ -1,25 +1,97 @@
-<%- include('header', { title: 'Error' }) %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - Novi</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/theme.css" rel="stylesheet">
+    <link rel="icon" href="/logo-icon copy.svg">
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%);
+            color: #1e293b;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+        .pastel-blue-bg {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+        .card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background: #10b981;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #059669;
+        }
+        .btn-outline-secondary {
+            background: transparent;
+            color: #64748b;
+            border: 1px solid #cbd5e1;
+        }
+        .btn-outline-secondary:hover {
+            background: #f1f5f9;
+            color: #475569;
+        }
+        .alert {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .alert-danger {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5 pastel-blue-bg">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h1 class="display-1 text-danger mb-4">Oops!</h1>
+                        <h4 class="mb-4">Something went wrong</h4>
+                        
+                        <div class="alert alert-danger" role="alert">
+                            <%= error || 'An unexpected error occurred. Please try again later.' %>
+                        </div>
 
-<div class="container mt-5 pastel-blue-bg">
-  <div class="row justify-content-center">
-    <div class="col-md-6">
-      <div class="card">
-        <div class="card-body text-center">
-          <h1 class="display-1 text-danger mb-4">Oops!</h1>
-          <h4 class="mb-4">Something went wrong</h4>
-          
-          <div class="alert alert-danger" role="alert">
-            <%= error || 'An unexpected error occurred. Please try again later.' %>
-          </div>
-
-          <div class="mt-4">
-            <a href="/" class="btn btn-primary">Go Home</a>
-            <button onclick="window.history.back()" class="btn btn-outline-secondary ms-2">Go Back</button>
-          </div>
+                        <div class="mt-4">
+                            <a href="/" class="btn btn-primary">Go Home</a>
+                            <button onclick="window.history.back()" class="btn btn-outline-secondary ms-2">Go Back</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
-</div>
-
-<%- include('footer') %> 
+</body>
+</html> 

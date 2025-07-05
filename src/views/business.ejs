@@ -1824,9 +1824,17 @@
                 
                 let items = [];
                 try {
-                    items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
+                    if (order.items && order.items.trim()) {
+                        items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
+                        // Ensure items is always an array
+                        if (!Array.isArray(items)) {
+                            items = [{ name: order.items, quantity: 1 }];
+                        }
+                    } else {
+                        items = []; // Empty array for null/empty items
+                    }
                 } catch (e) {
-                    items = [{ name: order.items, quantity: 1 }];
+                    items = [{ name: order.items || 'Unknown item', quantity: 1 }];
                 }
                 
                 content.innerHTML = `
@@ -1871,14 +1879,14 @@
                             <label class="order-detail-label">Order Items</label>
                             <div class="order-detail-value">
                                 <div class="items-list">
-                                    ${items.map(item => `
+                                    ${items && items.length > 0 ? items.map(item => `
                                         <div class="item-card">
                                             <div class="item-info">
                                                 <div class="item-name">${item.name || item}</div>
                                                 <div class="item-quantity">Qty: ${item.quantity || 1}</div>
                                             </div>
                                         </div>
-                                    `).join('')}
+                                    `).join('') : '<div class="item-card"><div class="item-info"><div class="item-name">No items listed</div></div></div>'}
                                 </div>
                             </div>
                         </div>

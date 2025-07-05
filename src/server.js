@@ -1828,9 +1828,9 @@ async function startServer() {
           `"${order.address || ''}"`,
           `"${order.items || ''}"`,
           `"${order.status || ''}"`,
-          `"${order.delivery_date || ''}"`,
+          `"${(order.delivery_date ? (order.delivery_date instanceof Date ? order.delivery_date.toISOString() : order.delivery_date) : '').replace(/"/g, '""')}"`,
           `"${order.notes || ''}"`,
-          `"${order.created_at || ''}"`
+          `"${order.created_at ? (order.created_at instanceof Date ? order.created_at.toISOString() : order.created_at) : ''}"`
         ];
         csvRows.push(row.join(','));
       });
@@ -1965,8 +1965,8 @@ async function startServer() {
           (order.business_name || 'N/A').substring(0, 15),
           order.status || 'N/A',
           (typeof order.items === 'string' ? order.items : JSON.stringify(order.items)).substring(0, 10) + '...',
-          order.delivery_date ? new Date(order.delivery_date).toLocaleDateString() : 'N/A',
-          order.created_at ? new Date(order.created_at).toLocaleDateString() : 'N/A'
+          order.delivery_date ? (order.delivery_date instanceof Date ? order.delivery_date.toLocaleDateString() : new Date(order.delivery_date).toLocaleDateString()) : 'N/A',
+          order.created_at ? (order.created_at instanceof Date ? order.created_at.toLocaleDateString() : new Date(order.created_at).toLocaleDateString()) : 'N/A'
         ];
         
         currentX = tableLeft + 5;
@@ -2000,15 +2000,16 @@ async function startServer() {
       doc.end();
     }
 
-    // Export functionality
+    // Export functionality with streaming for large datasets
     app.get('/api/export/orders', async (req, res) => {
       try {
-        const { userId, business_id, status, search, format = 'csv' } = req.query;
+        const { userId, business_id, status, search, format = 'csv', streaming = 'true' } = req.query;
         // Get userId from session if not provided in query
         const currentUserId = userId || (req.session && req.session.userId ? String(req.session.userId) : null);
         if (!currentUserId) {
           return res.status(400).json({ error: 'User ID is required' });
         }
+        
         // Get user's business IDs
         const userBusinesses = await db.query('groups')
           .select('business_id', 'business_name')
@@ -2018,6 +2019,7 @@ async function startServer() {
         if (businessIds.length === 0) {
           return res.status(400).json({ error: 'No businesses found for this user' });
         }
+        
         // Build query with DISTINCT to prevent duplication
         let query = db.query('orders as o')
           .join('groups as g', 'o.business_id', 'g.business_id')
@@ -2027,6 +2029,7 @@ async function startServer() {
             'o.*',
             'g.business_name'
           );
+        
         // Apply filters
         if (business_id) {
           query = query.where('o.business_id', business_id);
@@ -2040,7 +2043,85 @@ async function startServer() {
               .orWhere('o.order_id', 'like', `%${search}%`);
           });
         }
-        const orders = await query.orderBy('o.created_at', 'desc');
+        
+        // For streaming exports (CSV), use pagination
+        if (format === 'csv' && streaming === 'true') {
+          // Stream CSV directly to response
+          res.setHeader('Content-Type', 'text/csv');
+          res.setHeader('Content-Disposition', 'attachment; filename="orders.csv"');
+          
+          // Write CSV header
+          const headers = [
+            'Order ID',
+            'Business',
+            'Customer Name',
+            'Customer Phone',
+            'Address',
+            'Items',
+            'Status',
+            'Delivery Date',
+            'Notes',
+            'Created At'
+          ];
+          res.write(headers.join(',') + '\n');
+          
+          // Stream orders in batches
+          const batchSize = 100;
+          let offset = 0;
+          let hasMore = true;
+          
+          while (hasMore) {
+            const batch = await query
+              .orderBy('o.created_at', 'desc')
+              .limit(batchSize)
+              .offset(offset);
+            
+            if (batch.length === 0) {
+              hasMore = false;
+              break;
+            }
+            
+            // Process batch and write to response
+            batch.forEach(order => {
+              const row = [
+                `"${(order.order_id || '').replace(/"/g, '""')}"`,
+                `"${(order.business_name || '').replace(/"/g, '""')}"`,
+                `"${(order.customer_name || '').replace(/"/g, '""')}"`,
+                `"${(order.customer_phone || '').replace(/"/g, '""')}"`,
+                `"${(order.address || '').replace(/"/g, '""')}"`,
+                `"${(order.items || '').replace(/"/g, '""')}"`,
+                `"${(order.status || '').replace(/"/g, '""')}"`,
+                `"${(order.delivery_date ? (order.delivery_date instanceof Date ? order.delivery_date.toISOString() : order.delivery_date) : '').replace(/"/g, '""')}"`,
+                `"${(order.notes || '').replace(/"/g, '""')}"`,
+                `"${(order.created_at ? (order.created_at instanceof Date ? order.created_at.toISOString() : order.created_at) : '').replace(/"/g, '""')}"`
+              ];
+              res.write(row.join(',') + '\n');
+            });
+            
+            offset += batchSize;
+            
+            // Allow garbage collection between batches
+            if (global.gc) {
+              global.gc();
+            }
+            
+            // Small delay to prevent overwhelming the client
+            await new Promise(resolve => setTimeout(resolve, 10));
+          }
+          
+          res.end();
+          return;
+        }
+        
+        // For non-streaming exports (JSON, PDF) or when streaming is disabled
+        // Use a reasonable limit to prevent memory issues
+        const maxLimit = 10000; // Higher limit for non-streaming
+        const orders = await query.orderBy('o.created_at', 'desc').limit(maxLimit);
+        
+        if (orders.length === maxLimit) {
+          logger.warn(`Export reached limit of ${maxLimit} orders. Consider using streaming for larger exports.`);
+        }
+        
         if (format === 'json') {
           res.setHeader('Content-Type', 'application/json');
           res.setHeader('Content-Disposition', 'attachment; filename="orders.json"');
@@ -2054,7 +2135,7 @@ async function startServer() {
           }
           generateOrdersPDF(orders, res, businessName);
         } else {
-          // CSV format
+          // CSV format (non-streaming)
           const csv = generateOrdersCSV(orders);
           res.setHeader('Content-Type', 'text/csv');
           res.setHeader('Content-Disposition', 'attachment; filename="orders.csv"');
@@ -2123,10 +2204,10 @@ async function startServer() {
       }
     });
 
-    // Admin orders export functionality
+    // Admin orders export functionality with streaming
     app.get('/admin/api/export/orders', requireAdmin, async (req, res) => {
       try {
-        const { format = 'csv', status, business, search } = req.query;
+        const { format = 'csv', status, business, search, streaming = 'true' } = req.query;
         
         // Build query for orders with business details
         let query = db.query('orders as o')
@@ -2151,7 +2232,83 @@ async function startServer() {
           });
         }
 
-        const orders = await query.orderBy('o.created_at', 'desc');
+        // For streaming exports (CSV), use pagination
+        if (format === 'csv' && streaming === 'true') {
+          // Stream CSV directly to response
+          res.setHeader('Content-Type', 'text/csv');
+          res.setHeader('Content-Disposition', 'attachment; filename="admin-orders.csv"');
+          
+          // Write CSV header
+          const headers = [
+            'Order ID',
+            'Business',
+            'Customer Name',
+            'Customer Phone',
+            'Address',
+            'Items',
+            'Status',
+            'Delivery Date',
+            'Notes',
+            'Created At'
+          ];
+          res.write(headers.join(',') + '\n');
+          
+          // Stream orders in batches
+          const batchSize = 100;
+          let offset = 0;
+          let hasMore = true;
+          
+          while (hasMore) {
+            const batch = await query
+              .orderBy('o.created_at', 'desc')
+              .limit(batchSize)
+              .offset(offset);
+            
+            if (batch.length === 0) {
+              hasMore = false;
+              break;
+            }
+            
+            // Process batch and write to response
+            batch.forEach(order => {
+              const row = [
+                `"${(order.order_id || '').replace(/"/g, '""')}"`,
+                `"${(order.business_name || '').replace(/"/g, '""')}"`,
+                `"${(order.customer_name || '').replace(/"/g, '""')}"`,
+                `"${(order.customer_phone || '').replace(/"/g, '""')}"`,
+                `"${(order.address || '').replace(/"/g, '""')}"`,
+                `"${(order.items || '').replace(/"/g, '""')}"`,
+                `"${(order.status || '').replace(/"/g, '""')}"`,
+                `"${(order.delivery_date ? (order.delivery_date instanceof Date ? order.delivery_date.toISOString() : order.delivery_date) : '').replace(/"/g, '""')}"`,
+                `"${(order.notes || '').replace(/"/g, '""')}"`,
+                `"${(order.created_at ? (order.created_at instanceof Date ? order.created_at.toISOString() : order.created_at) : '').replace(/"/g, '""')}"`
+              ];
+              res.write(row.join(',') + '\n');
+            });
+            
+            offset += batchSize;
+            
+            // Allow garbage collection between batches
+            if (global.gc) {
+              global.gc();
+            }
+            
+            // Small delay to prevent overwhelming the client
+            await new Promise(resolve => setTimeout(resolve, 10));
+          }
+          
+          res.end();
+          return;
+        }
+        
+        // For non-streaming exports (JSON, PDF) or when streaming is disabled
+        // Use a reasonable limit to prevent memory issues
+        const maxLimit = 10000; // Higher limit for non-streaming
+        const orders = await query.orderBy('o.created_at', 'desc').limit(maxLimit);
+        
+        if (orders.length === maxLimit) {
+          logger.warn(`Admin export reached limit of ${maxLimit} orders. Consider using streaming for larger exports.`);
+        }
 
         if (format === 'json') {
           res.setHeader('Content-Type', 'application/json');
@@ -2481,7 +2638,7 @@ function generateBusinessesCSV(businesses) {
       business.owner_email || '',
       business.is_active ? 'Active' : 'Inactive',
       business.total_orders || 0,
-      business.created_at ? new Date(business.created_at).toLocaleString() : ''
+      business.created_at ? (business.created_at instanceof Date ? business.created_at.toLocaleString() : new Date(business.created_at).toLocaleString()) : ''
     ];
     csvRows.push(row.join(','));
   });
@@ -2618,7 +2775,7 @@ function generateBusinessesPDF(businesses, res) {
       (business.owner_email || 'N/A').substring(0, 20),
       business.is_active ? 'Active' : 'Inactive',
       business.total_orders || 0,
-      business.created_at ? new Date(business.created_at).toLocaleDateString() : 'N/A'
+      business.created_at ? (business.created_at instanceof Date ? business.created_at.toLocaleDateString() : new Date(business.created_at).toLocaleDateString()) : 'N/A'
     ];
     
     currentX = tableLeft + 5;
