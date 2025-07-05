@@ -141,7 +141,8 @@
                             </button>
                         </div>
                         <div class="card-content">
-                            <% if (businessGroups && businessGroups.length > 0) { %>
+                            <% const filteredGroups = businessGroups ? businessGroups.filter(g => g.group_type !== 'main') : []; %>
+                            <% if (filteredGroups && filteredGroups.length > 0) { %>
                                 <div class="table-container">
                                     <table class="data-table">
                                         <thead>
@@ -154,7 +155,7 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <% businessGroups.forEach(group => { %>
+                                            <% filteredGroups.forEach(group => { %>
                                                 <tr>
                                                     <td>
                                                         <div class="group-info">

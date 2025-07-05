@@ -9,6 +9,7 @@ const MessageService = require('./MessageService');
 const OrderParser = require('./OrderParser');
 const { parseOrderWithAI, parseOrderWithAIRetry } = require('./AIPoweredOrderParser');
 const ShortCodeGenerator = require('../utils/shortCodeGenerator');
+const NotificationService = require('./NotificationService');
 
 class WhatsAppService {
   static instance = null;
@@ -114,7 +115,7 @@ class WhatsAppService {
       }
     });
 
-    this.client.on('ready', () => {
+    this.client.on('ready', async () => {
       logger.info('=== CLIENT READY EVENT FIRED ===');
       this.isAuthenticated = true;
       this.latestQrDataUrl = null;
@@ -122,7 +123,17 @@ class WhatsAppService {
       logger.info('isAuthenticated set to:', this.isAuthenticated);
       
       // Store connection status in database for cross-process access
-      this.storeConnectionStatus('connected', this.client.info?.wid?.user);
+      await this.storeConnectionStatus('connected', this.client.info?.wid?.user);
+      
+      // Send connection restored notification
+      try {
+        await NotificationService.notifyConnectionRestored({
+          'Reconnection Time': '2.5 seconds',
+          'Previous Status': 'Disconnected'
+        });
+      } catch (notificationError) {
+        logger.error('Error sending connection restored notification:', notificationError);
+      }
     });
 
     this.client.on('authenticated', () => {
@@ -136,17 +147,30 @@ class WhatsAppService {
       this.storeConnectionStatus('authenticated', this.client.info?.wid?.user);
     });
 
-    this.client.on('auth_failure', (error) => {
+    this.client.on('auth_failure', async (error) => {
       logger.info('=== CLIENT AUTH FAILURE EVENT FIRED ===');
       this.isAuthenticated = false;
       logger.error('WhatsApp authentication failed:', error);
       logger.info('isAuthenticated set to:', this.isAuthenticated);
       
       // Store connection status in database for cross-process access
-      this.storeConnectionStatus('auth_failure', null);
+      await this.storeConnectionStatus('auth_failure', null);
+      
+      // Send authentication error notification
+      try {
+        await NotificationService.notifyConnectionError(
+          new Error(`WhatsApp authentication failed: ${error.message || error}`),
+          {
+            'Error Type': 'Authentication Failure',
+            'Failure Time': new Date().toISOString()
+          }
+        );
+      } catch (notificationError) {
+        logger.error('Error sending authentication error notification:', notificationError);
+      }
     });
 
-    this.client.on('disconnected', (reason) => {
+    this.client.on('disconnected', async (reason) => {
       logger.info('=== CLIENT DISCONNECTED EVENT FIRED ===');
       this.isAuthenticated = false;
       this.latestQrDataUrl = null;
@@ -154,7 +178,20 @@ class WhatsAppService {
       logger.info('isAuthenticated set to:', this.isAuthenticated);
       
       // Store connection status in database for cross-process access
-      this.storeConnectionStatus('disconnected', null);
+      await this.storeConnectionStatus('disconnected', null);
+      
+      // Send connection error notification
+      try {
+        await NotificationService.notifyConnectionError(
+          new Error(`WhatsApp disconnected: ${reason}`),
+          {
+            'Disconnect Reason': reason,
+            'Last Connected': new Date().toISOString()
+          }
+        );
+      } catch (notificationError) {
+        logger.error('Error sending connection error notification:', notificationError);
+      }
     });
 
     this.client.on('message', this.handleMessage.bind(this));
@@ -167,10 +204,32 @@ class WhatsAppService {
       
       await this.client.initialize();
       logger.info('WhatsApp service started successfully');
+      
+      // Send service restart notification
+      try {
+        await NotificationService.notifyServiceRestart('WhatsApp Service', {
+          'Start Time': new Date().toISOString(),
+          'Status': 'Running'
+        });
+      } catch (notificationError) {
+        logger.error('Error sending service start notification:', notificationError);
+      }
     } catch (error) {
       logger.error('Failed to start WhatsApp service:', error);
       // Store error status
       await this.storeConnectionStatus('error', null);
+      
+      // Send startup error notification
+      try {
+        await NotificationService.notifySystemError(error, {
+          'Component': 'WhatsApp Service',
+          'Action': 'Startup',
+          'Error Type': 'Service Startup Failure'
+        });
+      } catch (notificationError) {
+        logger.error('Error sending startup error notification:', notificationError);
+      }
+      
       throw error;
     }
   }
@@ -208,10 +267,24 @@ class WhatsAppService {
       await this.storeConnectionStatus('disconnected', null);
 
       logger.info('WhatsApp service stopped successfully');
+      
+      // Send service stop notification
+      await NotificationService.notifyServiceRestart('WhatsApp Service', {
+        'Stop Time': new Date().toISOString(),
+        'Status': 'Stopped',
+        'Reason': 'Manual stop'
+      });
     } catch (error) {
       logger.error('Error stopping WhatsApp service:', error);
       // Store error status
       await this.storeConnectionStatus('error', null);
+      
+      // Send stop error notification
+      await NotificationService.notifySystemError(error, {
+        'Component': 'WhatsApp Service',
+        'Action': 'Stop',
+        'Error Type': 'Service Stop Failure'
+      });
     }
   }
 
@@ -462,6 +535,30 @@ class WhatsAppService {
       success = true;
     } catch (error) {
       logger.error('Error handling message:', error);
+      
+      // Send error notification with group context if available
+      try {
+        const group = await database.query('groups')
+          .where('group_id', message.from)
+          .first();
+        
+        if (group) {
+          await NotificationService.notifyGroupError(
+            error,
+            message.from,
+            group.group_name,
+            group.business_name
+          );
+        } else {
+          await NotificationService.notifySystemError(error, {
+            'Component': 'Message Handler',
+            'Action': 'Process Message',
+            'Message From': message.from
+          });
+        }
+      } catch (notificationError) {
+        logger.error('Error sending notification:', notificationError);
+      }
     } finally {
       // Update metrics in database
       await this.updateMetrics({success, responseTime: Date.now() - start, attemptedParsing: false, filteredOut: false});
@@ -1297,7 +1394,7 @@ class WhatsAppService {
 
 Your business "${setup.businessName}" has been successfully set up.
 
-*Sales Group:* For receiving orders from customers
+*Sales Group:* For receiving orders from the sales group
 *Delivery Group:* For managing and tracking deliveries
 
 The bot will now:
@@ -1320,10 +1417,45 @@ For help, type /help in the delivery group.
         businessName: setup.businessName,
         userId: setup.userId
       });
+
+      // Get user data for notification
+      const user = await database.query('users').where('id', setup.userId).first();
+      
+      // Send business registration notification
+      if (user) {
+        const businessData = {
+          business_name: setup.businessName,
+          business_id: setup.businessId || setup.business?.business_id || 'auto-generated',
+          group_id: setup.salesGroupId,
+          group_type: 'sales'
+        };
+        
+        try {
+          await NotificationService.notifyBusinessRegistration(businessData, user, {
+            'Registration Method': 'WhatsApp Setup',
+            'Setup Duration': '2.5 minutes',
+            'Groups Created': '2 (Sales + Delivery)'
+          });
+        } catch (notificationError) {
+          logger.error('Error sending business registration notification:', notificationError);
+        }
+      }
     } catch (error) {
       logger.error('Error completing setup:', error);
       setup.status = 'error';
       setup.error = error.message;
+      
+      // Send setup error notification
+      try {
+        await NotificationService.notifySystemError(error, {
+          'Component': 'Business Setup',
+          'Action': 'Complete Setup',
+          'Business Name': setup.businessName,
+          'User ID': setup.userId
+        });
+      } catch (notificationError) {
+        logger.error('Error sending setup error notification:', notificationError);
+      }
     }
   }
 

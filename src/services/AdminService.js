@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const ShortCodeGenerator = require('../utils/shortCodeGenerator');
 const WhatsAppService = require('./WhatsAppService');
 const { v4: uuidv4 } = require('uuid');
+const NotificationService = require('./NotificationService');
 
 class AdminService {
   static async createAdmin(username, email, password, role = 'admin') {
@@ -435,9 +436,55 @@ class AdminService {
     }
   }
 
-  static async deleteBusiness(businessId) {
+  static async deleteBusiness(businessId, reason = null) {
     try {
+      // Get business details before deletion
+      const business = await database.query('groups')
+        .where('business_id', businessId)
+        .first();
+      
+      if (!business) {
+        throw new Error('Business not found');
+      }
+
+      // Get user details
+      const user = await database.query('users')
+        .where('id', business.user_id)
+        .first();
+
+      // Get order count
+      const orderCount = await database.query('orders')
+        .where('business_id', businessId)
+        .count('* as count')
+        .first();
+
+      // Delete the business
       await database.query('groups').where('business_id', businessId).del();
+
+      // Send business deletion notification
+      if (user) {
+        const businessData = {
+          business_name: business.business_name,
+          business_id: businessId,
+          group_id: business.group_id
+        };
+        
+        const businessDeletionReason = reason || 'Business closed by admin';
+        try {
+          await NotificationService.notifyBusinessDeletion(
+            businessData,
+            user,
+            'Admin',
+            businessDeletionReason,
+            {
+              'Deletion Method': 'Admin Dashboard',
+              'Orders Affected': parseInt(orderCount.count)
+            }
+          );
+        } catch (notificationError) {
+          logger.error('Error sending business deletion notification:', notificationError);
+        }
+      }
     } catch (error) {
       logger.error('Error deleting business:', error);
       throw error;
@@ -495,7 +542,7 @@ class AdminService {
     }
   }
 
-  static async deleteUser(userId) {
+  static async deleteUser(userId, reason = null) {
     try {
       // Get user details for confirmation
       const user = await this.getUserById(userId);
@@ -537,6 +584,19 @@ class AdminService {
         // 3. Delete user
         await database.query('users').where('id', userId).del();
 
+        // Send user deletion notification
+        try {
+          const deletionReason = reason || 'Account terminated due to admin action';
+          await NotificationService.notifyUserDeletion(user, 'Admin', deletionReason, {
+            'Deletion Method': 'Admin Dashboard',
+            'Businesses Affected': userBusinesses.length,
+            'Orders Affected': totalUserOrders,
+            'Deletion Type': 'Bulk Delete'
+          });
+        } catch (notificationError) {
+          logger.error('Error sending user deletion notification:', notificationError);
+        }
+
         return {
           success: true,
           message: `User "${user.full_name}" deleted successfully along with ${userBusinesses.length} business(es) and ${totalUserOrders} order(s).`,
@@ -546,7 +606,20 @@ class AdminService {
         };
       } else {
         // User has no data - just delete user
-      await database.query('users').where('id', userId).del();
+        await database.query('users').where('id', userId).del();
+        
+        // Send user deletion notification
+        try {
+          const deletionReason = reason || 'Account terminated due to admin action';
+          await NotificationService.notifyUserDeletion(user, 'Admin', deletionReason, {
+            'Deletion Method': 'Admin Dashboard',
+            'Businesses Affected': 0,
+            'Orders Affected': 0,
+            'Deletion Type': 'Single Delete'
+          });
+        } catch (notificationError) {
+          logger.error('Error sending user deletion notification:', notificationError);
+        }
         
         return {
           success: true,
@@ -562,7 +635,7 @@ class AdminService {
     }
   }
 
-  static async toggleUserActive(userId) {
+  static async toggleUserActive(userId, reason = null) {
     try {
       const user = await database.query('users').where('id', userId).first();
       if (!user) {
@@ -571,6 +644,25 @@ class AdminService {
       
       const newStatus = !user.is_active;
       await database.query('users').where('id', userId).update({ is_active: newStatus });
+      
+      // Send user activation/deactivation notification
+      try {
+        if (newStatus) {
+          await NotificationService.notifyUserActivation(user, 'Admin', {
+            'Activation Method': 'Admin Dashboard',
+            'Previous Status': 'Inactive'
+          });
+        } else {
+          const deactivationReason = reason || 'Account suspended by admin';
+          await NotificationService.notifyUserDeactivation(user, 'Admin', deactivationReason, {
+            'Deactivation Method': 'Admin Dashboard',
+            'Suspension Duration': 'Indefinite'
+          });
+        }
+      } catch (notificationError) {
+        logger.error('Error sending user activation/deactivation notification:', notificationError);
+      }
+      
       return { success: true, is_active: newStatus };
     } catch (error) {
       logger.error('Error toggling user active status:', error);

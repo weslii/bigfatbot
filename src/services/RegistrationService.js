@@ -2,6 +2,7 @@ const logger = require('../utils/logger');
 const database = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
 const ShortCodeGenerator = require('../utils/shortCodeGenerator');
+const NotificationService = require('./NotificationService');
 
 class RegistrationService {
   static async registerUser(name, email, phoneNumber, password) {
@@ -29,9 +30,32 @@ class RegistrationService {
         })
         .returning('*');
 
+      // Send user registration notification
+      try {
+        await NotificationService.notifyUserRegistration(newUser, {
+          'Registration Method': 'Web Dashboard',
+          'Registration Time': new Date().toISOString()
+        });
+      } catch (notificationError) {
+        logger.error('Error sending user registration notification:', notificationError);
+      }
+
       return newUser;
     } catch (error) {
       logger.error('Error registering user:', error);
+      
+      // Send registration error notification
+      try {
+        await NotificationService.notifySystemError(error, {
+          'Component': 'Registration Service',
+          'Action': 'User Registration',
+          'Email': email,
+          'Name': name
+        });
+      } catch (notificationError) {
+        logger.error('Error sending registration error notification:', notificationError);
+      }
+      
       throw error;
     }
   }
@@ -131,6 +155,29 @@ class RegistrationService {
           .returning('*');
 
         logger.info('Business created successfully', { businessId, userId, setupIdentifier });
+        
+        // Get user data for notification
+        const user = await database.query('users').where('id', userId).first();
+        
+        // Send business creation notification
+        if (user) {
+          const businessData = {
+            business_name: businessName,
+            business_id: businessId,
+            group_id: `default_${businessId}`,
+            group_type: 'main'
+          };
+          
+                  try {
+          await NotificationService.notifyBusinessRegistration(businessData, user, {
+            'Registration Method': 'Web Dashboard',
+            'Setup Status': 'Pending WhatsApp Setup'
+          });
+        } catch (notificationError) {
+          logger.error('Error sending business registration notification:', notificationError);
+        }
+        }
+        
         return {
           businessId,
           setupIdentifier: columnExists.rows.length > 0 ? setupIdentifier : businessId
