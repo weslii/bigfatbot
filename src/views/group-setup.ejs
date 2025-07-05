@@ -310,6 +310,81 @@
             color: #fff;
             box-shadow: 0 2px 8px rgba(16,185,129,0.13);
         }
+        .copy-btn.copied {
+            background: #10b981 !important;
+            color: #fff !important;
+        }
+        .group-types {
+            display: flex;
+            gap: 1rem;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+        .group-type {
+            flex: 1;
+            min-width: 200px;
+            background: rgba(59, 130, 246, 0.05);
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px solid rgba(59, 130, 246, 0.1);
+        }
+        .group-type-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        .group-type-badge.sales {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+        .group-type-badge.delivery {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+        .group-type p {
+            margin: 0;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        .admin-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-top: 1rem;
+            color: #d97706;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .admin-warning i {
+            font-size: 1rem;
+        }
+        .admin-badge {
+  display: inline-block;
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  animation: pulse-admin 2s infinite;
+}
+        @keyframes pulse-admin {
+  0%, 100% {
+    background: rgba(245, 158, 11, 0.1);
+  }
+  50% {
+    background: rgba(245, 158, 11, 0.15);
+  }
+}
         .info-card {
             display: flex;
             align-items: flex-start;
@@ -425,28 +500,71 @@
             }
         }
         @media (max-width: 500px) {
+            .header-content {
+                padding: 0.75rem 1rem;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+            .logo {
+                gap: 0.5rem;
+            }
+            .logo-text img {
+                height: 40px !important;
+            }
+            .nav {
+                gap: 0.75rem;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .nav-link {
+                font-size: 0.8rem;
+                padding: 0.4rem 0.6rem;
+            }
+            .theme-toggle {
+                padding: 0.4rem;
+                font-size: 0.8rem;
+            }
             .setup-section {
-                padding: 0.5rem 0 0.5rem 0;
+                padding: 1rem 1rem;
             }
             .setup-cards-wrapper {
-                max-width: 100vw;
+                width: 100%;
+                max-width: 100%;
             }
             .setup-cards {
-                max-width: 100vw;
+                width: 100%;
+                max-width: 100%;
+                gap: 1rem;
+                padding: 0;
             }
             .step-card, .info-card, .dashboard-card, .success-banner {
                 flex-direction: column;
                 align-items: stretch;
                 gap: 0.7rem;
-                padding: 0.7rem 0.3rem 0.7rem 0.3rem;
-                max-width: 100vw;
+                padding: 1rem;
+                width: 100%;
+                max-width: 100%;
+                margin: 0;
+                box-sizing: border-box;
             }
             .step-badge, .info-badge {
                 margin-bottom: 0.5rem;
                 margin-top: 0;
             }
             .copy-card {
-                padding: 0.18rem 0.2rem 0.18rem 0.5rem;
+                padding: 0.5rem 0.75rem;
+            }
+            .group-types {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .group-type {
+                min-width: auto;
+            }
+            .admin-warning {
+                flex-direction: column;
+                text-align: center;
+                gap: 0.25rem;
             }
         }
     </style>
@@ -488,13 +606,27 @@
                 <div class="step-card">
                     <div class="step-badge">1</div>
                     <div class="step-content">
-                        <div class="step-title">Add the Bot to Your Group</div>
-                        <div class="step-desc">Add this WhatsApp number to your group as an admin:</div>
+                        <div class="step-title">Add the Bot to BOTH of Your Groups as <span class="admin-badge">ADMIN</span></div>
+                        <div class="step-desc">You need <strong>two WhatsApp groups</strong> for your business:</div>
+                        <div class="group-types">
+                            <div class="group-type">
+                                <span class="group-type-badge sales">🛍️ Sales Group</span>
+                                <p>Where your incoming orders are sent</p>
+                            </div>
+                            <div class="group-type">
+                                <span class="group-type-badge delivery">🚚 Delivery Group</span>
+                                <p>Where delivery & operations staff manage order fulfillment and logistics</p>
+                            </div>
+                        </div>
+                        <div class="step-desc">Add this WhatsApp number to <strong>BOTH groups</strong> as an <span class="admin-badge">ADMIN</span>:</div>
                         <div class="copy-card">
                             <span id="botNumber" class="copy-value">Loading...</span>
-                            <button class="copy-btn" onclick="copyBotNumber()"><i class="far fa-copy"></i> Copy</button>
+                            <button class="copy-btn" onclick="copyBotNumber(event)"><i class="far fa-copy"></i> Copy</button>
                         </div>
-                        <small class="step-note">Give the bot admin permissions for full functionality.</small>
+                        <div class="admin-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>IMPORTANT:</strong> The bot MUST be added as an <span class="admin-badge">ADMIN</span> in both groups for full functionality.
+                        </div>
                     </div>
                 </div>
                 <!-- Step 2 Card -->
@@ -505,7 +637,7 @@
                         <div class="step-desc">In your WhatsApp group, type this exact command:</div>
                         <div class="copy-card">
                             <span class="copy-value user-select-all">/setup <%= business.setup_identifier || business.business_id %></span>
-                            <button class="copy-btn" onclick="copySetupCommand()"><i class="far fa-copy"></i> Copy</button>
+                            <button class="copy-btn" onclick="copySetupCommand(event)"><i class="far fa-copy"></i> Copy</button>
                         </div>
                     </div>
                 </div>
@@ -527,7 +659,7 @@
                     <div class="step-badge">4</div>
                     <div class="step-content">
                         <div class="step-title">Repeat for Second Group</div>
-                        <div class="step-desc">To add your other group (sales or delivery), repeat these steps in your other WhatsApp group.</div>
+                        <div class="step-desc">Now repeat steps 2-3 in your other WhatsApp group. The bot will automatically determine which group is for sales and which is for delivery.</div>
                     </div>
                 </div>
                 <!-- Important Notes Card -->
@@ -536,8 +668,9 @@
                     <div class="info-content">
                         <div class="info-title">Important Notes</div>
                         <ul class="info-list">
-                            <li>Make sure to add the bot to both groups if you want to use both sales and delivery features.</li>
-                            <li>The bot will automatically determine which group is for sales and which is for delivery.</li>
+                            <li><strong>Admin Requirement:</strong> The bot MUST be added as an <span class="admin-badge">ADMIN</span> in both groups for full functionality.</li>
+                            <li><strong>Two Groups Required:</strong> You need both a sales group (for incoming orders) and a delivery group (for operations staff).</li>
+                            <li><strong>Automatic Detection:</strong> The bot will automatically determine which group is for sales and which is for delivery.</li>
                             <li>You can always add more groups later through the dashboard.</li>
                         </ul>
                     </div>
@@ -568,28 +701,87 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('botNumber').textContent = 'Error loading';
   }
 });
-function copyBotNumber() {
+function copyBotNumber(event) {
     const botNumber = document.querySelector('#botNumber').textContent;
     if (botNumber === 'Loading...' || botNumber === 'Not available' || botNumber === 'Error loading') {
         alert('Bot number not available yet. Please try again in a moment.');
         return;
     }
+    
+    // Fallback for older browsers
+    if (!navigator.clipboard) {
+        const textArea = document.createElement('textarea');
+        textArea.value = botNumber;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            const button = event.target.closest('.copy-btn');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            button.classList.add('copied');
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.classList.remove('copied');
+            }, 2000);
+        } catch (err) {
+            alert('Failed to copy. Please try again.');
+        }
+        document.body.removeChild(textArea);
+        return;
+    }
+    
     navigator.clipboard.writeText(botNumber).then(() => {
-        const button = event.target;
-        button.textContent = 'Copied!';
+        const button = event.target.closest('.copy-btn');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        button.classList.add('copied');
         setTimeout(() => {
-            button.textContent = 'Copy';
+            button.innerHTML = originalText;
+            button.classList.remove('copied');
         }, 2000);
+    }).catch(() => {
+        alert('Failed to copy. Please try again.');
     });
 }
-function copySetupCommand() {
-            const command = document.querySelector('.user-select-all').textContent;
+
+function copySetupCommand(event) {
+    const command = document.querySelector('.user-select-all').textContent;
+    
+    // Fallback for older browsers
+    if (!navigator.clipboard) {
+        const textArea = document.createElement('textarea');
+        textArea.value = command;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            const button = event.target.closest('.copy-btn');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            button.classList.add('copied');
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.classList.remove('copied');
+            }, 2000);
+        } catch (err) {
+            alert('Failed to copy. Please try again.');
+        }
+        document.body.removeChild(textArea);
+        return;
+    }
+    
     navigator.clipboard.writeText(command).then(() => {
-        const button = event.target;
-        button.textContent = 'Copied!';
+        const button = event.target.closest('.copy-btn');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        button.classList.add('copied');
         setTimeout(() => {
-            button.textContent = 'Copy';
+            button.innerHTML = originalText;
+            button.classList.remove('copied');
         }, 2000);
+    }).catch(() => {
+        alert('Failed to copy. Please try again.');
     });
 }
 </script>

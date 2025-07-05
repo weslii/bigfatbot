@@ -1584,12 +1584,22 @@ For help, type /help in the delivery group.
       const connectionStatus = await this.getConnectionStatus();
       logger.info('Database connection status:', connectionStatus);
       
+      // Format phone number to remove 234 prefix
+      const formatPhoneNumber = (phoneNumber) => {
+        if (!phoneNumber) return null;
+        // Remove 234 prefix and add 0
+        if (phoneNumber.startsWith('234')) {
+          return '0' + phoneNumber.substring(3);
+        }
+        return phoneNumber;
+      };
+      
       // Map database status to bot info
       switch (connectionStatus.status) {
         case 'connected':
         case 'authenticated':
           return {
-            number: connectionStatus.phoneNumber || 'Connected',
+            number: formatPhoneNumber(connectionStatus.phoneNumber) || 'Connected',
             name: 'WhatsApp Bot',
             status: 'connected'
           };
