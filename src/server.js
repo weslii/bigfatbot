@@ -14,6 +14,7 @@ const cacheService = require('./services/CacheService');
 const memoryMonitor = require('./utils/memoryMonitor');
 const PDFDocument = require('pdfkit');
 const { generateOrdersCSV, generateOrdersPDF, generateBusinessesCSV, generateBusinessesPDF } = require('./utils/exportHelpers');
+const { requireAdmin, requireSuperAdmin } = require('./middleware/auth');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -140,58 +141,7 @@ async function initializeSession() {
   }
 }
 
-// Admin authentication middleware
-const requireAdmin = async (req, res, next) => {
-  // console.log('requireAdmin middleware - Session:', req.session);
-  // console.log('requireAdmin middleware - Session ID:', req.sessionID);
-  // console.log('requireAdmin middleware - Session adminId:', req.session ? req.session.adminId : undefined);
-  // console.log('requireAdmin middleware - Session isAuthenticated:', req.session ? req.session.isAuthenticated : undefined);
-  
-  if (!req.session || !req.session.adminId || !req.session.isAuthenticated) {
-    // console.log('requireAdmin middleware - Authentication failed');
-    return res.redirect('/admin/login');
-  }
-  
-  try {
-    const admin = await AdminService.getAdminById(req.session.adminId);
-    // console.log('requireAdmin middleware - Admin lookup result:', admin);
-    
-    if (!admin || !admin.is_active) {
-      // console.log('requireAdmin middleware - Admin not found or inactive');
-      req.session.destroy((err) => {
-        if (err) {
-          console.error('Error destroying session:', err);
-        }
-        res.redirect('/admin/login');
-      });
-      return;
-    }
-    
-    req.admin = admin;
-    next();
-  } catch (error) {
-    logger.error('Admin auth error:', error);
-    res.redirect('/admin/login');
-  }
-};
 
-// Superadmin authentication middleware
-const requireSuperAdmin = async (req, res, next) => {
-  if (!req.session || !req.session.adminId || !req.session.isAuthenticated) {
-    return res.status(403).json({ error: 'Superadmin access required' });
-  }
-  try {
-    const admin = await AdminService.getAdminById(req.session.adminId);
-    if (!admin || !admin.is_active || admin.role !== 'super_admin') {
-      return res.status(403).json({ error: 'Superadmin access required' });
-    }
-    req.admin = admin;
-    next();
-  } catch (error) {
-    logger.error('Superadmin auth error:', error);
-    res.status(403).json({ error: 'Superadmin access required' });
-  }
-};
 
 // Health check endpoint
 app.get('/health', async (req, res) => {
