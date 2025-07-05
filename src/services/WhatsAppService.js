@@ -156,17 +156,15 @@ class WhatsAppService {
       // Store connection status in database for cross-process access
       await this.storeConnectionStatus('auth_failure', null);
       
-      // Send authentication error notification
+      // Start continuous authentication error notifications
       try {
-        await NotificationService.notifyConnectionError(
-          new Error(`WhatsApp authentication failed: ${error.message || error}`),
-          {
-            'Error Type': 'Authentication Failure',
-            'Failure Time': new Date().toISOString()
-          }
-        );
+        const authError = new Error(`WhatsApp authentication failed: ${error.message || error}`);
+        NotificationService.startContinuousErrorNotification('connection', authError, {
+          'Error Type': 'Authentication Failure',
+          'Failure Time': new Date().toISOString()
+        });
       } catch (notificationError) {
-        logger.error('Error sending authentication error notification:', notificationError);
+        logger.error('Error starting continuous authentication error notification:', notificationError);
       }
     });
 
@@ -180,17 +178,15 @@ class WhatsAppService {
       // Store connection status in database for cross-process access
       await this.storeConnectionStatus('disconnected', null);
       
-      // Send connection error notification
+      // Start continuous connection error notifications
       try {
-        await NotificationService.notifyConnectionError(
-          new Error(`WhatsApp disconnected: ${reason}`),
-          {
-            'Disconnect Reason': reason,
-            'Last Connected': new Date().toISOString()
-          }
-        );
+        const disconnectError = new Error(`WhatsApp disconnected: ${reason}`);
+        NotificationService.startContinuousErrorNotification('connection', disconnectError, {
+          'Disconnect Reason': reason,
+          'Last Connected': new Date().toISOString()
+        });
       } catch (notificationError) {
-        logger.error('Error sending connection error notification:', notificationError);
+        logger.error('Error starting continuous connection error notification:', notificationError);
       }
     });
 
@@ -219,15 +215,15 @@ class WhatsAppService {
       // Store error status
       await this.storeConnectionStatus('error', null);
       
-      // Send startup error notification
+      // Start continuous service error notifications
       try {
-        await NotificationService.notifySystemError(error, {
+        NotificationService.startContinuousErrorNotification('service', error, {
           'Component': 'WhatsApp Service',
           'Action': 'Startup',
           'Error Type': 'Service Startup Failure'
         });
       } catch (notificationError) {
-        logger.error('Error sending startup error notification:', notificationError);
+        logger.error('Error starting continuous service error notification:', notificationError);
       }
       
       throw error;
@@ -268,6 +264,9 @@ class WhatsAppService {
 
       logger.info('WhatsApp service stopped successfully');
       
+      // Stop all continuous error notifications when service is properly stopped
+      NotificationService.stopAllContinuousErrorNotifications();
+      
       // Send service stop notification
       await NotificationService.notifyServiceRestart('WhatsApp Service', {
         'Stop Time': new Date().toISOString(),
@@ -279,12 +278,16 @@ class WhatsAppService {
       // Store error status
       await this.storeConnectionStatus('error', null);
       
-      // Send stop error notification
-      await NotificationService.notifySystemError(error, {
-        'Component': 'WhatsApp Service',
-        'Action': 'Stop',
-        'Error Type': 'Service Stop Failure'
-      });
+      // Start continuous service error notifications
+      try {
+        NotificationService.startContinuousErrorNotification('service', error, {
+          'Component': 'WhatsApp Service',
+          'Action': 'Stop',
+          'Error Type': 'Service Stop Failure'
+        });
+      } catch (notificationError) {
+        logger.error('Error starting continuous service error notification:', notificationError);
+      }
     }
   }
 
@@ -536,13 +539,15 @@ class WhatsAppService {
     } catch (error) {
       logger.error('Error handling message:', error);
       
-      // Send error notification with group context if available
+      // Start continuous error notification with group context if available
       try {
         const group = await database.query('groups')
           .where('group_id', message.from)
           .first();
         
         if (group) {
+          // For group errors, we'll use a different approach - send immediate notification
+          // but don't start continuous notifications for individual message errors
           await NotificationService.notifyGroupError(
             error,
             message.from,
@@ -550,14 +555,15 @@ class WhatsAppService {
             group.business_name
           );
         } else {
-          await NotificationService.notifySystemError(error, {
+          // For system-level message handling errors, start continuous notifications
+          NotificationService.startContinuousErrorNotification('service', error, {
             'Component': 'Message Handler',
             'Action': 'Process Message',
             'Message From': message.from
           });
         }
       } catch (notificationError) {
-        logger.error('Error sending notification:', notificationError);
+        logger.error('Error starting continuous error notification:', notificationError);
       }
     } finally {
       // Update metrics in database
@@ -1445,16 +1451,16 @@ For help, type /help in the delivery group.
       setup.status = 'error';
       setup.error = error.message;
       
-      // Send setup error notification
+      // Start continuous setup error notifications
       try {
-        await NotificationService.notifySystemError(error, {
+        NotificationService.startContinuousErrorNotification('service', error, {
           'Component': 'Business Setup',
           'Action': 'Complete Setup',
           'Business Name': setup.businessName,
           'User ID': setup.userId
         });
       } catch (notificationError) {
-        logger.error('Error sending setup error notification:', notificationError);
+        logger.error('Error starting continuous setup error notification:', notificationError);
       }
     }
   }

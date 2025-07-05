@@ -20,6 +20,10 @@ class NotificationService {
   constructor() {
     this.emailTransporter = null;
     this.initializeEmailTransporter();
+    
+    // Timer management for continuous error notifications
+    this.activeErrorTimers = new Map(); // Track active timers by error type
+    this.errorNotificationInterval = 20000; // 20 seconds
   }
 
   initializeEmailTransporter() {
@@ -210,6 +214,9 @@ class NotificationService {
 
   // Convenience methods for different success types
   async notifyConnectionRestored(additionalInfo = {}) {
+    // Stop any active connection error timers when connection is restored
+    this.stopContinuousErrorNotification('connection');
+    
     return this.notifySuccess('WhatsApp connection has been restored successfully!', {
       type: 'Connection',
       additionalInfo: {
@@ -398,6 +405,101 @@ class NotificationService {
     }
 
     return this.notifySuccess(`Business deleted.`, context);
+  }
+
+  // Continuous error notification methods
+  startContinuousErrorNotification(errorType, error, additionalInfo = {}) {
+    // Stop any existing timer for this error type
+    this.stopContinuousErrorNotification(errorType);
+    
+    // Create a timer that sends notifications every 20 seconds
+    const timer = setInterval(async () => {
+      try {
+        logger.info(`Sending continuous ${errorType} error notification`);
+        
+        switch (errorType) {
+          case 'connection':
+            await this.notifyConnectionError(error, {
+              ...additionalInfo,
+              'Continuous Alert': 'Yes',
+              'Alert Count': this.getErrorAlertCount(errorType)
+            });
+            break;
+          case 'service':
+            await this.notifySystemError(error, {
+              ...additionalInfo,
+              'Continuous Alert': 'Yes',
+              'Alert Count': this.getErrorAlertCount(errorType)
+            });
+            break;
+          default:
+            await this.notifyError(error, {
+              type: errorType.charAt(0).toUpperCase() + errorType.slice(1),
+              additionalInfo: {
+                ...additionalInfo,
+                'Continuous Alert': 'Yes',
+                'Alert Count': this.getErrorAlertCount(errorType)
+              }
+            });
+        }
+      } catch (notificationError) {
+        logger.error(`Error sending continuous ${errorType} notification:`, notificationError);
+      }
+    }, this.errorNotificationInterval);
+    
+    // Store the timer and error info
+    this.activeErrorTimers.set(errorType, {
+      timer,
+      error,
+      additionalInfo,
+      startTime: Date.now(),
+      alertCount: 0
+    });
+    
+    logger.info(`Started continuous ${errorType} error notifications every ${this.errorNotificationInterval/1000} seconds`);
+  }
+
+  stopContinuousErrorNotification(errorType) {
+    const timerInfo = this.activeErrorTimers.get(errorType);
+    if (timerInfo) {
+      clearInterval(timerInfo.timer);
+      this.activeErrorTimers.delete(errorType);
+      logger.info(`Stopped continuous ${errorType} error notifications`);
+    }
+  }
+
+  stopAllContinuousErrorNotifications() {
+    for (const [errorType, timerInfo] of this.activeErrorTimers) {
+      clearInterval(timerInfo.timer);
+      logger.info(`Stopped continuous ${errorType} error notifications`);
+    }
+    this.activeErrorTimers.clear();
+    logger.info('Stopped all continuous error notifications');
+  }
+
+  getErrorAlertCount(errorType) {
+    const timerInfo = this.activeErrorTimers.get(errorType);
+    if (timerInfo) {
+      timerInfo.alertCount++;
+      return timerInfo.alertCount;
+    }
+    return 1;
+  }
+
+  isContinuousNotificationActive(errorType) {
+    return this.activeErrorTimers.has(errorType);
+  }
+
+  getActiveErrorTimers() {
+    const activeTimers = {};
+    for (const [errorType, timerInfo] of this.activeErrorTimers) {
+      activeTimers[errorType] = {
+        startTime: timerInfo.startTime,
+        alertCount: timerInfo.alertCount,
+        duration: Date.now() - timerInfo.startTime
+      };
+    }
+    return activeTimers;
   }
 }
 
