@@ -57,11 +57,40 @@
 
         <div class="setup-instructions">
           <h5><i class="fas fa-info-circle"></i> Setup Instructions</h5>
+          
+          <!-- Group Types Explanation -->
+          <div class="group-types">
+            <div class="group-type">
+              <span class="group-type-badge sales">🛍️ Sales Group</span>
+              <p>Where your incoming orders are sent</p>
+            </div>
+            <div class="group-type">
+              <span class="group-type-badge delivery">🚚 Delivery Group</span>
+              <p>Where delivery & operations staff manage order fulfillment and logistics</p>
+            </div>
+          </div>
+
+          <!-- Admin Requirement Warning -->
+          <div class="admin-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>IMPORTANT:</strong> The bot MUST be added as an <span class="admin-badge">ADMIN</span> in your WhatsApp group for full functionality.
+          </div>
+
           <ol>
-            <li>Add our bot to your WhatsApp group</li>
-            <li>Type this command in the group: <code>/setup <%= business.setup_identifier %></code></li>
-            <li>The bot will automatically configure your group</li>
-            <li>Start receiving and managing orders!</li>
+            <li><strong>Add the bot to your WhatsApp group as an <span class="admin-badge">ADMIN</span></strong></li>
+            <li>Type this command in the group: 
+              <div class="copy-card">
+                <code class="setup-command">/setup <%= business.setup_identifier %></code>
+                <button class="copy-btn" onclick="copySetupCommand(event)"><i class="far fa-copy"></i> Copy</button>
+              </div>
+            </li>
+            <li>The bot will ask if this is a "sales" or "delivery" group. Reply with:
+              <ul class="group-type-options">
+                <li><strong>"sales"</strong> – For receiving customer orders</li>
+                <li><strong>"delivery"</strong> – For managing deliveries and tracking orders</li>
+              </ul>
+            </li>
+            <li>The bot will confirm when the group is registered and you can start managing orders!</li>
           </ol>
         </div>
 
@@ -239,6 +268,131 @@
   color: var(--primary-color);
   font-weight: 600;
 }
+.group-types {
+  display: flex;
+  gap: 1rem;
+  margin: 1rem 0;
+  flex-wrap: wrap;
+}
+.group-type {
+  flex: 1;
+  min-width: 200px;
+  background: rgba(59, 130, 246, 0.05);
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid rgba(59, 130, 246, 0.1);
+}
+.group-type-badge {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+.group-type-badge.sales {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+.group-type-badge.delivery {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+.group-type p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+.admin-warning {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin: 1rem 0;
+  color: #d97706;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.admin-warning i {
+  font-size: 1rem;
+}
+.admin-badge {
+  display: inline-block;
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  animation: pulse-admin 2s infinite;
+}
+@keyframes pulse-admin {
+  0%, 100% {
+    background: rgba(245, 158, 11, 0.1);
+  }
+  50% {
+    background: rgba(245, 158, 11, 0.15);
+  }
+}
+.copy-card {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(90deg, #f1f5f9 60%, #e0f2fe 100%);
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem 0.8rem;
+  margin: 0.5rem 0;
+  width: 100%;
+  justify-content: space-between;
+  box-shadow: 0 1px 4px rgba(59,130,246,0.04);
+  overflow: hidden;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+.copy-btn {
+  flex-shrink: 0;
+  background: #10b981;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border-radius: 6px;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  box-shadow: 0 1px 4px rgba(16,185,129,0.08);
+  white-space: nowrap;
+}
+.copy-btn:hover, .copy-btn:focus {
+  background: #059669;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(16,185,129,0.13);
+}
+.copy-btn.copied {
+  background: #10b981 !important;
+  color: #fff !important;
+}
+.setup-command {
+  background: transparent !important;
+  padding: 0 !important;
+  color: var(--primary-color) !important;
+  font-weight: 600;
+}
+.group-type-options {
+  margin: 0.5rem 0 0.5rem 1rem;
+  padding-left: 1rem;
+}
+.group-type-options li {
+  margin-bottom: 0.25rem;
+}
 .existing-groups {
   background: rgba(139,92,246,0.06);
   border-radius: 10px;
@@ -363,6 +517,27 @@
 @media (max-width: 600px) {
   .add-business-card { padding: 1.2rem 0.5rem; }
   .add-business-title { font-size: 1.3rem; }
+  .group-types {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .group-type {
+    min-width: auto;
+  }
+  .admin-warning {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.25rem;
+  }
+  .copy-card {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+  .copy-btn {
+    align-self: flex-end;
+    max-width: fit-content;
+  }
 }
 /* Fix nav-link color for visibility */
 .header .nav-link {
@@ -400,6 +575,46 @@
         setupDropdown('profileDropdown', 'profileMenu');
         window.addEventListener('click', () => document.querySelectorAll('.dropdown-content.show').forEach(m => m.classList.remove('show')));
     });
+
+    function copySetupCommand(event) {
+        const command = document.querySelector('.setup-command').textContent;
+        
+        // Fallback for older browsers
+        if (!navigator.clipboard) {
+            const textArea = document.createElement('textarea');
+            textArea.value = command;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                const button = event.target.closest('.copy-btn');
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                button.classList.add('copied');
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            } catch (err) {
+                alert('Failed to copy. Please try again.');
+            }
+            document.body.removeChild(textArea);
+            return;
+        }
+        
+        navigator.clipboard.writeText(command).then(() => {
+            const button = event.target.closest('.copy-btn');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            button.classList.add('copied');
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.classList.remove('copied');
+            }, 2000);
+        }).catch(() => {
+            alert('Failed to copy. Please try again.');
+        });
+    }
 </script> 
 </body>
 </html> 
