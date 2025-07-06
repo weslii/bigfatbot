@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Details - Admin</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="icon" href="/logo-icon copy.svg">
+    <link href="/css/admin-dashboard.css" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="/admin/dashboard" class="logo-section">
+                    <div class="logo-icon"><i class="fas fa-building"></i></div>
+                    <div class="logo-text"><span class="main-title">Business Details</span></div>
+                </a>
+            </div>
+            <nav class="header-right" style="display: flex; align-items: center; gap: 0.75rem;">
+                <a href="/admin/dashboard" class="nav-link">Dashboard</a>
+                <a href="/admin/businesses" class="nav-link active">Businesses</a>
+                <a href="/admin/orders" class="nav-link">Orders</a>
+                <a href="/admin/users" class="nav-link">Users</a>
+                <button class="btn btn-icon" id="theme-toggle" aria-label="Toggle Theme">
+                    <i class="fas fa-sun"></i>
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-icon" id="profileDropdown"><i class="fas fa-user"></i></button>
+                    <div class="dropdown-content" id="profileMenu">
+                        <a href="/admin/profile" class="dropdown-item"><i class="fas fa-cog"></i> Profile</a>
+                        <form action="/admin/logout" method="post" class="dropdown-item" style="padding: 0; margin: 0;">
+                            <button type="submit" style="all: unset; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; width: 100%;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                        </form>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+    <main class="main-content" style="padding: 2.5rem 0; min-height: 80vh;">
+        <div class="container" style="max-width: 1200px; margin: 0 auto;">
+            <!-- Back Button -->
+            <div style="margin-bottom: 1.5rem;">
+                <a href="/admin/businesses" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-arrow-left"></i> Back to Businesses
+                </a>
+            </div>
+
+            <!-- Business Overview Card -->
+            <div class="content-card" style="padding: 2.2rem 2rem 1.5rem 2rem; border-radius: 18px; box-shadow: var(--shadow-lg); background: var(--surface); border: 1px solid var(--border); margin-bottom: 2rem;">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--primary-color); margin: 0;">
+                        <i class="fas fa-building me-2"></i><%= business.business_name %>
+                    </h2>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <a href="/admin/businesses/<%= business.business_id %>/edit" class="btn btn-primary">
+                            <i class="fas fa-edit me-1"></i> Edit Business
+                        </a>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                    <!-- Business Info -->
+                    <div>
+                        <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 1rem;">Business Information</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <div>
+                                <span style="font-weight: 600; color: var(--text-secondary);">Status:</span>
+                                <% if (business.is_active) { %>
+                                    <span class="status-badge active">Active</span>
+                                <% } else { %>
+                                    <span class="status-badge">Inactive</span>
+                                <% } %>
+                            </div>
+                            <div>
+                                <span style="font-weight: 600; color: var(--text-secondary);">Setup Code:</span>
+                                <% if (business.setup_identifier) { %>
+                                    <span style="display: inline-flex; align-items: center; gap: 0.3rem;">
+                                        <code class="setup-code"><%= business.setup_identifier %></code>
+                                        <button class="btn btn-icon btn-copy" style="width: 1.7rem; height: 1.7rem; font-size: 0.95rem; padding: 0; margin-left: 0.2rem;" onclick="copyToClipboard('<%= business.setup_identifier %>')" title="Copy setup code"><i class="fas fa-copy"></i></button>
+                                    </span>
+                                <% } else { %>
+                                    <span class="text-muted">No setup code</span>
+                                <% } %>
+                            </div>
+                            <div>
+                                <span style="font-weight: 600; color: var(--text-secondary);">Created:</span>
+                                <span style="color: var(--text-primary);"><%= new Date(business.created_at).toLocaleDateString() %></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Owner Info -->
+                    <div>
+                        <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 1rem;">Owner Information</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <div>
+                                <span style="font-weight: 600; color: var(--text-secondary);">Name:</span>
+                                <span style="color: var(--text-primary);"><%= business.owner_name %></span>
+                            </div>
+                            <div>
+                                <span style="font-weight: 600; color: var(--text-secondary);">Email:</span>
+                                <span style="color: var(--text-primary);"><%= business.owner_email %></span>
+                            </div>
+                            <div>
+                                <span style="font-weight: 600; color: var(--text-secondary);">Phone:</span>
+                                <span style="color: var(--text-primary);"><%= business.owner_phone %></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistics -->
+                    <div>
+                        <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 1rem;">Statistics</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <div>
+                                <span style="font-weight: 600; color: var(--text-secondary);">Total Orders:</span>
+                                <span style="color: var(--text-primary); font-size: 1.1rem; font-weight: 600;"><%= totalOrders %></span>
+                            </div>
+                            <div>
+                                <span style="font-weight: 600; color: var(--text-secondary);">WhatsApp Groups:</span>
+                                <span style="color: var(--text-primary); font-size: 1.1rem; font-weight: 600;"><%= groups.length %></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WhatsApp Groups -->
+            <div class="content-card" style="padding: 2.2rem 2rem 1.5rem 2rem; border-radius: 18px; box-shadow: var(--shadow-lg); background: var(--surface); border: 1px solid var(--border); margin-bottom: 2rem;">
+                <h3 style="font-size: 1.35rem; font-weight: 800; color: var(--primary-color); margin-bottom: 1.5rem;">
+                    <i class="fab fa-whatsapp me-2"></i>WhatsApp Groups
+                </h3>
+                
+                <% if (groups && groups.length > 0) { %>
+                    <div class="table-container" style="overflow-x: auto;">
+                        <table class="data-table" style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th>Group Name</th>
+                                    <th>Group Type</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% groups.forEach(group => { %>
+                                <tr>
+                                    <td style="font-weight: 600; color: var(--text-primary);"><%= group.group_name %></td>
+                                    <td>
+                                        <span class="status-badge <%= group.group_type === 'sales' ? 'active' : 'secondary' %>">
+                                            <%= group.group_type.charAt(0).toUpperCase() + group.group_type.slice(1) %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <% if (group.is_active) { %>
+                                            <span class="status-badge active">Active</span>
+                                        <% } else { %>
+                                            <span class="status-badge">Inactive</span>
+                                        <% } %>
+                                    </td>
+                                    <td style="color: var(--text-secondary);">
+                                        <%= new Date(group.created_at).toLocaleDateString() %>
+                                    </td>
+                                </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } else { %>
+                    <div class="no-data" style="text-align: center; color: var(--text-muted); padding: 2.5rem 0; font-size: 1.1rem;">
+                        <i class="fab fa-whatsapp" style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 0.5rem;"></i><br>
+                        No WhatsApp groups found for this business.
+                    </div>
+                <% } %>
+            </div>
+
+            <!-- Recent Orders -->
+            <div class="content-card" style="padding: 2.2rem 2rem 1.5rem 2rem; border-radius: 18px; box-shadow: var(--shadow-lg); background: var(--surface); border: 1px solid var(--border);">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3 style="font-size: 1.35rem; font-weight: 800; color: var(--primary-color); margin: 0;">
+                        <i class="fas fa-shopping-cart me-2"></i>Recent Orders
+                    </h3>
+                    <a href="/admin/orders?business_id=<%= business.business_id %>" class="btn btn-secondary">
+                        View All Orders
+                    </a>
+                </div>
+                
+                <% if (orders && orders.length > 0) { %>
+                    <div class="table-container" style="overflow-x: auto;">
+                        <table class="data-table" style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>Items</th>
+                                    <th>Status</th>
+                                    <th>Total</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% orders.forEach(order => { %>
+                                <tr>
+                                    <td style="font-weight: 600; color: var(--text-primary);">
+                                        <%= order.customer_name %>
+                                        <br><small style="color: var(--text-muted);"><%= order.customer_phone %></small>
+                                    </td>
+                                    <td style="color: var(--text-secondary);">
+                                        <%= order.items ? order.items.length : 0 %> items
+                                    </td>
+                                    <td>
+                                        <span class="status-badge <%= order.status === 'delivered' ? 'active' : order.status === 'cancelled' ? 'danger' : 'secondary' %>">
+                                            <%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %>
+                                        </span>
+                                    </td>
+                                    <td style="font-weight: 600; color: var(--text-primary);">
+                                        ₦<%= order.total_amount ? order.total_amount.toLocaleString() : '0' %>
+                                    </td>
+                                    <td style="color: var(--text-secondary);">
+                                        <%= new Date(order.created_at).toLocaleDateString() %>
+                                    </td>
+                                </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } else { %>
+                    <div class="no-data" style="text-align: center; color: var(--text-muted); padding: 2.5rem 0; font-size: 1.1rem;">
+                        <i class="fas fa-shopping-cart" style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 0.5rem;"></i><br>
+                        No orders found for this business.
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </main>
+    <script>
+        // Profile dropdown functionality
+        const profileDropdown = document.getElementById('profileDropdown');
+        const profileMenu = document.getElementById('profileMenu');
+        const dropdownParent = profileDropdown.closest('.dropdown');
+        profileDropdown.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdownParent.classList.toggle('active');
+        });
+        document.addEventListener('click', (e) => {
+            if (!profileMenu.contains(e.target) && !profileDropdown.contains(e.target)) {
+                dropdownParent.classList.remove('active');
+            }
+        });
+        
+        // Copy setup code
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                const notification = document.createElement('div');
+                notification.textContent = 'Setup code copied!';
+                notification.className = 'notification notification-success';
+                document.body.appendChild(notification);
+                setTimeout(() => notification.remove(), 1800);
+            });
+        }
+    </script>
+    <script src="/js/theme-utils.js"></script>
+</body>
+</html> 

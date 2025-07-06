@@ -86,6 +86,70 @@ class SchedulerService {
     }
   }
 
+  formatDailyReport(orders, businessName) {
+    const today = new Date().toLocaleDateString();
+    let report = `📊 *Daily Report - ${businessName}*\n`;
+    report += `📅 Date: ${today}\n\n`;
+
+    if (orders.length === 0) {
+      report += 'No orders today.';
+    } else {
+      report += `📦 Total Orders: ${orders.length}\n\n`;
+      
+      const statusCounts = {};
+      orders.forEach(order => {
+        statusCounts[order.status] = (statusCounts[order.status] || 0) + 1;
+      });
+
+      Object.entries(statusCounts).forEach(([status, count]) => {
+        const emoji = this.getStatusEmoji(status);
+        report += `${emoji} ${status.charAt(0).toUpperCase() + status.slice(1)}: ${count}\n`;
+      });
+
+      report += '\n📋 Recent Orders:\n';
+      orders.slice(0, 5).forEach(order => {
+        const time = new Date(order.created_at).toLocaleTimeString();
+        report += `• ${order.customer_name} - ${order.status} (${time})\n`;
+      });
+    }
+
+    return report;
+  }
+
+  formatPendingOrdersReport(orders, businessName) {
+    let report = `⏳ *Pending Orders Report - ${businessName}*\n\n`;
+
+    if (orders.length === 0) {
+      report += '✅ No pending orders at the moment.';
+    } else {
+      report += `📦 Total Pending Orders: ${orders.length}\n\n`;
+      
+      orders.forEach((order, index) => {
+        const time = new Date(order.created_at).toLocaleString();
+        report += `${index + 1}. *${order.customer_name}*\n`;
+        report += `   📞 ${order.customer_phone}\n`;
+        report += `   📍 ${order.delivery_address}\n`;
+        report += `   🕐 ${time}\n\n`;
+      });
+
+      report += 'Please process these orders as soon as possible.';
+    }
+
+    return report;
+  }
+
+  getStatusEmoji(status) {
+    const emojis = {
+      'pending': '⏳',
+      'confirmed': '✅',
+      'preparing': '👨‍🍳',
+      'out_for_delivery': '🚚',
+      'delivered': '🎉',
+      'cancelled': '❌'
+    };
+    return emojis[status] || '📦';
+  }
+
   async sendReportsToAllBusinesses(reportType) {
     try {
       // Get all delivery groups

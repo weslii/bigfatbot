@@ -3,15 +3,49 @@ const logger = require('./logger');
 class MemoryMonitor {
   constructor() {
     this.interval = null;
-    this.warningThreshold = 500 * 1024 * 1024; // 500MB (more conservative)
-    this.criticalThreshold = 800 * 1024 * 1024; // 800MB (more conservative)
-    this.restartThreshold = 1200 * 1024 * 1024; // 1.2GB - restart bot (more conservative)
+    
+    // Detect service type and apply appropriate thresholds
+    this.detectServiceType();
+    this.setThresholds();
+    
     this.lastCleanup = Date.now();
     this.cleanupInterval = 15 * 60 * 1000; // 15 minutes (less frequent)
     this.restartCount = 0;
     this.maxRestartsPerHour = 2; // Limit restarts
     this.lastRestartTime = 0;
     this.lastDetailedLog = null;
+  }
+
+  detectServiceType() {
+    // Detect if this is web service or WhatsApp bot
+    this.isWebService = process.env.NODE_ENV === 'production' && 
+                       !process.env.WHATSAPP_BOT && 
+                       !global.whatsappService;
+    
+    // Additional detection: check if Express app is running
+    if (this.isWebService === undefined) {
+      this.isWebService = typeof process.env.PORT !== 'undefined' || 
+                         process.argv.includes('server.js') ||
+                         process.argv.includes('start:prod');
+    }
+    
+    logger.info(`Memory monitor initialized for: ${this.isWebService ? 'Web Service' : 'WhatsApp Bot'}`);
+  }
+
+  setThresholds() {
+    if (this.isWebService) {
+      // Safer thresholds for web service
+      this.warningThreshold = 250 * 1024 * 1024; // 250MB
+      this.criticalThreshold = 400 * 1024 * 1024; // 400MB
+      this.restartThreshold = 600 * 1024 * 1024;  // 600MB
+      logger.info('Web service memory thresholds: Warning=250MB, Critical=400MB, Restart=600MB');
+    } else {
+      // Original conservative thresholds for WhatsApp bot
+      this.warningThreshold = 500 * 1024 * 1024; // 500MB
+      this.criticalThreshold = 800 * 1024 * 1024; // 800MB
+      this.restartThreshold = 1200 * 1024 * 1024; // 1.2GB
+      logger.info('WhatsApp bot memory thresholds: Warning=500MB, Critical=800MB, Restart=1.2GB');
+    }
   }
 
   start(intervalMs = 300000) { // Check every 5 minutes (less frequent)
@@ -65,13 +99,15 @@ class MemoryMonitor {
     }
 
     // Check for critical memory usage
+    const serviceType = this.isWebService ? 'Web Service' : 'WhatsApp Bot';
+    
     if (memUsage.rss > this.restartThreshold) {
-      logger.error('CRITICAL: Memory usage exceeded restart threshold!', memoryInfo);
+      logger.error(`CRITICAL: ${serviceType} memory usage exceeded restart threshold!`, memoryInfo);
       this.requestRestart();
     } else if (memUsage.rss > this.criticalThreshold) {
-      logger.error('CRITICAL: High memory usage detected!', memoryInfo);
+      logger.error(`CRITICAL: ${serviceType} high memory usage detected!`, memoryInfo);
     } else if (memUsage.rss > this.warningThreshold) {
-      logger.warn('WARNING: High memory usage detected', memoryInfo);
+      logger.warn(`WARNING: ${serviceType} high memory usage detected`, memoryInfo);
     }
 
     // Force garbage collection if heap usage is high
@@ -199,7 +235,8 @@ class MemoryMonitor {
       return;
     }
     
-    logger.error('Requesting bot restart due to memory issues...');
+    const serviceType = this.isWebService ? 'Web Service' : 'WhatsApp Bot';
+    logger.error(`Requesting ${serviceType} restart due to memory issues...`);
     
     // Update restart tracking
     this.restartCount++;

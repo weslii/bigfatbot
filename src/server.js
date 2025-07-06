@@ -1396,6 +1396,31 @@ async function startServer() {
       res.render('admin/edit-business', { admin: req.admin, business: null });
     });
     
+    app.get('/admin/businesses/:businessId', requireAdmin, async (req, res) => {
+      try {
+        const business = await AdminService.getBusinessById(req.params.businessId);
+        if (!business) {
+          return res.status(404).render('error', { error: 'Business not found.' });
+        }
+        
+        // Get additional business details like groups, orders, etc.
+        const groups = await db.query('groups').where('business_id', req.params.businessId);
+        const orders = await db.query('orders').where('business_id', req.params.businessId).orderBy('created_at', 'desc').limit(10);
+        const totalOrders = await db.query('orders').where('business_id', req.params.businessId).count('* as count').first();
+        
+        res.render('admin/business-details', { 
+          admin: req.admin, 
+          business, 
+          groups, 
+          orders, 
+          totalOrders: totalOrders ? totalOrders.count : 0 
+        });
+      } catch (error) {
+        logger.error('Get business details error:', error);
+        res.render('error', { error: 'Failed to load business details.' });
+      }
+    });
+    
     app.post('/admin/businesses/add', requireAdmin, async (req, res) => {
       try {
         await AdminService.addBusiness(req.body);
