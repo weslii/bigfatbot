@@ -837,5 +837,29 @@ module.exports = {
       logger.error('Admin orders export error:', error);
       res.status(500).json({ error: 'Failed to export orders: ' + error.message });
     }
+  },
+
+  renderBusinessDetails: async (req, res) => {
+    try {
+      const business = await AdminService.getBusinessById(req.params.businessId);
+      if (!business) {
+        return res.status(404).render('error', { error: 'Business not found.' });
+      }
+      // Get additional business details like groups, orders, etc.
+      const groups = await db.query('groups').where('business_id', req.params.businessId);
+      const orders = await db.query('orders').where('business_id', req.params.businessId).orderBy('created_at', 'desc').limit(10);
+      const totalOrdersResult = await db.query('orders').where('business_id', req.params.businessId).count('* as count').first();
+      const totalOrders = totalOrdersResult ? totalOrdersResult.count : 0;
+      res.render('admin/business-details', {
+        admin: req.admin,
+        business,
+        groups,
+        orders,
+        totalOrders
+      });
+    } catch (error) {
+      logger.error('Get business details error:', error);
+      res.render('error', { error: 'Failed to load business details.' });
+    }
   }
 }; 

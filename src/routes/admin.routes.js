@@ -31,6 +31,7 @@ router.get('/businesses/:businessId/edit', requireAdmin, adminController.renderE
 router.post('/businesses/:businessId/edit', requireAdmin, adminController.handleEditBusiness);
 router.post('/api/businesses/:businessId/toggle', requireAdmin, adminController.toggleBusinessActive);
 router.post('/businesses/:businessId/delete', requireAdmin, adminController.deleteBusiness);
+router.get('/businesses/:businessId', requireAdmin, adminController.renderBusinessDetails);
 
 // User Management
 router.get('/users', requireAdmin, adminController.listUsers);
