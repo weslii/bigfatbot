@@ -47,16 +47,7 @@ module.exports = {
   },
 
   // WhatsApp Healthcheck/Heartbeat Configuration
-  // The group ID to which the bot will send a heartbeat message every interval.
-  // Set this directly or override with the HEALTHCHECK_GROUP_ID environment variable.
-  // Example: '1234567890-1234567890@g.us'
   healthcheckGroupId: process.env.HEALTHCHECK_GROUP_ID || '',
-
-  // How often (in milliseconds) to send the heartbeat message.
-  // Default: 5 minutes (5 * 60 * 1000). Override with HEARTBEAT_INTERVAL_MS env variable.
   heartbeatIntervalMs: parseInt(process.env.HEARTBEAT_INTERVAL_MS, 10) || 5 * 60 * 1000,
-
-  // Minimum time (in milliseconds) between automatic restarts due to failed heartbeat.
-  // Default: 10 minutes (10 * 60 * 1000). Override with HEARTBEAT_RESTART_COOLDOWN_MS env variable.
   heartbeatRestartCooldownMs: parseInt(process.env.HEARTBEAT_RESTART_COOLDOWN_MS, 10) || 10 * 60 * 1000
 }; 
