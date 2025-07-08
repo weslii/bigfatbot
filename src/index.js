@@ -8,6 +8,13 @@ const fs = require('fs');
 const path = require('path');
 const logger = require('./utils/logger');
 
+// Handle memory-based restart requests gracefully
+process.on('restart-requested', (info) => {
+  logger.error('Restart requested due to memory issue. Exiting process so Railway or PM2 can restart...');
+  // Optionally: perform any cleanup here
+  process.exit(1);
+});
+
 // Debug environment variables before loading database config
 console.log('🔍 Environment Debug:');
 console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
@@ -17,6 +24,7 @@ console.log('POSTGRES_HOST exists:', !!process.env.POSTGRES_HOST);
 const database = require('./config/database');
 const WhatsAppService = require('./services/WhatsAppService');
 const SchedulerService = require('./services/SchedulerService');
+const HealthCheckService = require('./services/HealthCheckService');
 
 // --- Health check endpoint for Railway worker ---
 const express = require('express');
@@ -34,6 +42,7 @@ class DeliveryBot {
   constructor() {
     this.whatsappService = WhatsAppService.getInstance();
     this.schedulerService = new SchedulerService(this.whatsappService);
+    this.healthCheckService = new HealthCheckService(this.whatsappService);
     this.isShuttingDown = false;
   }
 
@@ -57,6 +66,9 @@ class DeliveryBot {
 
       // Start scheduler
       this.schedulerService.start();
+
+      // Start health check heartbeat
+      this.healthCheckService.start();
 
       // Setup graceful shutdown
       this.setupGracefulShutdown();
@@ -90,6 +102,9 @@ class DeliveryBot {
       try {
         // Stop scheduler
         this.schedulerService.stop();
+
+        // Stop health check heartbeat
+        this.healthCheckService.stop();
 
         // Stop WhatsApp service
         await this.whatsappService.stop();

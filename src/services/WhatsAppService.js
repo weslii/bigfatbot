@@ -346,6 +346,16 @@ class WhatsAppService {
     return await this.setupHandler.getSetupStatus(userId, businessName);
   }
 
+  async sendMessage(chatId, message) {
+    if (!this.core.client) throw new Error('WhatsApp client not initialized');
+    return await this.core.client.sendMessage(chatId, message);
+  }
+
+  async deleteMessage(chatId, messageId) {
+    if (!this.core.client) throw new Error('WhatsApp client not initialized');
+    return await this.core.client.deleteMessage(chatId, messageId);
+  }
+
   // PRESERVE THESE EXACTLY AS IN ORIGINAL
   isLikelyOrder = WhatsAppUtils.isLikelyOrder;
   extractOrderIdFromMessage = WhatsAppUtils.extractOrderIdFromMessage;

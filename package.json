@@ -9,6 +9,7 @@
     "dev": "concurrently \"nodemon --max-old-space-size=512 --expose-gc src/index.js\" \"nodemon --max-old-space-size=512 --expose-gc src/server.js\"",
     "dev:bot": "nodemon --max-old-space-size=512 --expose-gc src/index.js",
     "dev:web": "nodemon --max-old-space-size=512 --expose-gc src/server.js",
+    "dev:pm2": "pm2 start src/server.js --watch --name bigfatbot-dev",
     "migrate": "knex migrate:latest && echo 'Migrations completed successfully' || echo 'Migration failed'",
     "migrate:rollback": "knex migrate:rollback",
     "migrate:make": "knex migrate:make",
@@ -41,7 +42,8 @@
     "redis": "^3.1.2",
     "uuid": "^11.1.0",
     "whatsapp-web.js": "^1.30.0",
-    "winston": "^3.8.2"
+    "winston": "^3.8.2",
+    "pm2": "^5.3.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"
