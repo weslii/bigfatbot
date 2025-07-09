@@ -71,7 +71,7 @@ class HealthCheckService {
         ) {
           try {
             // await this.whatsappService.core.client.deleteMessage(this.groupId, msg, { revoke: true });
-            logger.info(`HealthCheckService: Deleted old heartbeat message ${msg.id._serialized}`);
+            // logger.info(`HealthCheckService: Deleted old heartbeat message ${msg.id._serialized}`);
           } catch (err) {
             logger.warn(`HealthCheckService: Failed to delete old heartbeat message ${msg.id._serialized}:`, err);
           }
