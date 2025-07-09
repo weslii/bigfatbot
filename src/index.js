@@ -7,6 +7,7 @@ if (process.env.NODE_ENV !== 'production') {
 const fs = require('fs');
 const path = require('path');
 const logger = require('./utils/logger');
+const memoryMonitor = require('./utils/memoryMonitor');
 
 // Handle memory-based restart requests gracefully
 process.on('restart-requested', (info) => {
@@ -133,6 +134,32 @@ class DeliveryBot {
   }
 }
 
+async function pollBotControl() {
+  setInterval(async () => {
+    try {
+      const control = await database.query('bot_control').where({ id: 1 }).first();
+      if (control && control.restart_requested) {
+        // Clear the flag and update last_restart
+        await database.query('bot_control').where({ id: 1 }).update({
+          restart_requested: false,
+          last_restart: new Date()
+        });
+        // Perform the restart
+        await WhatsAppService.getInstance().restart();
+      }
+    } catch (err) {
+      console.error('Error polling bot_control:', err);
+    }
+  }, 5000); // Poll every 5 seconds
+}
+
+// Start memory monitoring in production for the bot process
+if (process.env.NODE_ENV === 'production') {
+  memoryMonitor.start();
+  logger.info('Memory monitoring started (bot process)');
+}
+
 // Start the bot
 const bot = new DeliveryBot();
 bot.start();
+pollBotControl();

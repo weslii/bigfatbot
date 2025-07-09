@@ -8,6 +8,12 @@ const memoryMonitor = require('./utils/memoryMonitor');
 const sessionConfig = require('./config/session');
 const { sessionDebug, sessionErrorHandler } = require('./middleware/session.middleware');
 
+// Handle memory-based restart requests gracefully (for web service)
+process.on('restart-requested', (info) => {
+  logger.error('Web service restart requested due to memory issue. Exiting process so Railway or PM2 can restart...');
+  process.exit(1);
+});
+
 // Import routes
 const adminRoutes = require('./routes/admin.routes');
 const apiRoutes = require('./routes/api.routes');

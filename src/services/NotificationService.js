@@ -56,6 +56,27 @@ class NotificationService {
     }
   }
 
+  async sendCustomEmail(to, subject, html) {
+    if (!this.emailTransporter) {
+      logger.error('Email transporter not initialized');
+      return false;
+    }
+    try {
+      const info = await this.emailTransporter.sendMail({
+        from: `"Novi Support" <${EMAIL_CONFIG.auth.user}>`,
+        to,
+        subject,
+        html
+      });
+      logger.info(`Custom email sent to ${to} successfully`);
+      return true;
+    } catch (error) {
+      logger.error('Error sending custom email:', error.message);
+      return false;
+    }
+  }
+
+  // Update sendEmail to use Novi Bot Alert as display name
   async sendEmail(subject, text) {
     if (!this.emailTransporter) {
       logger.error('Email transporter not initialized');
@@ -64,12 +85,11 @@ class NotificationService {
 
     try {
       const info = await this.emailTransporter.sendMail({
-        from: `"WhatsApp Bot Alert" <${EMAIL_CONFIG.auth.user}>`,
+        from: `"Novi Bot Alert" <${EMAIL_CONFIG.auth.user}>`,
         to: TO_EMAIL,
         subject: subject,
         text: text
       });
-      
       logger.info('Email notification sent successfully');
       return true;
     } catch (error) {

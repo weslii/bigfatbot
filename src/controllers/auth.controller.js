@@ -1,6 +1,8 @@
 const RegistrationService = require('../services/RegistrationService');
 const logger = require('../utils/logger');
 const db = require('../config/database');
+const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 
 module.exports = {
   // User registration
@@ -113,6 +115,164 @@ module.exports = {
         error: 'Setup failed. Please try again.',
         userId: req.body.userId
       });
+    }
+  },
+
+  // Password reset functionality
+  forgotPassword: async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ success: false, message: 'Email is required' });
+      }
+
+      // Find user by email
+      const user = await db.query('users').where('email', email).first();
+      
+      if (!user) {
+        // Don't reveal if email exists or not for security
+        return res.json({ success: true, message: 'If the email exists, a reset link has been sent.' });
+      }
+
+      // Generate reset token
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      // Store reset token in database
+      await db.query('users')
+        .where('id', user.id)
+        .update({
+          reset_token: resetToken,
+          reset_token_expiry: resetTokenExpiry
+        });
+
+      // Create reset URL
+      const resetUrl = `${req.protocol}://${req.get('host')}/auth/reset-password/${resetToken}`;
+
+      // Send email (now using NotificationService)
+      const NotificationService = require('../services/NotificationService');
+      const subject = 'Novi Password Reset Request';
+      const html = `<p>Hello,</p><p>You requested a password reset for your Novi account. Click the link below to reset your password:</p><p><a href="${resetUrl}">${resetUrl}</a></p><p>If you did not request this, please ignore this email.</p>`;
+      await NotificationService.sendCustomEmail(email, subject, html);
+
+      res.json({ success: true, message: 'Password reset link sent to your email.' });
+    } catch (error) {
+      logger.error('Forgot password error:', error);
+      res.status(500).json({ success: false, message: 'Failed to process request' });
+    }
+  },
+
+  forgotPasswordAdmin: async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ success: false, message: 'Email is required' });
+      }
+
+      // Find admin by email
+      const admin = await db.query('admins').where('email', email).first();
+      
+      if (!admin) {
+        // Don't reveal if email exists or not for security
+        return res.json({ success: true, message: 'If the email exists, a reset link has been sent.' });
+      }
+
+      // Generate reset token
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      // Store reset token in database
+      await db.query('admins')
+        .where('id', admin.id)
+        .update({
+          reset_token: resetToken,
+          reset_token_expiry: resetTokenExpiry
+        });
+
+      // Create reset URL
+      const resetUrl = `${req.protocol}://${req.get('host')}/auth/reset-password/${resetToken}?type=admin`;
+
+      // Send email (you'll need to implement email sending)
+      // For now, we'll just log the reset URL
+      logger.info(`Admin password reset link for ${email}: ${resetUrl}`);
+
+      res.json({ success: true, message: 'Password reset link sent to your email.' });
+    } catch (error) {
+      logger.error('Admin forgot password error:', error);
+      res.status(500).json({ success: false, message: 'Failed to process request' });
+    }
+  },
+
+  showResetPassword: async (req, res) => {
+    try {
+      const { token } = req.params;
+      const { type } = req.query;
+
+      if (!token) {
+        return res.render('reset-password', { error: 'Invalid reset link' });
+      }
+
+      // Find user/admin by reset token
+      const table = type === 'admin' ? 'admins' : 'users';
+      const user = await db.query(table)
+        .where('reset_token', token)
+        .where('reset_token_expiry', '>', new Date())
+        .first();
+
+      if (!user) {
+        return res.render('reset-password', { error: 'Reset link is invalid or has expired' });
+      }
+
+      res.render('reset-password', { token, type });
+    } catch (error) {
+      logger.error('Show reset password error:', error);
+      res.render('reset-password', { error: 'An error occurred. Please try again.' });
+    }
+  },
+
+  resetPassword: async (req, res) => {
+    try {
+      const { token, password } = req.body;
+      const { type } = req.query;
+
+      if (!token || !password) {
+        return res.status(400).json({ success: false, message: 'Token and password are required' });
+      }
+
+      // Validate password strength
+      if (password.length < 8) {
+        return res.status(400).json({ success: false, message: 'Password must be at least 8 characters long' });
+      }
+
+      // Find user/admin by reset token
+      const table = type === 'admin' ? 'admins' : 'users';
+      const user = await db.query(table)
+        .where('reset_token', token)
+        .where('reset_token_expiry', '>', new Date())
+        .first();
+
+      if (!user) {
+        return res.status(400).json({ success: false, message: 'Reset link is invalid or has expired' });
+      }
+
+      // Hash new password
+      const hashedPassword = await bcrypt.hash(password, 12);
+
+      // Update password and clear reset token
+      await db.query(table)
+        .where('id', user.id)
+        .update({
+          password_hash: hashedPassword,
+          reset_token: null,
+          reset_token_expiry: null
+        });
+
+      res.json({ success: true, message: 'Password reset successfully' });
+    } catch (error) {
+      logger.error('Reset password error:', error);
+      res.status(500).json({ success: false, message: 'Failed to reset password' });
     }
   }
 }; 

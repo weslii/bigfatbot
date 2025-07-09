@@ -1,0 +1,31 @@
+/**
+ * @param { import("knex").Knex } knex
+ * @returns { Promise<void> }
+ */
+exports.up = function(knex) {
+  return knex.schema
+    .alterTable('users', function(table) {
+      table.string('reset_token', 255).nullable();
+      table.timestamp('reset_token_expiry').nullable();
+    })
+    .alterTable('admins', function(table) {
+      table.string('reset_token', 255).nullable();
+      table.timestamp('reset_token_expiry').nullable();
+    });
+};
+
+/**
+ * @param { import("knex").Knex } knex
+ * @returns { Promise<void> }
+ */
+exports.down = function(knex) {
+  return knex.schema
+    .alterTable('users', function(table) {
+      table.dropColumn('reset_token');
+      table.dropColumn('reset_token_expiry');
+    })
+    .alterTable('admins', function(table) {
+      table.dropColumn('reset_token');
+      table.dropColumn('reset_token_expiry');
+    });
+}; 

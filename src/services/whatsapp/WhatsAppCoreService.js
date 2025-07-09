@@ -181,34 +181,57 @@ class WhatsAppCoreService {
     }
   }
 
+  async forceProcessRestart(reason = 'Manual or automatic hard restart requested') {
+    logger.error(`Forcefully exiting process: ${reason}`);
+    try {
+      // Add timeout for notifications (10 seconds max)
+      await Promise.race([
+        NotificationService.startContinuousErrorNotification('service', new Error(reason), {
+          'Component': 'WhatsApp Service',
+          'Action': 'Force Restart',
+          'Error Type': 'Process Exit',
+          'Time': new Date().toISOString(),
+        }),
+        new Promise(resolve => setTimeout(resolve, 10000))
+      ]);
+    } catch (e) {
+      logger.error('Failed to send force restart notification:', e);
+    } finally {
+      try {
+        process.exit(1); // Ensure exit even if notification fails
+      } catch (exitErr) {
+        logger.error('Process exit failed:', exitErr);
+      }
+    }
+  }
+
   async restart() {
     try {
       logger.info('Restarting WhatsApp service...');
-      
-      // Check if client is already running
-      const isRunning = this.client.pupPage && !this.client.pupPage.isClosed();
-      
-      if (isRunning) {
+      // Cleanup existing client
+      if (this.client && this.client.pupPage && !this.client.pupPage.isClosed()) {
         logger.info('Stopping current WhatsApp client...');
         await this.client.destroy();
         logger.info('WhatsApp client stopped successfully');
       }
-      
-      // Wait a moment for cleanup
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Reinitialize the client (LocalAuth will automatically reuse saved session)
-      logger.info('Reinitializing WhatsApp client with saved authentication...');
-      await this.client.initialize();
-      
-      // Check authentication status after restart
+      // Reinitialize with timeout
+      const INIT_TIMEOUT = 20000; // 20 seconds
+      await Promise.race([
+        this.client.initialize(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Initialization timed out')), INIT_TIMEOUT)
+        )
+      ]);
       const authStatus = await this.checkAuthenticationStatus();
-      
       logger.info('WhatsApp service restarted successfully');
       return authStatus;
     } catch (error) {
-      logger.error('Failed to restart WhatsApp service:', error);
-      throw error;
+      logger.error('Restart failed:', error);
+      // Handle timeouts and connection issues
+      if (/timed out|ECONN/i.test(error.message)) {
+        await this.forceProcessRestart(`Restart failure: ${error.message}`);
+      }
+      throw error; // Propagate other errors
     }
   }
 

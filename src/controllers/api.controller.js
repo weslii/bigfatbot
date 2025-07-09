@@ -100,31 +100,12 @@ module.exports = {
 
   restartBot: async (req, res) => {
     try {
-      const { userId } = req.body;
-      // Keep userId validation if present, but do not require admin session
-      if (!userId) {
-        return res.status(400).json({ error: 'User ID is required' });
-      }
-      // Import WhatsAppService
-      const whatsappService = WhatsAppService.getInstance();
-      // Call the restart method
-      const authStatus = await whatsappService.restart();
-      
-      res.json({ 
-        success: authStatus.success, 
-        authenticated: authStatus.authenticated,
-        message: authStatus.message,
-        needsQrCode: authStatus.needsQrCode || false,
-        phoneNumber: authStatus.phoneNumber
-      });
+      // Set the restart_requested flag in the bot_control table
+      await db.query('bot_control').where({ id: 1 }).update({ restart_requested: true });
+      res.json({ success: true, message: 'Bot restart requested.' });
     } catch (error) {
-      logger.error('Restart WhatsApp bot error:', error);
-      res.status(500).json({ 
-        success: false,
-        authenticated: false,
-        message: 'Failed to restart WhatsApp bot',
-        needsQrCode: true
-      });
+      logger.error('RestartBot flag error:', error);
+      res.status(500).json({ success: false, message: 'Failed to request bot restart.' });
     }
   },
 
