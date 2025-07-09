@@ -70,7 +70,7 @@ class HealthCheckService {
           msg.timestamp * 1000 < oneHourAgo
         ) {
           try {
-            await this.whatsappService.deleteMessage(this.groupId, msg.id._serialized);
+            // await this.whatsappService.core.client.deleteMessage(this.groupId, msg, { revoke: true });
             logger.info(`HealthCheckService: Deleted old heartbeat message ${msg.id._serialized}`);
           } catch (err) {
             logger.warn(`HealthCheckService: Failed to delete old heartbeat message ${msg.id._serialized}:`, err);

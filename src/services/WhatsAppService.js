@@ -351,10 +351,10 @@ class WhatsAppService {
     return await this.core.client.sendMessage(chatId, message);
   }
 
-  async deleteMessage(chatId, messageId) {
-    if (!this.core.client) throw new Error('WhatsApp client not initialized');
-    return await this.core.client.deleteMessage(chatId, messageId);
-  }
+  // async deleteMessage(chatId, messageId) {
+  //   if (!this.core.client) throw new Error('WhatsApp client not initialized');
+  //   return await this.core.client.deleteMessage(chatId, messageId);
+  // }
 
   // PRESERVE THESE EXACTLY AS IN ORIGINAL
   isLikelyOrder = WhatsAppUtils.isLikelyOrder;
