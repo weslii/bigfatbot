@@ -33,7 +33,11 @@ class HealthCheckService {
   async sendHeartbeat() {
     try {
       const msg = `🤖 Bot heartbeat: ${new Date().toISOString()}`;
-      await this.whatsappService.sendMessage(this.groupId, msg);
+      // Add a 3-minute timeout (180000 ms)
+      await Promise.race([
+        this.whatsappService.sendMessage(this.groupId, msg),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Heartbeat send timed out after 3 minutes')), 180000))
+      ]);
       logger.info('HealthCheckService: Heartbeat sent successfully.');
     } catch (err) {
       logger.error('HealthCheckService: Failed to send heartbeat:', err);

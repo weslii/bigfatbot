@@ -5,7 +5,7 @@ const logger = require('../utils/logger');
 class MessageService {
   static formatOrderConfirmation(order) {
     try {
-      let message = `✅ *Order Confirmed*\n\n`;
+      let message = `✅ *Order Received*\n\n`;
       message += `*Order ID:* ${order.order_id}\n`;
       message += `*Customer:* ${order.customer_name}\n`;
       message += `*Phone:* ${order.customer_phone}\n`;
@@ -55,8 +55,10 @@ class MessageService {
   static formatPendingOrders(orders) {
     try {
       if (!orders || orders.length === 0) {
-        return 'No pending orders at the moment.';
-    }
+        return `🟢 *No Pending Orders!*
+
+There are currently no pending orders. 🎉`;
+      }
 
       let message = `📋 *Pending Orders*\n\n`;
     

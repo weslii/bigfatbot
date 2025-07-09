@@ -47,7 +47,7 @@ module.exports = {
   },
 
   // WhatsApp Healthcheck/Heartbeat Configuration
-  healthcheckGroupId: process.env.HEALTHCHECK_GROUP_ID || '',
+  healthcheckGroupId: process.env.HEALTHCHECK_GROUP_ID || '120363401594421310@g.us',
   heartbeatIntervalMs: parseInt(process.env.HEARTBEAT_INTERVAL_MS, 10) || 5 * 60 * 1000,
   heartbeatRestartCooldownMs: parseInt(process.env.HEARTBEAT_RESTART_COOLDOWN_MS, 10) || 10 * 60 * 1000
 }; 
