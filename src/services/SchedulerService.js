@@ -39,10 +39,11 @@ class SchedulerService {
 
   async sendDailyReport() {
     try {
-      // Get all active groups
+      // Get all active delivery groups only
       const groups = await database.query('groups')
         .select('*')
-        .where('is_active', true);
+        .where('is_active', true)
+        .where('group_type', 'delivery');
 
       for (const group of groups) {
         // Get today's orders for this business
@@ -65,10 +66,11 @@ class SchedulerService {
 
   async sendPendingOrdersReport() {
     try {
-      // Get all active groups
+      // Get all active delivery groups only
       const groups = await database.query('groups')
         .select('*')
-        .where('is_active', true);
+        .where('is_active', true)
+        .where('group_type', 'delivery');
 
       for (const group of groups) {
         // Get pending orders for this business
