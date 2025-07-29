@@ -52,7 +52,8 @@ class OrderService {
           delivery_date: orderData.delivery_date,
           notes: orderData.notes,
           status: 'pending',
-          business_id: businessId || orderData.business_id
+          business_id: businessId || orderData.business_id,
+          source: orderData.source || 'whatsapp' // Default to whatsapp for backward compatibility
         })
         .returning('*');
 

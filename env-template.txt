@@ -17,6 +17,16 @@ LOG_LEVEL=info
 # WhatsApp Bot Configuration (if needed)
 WHATSAPP_SESSION_PATH=./sessions
 
+# Telegram Bot Configuration
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
+TELEGRAM_BOT_USERNAME=your_bot_username_here
+TELEGRAM_WEBHOOK_URL=https://your-domain.com
+TELEGRAM_WEBHOOK_PORT=8443
+
+# Platform Configuration
+ENABLE_WHATSAPP=true
+ENABLE_TELEGRAM=true
+
 # Feature Flags
 ENABLE_NEW_PARSER=true
 ENABLE_ANALYTICS=true

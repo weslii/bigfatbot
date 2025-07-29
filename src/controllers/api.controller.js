@@ -46,8 +46,10 @@ module.exports = {
   // WhatsApp bot management endpoints
   getBotInfo: async (req, res) => {
     try {
-      const whatsappService = WhatsAppService.getInstance();
-      const botInfo = await whatsappService.getBotInfo();
+      const { platform = 'whatsapp' } = req.query;
+      const MessageService = require('../services/MessageService');
+      const messageService = new MessageService();
+      const botInfo = await messageService.getBotInfo(platform);
       
       res.json({ 
         success: true, 
@@ -59,9 +61,36 @@ module.exports = {
         success: false,
         error: 'Failed to get bot info',
         number: 'Not available',
-        name: 'WhatsApp Bot',
+        name: `${platform} Bot`,
         status: 'error'
       });
+    }
+  },
+
+  // Telegram webhook handler
+  handleTelegramWebhook: async (req, res) => {
+    try {
+      const { message } = req.body;
+      
+      if (!message) {
+        logger.warn('Telegram webhook received without message:', req.body);
+        return res.status(200).json({ success: true });
+      }
+
+      // Import MessageService and handle the message
+      const MessageService = require('../services/MessageService');
+      const messageService = new MessageService();
+      
+      // Get the Telegram service and handle the message
+      const telegramService = messageService.getPlatformService('telegram');
+      if (telegramService && telegramService.messageHandler) {
+        await telegramService.messageHandler.handleMessage(message);
+      }
+
+      res.status(200).json({ success: true });
+    } catch (error) {
+      logger.error('Telegram webhook error:', error);
+      res.status(500).json({ success: false, error: error.message });
     }
   },
 
@@ -82,11 +111,12 @@ module.exports = {
         return res.status(404).json({ error: 'User not found' });
       }
 
-      // Import WhatsAppService
-      const whatsappService = WhatsAppService.getInstance();
+      // Import MessageService
+      const MessageService = require('../services/MessageService');
+      const messageService = new MessageService();
 
-      // Call the changeNumber method
-      await whatsappService.changeNumber();
+      // Call the changeNumber method (WhatsApp only)
+      await messageService.getPlatformService('whatsapp').changeNumber();
       
       res.json({ 
         success: true, 
@@ -100,9 +130,20 @@ module.exports = {
 
   restartBot: async (req, res) => {
     try {
+      const { platform = 'whatsapp' } = req.body;
+      
+      // Validate platform
+      if (!['whatsapp', 'telegram'].includes(platform)) {
+        return res.status(400).json({ error: 'Invalid platform. Must be "whatsapp" or "telegram"' });
+      }
+      
       // Set the restart_requested flag in the bot_control table
       await db.query('bot_control').where({ id: 1 }).update({ restart_requested: true });
-      res.json({ success: true, message: 'Bot restart requested.' });
+      
+      res.json({ 
+        success: true, 
+        message: `${platform.charAt(0).toUpperCase() + platform.slice(1)} bot restart requested.` 
+      });
     } catch (error) {
       logger.error('RestartBot flag error:', error);
       res.status(500).json({ success: false, message: 'Failed to request bot restart.' });
@@ -111,12 +152,14 @@ module.exports = {
 
   getQrCode: async (req, res) => {
     try {
-      const whatsappService = WhatsAppService.getInstance();
-      const qrStatus = whatsappService.getLatestQrStatus();
+      const { platform = 'whatsapp' } = req.query;
+      const MessageService = require('../services/MessageService');
+      const messageService = new MessageService();
+      const qrStatus = await messageService.getQrStatus(platform);
       res.json(qrStatus);
     } catch (error) {
-      logger.error('Get WhatsApp QR code error:', error);
-      res.status(500).json({ error: 'Failed to get WhatsApp QR code' });
+      logger.error(`Get ${platform} QR code error:`, error);
+      res.status(500).json({ error: `Failed to get ${platform} QR code` });
     }
   },
 

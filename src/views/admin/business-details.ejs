@@ -120,17 +120,21 @@
                             </div>
                             <div>
                                 <span style="font-weight: 600; color: var(--text-secondary);">WhatsApp Groups:</span>
-                                <span style="color: var(--text-primary); font-size: 1.1rem; font-weight: 600;"><%= groups.length %></span>
+                                <span style="color: var(--text-primary); font-size: 1.1rem; font-weight: 600;"><%= groups.filter(g => g.platform === 'whatsapp').length %></span>
+                            </div>
+                            <div>
+                                <span style="font-weight: 600; color: var(--text-secondary);">Telegram Groups:</span>
+                                <span style="color: var(--text-primary); font-size: 1.1rem; font-weight: 600;"><%= groups.filter(g => g.platform === 'telegram').length %></span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- WhatsApp Groups -->
+            <!-- Groups by Platform -->
             <div class="content-card" style="padding: 2.2rem 2rem 1.5rem 2rem; border-radius: 18px; box-shadow: var(--shadow-lg); background: var(--surface); border: 1px solid var(--border); margin-bottom: 2rem;">
                 <h3 style="font-size: 1.35rem; font-weight: 800; color: var(--primary-color); margin-bottom: 1.5rem;">
-                    <i class="fab fa-whatsapp me-2"></i>WhatsApp Groups
+                    <i class="fas fa-comments me-2"></i>Business Groups
                 </h3>
                 
                 <% if (groups && groups.length > 0) { %>
@@ -138,6 +142,7 @@
                         <table class="data-table" style="width: 100%; border-collapse: collapse;">
                             <thead>
                                 <tr>
+                                    <th>Platform</th>
                                     <th>Group Name</th>
                                     <th>Group Type</th>
                                     <th>Status</th>
@@ -147,6 +152,17 @@
                             <tbody>
                                 <% groups.forEach(group => { %>
                                 <tr>
+                                    <td>
+                                        <% if (group.platform === 'telegram') { %>
+                                            <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.75rem; font-weight: 500; background: rgb(0 122 255 / 0.1); color: #007aff;">
+                                                <i class="fab fa-telegram-plane"></i> Telegram
+                                            </span>
+                                        <% } else { %>
+                                            <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.75rem; font-weight: 500; background: rgb(37 211 102 / 0.1); color: #25d366;">
+                                                <i class="fab fa-whatsapp"></i> WhatsApp
+                                            </span>
+                                        <% } %>
+                                    </td>
                                     <td style="font-weight: 600; color: var(--text-primary);"><%= group.group_name %></td>
                                     <td>
                                         <span class="status-badge <%= group.group_type === 'sales' ? 'active' : 'secondary' %>">
@@ -170,8 +186,8 @@
                     </div>
                 <% } else { %>
                     <div class="no-data" style="text-align: center; color: var(--text-muted); padding: 2.5rem 0; font-size: 1.1rem;">
-                        <i class="fab fa-whatsapp" style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 0.5rem;"></i><br>
-                        No WhatsApp groups found for this business.
+                        <i class="fas fa-comments" style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 0.5rem;"></i><br>
+                        No groups found for this business.
                     </div>
                 <% } %>
             </div>

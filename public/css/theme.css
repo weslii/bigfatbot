@@ -366,3 +366,78 @@ input:focus, select:focus, textarea:focus {
     justify-content: center;
   }
 } 
+
+/* Platform Badges */
+.platform-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin: 0 0.25rem;
+}
+
+.platform-badge.whatsapp {
+    background: rgb(37 211 102 / 0.1);
+    color: #25d366;
+}
+
+.platform-badge.telegram {
+    background: rgb(0 122 255 / 0.1);
+    color: #007aff;
+}
+
+/* Platform Selection */
+.platform-option {
+    transition: all 0.2s ease;
+}
+
+.platform-option:hover {
+    border-color: var(--primary-color) !important;
+    background-color: rgba(16, 185, 129, 0.05) !important;
+}
+
+.platform-option input[type="radio"]:checked + .platform-option {
+    border-color: var(--primary-color) !important;
+    background-color: rgba(16, 185, 129, 0.1) !important;
+}
+
+/* Platform Icons */
+.platform-icon {
+    font-size: 1.2rem;
+}
+
+.platform-icon.whatsapp {
+    color: #25d366;
+}
+
+.platform-icon.telegram {
+    color: #007aff;
+}
+
+/* Platform Stats */
+.platform-stats {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.platform-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+}
+
+.platform-stat.whatsapp {
+    border-left: 4px solid #25d366;
+}
+
+.platform-stat.telegram {
+    border-left: 4px solid #007aff;
+} 

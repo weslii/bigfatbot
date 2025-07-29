@@ -83,6 +83,20 @@
                     <p style="font-size: 0.875rem; margin: 0;">Delivery Groups</p>
                 </div>
             </div>
+            <div style="background: var(--card-bg); backdrop-filter: blur(5px); border: 1px solid var(--card-border); border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 1rem;" class="card-hover">
+                <div style="font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.05);"><i class="fab fa-whatsapp"></i></div>
+                <div>
+                    <h3 style="font-size: 1.5rem; font-weight: 700; margin: 0;"><%= groups.filter(g => g.platform === 'whatsapp').length %></h3>
+                    <p style="font-size: 0.875rem; margin: 0;">WhatsApp Groups</p>
+                </div>
+            </div>
+            <div style="background: var(--card-bg); backdrop-filter: blur(5px); border: 1px solid var(--card-border); border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 1rem;" class="card-hover">
+                <div style="font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.05);"><i class="fab fa-telegram-plane"></i></div>
+                <div>
+                    <h3 style="font-size: 1.5rem; font-weight: 700; margin: 0;"><%= groups.filter(g => g.platform === 'telegram').length %></h3>
+                    <p style="font-size: 0.875rem; margin: 0;">Telegram Groups</p>
+                </div>
+            </div>
         </div>
 
         <!-- Groups Table -->
@@ -107,6 +121,14 @@
                             <option value="delivery">Delivery</option>
                         </select>
                     </div>
+                     <div style="display: flex; flex-direction: column; flex-grow: 1;">
+                        <label style="font-size: 0.875rem; font-weight: 500; color: #1e293b; margin-bottom: 0.5rem;">Filter by Platform</label>
+                        <select id="platformFilter" style="padding: 0.625rem 0.75rem; border: 1px solid var(--card-border); border-radius: 8px; font-size: 0.875rem; background: rgba(241, 245, 249, 0.5); color: #1e293b;">
+                            <option value="">All Platforms</option>
+                            <option value="whatsapp">WhatsApp</option>
+                            <option value="telegram">Telegram</option>
+                        </select>
+                    </div>
                 </div>
             </div>
             <div style="padding: 1.5rem;">
@@ -115,6 +137,7 @@
                         <thead>
                             <tr>
                                 <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Business</th>
+                                <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Platform</th>
                                 <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Group Name</th>
                                 <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Type</th>
                                 <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Status</th>
@@ -144,6 +167,17 @@
                                             </div>
                                         </td>
                                         <td style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--card-border); vertical-align: middle;">
+                                            <% if (group.platform === 'telegram') { %>
+                                                <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.75rem; font-weight: 500; background: rgb(0 122 255 / 0.1); color: #007aff;">
+                                                    <i class="fab fa-telegram-plane"></i> Telegram
+                                                </span>
+                                            <% } else { %>
+                                                <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.75rem; font-weight: 500; background: rgb(37 211 102 / 0.1); color: #25d366;">
+                                                    <i class="fab fa-whatsapp"></i> WhatsApp
+                                                </span>
+                                            <% } %>
+                                        </td>
+                                        <td style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--card-border); vertical-align: middle;">
                                             <strong><%= group.group_name %></strong><br>
                                             <small style="color: #94a3b8;"><%= group.group_id %></small>
                                         </td>
@@ -170,7 +204,7 @@
                                 <% }); %>
                             <% } else { %>
                                 <tr>
-                                    <td colspan="6" style="padding: 3rem 1.5rem; text-align: center; color: #64748b;">
+                                    <td colspan="7" style="padding: 3rem 1.5rem; text-align: center; color: #64748b;">
                                         <div>
                                             <i class="fas fa-comments" style="font-size: 3rem; margin-bottom: 1rem; color: #94a3b8;"></i>
                                             <h5>No Groups Found</h5>
@@ -191,7 +225,7 @@
     <div class="modal-overlay" id="addGroupModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Add New WhatsApp Group</h5>
+                <h5 class="modal-title">Add New Group</h5>
                 <button type="button" class="close-modal" id="closeAddGroupModal">&times;</button>
             </div>
             <div class="modal-body">
@@ -232,6 +266,28 @@
                         </select>
                     </div>
 
+                    <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <label for="platformSelect" style="display: block; font-weight: 600; margin-bottom: 0.75rem; color: var(--text-primary);">Platform *</label>
+                        <div style="display: flex; gap: 1rem;">
+                            <label style="flex: 1; display: flex; align-items: center; gap: 0.5rem; padding: 1rem; border: 2px solid var(--card-border); border-radius: 8px; cursor: pointer; transition: all 0.2s;" class="platform-option" data-platform="whatsapp">
+                                <input type="radio" name="platform" value="whatsapp" id="whatsappPlatform" style="margin: 0;">
+                                <i class="fab fa-whatsapp" style="color: #25d366; font-size: 1.2rem;"></i>
+                                <div>
+                                    <div style="font-weight: 600; color: var(--text-primary);">WhatsApp</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-secondary);">Most popular</div>
+                                </div>
+                            </label>
+                            <label style="flex: 1; display: flex; align-items: center; gap: 0.5rem; padding: 1rem; border: 2px solid var(--card-border); border-radius: 8px; cursor: pointer; transition: all 0.2s;" class="platform-option" data-platform="telegram">
+                                <input type="radio" name="platform" value="telegram" id="telegramPlatform" style="margin: 0;">
+                                <i class="fab fa-telegram-plane" style="color: #007aff; font-size: 1.2rem;"></i>
+                                <div>
+                                    <div style="font-weight: 600; color: var(--text-primary);">Telegram</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-secondary);">Fast & secure</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
                     <div style="text-align: center;">
                         <button type="button" class="btn btn-primary" onclick="showSetupInstructions()" id="continueBtn" disabled>
                             <i class="fas fa-arrow-right"></i> Continue
@@ -246,7 +302,7 @@
                             <i class="fas fa-robot"></i> Setup Instructions for <span id="selectedBusinessName"></span>
                         </h6>
                         <p style="margin: 0; color: #64748b; line-height: 1.6;">
-                            Follow these steps to add a WhatsApp group to your business.
+                            Follow these steps to add a <span id="selectedPlatform">WhatsApp</span> group to your business.
                         </p>
                     </div>
 
@@ -543,22 +599,57 @@
             // Two-step modal functionality
             const businessSelect = document.getElementById('businessSelect');
             const continueBtn = document.getElementById('continueBtn');
+            const platformOptions = document.querySelectorAll('.platform-option');
 
             businessSelect.addEventListener('change', function() {
                 continueBtn.disabled = !this.value;
+            });
+
+            // Platform selection functionality
+            platformOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Remove active class from all options
+                    platformOptions.forEach(opt => {
+                        opt.style.borderColor = 'var(--card-border)';
+                        opt.style.backgroundColor = 'transparent';
+                    });
+                    
+                    // Add active class to selected option
+                    this.style.borderColor = 'var(--primary-color)';
+                    this.style.backgroundColor = 'rgba(16, 185, 129, 0.05)';
+                    
+                    // Update continue button
+                    continueBtn.disabled = !businessSelect.value;
+                });
             });
 
             window.showSetupInstructions = function() {
                 const selectedOption = businessSelect.options[businessSelect.selectedIndex];
                 if (!selectedOption || !selectedOption.value) return;
 
+                // Get selected platform
+                const selectedPlatform = document.querySelector('input[name="platform"]:checked');
+                if (!selectedPlatform) {
+                    alert('Please select a platform first.');
+                    return;
+                }
+
                 const businessName = selectedOption.getAttribute('data-business-name');
                 const setupCode = selectedOption.getAttribute('data-setup-code');
                 const hasSales = selectedOption.getAttribute('data-has-sales') === 'true';
                 const hasDelivery = selectedOption.getAttribute('data-has-delivery') === 'true';
+                const platform = selectedPlatform.value;
 
-                // Update setup command
-                document.getElementById('setupCommand').textContent = `/setup ${setupCode}`;
+                // Update platform display
+                document.getElementById('selectedPlatform').textContent = platform.charAt(0).toUpperCase() + platform.slice(1);
+                
+                // Update setup command based on platform
+                if (platform === 'telegram') {
+                    document.getElementById('setupCommand').textContent = `/setup ${setupCode}`;
+                } else {
+                    document.getElementById('setupCommand').textContent = `/setup ${setupCode}`;
+                }
+                
                 document.getElementById('selectedBusinessName').textContent = businessName;
 
                 // Update group type options based on what's available
@@ -620,6 +711,34 @@
             closeAddGroupModal.addEventListener('click', function() {
                 backToBusinessSelection();
             });
+
+            // Table filtering functionality
+            const platformFilter = document.getElementById('platformFilter');
+
+            function filterTable() {
+                const businessValue = businessFilter.value;
+                const typeValue = typeFilter.value;
+                const platformValue = platformFilter.value;
+                const rows = groupsTable.querySelectorAll('tbody tr');
+
+                rows.forEach(row => {
+                    const business = row.getAttribute('data-business');
+                    const type = row.getAttribute('data-type');
+                    const platform = row.querySelector('td:nth-child(2) span').textContent.toLowerCase().includes('telegram') ? 'telegram' : 'whatsapp';
+
+                    const businessMatch = !businessValue || business === businessValue;
+                    const typeMatch = !typeValue || type === typeValue;
+                    const platformMatch = !platformValue || platform === platformValue;
+
+                    if (businessMatch && typeMatch && platformMatch) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            }
+
+            platformFilter.addEventListener('change', filterTable);
         });
     </script>
 </body>

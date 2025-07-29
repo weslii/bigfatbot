@@ -17,10 +17,12 @@ class MemoryMonitor {
   }
 
   detectServiceType() {
-    // Detect if this is web service or WhatsApp bot
+    // Detect if this is web service or messaging bot
     this.isWebService = process.env.NODE_ENV === 'production' && 
                        !process.env.WHATSAPP_BOT && 
-                       !global.whatsappService;
+                       !process.env.TELEGRAM_BOT &&
+                       !global.whatsappService &&
+                       !global.telegramService;
     
     // Additional detection: check if Express app is running
     if (this.isWebService === undefined) {
@@ -29,7 +31,7 @@ class MemoryMonitor {
                          process.argv.includes('start:prod');
     }
     
-    logger.info(`Memory monitor initialized for: ${this.isWebService ? 'Web Service' : 'WhatsApp Bot'}`);
+    logger.info(`Memory monitor initialized for: ${this.isWebService ? 'Web Service' : 'Messaging Bot'}`);
   }
 
   setThresholds() {
@@ -40,11 +42,11 @@ class MemoryMonitor {
       this.restartThreshold = 600 * 1024 * 1024;  // 600MB
       logger.info('Web service memory thresholds: Warning=250MB, Critical=400MB, Restart=600MB');
     } else {
-      // Original conservative thresholds for WhatsApp bot
+      // Original conservative thresholds for messaging bot
       this.warningThreshold = 500 * 1024 * 1024; // 500MB
       this.criticalThreshold = 800 * 1024 * 1024; // 800MB
       this.restartThreshold = 1200 * 1024 * 1024; // 1.2GB
-      logger.info('WhatsApp bot memory thresholds: Warning=500MB, Critical=800MB, Restart=1.2GB');
+      logger.info('Messaging bot memory thresholds: Warning=500MB, Critical=800MB, Restart=1.2GB');
     }
   }
 
@@ -99,7 +101,7 @@ class MemoryMonitor {
     }
 
     // Check for critical memory usage
-    const serviceType = this.isWebService ? 'Web Service' : 'WhatsApp Bot';
+    const serviceType = this.isWebService ? 'Web Service' : 'Messaging Bot';
     
     if (memUsage.rss > this.restartThreshold) {
       logger.error(`CRITICAL: ${serviceType} memory usage exceeded restart threshold!`, memoryInfo);
@@ -135,7 +137,7 @@ class MemoryMonitor {
 
       logger.info('Detailed memory breakdown:', breakdown);
       
-      // Log WhatsApp-specific memory info if available
+      // Log messaging service memory info if available
       if (global.whatsappService) {
         const whatsappInfo = {
           messageHistoryCount: global.whatsappService.messageHistory?.length || 0,
@@ -144,6 +146,14 @@ class MemoryMonitor {
           hasClient: !!global.whatsappService.client
         };
         logger.info('WhatsApp service memory info:', whatsappInfo);
+      }
+      
+      if (global.telegramService) {
+        const telegramInfo = {
+          isConnected: global.telegramService.isConnected,
+          hasClient: !!global.telegramService.core?.client
+        };
+        logger.info('Telegram service memory info:', telegramInfo);
       }
     }
   }

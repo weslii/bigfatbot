@@ -6,8 +6,8 @@ const MessageService = require('./MessageService');
 const database = require('../config/database');
 
 class SchedulerService {
-  constructor(whatsappService) {
-    this.whatsappService = whatsappService;
+  constructor(messageService) {
+    this.messageService = messageService;
     this.jobs = [];
   }
 
@@ -57,7 +57,14 @@ class SchedulerService {
 
         // Format and send report
         const report = this.formatDailyReport(orders, group.business_name);
-        await this.whatsappService.sendMessage(group.group_id, report);
+        
+        // Send message based on platform
+        if (group.platform === 'telegram') {
+          await this.messageService.sendMessage('telegram', group.telegram_chat_id, report);
+        } else {
+          // Default to WhatsApp
+          await this.messageService.sendMessage('whatsapp', group.group_id, report);
+        }
       }
     } catch (error) {
       logger.error('Error sending daily report:', error);
@@ -81,7 +88,14 @@ class SchedulerService {
 
         // Format and send report
         const report = this.formatPendingOrdersReport(pendingOrders, group.business_name);
-        await this.whatsappService.sendMessage(group.group_id, report);
+        
+        // Send message based on platform
+        if (group.platform === 'telegram') {
+          await this.messageService.sendMessage('telegram', group.telegram_chat_id, report);
+        } else {
+          // Default to WhatsApp
+          await this.messageService.sendMessage('whatsapp', group.group_id, report);
+        }
       }
     } catch (error) {
       logger.error('Error sending pending orders report:', error);
@@ -154,7 +168,7 @@ class SchedulerService {
 
   async sendReportsToAllBusinesses(reportType) {
     try {
-      // Get all delivery groups
+      // Get all delivery groups for both platforms
       const groups = await database.query('groups')
         .where('group_type', 'delivery');
 
@@ -181,8 +195,15 @@ class SchedulerService {
               continue;
           }
 
-          await this.whatsappService.client.sendMessage(group.group_id, message);
-          logger.info(`Sent ${reportType} report to business ${group.business_id}`);
+          // Send message based on platform
+          if (group.platform === 'telegram') {
+            await this.messageService.sendMessage('telegram', group.telegram_chat_id, message);
+          } else {
+            // Default to WhatsApp
+            await this.messageService.sendMessage('whatsapp', group.group_id, message);
+          }
+          
+          logger.info(`Sent ${reportType} report to business ${group.business_id} via ${group.platform}`);
         } catch (error) {
           logger.error(`Error sending ${reportType} report to business ${group.business_id}:`, error);
         }
@@ -195,7 +216,7 @@ class SchedulerService {
 
   async sendPendingOrdersToAllBusinesses() {
     try {
-      // Get all delivery groups
+      // Get all delivery groups for both platforms
       const groups = await database.query('groups')
         .where('group_type', 'delivery');
 
@@ -203,8 +224,16 @@ class SchedulerService {
         try {
           const orders = await OrderService.getPendingOrders(group.business_id);
           const message = MessageService.formatPendingOrders(orders);
-          await this.whatsappService.client.sendMessage(group.group_id, message);
-          logger.info(`Sent pending orders to business ${group.business_id}`);
+          
+          // Send message based on platform
+          if (group.platform === 'telegram') {
+            await this.messageService.sendMessage('telegram', group.telegram_chat_id, message);
+          } else {
+            // Default to WhatsApp
+            await this.messageService.sendMessage('whatsapp', group.group_id, message);
+          }
+          
+          logger.info(`Sent pending orders to business ${group.business_id} via ${group.platform}`);
         } catch (error) {
           logger.error(`Error sending pending orders to business ${group.business_id}:`, error);
         }

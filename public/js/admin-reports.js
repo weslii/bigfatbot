@@ -34,11 +34,13 @@ async function fetchAndRenderStats() {
   let [startDate, endDate] = (formData.get('date-range') || '').split(' to ');
   const businessId = formData.get('business');
   const userId = formData.get('user');
+  const platform = formData.get('platform');
   const params = new URLSearchParams();
   if (startDate) params.append('startDate', startDate);
   if (endDate) params.append('endDate', endDate);
   if (businessId) params.append('businessId', businessId);
   if (userId) params.append('userId', userId);
+  if (platform) params.append('platform', platform);
   try {
     const res = await fetch('/admin/api/reports?' + params.toString());
     const { success, stats } = await res.json();
@@ -98,6 +100,22 @@ function renderSummaryCards(stats) {
         <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.parsingSuccesses}</div>
       </div>
       <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
+        <div class="summary-title" style="font-size: 0.97rem;">WhatsApp Businesses</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700; color: #25d366;">${stats.whatsappBusinesses || 0}</div>
+      </div>
+      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
+        <div class="summary-title" style="font-size: 0.97rem;">Telegram Businesses</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700; color: #0088cc;">${stats.telegramBusinesses || 0}</div>
+      </div>
+      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
+        <div class="summary-title" style="font-size: 0.97rem;">WhatsApp Orders</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700; color: #25d366;">${stats.whatsappOrders || 0}</div>
+      </div>
+      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
+        <div class="summary-title" style="font-size: 0.97rem;">Telegram Orders</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700; color: #0088cc;">${stats.telegramOrders || 0}</div>
+      </div>
+      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
         <div class="summary-title" style="font-size: 0.97rem;">Parsing Failures</div>
         <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.parsingFailures}</div>
       </div>
@@ -145,8 +163,20 @@ function exportStatsAsCSV() {
     ['Parsing Successes', stats.parsingSuccesses],
     ['Parsing Failures', stats.parsingFailures],
     ['Filtered Messages', stats.filteredMessages],
-    ['AI Parsed Orders', stats.aiParsedOrders + ' (' + stats.aiParsedPercent.toFixed(1) + '%)'],
-    ['Pattern Parsed Orders', stats.patternParsedOrders + ' (' + stats.patternParsedPercent.toFixed(1) + '%)'],
+          ['AI Parsed Orders', stats.aiParsedOrders + ' (' + stats.aiParsedPercent.toFixed(1) + '%)'],
+      ['Pattern Parsed Orders', stats.patternParsedOrders + ' (' + stats.patternParsedPercent.toFixed(1) + '%)'],
+      ['WhatsApp Businesses', stats.whatsappBusinesses || 0],
+      ['Telegram Businesses', stats.telegramBusinesses || 0],
+      ['WhatsApp Orders', stats.whatsappOrders || 0],
+      ['Telegram Orders', stats.telegramOrders || 0],
+      ['WhatsApp Businesses', stats.whatsappBusinesses || 0],
+      ['Telegram Businesses', stats.telegramBusinesses || 0],
+      ['WhatsApp Orders', stats.whatsappOrders || 0],
+      ['Telegram Orders', stats.telegramOrders || 0],
+      ['WhatsApp Businesses', stats.whatsappBusinesses || 0],
+      ['Telegram Businesses', stats.telegramBusinesses || 0],
+      ['WhatsApp Orders', stats.whatsappOrders || 0],
+      ['Telegram Orders', stats.telegramOrders || 0],
   ];
   const csv = rows.map(r => r.map(x => '"' + String(x).replace(/"/g, '""') + '"').join(',')).join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
