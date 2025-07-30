@@ -166,57 +166,25 @@
                                     <p>Monitor and manage your Novi bot connection</p>
                                 </div>
                                 <div class="card-content">
-                                    <!-- WhatsApp Status -->
-                                    <div class="platform-section">
-                                        <h4 style="margin: 0 0 0.5rem 0; color: #25d366; font-size: 0.9rem;">
-                                            <i class="fab fa-whatsapp"></i> WhatsApp
-                                        </h4>
-                                        <div class="status-item">
-                                            <span>Connection Status</span>
-                                            <span class="status-badge <%= stats && stats.whatsapp && stats.whatsapp.status === 'connected' ? 'active' : 'inactive' %>">
-                                                <%= stats && stats.whatsapp && stats.whatsapp.status ? stats.whatsapp.status.charAt(0).toUpperCase() + stats.whatsapp.status.slice(1) : 'Unknown' %>
-                                            </span>
-                                        </div>
-                                        <div class="status-item">
-                                            <span>Phone Number</span>
-                                            <span class="status-value"><%= stats && stats.whatsapp && stats.whatsapp.number ? stats.whatsapp.number : 'N/A' %></span>
-                                        </div>
+                                    <div class="status-item">
+                                        <span>Connection Status</span>
+                                        <span class="status-badge <%= stats && stats.connectionStatus === 'connected' ? 'active' : 'inactive' %>"><%= stats && stats.connectionStatus ? stats.connectionStatus.charAt(0).toUpperCase() + stats.connectionStatus.slice(1) : 'Unknown' %></span>
                                     </div>
-                                    
-                                    <!-- Telegram Status -->
-                                    <div class="platform-section" style="margin-top: 1rem;">
-                                        <h4 style="margin: 0 0 0.5rem 0; color: #0088cc; font-size: 0.9rem;">
-                                            <i class="fab fa-telegram-plane"></i> Telegram
-                                        </h4>
-                                        <div class="status-item">
-                                            <span>Connection Status</span>
-                                            <span class="status-badge <%= stats && stats.telegram && stats.telegram.status === 'connected' ? 'active' : 'inactive' %>">
-                                                <%= stats && stats.telegram && stats.telegram.status ? stats.telegram.status.charAt(0).toUpperCase() + stats.telegram.status.slice(1) : 'Unknown' %>
-                                            </span>
-                                        </div>
-                                        <div class="status-item">
-                                            <span>Bot Username</span>
-                                            <span class="status-value"><%= stats && stats.telegram && stats.telegram.username ? '@' + stats.telegram.username : 'N/A' %></span>
-                                        </div>
+                                    <div class="status-item">
+                                        <span>Phone Number</span>
+                                        <span class="status-value"><%= stats && stats.phoneNumber ? stats.phoneNumber : 'N/A' %></span>
                                     </div>
-                                    
                                     <div class="status-item">
                                         <span>Last Activity</span>
                                         <span class="status-value"><%= stats && stats.lastActivity ? new Date(stats.lastActivity).toLocaleString() : 'N/A' %></span>
                                     </div>
                                     <hr>
                                     <div class="bot-actions">
-                                        <button class="secondary-btn" onclick="showQR('whatsapp')">
-                                            <i class="fas fa-qrcode"></i> WhatsApp QR
+                                        <button class="secondary-btn">
+                                            <i class="fas fa-qrcode"></i> Show QR
                                         </button>
-                                        <button class="secondary-btn" onclick="showQR('telegram')">
-                                            <i class="fas fa-qrcode"></i> Telegram QR
-                                        </button>
-                                        <button class="secondary-btn" onclick="restartBot('whatsapp')">
-                                            <i class="fas fa-sync-alt"></i> Restart WhatsApp
-                                        </button>
-                                        <button class="secondary-btn" onclick="restartBot('telegram')">
-                                            <i class="fas fa-sync-alt"></i> Restart Telegram
+                                        <button class="secondary-btn">
+                                            <i class="fas fa-sync-alt"></i> Restart
                                         </button>
                                     </div>
                                 </div>
@@ -471,80 +439,5 @@
 
     <script src="/js/theme-utils.js"></script>
     <script src="/js/admin-dashboard.js"></script>
-    <script>
-        // Bot management functions
-        function showQR(platform) {
-            const modal = document.getElementById('qr-modal');
-            const modalTitle = modal.querySelector('h3');
-            const modalDescription = modal.querySelector('p');
-            const qrImage = document.getElementById('qr-image');
-            
-            // Update modal content based on platform
-            if (platform === 'whatsapp') {
-                modalTitle.innerHTML = '<i class="fab fa-whatsapp"></i> WhatsApp Authentication';
-                modalDescription.textContent = 'Scan this QR code with your WhatsApp mobile app to authenticate the bot';
-            } else if (platform === 'telegram') {
-                modalTitle.innerHTML = '<i class="fab fa-telegram-plane"></i> Telegram Bot Setup';
-                modalDescription.textContent = 'Use this information to set up your Telegram bot';
-            }
-            
-            // Show loading state
-            document.getElementById('qr-loading').style.display = 'block';
-            document.getElementById('qr-content').style.display = 'none';
-            document.getElementById('qr-error').style.display = 'none';
-            modal.style.display = 'flex';
-            
-            // Fetch QR code
-            fetch(`/api/qr?platform=${platform}`)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('qr-loading').style.display = 'none';
-                    if (data.qr) {
-                        qrImage.src = data.qr;
-                        document.getElementById('qr-content').style.display = 'block';
-                    } else {
-                        document.getElementById('qr-error').style.display = 'block';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching QR code:', error);
-                    document.getElementById('qr-loading').style.display = 'none';
-                    document.getElementById('qr-error').style.display = 'block';
-                });
-        }
-        
-        function restartBot(platform) {
-            if (confirm(`Are you sure you want to restart the ${platform} bot?`)) {
-                fetch('/api/restart', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ platform: platform })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert(`${platform.charAt(0).toUpperCase() + platform.slice(1)} bot restart requested successfully.`);
-                    } else {
-                        alert('Failed to restart bot: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error restarting bot:', error);
-                    alert('Failed to restart bot. Please try again.');
-                });
-            }
-        }
-        
-        function retryQrCode() {
-            // This would need to be implemented to retry the current platform's QR code
-            location.reload();
-        }
-        
-        function closeQrModal() {
-            document.getElementById('qr-modal').style.display = 'none';
-        }
-    </script>
 </body>
 </html> 

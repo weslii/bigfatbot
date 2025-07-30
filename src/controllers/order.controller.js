@@ -11,7 +11,7 @@ module.exports = {
         return res.redirect('/login');
       }
 
-      const { business, status, search, startDate = '', endDate = '', platform = '', page = 1, pageSize = 10 } = req.query;
+      const { business, status, search, startDate = '', endDate = '', page = 1, pageSize = 10 } = req.query;
 
       // Get user's business IDs first to avoid duplicates
       const userBusinesses = await db.query('groups')
@@ -36,9 +36,6 @@ module.exports = {
           this.where('o.customer_name', 'ilike', `%${search}%`)
             .orWhere('o.order_id', 'ilike', `%${search}%`);
         });
-      }
-      if (platform) {
-        query.where('o.source', platform);
       }
       
       // Date filtering
@@ -68,9 +65,6 @@ module.exports = {
       // Chart Data - Use the same approach to avoid duplicates
       const baseChartQuery = db.query('orders as o')
         .whereIn('o.business_id', businessIds);
-      if (platform) {
-        baseChartQuery.where('o.source', platform);
-      }
       
       const statusCounts = await baseChartQuery.clone()
         .groupBy('o.status')
@@ -115,7 +109,6 @@ module.exports = {
         pageSize: parseInt(pageSize, 10),
         selectedBusiness: business,
         selectedStatus: status,
-        selectedPlatform: platform,
         search,
         startDate,
         endDate,

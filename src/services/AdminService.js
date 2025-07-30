@@ -779,19 +779,10 @@ class AdminService {
   }
 
   static async getBotManagementMetrics() {
-    const MessageService = require('./MessageService');
-    const messageService = new MessageService();
-    
-    // Get metrics for both platforms
-    const whatsappInfo = await messageService.getBotInfo('whatsapp');
-    const whatsappMetrics = await messageService.getBotMetrics('whatsapp');
-    const telegramInfo = await messageService.getBotInfo('telegram');
-    const telegramMetrics = await messageService.getBotMetrics('telegram');
-    
-    return {
-      whatsapp: { ...whatsappInfo, ...whatsappMetrics },
-      telegram: { ...telegramInfo, ...telegramMetrics }
-    };
+    const botService = WhatsAppService.getInstance();
+    const info = await botService.getBotInfo();
+    const metrics = await botService.getBotMetrics();
+    return { ...info, ...metrics };
   }
 
   static async getAnalytics() {
@@ -858,11 +849,9 @@ class AdminService {
         lastActivity = botMetrics.last_activity;
       }
       
-      // Get bot connection status for both platforms
-      const MessageService = require('./MessageService');
-      const messageService = new MessageService();
-      const whatsappInfo = await messageService.getBotInfo('whatsapp');
-      const telegramInfo = await messageService.getBotInfo('telegram');
+      // Get bot connection status
+      const botService = WhatsAppService.getInstance();
+      const botInfo = await botService.getBotInfo();
       
       return {
         totalRevenue: '23,584.89', // Placeholder value for dashboard
@@ -873,14 +862,8 @@ class AdminService {
         orderStatusCounts,
         businessChange,
         orderChange,
-        whatsapp: {
-          status: whatsappInfo.status || 'disconnected',
-          number: whatsappInfo.number || 'Not connected'
-        },
-        telegram: {
-          status: telegramInfo.status || 'disconnected',
-          username: telegramInfo.username || 'Not connected'
-        },
+        status: botInfo.status || 'disconnected',
+        number: botInfo.number || 'Not connected',
         lastActivity: lastActivity || new Date().toISOString(),
         messageSuccessRate: Math.round(messageSuccessRate * 100) / 100, // Round to 2 decimal places
         avgResponseTime: Math.round((avgResponseTime / 1000) * 10) / 10, // Convert ms to seconds, round to 1 decimal
@@ -915,21 +898,16 @@ class AdminService {
     }
   }
 
-  static async getReportStats({ startDate, endDate, businessId, userId, platform } = {}) {
+  static async getReportStats({ startDate, endDate, businessId, userId } = {}) {
     try {
       // Businesses
       const businessQuery = database.query('groups');
       if (startDate) businessQuery.where('created_at', '>=', startDate);
       if (endDate) businessQuery.where('created_at', '<=', endDate);
       if (businessId) businessQuery.where('business_id', businessId);
-      if (platform) businessQuery.where('platform', platform);
       const totalBusinesses = await businessQuery.clone().countDistinct('business_id as count').first();
       const activeBusinesses = await businessQuery.clone().where('is_active', true).countDistinct('business_id as count').first();
       const newBusinesses = startDate ? await businessQuery.clone().where('created_at', '>=', startDate).countDistinct('business_id as count').first() : { count: 0 };
-
-      // Platform-specific business counts
-      const whatsappBusinesses = await businessQuery.clone().where('platform', 'whatsapp').countDistinct('business_id as count').first();
-      const telegramBusinesses = await businessQuery.clone().where('platform', 'telegram').countDistinct('business_id as count').first();
 
       // Users
       const userQuery = database.query('users');
@@ -944,7 +922,6 @@ class AdminService {
       if (startDate) orderQuery.where('created_at', '>=', startDate);
       if (endDate) orderQuery.where('created_at', '<=', endDate);
       if (businessId) orderQuery.where('business_id', businessId);
-      if (platform) orderQuery.where('source', platform);
       if (userId) {
         // Get all business IDs for this user
         const userBusinesses = await database.query('groups').select('business_id').where('user_id', userId);
@@ -955,10 +932,6 @@ class AdminService {
       const newOrders = startDate ? await orderQuery.clone().where('created_at', '>=', startDate).count('id as count').first() : { count: 0 };
       // All-time total orders (ignoring filters)
       const totalOrdersAllTime = await database.query('orders').count('id as count').first();
-
-      // Platform-specific order counts
-      const whatsappOrders = await orderQuery.clone().where('source', 'whatsapp').count('id as count').first();
-      const telegramOrders = await orderQuery.clone().where('source', 'telegram').count('id as count').first();
 
       // Parsing success rate (from bot_metrics)
       const metrics = await database.query('bot_metrics').orderBy('created_at', 'desc').first();
@@ -986,11 +959,6 @@ class AdminService {
         totalOrders: parseInt(totalOrders.count) || 0,
         newOrders: parseInt(newOrders.count) || 0,
         totalOrdersAllTime: parseInt(totalOrdersAllTime.count) || 0,
-        // Platform-specific stats
-        whatsappBusinesses: parseInt(whatsappBusinesses.count) || 0,
-        telegramBusinesses: parseInt(telegramBusinesses.count) || 0,
-        whatsappOrders: parseInt(whatsappOrders.count) || 0,
-        telegramOrders: parseInt(telegramOrders.count) || 0,
         parsingSuccessRate,
         parsingAttempts,
         parsingSuccesses,

@@ -2,8 +2,8 @@ const logger = require('../utils/logger');
 const config = require('../config/config');
 
 class HealthCheckService {
-  constructor(messageService) {
-    this.messageService = messageService;
+  constructor(whatsappService) {
+    this.whatsappService = whatsappService;
     this.groupId = config.healthcheckGroupId;
     this.intervalMs = config.heartbeatIntervalMs;
     this.restartCooldownMs = config.heartbeatRestartCooldownMs;
@@ -35,7 +35,7 @@ class HealthCheckService {
       const msg = `🤖 Bot heartbeat: ${new Date().toISOString()}`;
       // Add a 3-minute timeout (180000 ms)
       await Promise.race([
-        this.messageService.sendMessage('whatsapp', this.groupId, msg),
+        this.whatsappService.sendMessage(this.groupId, msg),
         new Promise((_, reject) => setTimeout(() => reject(new Error('Heartbeat send timed out after 3 minutes')), 180000))
       ]);
       logger.info('HealthCheckService: Heartbeat sent successfully.');
@@ -46,7 +46,7 @@ class HealthCheckService {
         this.lastRestart = now;
         logger.warn('HealthCheckService: Restarting WhatsApp service due to failed heartbeat...');
         try {
-          await this.messageService.restart('whatsapp');
+          await this.whatsappService.restart();
           logger.info('HealthCheckService: WhatsApp service restarted after heartbeat failure.');
         } catch (restartErr) {
           logger.error('HealthCheckService: WhatsApp service restart failed:', restartErr);
@@ -59,8 +59,7 @@ class HealthCheckService {
 
   async cleanupOldHeartbeats() {
     try {
-      const whatsappService = this.messageService.getPlatformService('whatsapp');
-      const chat = await whatsappService.core.client.getChatById(this.groupId);
+      const chat = await this.whatsappService.core.client.getChatById(this.groupId);
       const messages = await chat.fetchMessages({ limit: 50 }); // Adjust limit as needed
       const oneHourAgo = Date.now() - 60 * 60 * 1000;
       for (const msg of messages) {

@@ -505,8 +505,8 @@ module.exports = {
 
   getReportStats: async (req, res) => {
     try {
-      const { startDate, endDate, businessId, userId, platform } = req.query;
-      const stats = await AdminService.getReportStats({ startDate, endDate, businessId, userId, platform });
+      const { startDate, endDate, businessId, userId } = req.query;
+      const stats = await AdminService.getReportStats({ startDate, endDate, businessId, userId });
       res.json({ success: true, stats });
     } catch (error) {
       logger.error('Reports API error:', error);
@@ -846,7 +846,7 @@ module.exports = {
         return res.status(404).render('error', { error: 'Business not found.' });
       }
       // Get additional business details like groups, orders, etc.
-      const groups = await db.query('groups').where('business_id', req.params.businessId).orderBy('platform', 'asc');
+      const groups = await db.query('groups').where('business_id', req.params.businessId);
       const orders = await db.query('orders').where('business_id', req.params.businessId).orderBy('created_at', 'desc').limit(10);
       const totalOrdersResult = await db.query('orders').where('business_id', req.params.businessId).count('* as count').first();
       const totalOrders = totalOrdersResult ? totalOrdersResult.count : 0;

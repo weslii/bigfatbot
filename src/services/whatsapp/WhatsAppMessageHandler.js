@@ -39,7 +39,6 @@ class WhatsAppMessageHandler {
       // Get group info (only for non-setup messages)
       const group = await database.query('groups')
         .where('group_id', message.from)
-        .where('platform', 'whatsapp')
         .first();
 
       if (!group) {
@@ -84,7 +83,6 @@ class WhatsAppMessageHandler {
       try {
         const group = await database.query('groups')
           .where('group_id', message.from)
-          .where('platform', 'whatsapp')
           .first();
         
         if (group) {
@@ -224,7 +222,6 @@ class WhatsAppMessageHandler {
         if (attemptedParsing) {
           if (orderData) {
             orderData.business_id = groupInfo.business_id;
-            orderData.source = 'whatsapp'; // Explicitly set source for WhatsApp orders
             const order = await OrderService.createOrder(groupInfo.business_id, orderData);
             const deliveryConfirmation = MessageService.formatOrderConfirmation(order);
             const salesConfirmation = MessageService.formatSalesConfirmation(order);

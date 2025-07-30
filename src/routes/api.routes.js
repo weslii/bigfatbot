@@ -10,14 +10,11 @@ router.get('/health', apiController.healthCheck);
 // Memory usage endpoint for monitoring
 router.get('/memory', apiController.getMemoryUsage);
 
-// Bot management endpoints (support both WhatsApp and Telegram)
-router.get('/bot-info', apiController.getBotInfo);
+// WhatsApp bot management endpoints
+router.get('/whatsapp/bot-info', apiController.getBotInfo);
 router.post('/whatsapp/change-number', apiController.changeNumber);
-router.post('/restart', requireAdmin, apiController.restartBot);
-router.get('/qr', requireSuperAdmin, apiController.getQrCode);
-
-// Telegram webhook endpoint
-router.post('/telegram-webhook', apiController.handleTelegramWebhook);
+router.post('/whatsapp/restart', requireAdmin, apiController.restartBot);
+router.get('/whatsapp/qr', requireSuperAdmin, apiController.getQrCode);
 
 // Order management API endpoints
 router.get('/orders/:orderId', apiController.getOrderDetails);

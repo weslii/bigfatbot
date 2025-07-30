@@ -90,22 +90,6 @@
                 </div>
                 <div class="stat-value"><%= businesses && businesses.length ? businesses.length : 0 %></div>
             </div>
-            <div class="stat-card platforms">
-                <div class="stat-header">
-                    <span class="stat-title">Platforms</span>
-                    <div class="stat-icon">
-                        <i class="fas fa-mobile-alt"></i>
-                    </div>
-                </div>
-                <div class="stat-value">
-                    <span class="platform-badge whatsapp" title="WhatsApp Groups">
-                        <i class="fab fa-whatsapp"></i> <%= groups ? groups.filter(g => g.platform === 'whatsapp').length : 0 %>
-                    </span>
-                    <span class="platform-badge telegram" title="Telegram Groups">
-                        <i class="fab fa-telegram-plane"></i> <%= groups ? groups.filter(g => g.platform === 'telegram').length : 0 %>
-                    </span>
-                </div>
-            </div>
         </section>
         <div class="dashboard-layout">
             <!-- Main Content -->

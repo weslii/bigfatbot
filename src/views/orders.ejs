@@ -135,15 +135,6 @@
             </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="platformFilter">Platform</label>
-                        <select class="form-select" name="platform" id="platformFilter">
-                            <option value="">All Platforms</option>
-                            <option value="whatsapp" <%= selectedPlatform == 'whatsapp' ? 'selected' : '' %>>WhatsApp</option>
-                            <option value="telegram" <%= selectedPlatform == 'telegram' ? 'selected' : '' %>>Telegram</option>
-                        </select>
-            </div>
-
-                    <div class="form-group">
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-search"></i> Apply
                         </button>
@@ -182,11 +173,10 @@
               <thead>
                 <tr>
                   <th>Order ID</th>
-                  <th>Business</th>
-                  <th>Platform</th>
+                                <th>Business</th>
                   <th>Customer</th>
                   <th>Status</th>
-                  <th>Created</th>
+                                <th>Created</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -196,17 +186,6 @@
                     <tr>
                                         <td><strong><%= order.order_id %></strong></td>
                                         <td><span class="business-badge"><%= order.business_name %></span></td>
-                                        <td>
-                                            <% if (order.source === 'telegram') { %>
-                                                <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.75rem; font-weight: 500; background: rgb(0 122 255 / 0.1); color: #007aff;">
-                                                    <i class="fab fa-telegram-plane"></i> Telegram
-                                                </span>
-                                            <% } else { %>
-                                                <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.75rem; font-weight: 500; background: rgb(37 211 102 / 0.1); color: #25d366;">
-                                                    <i class="fab fa-whatsapp"></i> WhatsApp
-                                                </span>
-                                            <% } %>
-                                        </td>
                                         <td><%= order.customer_name %></td>
                       <td>
                                             <span class="status-badge <%= order.status %>"><%= order.status %></span>
@@ -229,7 +208,7 @@
                   <% }); %>
                 <% } else { %>
                   <tr>
-                                    <td colspan="7" class="no-orders">
+                                    <td colspan="6" class="no-orders">
                                         <i class="fas fa-box-open"></i>
                                         <p>No orders found matching your criteria.</p>
                     </td>
