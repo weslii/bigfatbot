@@ -109,55 +109,62 @@ class ThemeManager {
      * Update theme toggle button UI
      */
     updateThemeToggleUI() {
-        const themeToggle = document.getElementById('theme-toggle') || 
-                           document.getElementById('themeToggle');
+        // Update both desktop and mobile theme toggles
+        const themeToggles = [
+            document.getElementById('theme-toggle'),
+            document.getElementById('themeToggle'),
+            document.getElementById('mobileThemeToggle')
+        ].filter(Boolean); // Remove null/undefined elements
         
-        if (!themeToggle) return;
+        themeToggles.forEach(themeToggle => {
+            // Find both sun and moon icons
+            const sunIcon = themeToggle.querySelector('.fa-sun');
+            const moonIcon = themeToggle.querySelector('.fa-moon');
 
-        // Find both sun and moon icons
-        const sunIcon = themeToggle.querySelector('.fa-sun');
-        const moonIcon = themeToggle.querySelector('.fa-moon');
-
-        if (sunIcon && moonIcon) {
-            // Dual icon setup - toggle visibility
-            if (this.currentTheme === 'light') {
-                sunIcon.style.display = 'none';
-                moonIcon.style.display = 'inline-block';
-            } else {
-                sunIcon.style.display = 'inline-block';
-                moonIcon.style.display = 'none';
+            if (sunIcon && moonIcon) {
+                // Dual icon setup - toggle visibility
+                if (this.currentTheme === 'light') {
+                    sunIcon.style.display = 'none';
+                    moonIcon.style.display = 'inline-block';
+                } else {
+                    sunIcon.style.display = 'inline-block';
+                    moonIcon.style.display = 'none';
+                }
+            } else if (sunIcon || moonIcon) {
+                // Single icon setup - change the class
+                const icon = sunIcon || moonIcon;
+                icon.className = this.currentTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
             }
-        } else if (sunIcon || moonIcon) {
-            // Single icon setup - change the class
-            const icon = sunIcon || moonIcon;
-            icon.className = this.currentTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
-        }
 
-        // Update aria-label
-        themeToggle.setAttribute('aria-label', 
-            `Switch to ${this.currentTheme === 'light' ? 'dark' : 'light'} mode`);
+            // Update aria-label
+            themeToggle.setAttribute('aria-label', 
+                `Switch to ${this.currentTheme === 'light' ? 'dark' : 'light'} mode`);
+        });
     }
 
     /**
      * Setup theme toggle button event listener
      */
     setupThemeToggle() {
-        const themeToggle = document.getElementById('theme-toggle') || 
-                           document.getElementById('themeToggle');
+        // Setup both desktop and mobile theme toggles
+        const themeToggleIds = ['theme-toggle', 'themeToggle', 'mobileThemeToggle'];
         
-        if (themeToggle) {
-            // Remove existing listeners to prevent duplicates
-            themeToggle.replaceWith(themeToggle.cloneNode(true));
-            const newThemeToggle = document.getElementById('theme-toggle') || 
-                                  document.getElementById('themeToggle');
+        themeToggleIds.forEach(id => {
+            const themeToggle = document.getElementById(id);
             
-            newThemeToggle.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.toggleTheme();
-            });
+            if (themeToggle) {
+                // Remove existing listeners to prevent duplicates
+                themeToggle.replaceWith(themeToggle.cloneNode(true));
+                const newThemeToggle = document.getElementById(id);
+                
+                newThemeToggle.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.toggleTheme();
+                });
+            }
+        });
 
-            this.updateThemeToggleUI();
-        }
+        this.updateThemeToggleUI();
     }
 
     /**

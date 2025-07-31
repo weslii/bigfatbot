@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management - <%= user.business_name %></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/inventory.css">
+    <link rel="icon" href="/logo-icon copy.svg">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="/dashboard" class="logo-section">
+                    <div class="logo-icon">
+                        <i class="fas fa-boxes"></i>
+                    </div>
+                    <div class="logo-text">
+                        <span class="main-title">Inventory Management</span>
+                    </div>
+                </a>
+            </div>
+            <div class="header-right">
+                <a href="/dashboard" class="nav-link">Dashboard</a>
+                <a href="/orders" class="nav-link">Orders</a>
+                <a href="/groups" class="nav-link">Groups</a>
+                <a href="/inventory" class="nav-link active">Inventory</a>
+                <button class="btn btn-icon" id="theme-toggle" aria-label="Toggle Theme">
+                    <i class="fas fa-sun"></i>
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-icon" id="profileDropdown"><i class="fas fa-user"></i></button>
+                    <div class="dropdown-content" id="profileMenu">
+                        <a href="/settings" class="dropdown-item"><i class="fas fa-cog"></i> Settings</a>
+                        <form action="/logout" method="post" class="dropdown-item" style="padding: 0; margin: 0;">
+                            <button type="submit" style="all: unset; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; width: 100%;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                        </form>
+                    </div>
+                </div>
+                <button class="btn btn-icon hamburger-menu" id="hamburgerMenu" aria-label="Toggle Menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Navigation Overlay -->
+    <div class="mobile-nav-overlay" id="mobileNavOverlay">
+        <div class="mobile-nav-content">
+            <div class="mobile-nav-header">
+                <span class="mobile-nav-title">Menu</span>
+                <button class="btn btn-icon close-mobile-nav" id="closeMobileNav">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <nav class="mobile-nav-menu">
+                <a href="/dashboard" class="mobile-nav-link">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/orders" class="mobile-nav-link">
+                    <i class="fas fa-box"></i>
+                    <span>Orders</span>
+                </a>
+                <a href="/groups" class="mobile-nav-link">
+                    <i class="fas fa-users"></i>
+                    <span>Groups</span>
+                </a>
+                <a href="/inventory" class="mobile-nav-link active">
+                    <i class="fas fa-boxes"></i>
+                    <span>Inventory</span>
+                </a>
+            </nav>
+            <div class="mobile-nav-actions">
+                <button class="btn btn-icon mobile-theme-toggle" id="mobileThemeToggle" aria-label="Toggle Theme">
+                    <i class="fas fa-sun"></i>
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div class="mobile-profile-section">
+                    <a href="/settings" class="mobile-nav-link">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                    <form action="/logout" method="post" class="mobile-nav-link" style="padding: 0; margin: 0;">
+                        <button type="submit" style="all: unset; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; width: 100%; color: var(--text-primary);">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Inventory Overview</h1>
+                <p class="page-subtitle">Manage your product catalog, fees, and collections</p>
+            </div>
+            <div class="header-actions-right">
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Search inventory..." class="search-input">
+                    <i class="fas fa-search search-icon"></i>
+                </div>
+                <button class="btn btn-primary" id="addItemBtn">
+                    <i class="fas fa-plus"></i> Add Item
+                </button>
+            </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+            <div class="kpi-card card-hover clickable-kpi" data-filter="product" role="button" tabindex="0">
+                <div class="kpi-icon">
+                    <i class="fas fa-box"></i>
+                </div>
+                <div class="kpi-info">
+                    <h3><%= summary.products %></h3>
+                    <p>Products</p>
+                </div>
+            </div>
+            <div class="kpi-card card-hover clickable-kpi" data-filter="other" role="button" tabindex="0">
+                <div class="kpi-icon">
+                    <i class="fas fa-tag"></i>
+                </div>
+                <div class="kpi-info">
+                    <h3><%= summary.others %></h3>
+                    <p>Fees & Charges</p>
+                </div>
+            </div>
+            <div class="kpi-card card-hover clickable-kpi" data-filter="collection" role="button" tabindex="0">
+                <div class="kpi-icon">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <div class="kpi-info">
+                    <h3><%= summary.collections %></h3>
+                    <p>Collections</p>
+                </div>
+            </div>
+            <div class="kpi-card card-hover clickable-kpi" data-filter="outofstock" role="button" tabindex="0">
+                <div class="kpi-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="kpi-info">
+                    <h3><%= outOfStock ? outOfStock.length : 0 %></h3>
+                    <p>Out of Stock</p>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- Inventory Grid -->
+        <div class="content-card card-hover">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-boxes"></i> Inventory Items
+                </h3>
+            </div>
+            <div class="card-content">
+                <% if (inventory.length === 0) { %>
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-box-open"></i>
+                        </div>
+                        <h3>No items found</h3>
+                        <p>Start by adding your first product, fee, or collection</p>
+                        <button class="btn btn-primary" id="addFirstItemBtn">
+                            <i class="fas fa-plus"></i> Add Your First Item
+                        </button>
+                    </div>
+                <% } else { %>
+                    <div id="inventoryGrid" class="inventory-grid">
+                        <% inventory.forEach(item => { %>
+                        <div class="inventory-card <%= item.type %>-card <%= item.type === 'collection' ? 'clickable' : '' %>" data-id="<%= item.id %>" data-type="<%= item.type %>">
+                            <!-- Small icon in top-left corner -->
+                            <div class="card-icon">
+                                <i class="fas <%= item.type === 'product' ? 'fa-box' : (item.type === 'other' ? 'fa-tag' : 'fa-layer-group') %>"></i>
+                            </div>
+                            
+                            <div class="card-content">
+                                <h3 class="card-title"><%= item.name %></h3>
+                                
+                                <div class="card-price-section">
+                                    <p class="card-price">
+                                        <% if (item.price_override) { %>
+                                            <span class="original-price">$<%= parseFloat(item.price).toFixed(2) %></span>
+                                            <span class="override-price">$<%= parseFloat(item.price_override).toFixed(2) %></span>
+                                        <% } else { %>
+                                            $<%= parseFloat(item.price).toFixed(2) %>
+                                        <% } %>
+                                    </p>
+                                    <% if (item.price_override) { %>
+                                        <small class="collection-indicator">via <%= item.collection_name %></small>
+                                    <% } %>
+                                </div>
+                                
+                                <% if (item.description) { %>
+                                    <p class="card-description"><%= item.description %></p>
+                                <% } %>
+                                
+                                <div class="card-meta">
+                                    <% if (item.type === 'product') { %>
+                                        <div class="stock-info">
+                                            <% if (item.stock_count <= 0) { %>
+                                                <span class="out-of-stock">Out of Stock</span>
+                                            <% } else if (item.stock_count <= 10) { %>
+                                                <span class="low-stock">Low Stock: <%= item.stock_count %></span>
+                                            <% } else { %>
+                                                <span class="in-stock">In Stock: <%= item.stock_count %></span>
+                                            <% } %>
+                                        </div>
+                                    <% } %>
+                                    
+                                    <% if (item.type === 'collection') { %>
+                                        <div class="collection-info">
+                                            <span class="collection-item-count"><%= item.items ? item.items.length : 0 %> items</span>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                        <% }); %>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Item Modal -->
+    <div class="modal" id="itemModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Item</h2>
+                <button class="close-btn" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="itemForm" class="item-form">
+                <div class="form-group">
+                    <label for="itemType">Item Type</label>
+                    <select id="itemType" name="type" required>
+                        <option value="product">Product</option>
+                        <option value="other">Fee/Charge</option>
+                        <option value="collection">Collection</option>
+                    </select>
+                </div>
+                
+                <div class="form-group collection-only" style="display: none;">
+                    <label for="collectionType">Collection Type</label>
+                    <select id="collectionType" name="collection_type">
+                        <option value="product">Product Collection</option>
+                        <option value="other">Fee/Charge Collection</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="itemName">Name</label>
+                    <input type="text" id="itemName" name="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="itemDescription">Description (Optional)</label>
+                    <textarea id="itemDescription" name="description" rows="3"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="itemPrice">Price</label>
+                    <input type="number" id="itemPrice" name="price" step="0.01" min="0" required>
+                </div>
+                
+                <div class="form-group product-only" style="display: none;">
+                    <label for="itemStock">Stock Count</label>
+                    <input type="number" id="itemStock" name="stock_count" min="0" value="0">
+                </div>
+                
+                <div class="form-group">
+                    <label for="itemImage">Image URL (Optional)</label>
+                    <input type="url" id="itemImage" name="image_url" placeholder="https://example.com/image.jpg">
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal" id="deleteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Delete Item</h2>
+                <button class="close-btn" id="closeDeleteModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <p>Are you sure you want to delete this item? This action cannot be undone.</p>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="cancelDeleteBtn">Cancel</button>
+                <button class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Item Details Modal -->
+    <div class="modal" id="itemDetailsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="detailsModalTitle">Item Details</h2>
+                <button class="close-btn" id="closeDetailsModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <form id="itemDetailsForm" class="item-form">
+                    <div class="form-group">
+                        <label for="detailsItemType">Item Type</label>
+                        <select id="detailsItemType" name="type" required>
+                            <option value="product">Product</option>
+                            <option value="other">Fee/Charge</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="detailsItemName">Name</label>
+                        <input type="text" id="detailsItemName" name="name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="detailsItemDescription">Description (Optional)</label>
+                        <textarea id="detailsItemDescription" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="detailsItemPrice">Price</label>
+                        <input type="number" id="detailsItemPrice" name="price" step="0.01" min="0" required>
+                    </div>
+                    
+                    <div class="form-group product-only">
+                        <label for="detailsItemStock">Stock Count</label>
+                        <input type="number" id="detailsItemStock" name="stock_count" min="0" value="0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="detailsItemImage">Image URL (Optional)</label>
+                        <input type="url" id="detailsItemImage" name="image_url" placeholder="https://example.com/image.jpg">
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-danger" id="deleteItemBtn">
+                            <i class="fas fa-trash"></i> Delete Item
+                        </button>
+                        <div class="form-actions-right">
+                            <button type="button" class="btn btn-secondary" id="cancelDetailsBtn">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/inventory.js"></script>
+    <script src="/js/theme-utils.js"></script>
+    <script>
+        // Profile dropdown functionality
+        const profileDropdownBtn = document.getElementById('profileDropdown');
+        const profileMenu = document.getElementById('profileMenu');
+        if (profileDropdownBtn && profileMenu) {
+            profileDropdownBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                profileDropdownBtn.parentElement.classList.toggle('active');
+            });
+            document.addEventListener('click', function(e) {
+                if (!profileMenu.contains(e.target) && !profileDropdownBtn.contains(e.target)) {
+                    profileDropdownBtn.parentElement.classList.remove('active');
+                }
+            });
+        }
+
+        // Mobile navigation functionality
+        const hamburgerMenu = document.getElementById('hamburgerMenu');
+        const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+        const closeMobileNav = document.getElementById('closeMobileNav');
+        const mobileThemeToggle = document.getElementById('mobileThemeToggle');
+
+        // Open mobile menu
+        hamburgerMenu.addEventListener('click', function() {
+            mobileNavOverlay.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        });
+
+        // Close mobile menu
+        function closeMobileMenu() {
+            mobileNavOverlay.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        closeMobileNav.addEventListener('click', closeMobileMenu);
+
+        // Close mobile menu when clicking outside
+        mobileNavOverlay.addEventListener('click', function(e) {
+            if (e.target === mobileNavOverlay) {
+                closeMobileMenu();
+            }
+        });
+
+        // Close mobile menu with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && mobileNavOverlay.classList.contains('show')) {
+                closeMobileMenu();
+            }
+        });
+
+        // Mobile theme toggle
+        mobileThemeToggle.addEventListener('click', function() {
+            if (window.themeManager) {
+                window.themeManager.toggleTheme();
+            }
+        });
+
+        // Close mobile menu when clicking on navigation links
+        const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+        mobileNavLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                if (!this.classList.contains('mobile-theme-toggle')) {
+                    closeMobileMenu();
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

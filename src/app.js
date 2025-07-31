@@ -22,6 +22,7 @@ const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const orderRoutes = require('./routes/order.routes');
 const businessRoutes = require('./routes/business.routes');
+const inventoryRoutes = require('./routes/inventory.routes');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -84,6 +85,12 @@ async function initializeBotServices() {
       return true;
     }
 
+    // Check for WEB_ONLY environment variable for local development
+    if (process.env.WEB_ONLY === 'true') {
+      logger.info('WEB_ONLY mode detected - skipping bot service initialization');
+      return true;
+    }
+
     const botManager = BotServiceManager.getInstance();
     await botManager.initialize();
     logger.info('Bot services initialized successfully');
@@ -122,6 +129,9 @@ function setupRoutes() {
   
   // Business routes
   app.use('/', businessRoutes);
+  
+  // Inventory routes
+  app.use('/inventory', inventoryRoutes);
 }
 
 // Graceful shutdown

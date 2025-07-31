@@ -22,6 +22,7 @@
                 <a href="/dashboard" class="nav-link">Dashboard</a>
                 <a href="/orders" class="nav-link">Orders</a>
                 <a href="/groups" class="nav-link active">Groups</a>
+                <a href="/inventory" class="nav-link">Inventory</a>
                 <button class="btn btn-icon" id="theme-toggle" aria-label="Toggle Theme">
                     <i class="fas fa-sun"></i>
                     <i class="fas fa-moon"></i>
@@ -35,9 +36,60 @@
                         </form>
                     </div>
                 </div>
+                <button class="btn btn-icon hamburger-menu" id="hamburgerMenu" aria-label="Toggle Menu">
+                    <i class="fas fa-bars"></i>
+                </button>
             </div>
         </div>
     </header>
+
+    <!-- Mobile Navigation Overlay -->
+    <div class="mobile-nav-overlay" id="mobileNavOverlay">
+        <div class="mobile-nav-content">
+            <div class="mobile-nav-header">
+                <span class="mobile-nav-title">Menu</span>
+                <button class="btn btn-icon close-mobile-nav" id="closeMobileNav">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <nav class="mobile-nav-menu">
+                <a href="/dashboard" class="mobile-nav-link">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/orders" class="mobile-nav-link">
+                    <i class="fas fa-box"></i>
+                    <span>Orders</span>
+                </a>
+                <a href="/groups" class="mobile-nav-link active">
+                    <i class="fas fa-users"></i>
+                    <span>Groups</span>
+                </a>
+                <a href="/inventory" class="mobile-nav-link">
+                    <i class="fas fa-boxes"></i>
+                    <span>Inventory</span>
+                </a>
+            </nav>
+            <div class="mobile-nav-actions">
+                <button class="btn btn-icon mobile-theme-toggle" id="mobileThemeToggle" aria-label="Toggle Theme">
+                    <i class="fas fa-sun"></i>
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div class="mobile-profile-section">
+                    <a href="/settings" class="mobile-nav-link">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                    <form action="/logout" method="post" class="mobile-nav-link" style="padding: 0; margin: 0;">
+                        <button type="submit" style="all: unset; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; width: 100%; color: var(--text-primary);">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="main-content">
         <div class="page-header">
@@ -558,17 +610,17 @@
                 }
             }
 
+            // Two-step modal functionality
+            const businessSelect = document.getElementById('businessSelect');
+            const platformSelect = document.getElementById('platformSelect');
+            const continueBtn = document.getElementById('continueBtn');
+
             // Load bot info when platform changes
             platformSelect.addEventListener('change', function() {
                 if (this.value) {
                     loadBotInfo(this.value);
                 }
             });
-
-            // Two-step modal functionality
-            const businessSelect = document.getElementById('businessSelect');
-            const platformSelect = document.getElementById('platformSelect');
-            const continueBtn = document.getElementById('continueBtn');
 
             function updateContinueButton() {
                 continueBtn.disabled = !businessSelect.value || !platformSelect.value;
@@ -662,15 +714,66 @@
             window.backToBusinessSelection = function() {
                 document.getElementById('setupInstructionsStep').style.display = 'none';
                 document.getElementById('businessSelectionStep').style.display = 'block';
-                businessSelect.value = '';
-                platformSelect.value = '';
-                continueBtn.disabled = true;
+                document.getElementById('businessSelect').value = '';
+                document.getElementById('platformSelect').value = '';
+                document.getElementById('continueBtn').disabled = true;
             };
 
             // Reset modal when closed
             const closeAddGroupModal = document.getElementById('closeAddGroupModal');
             closeAddGroupModal.addEventListener('click', function() {
                 backToBusinessSelection();
+            });
+
+            // Mobile navigation functionality
+            const hamburgerMenu = document.getElementById('hamburgerMenu');
+            const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+            const closeMobileNav = document.getElementById('closeMobileNav');
+            const mobileThemeToggle = document.getElementById('mobileThemeToggle');
+
+            // Open mobile menu
+            hamburgerMenu.addEventListener('click', function() {
+                mobileNavOverlay.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            });
+
+            // Close mobile menu
+            function closeMobileMenu() {
+                mobileNavOverlay.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+
+            closeMobileNav.addEventListener('click', closeMobileMenu);
+
+            // Close mobile menu when clicking outside
+            mobileNavOverlay.addEventListener('click', function(e) {
+                if (e.target === mobileNavOverlay) {
+                    closeMobileMenu();
+                }
+            });
+
+            // Close mobile menu with Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && mobileNavOverlay.classList.contains('show')) {
+                    closeMobileMenu();
+                }
+            });
+
+            // Mobile theme toggle
+            mobileThemeToggle.addEventListener('click', function() {
+                if (window.themeManager) {
+                    window.themeManager.toggleTheme();
+                }
+            });
+
+            // Close mobile menu when clicking on navigation links
+            const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+            mobileNavLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (!this.classList.contains('mobile-theme-toggle')) {
+                        closeMobileMenu();
+                    }
+                });
             });
         });
     </script>

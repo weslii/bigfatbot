@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Collection - <%= user.business_name %></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/inventory.css">
+    <link rel="icon" href="/logo-icon copy.svg">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="/inventory" class="logo-section">
+                    <div class="logo-icon">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <div class="logo-text">
+                        <span class="main-title">Collection Management</span>
+                    </div>
+                </a>
+            </div>
+            <div class="header-right">
+                <a href="/dashboard" class="nav-link">Dashboard</a>
+                <a href="/orders" class="nav-link">Orders</a>
+                <a href="/groups" class="nav-link">Groups</a>
+                <a href="/inventory" class="nav-link">Inventory</a>
+                <button class="btn btn-icon" id="theme-toggle" aria-label="Toggle Theme">
+                    <i class="fas fa-sun"></i>
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-icon" id="profileDropdown"><i class="fas fa-user"></i></button>
+                    <div class="dropdown-content" id="profileMenu">
+                        <a href="/settings" class="dropdown-item"><i class="fas fa-cog"></i> Settings</a>
+                        <form action="/logout" method="post" class="dropdown-item" style="padding: 0; margin: 0;">
+                            <button type="submit" style="all: unset; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; width: 100%;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                        </form>
+                    </div>
+                </div>
+                <button class="btn btn-icon hamburger-menu" id="hamburgerMenu" aria-label="Toggle Menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Navigation Overlay -->
+    <div class="mobile-nav-overlay" id="mobileNavOverlay">
+        <div class="mobile-nav-content">
+            <div class="mobile-nav-header">
+                <span class="mobile-nav-title">Menu</span>
+                <button class="btn btn-icon close-mobile-nav" id="closeMobileNav">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <nav class="mobile-nav-menu">
+                <a href="/dashboard" class="mobile-nav-link">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/orders" class="mobile-nav-link">
+                    <i class="fas fa-box"></i>
+                    <span>Orders</span>
+                </a>
+                <a href="/groups" class="mobile-nav-link">
+                    <i class="fas fa-users"></i>
+                    <span>Groups</span>
+                </a>
+                <a href="/inventory" class="mobile-nav-link">
+                    <i class="fas fa-boxes"></i>
+                    <span>Inventory</span>
+                </a>
+            </nav>
+            <div class="mobile-nav-actions">
+                <button class="btn btn-icon mobile-theme-toggle" id="mobileThemeToggle" aria-label="Toggle Theme">
+                    <i class="fas fa-sun"></i>
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div class="mobile-profile-section">
+                    <a href="/settings" class="mobile-nav-link">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                    <form action="/logout" method="post" class="mobile-nav-link" style="padding: 0; margin: 0;">
+                        <button type="submit" style="all: unset; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; width: 100%; color: var(--text-primary);">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div>
+                <h1 class="page-title" id="collectionName" data-editable="true"><%= collection.name %></h1>
+                <p class="page-subtitle" id="collectionDescription" data-editable="true"><%= collection.description || 'Click to add description' %></p>
+            </div>
+            <div class="header-actions-right">
+                <button class="btn btn-primary" id="addItemBtn">
+                    <i class="fas fa-plus"></i> Add Item
+                </button>
+            </div>
+        </div>
+
+        <!-- Collection Info -->
+        <div class="content-card card-hover">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-info-circle"></i> Collection Details
+                </h3>
+            </div>
+            <div class="card-content">
+                <div class="collection-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Type:</span>
+                        <span class="detail-value"><%= collection.type === 'product' ? 'Product Collection' : 'Fee Collection' %></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Price:</span>
+                        <span class="detail-value" id="collectionPrice" data-editable="true">$<%= parseFloat(collection.price).toFixed(2) %></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Items:</span>
+                        <span class="detail-value"><%= collectionItems.length %> items</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Pricing:</span>
+                        <span class="detail-value">Items use collection price</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collection Items -->
+        <div class="content-card card-hover">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-boxes"></i> Collection Items
+                </h3>
+            </div>
+            <div class="card-content">
+                <% if (collectionItems.length === 0) { %>
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-box-open"></i>
+                        </div>
+                        <h3>No items in collection</h3>
+                        <p>Add items to this collection to get started</p>
+                        <button class="btn btn-primary" id="addFirstItemBtn">
+                            <i class="fas fa-plus"></i> Add Your First Item
+                        </button>
+                    </div>
+                <% } else { %>
+                    <div class="collection-items-grid">
+                        <% collectionItems.forEach(item => { %>
+                            <div class="collection-item-card clickable" data-id="<%= item.product_id || item.other_id %>" data-type="<%= item.product_name ? 'product' : 'other' %>">
+                                <div class="item-icon">
+                                    <i class="fas <%= item.product_name ? 'fa-box' : 'fa-tag' %>"></i>
+                                </div>
+                                <div class="item-details">
+                                    <h4 class="item-name"><%= item.product_name || item.other_name %></h4>
+                                    <p class="item-price">
+                                        <% if (item.price_override) { %>
+                                            <span class="original-price">$<%= parseFloat(item.product_price || item.other_price).toFixed(2) %></span>
+                                            <span class="override-price">$<%= parseFloat(item.price_override).toFixed(2) %></span>
+                                        <% } else { %>
+                                            $<%= parseFloat(item.product_price || item.other_price).toFixed(2) %>
+                                        <% } %>
+                                    </p>
+                                    <span class="item-type"><%= item.product_name ? 'Product' : 'Fee' %></span>
+                                </div>
+                                <div class="item-actions">
+                                    <button class="action-btn remove-btn" data-collection-item-id="<%= item.id %>" title="Remove from collection">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Item Modal -->
+    <div class="modal" id="addItemModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Item to Collection</h2>
+                <button class="close-btn" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="addItemForm" class="item-form">
+                <input type="hidden" id="itemType" name="type" value="<%= collection.type %>">
+                
+                                 <div class="form-group">
+                     <label>Add <%= collection.type === 'product' ? 'Product' : 'Fee/Charge' %></label>
+                     <div class="add-item-tabs">
+                         <button type="button" class="tab-btn active" data-tab="existing">Select Existing</button>
+                         <button type="button" class="tab-btn" data-tab="new">Create New</button>
+                     </div>
+                     <div class="collection-price-notice">
+                         <i class="fas fa-info-circle"></i>
+                         <span>New items will use the collection price: $<%= parseFloat(collection.price).toFixed(2) %></span>
+                     </div>
+                 </div>
+                
+                <!-- Existing Item Selection -->
+                <div class="tab-content active" id="existing-tab">
+                    <div class="form-group">
+                        <label for="itemSelect">Select <%= collection.type === 'product' ? 'Product' : 'Fee/Charge' %></label>
+                        <select id="itemSelect" name="itemId">
+                            <option value="">Choose an item</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- New Item Creation -->
+                <div class="tab-content" id="new-tab">
+                    <div class="form-group">
+                        <label for="newItemName">Name</label>
+                        <input type="text" id="newItemName" name="newItemName" placeholder="Enter item name">
+                    </div>
+                    <div class="form-group">
+                        <label for="newItemDescription">Description (Optional)</label>
+                        <textarea id="newItemDescription" name="newItemDescription" rows="2" placeholder="Enter description"></textarea>
+                    </div>
+                                         <div class="form-group">
+                         <label for="newItemPrice">Price</label>
+                         <input type="number" id="newItemPrice" name="newItemPrice" step="0.01" min="0" value="<%= parseFloat(collection.price).toFixed(2) %>" readonly>
+                         <small class="form-help">Price is set to collection price and cannot be changed</small>
+                     </div>
+                    <% if (collection.type === 'product') { %>
+                    <div class="form-group">
+                        <label for="newItemStock">Stock Count</label>
+                        <input type="number" id="newItemStock" name="newItemStock" min="0" value="0">
+                    </div>
+                    <% } %>
+                    <div class="form-group">
+                        <label for="newItemImage">Image URL (Optional)</label>
+                        <input type="url" id="newItemImage" name="newItemImage" placeholder="https://example.com/image.jpg">
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add to Collection</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/collection-management.js"></script>
+    <script src="/js/theme-utils.js"></script>
+    <script>
+        // Profile dropdown functionality
+        const profileDropdownBtn = document.getElementById('profileDropdown');
+        const profileMenu = document.getElementById('profileMenu');
+        if (profileDropdownBtn && profileMenu) {
+            profileDropdownBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                profileDropdownBtn.parentElement.classList.toggle('active');
+            });
+            document.addEventListener('click', function(e) {
+                if (!profileMenu.contains(e.target) && !profileDropdownBtn.contains(e.target)) {
+                    profileDropdownBtn.parentElement.classList.remove('active');
+                }
+            });
+        }
+
+        // Mobile navigation functionality
+        const hamburgerMenu = document.getElementById('hamburgerMenu');
+        const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+        const closeMobileNav = document.getElementById('closeMobileNav');
+        const mobileThemeToggle = document.getElementById('mobileThemeToggle');
+
+        // Open mobile menu
+        hamburgerMenu.addEventListener('click', function() {
+            mobileNavOverlay.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        });
+
+        // Close mobile menu
+        function closeMobileMenu() {
+            mobileNavOverlay.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        closeMobileNav.addEventListener('click', closeMobileMenu);
+
+        // Close mobile menu when clicking outside
+        mobileNavOverlay.addEventListener('click', function(e) {
+            if (e.target === mobileNavOverlay) {
+                closeMobileMenu();
+            }
+        });
+
+        // Close mobile menu with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && mobileNavOverlay.classList.contains('show')) {
+                closeMobileMenu();
+            }
+        });
+    </script>
+</body>
+</html> 
