@@ -7,6 +7,7 @@ const cacheService = require('./services/CacheService');
 const memoryMonitor = require('./utils/memoryMonitor');
 const sessionConfig = require('./config/session');
 const { sessionDebug, sessionErrorHandler } = require('./middleware/session.middleware');
+const BotServiceManager = require('./services/BotServiceManager');
 
 // Handle memory-based restart requests gracefully (for web service)
 process.on('restart-requested', (info) => {
@@ -67,6 +68,33 @@ async function initializeCache() {
   }
 }
 
+// Initialize bot services
+async function initializeBotServices() {
+  try {
+    // Check if we're in web-only mode (no bot services)
+    // Use NODE_ENV to determine if this is a web-only deployment
+    if (process.env.NODE_ENV === 'production' && !process.env.BOT_PORT) {
+      logger.info('Running in production web-only mode - skipping bot service initialization');
+      return true;
+    }
+
+    // Check if this is a Railway deployment with separate services
+    if (process.env.RAILWAY_PUBLIC_DOMAIN && process.env.NODE_ENV === 'production') {
+      logger.info('Railway deployment detected - bot services will be handled by separate service');
+      return true;
+    }
+
+    const botManager = BotServiceManager.getInstance();
+    await botManager.initialize();
+    logger.info('Bot services initialized successfully');
+    return true;
+  } catch (error) {
+    logger.error('Failed to initialize bot services:', error);
+    logger.warn('Continuing without bot services - web interface will have limited functionality');
+    return false;
+  }
+}
+
 // Start memory monitoring in production
 function startMemoryMonitoring() {
   if (process.env.NODE_ENV === 'production') {
@@ -96,6 +124,31 @@ function setupRoutes() {
   app.use('/', businessRoutes);
 }
 
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  logger.info('SIGTERM received, shutting down gracefully...');
+  try {
+    const botManager = BotServiceManager.getInstance();
+    await botManager.shutdown();
+    process.exit(0);
+  } catch (error) {
+    logger.error('Error during graceful shutdown:', error);
+    process.exit(1);
+  }
+});
+
+process.on('SIGINT', async () => {
+  logger.info('SIGINT received, shutting down gracefully...');
+  try {
+    const botManager = BotServiceManager.getInstance();
+    await botManager.shutdown();
+    process.exit(0);
+  } catch (error) {
+    logger.error('Error during graceful shutdown:', error);
+    process.exit(1);
+  }
+});
+
 // Initialize app
 async function initializeApp() {
   try {
@@ -109,6 +162,13 @@ async function initializeApp() {
     // Initialize cache service
     await initializeCache();
 
+    // Initialize bot services
+    const botServicesInitialized = await initializeBotServices();
+    if (!botServicesInitialized) {
+      console.error('Failed to initialize bot services');
+      // Don't exit, continue without bot services
+    }
+
     // Setup routes
     setupRoutes();
 
@@ -117,10 +177,10 @@ async function initializeApp() {
 
     // Start the server
     app.listen(port, () => {
-      // console.log(`Server is running on port ${port}`);
-      // console.log('SESSION_SECRET is set:', !!process.env.SESSION_SECRET);
-      // console.log('NODE_ENV:', process.env.NODE_ENV);
-      // console.log('RAILWAY_PUBLIC_DOMAIN:', process.env.RAILWAY_PUBLIC_DOMAIN);
+      logger.info(`Server is running on port ${port}`);
+      logger.info('SESSION_SECRET is set:', !!process.env.SESSION_SECRET);
+      logger.info('NODE_ENV:', process.env.NODE_ENV);
+      logger.info('RAILWAY_PUBLIC_DOMAIN:', process.env.RAILWAY_PUBLIC_DOMAIN);
     });
   } catch (err) {
     console.error('Failed to start server:', err);

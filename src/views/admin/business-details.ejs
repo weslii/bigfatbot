@@ -119,7 +119,7 @@
                                 <span style="color: var(--text-primary); font-size: 1.1rem; font-weight: 600;"><%= totalOrders %></span>
                             </div>
                             <div>
-                                <span style="font-weight: 600; color: var(--text-secondary);">WhatsApp Groups:</span>
+                                <span style="font-weight: 600; color: var(--text-secondary);">Messaging Groups:</span>
                                 <span style="color: var(--text-primary); font-size: 1.1rem; font-weight: 600;"><%= groups.length %></span>
                             </div>
                         </div>
@@ -127,10 +127,10 @@
                 </div>
             </div>
 
-            <!-- WhatsApp Groups -->
+            <!-- Messaging Groups -->
             <div class="content-card" style="padding: 2.2rem 2rem 1.5rem 2rem; border-radius: 18px; box-shadow: var(--shadow-lg); background: var(--surface); border: 1px solid var(--border); margin-bottom: 2rem;">
                 <h3 style="font-size: 1.35rem; font-weight: 800; color: var(--primary-color); margin-bottom: 1.5rem;">
-                    <i class="fab fa-whatsapp me-2"></i>WhatsApp Groups
+                    <i class="fas fa-comments me-2"></i>Messaging Groups
                 </h3>
                 
                 <% if (groups && groups.length > 0) { %>
@@ -170,8 +170,8 @@
                     </div>
                 <% } else { %>
                     <div class="no-data" style="text-align: center; color: var(--text-muted); padding: 2.5rem 0; font-size: 1.1rem;">
-                        <i class="fab fa-whatsapp" style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 0.5rem;"></i><br>
-                        No WhatsApp groups found for this business.
+                        <i class="fas fa-comments" style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 0.5rem;"></i><br>
+                        No messaging groups found for this business.
                     </div>
                 <% } %>
             </div>

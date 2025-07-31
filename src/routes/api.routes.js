@@ -10,11 +10,23 @@ router.get('/health', apiController.healthCheck);
 // Memory usage endpoint for monitoring
 router.get('/memory', apiController.getMemoryUsage);
 
-// WhatsApp bot management endpoints
+// Unified bot management endpoints
+router.get('/bot/info', apiController.getBotInfo);
+router.post('/bot/change-number', apiController.changeNumber);
+router.post('/bot/restart', requireAdmin, apiController.restartBot);
+router.get('/bot/qr', requireSuperAdmin, apiController.getQrCode);
+router.get('/bot/metrics', apiController.getBotMetrics);
+router.get('/bot/connection-status', apiController.getConnectionStatus);
+
+// Platform-specific endpoints (for backward compatibility)
 router.get('/whatsapp/bot-info', apiController.getBotInfo);
 router.post('/whatsapp/change-number', apiController.changeNumber);
 router.post('/whatsapp/restart', requireAdmin, apiController.restartBot);
 router.get('/whatsapp/qr', requireSuperAdmin, apiController.getQrCode);
+
+// Telegram-specific endpoints
+router.get('/telegram/bot-info', apiController.getBotInfo);
+router.post('/telegram/restart', requireAdmin, apiController.restartBot);
 
 // Order management API endpoints
 router.get('/orders/:orderId', apiController.getOrderDetails);

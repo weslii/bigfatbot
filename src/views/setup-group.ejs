@@ -42,8 +42,8 @@
   <div class="add-business-center">
     <div class="add-business-card">
       <div class="add-business-header">
-        <h2 class="add-business-title">Setup WhatsApp Group</h2>
-        <p class="add-business-subtitle">Configure your WhatsApp group to start managing deliveries.</p>
+        <h2 class="add-business-title">Setup Group</h2>
+        <p class="add-business-subtitle">Configure your messaging group to start managing deliveries.</p>
       </div>
       <div class="add-business-body">
         <% if (typeof error !== 'undefined') { %>
@@ -73,11 +73,11 @@
           <!-- Admin Requirement Warning -->
           <div class="admin-warning">
             <i class="fas fa-exclamation-triangle"></i>
-            <strong>IMPORTANT:</strong> The bot MUST be added as an <span class="admin-badge">ADMIN</span> in your WhatsApp group for full functionality.
+            <strong>IMPORTANT:</strong> The bot MUST be added as an <span class="admin-badge">ADMIN</span> in your messaging group for full functionality.
           </div>
 
           <ol>
-            <li><strong>Add the bot to your WhatsApp group as an <span class="admin-badge">ADMIN</span></strong></li>
+            <li><strong>Add the bot to your messaging group as an <span class="admin-badge">ADMIN</span></strong></li>
             <li>Type this command in the group: 
               <div class="copy-card">
                 <code class="setup-command">/setup <%= business.setup_identifier %></code>

@@ -43,7 +43,7 @@
         <div class="page-header">
             <div>
                 <h1 class="page-title">Groups Overview</h1>
-                <p class="page-subtitle">Manage your WhatsApp sales and delivery groups.</p>
+                <p class="page-subtitle">Manage your messaging platform sales and delivery groups.</p>
             </div>
             <div class="header-actions-right">
                 <button class="btn btn-primary" id="openAddGroupModal"><i class="fas fa-plus"></i> Add New Group</button>
@@ -116,6 +116,7 @@
                             <tr>
                                 <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Business</th>
                                 <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Group Name</th>
+                                <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Platform</th>
                                 <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Type</th>
                                 <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Status</th>
                                 <th style="background: transparent; padding: 0.75rem 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid var(--card-border); white-space: nowrap;">Created</th>
@@ -148,6 +149,11 @@
                                             <small style="color: #94a3b8;"><%= group.group_id %></small>
                                         </td>
                                         <td style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--card-border); vertical-align: middle;">
+                                            <span style="font-size: 0.75rem; font-weight: 500; padding: 0.2rem 0.6rem; border-radius: 8px; text-transform: capitalize; background: rgb(16 185 129 / 0.1); color: #10b981;">
+                                                <i class="fab fa-<%= group.platform || 'whatsapp' %>"></i> <%= group.platform || 'WhatsApp' %>
+                                            </span>
+                                        </td>
+                                        <td style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--card-border); vertical-align: middle;">
                                             <span style="font-size: 0.75rem; font-weight: 500; padding: 0.2rem 0.6rem; border-radius: 8px; text-transform: capitalize; background: rgb(245 158 11 / 0.1); color: #f59e0b;"><%= group.group_type %></span>
                                         </td>
                                         <td style="padding: 0.75rem 1rem; border-bottom: 1px solid var(--card-border); vertical-align: middle;">
@@ -170,7 +176,7 @@
                                 <% }); %>
                             <% } else { %>
                                 <tr>
-                                    <td colspan="6" style="padding: 3rem 1.5rem; text-align: center; color: #64748b;">
+                                    <td colspan="7" style="padding: 3rem 1.5rem; text-align: center; color: #64748b;">
                                         <div>
                                             <i class="fas fa-comments" style="font-size: 3rem; margin-bottom: 1rem; color: #94a3b8;"></i>
                                             <h5>No Groups Found</h5>
@@ -191,7 +197,7 @@
     <div class="modal-overlay" id="addGroupModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Add New WhatsApp Group</h5>
+                <h5 class="modal-title">Add New Group</h5>
                 <button type="button" class="close-modal" id="closeAddGroupModal">&times;</button>
             </div>
             <div class="modal-body">
@@ -199,10 +205,10 @@
                 <div id="businessSelectionStep">
                     <div style="background: rgba(59, 130, 246, 0.05); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
                         <h6 style="margin: 0 0 1rem 0; color: var(--info-color); display: flex; align-items: center; gap: 0.5rem;">
-                            <i class="fas fa-building"></i> Select Business
+                            <i class="fas fa-building"></i> Select Business & Platform
                         </h6>
                         <p style="margin: 0; color: #64748b; line-height: 1.6;">
-                            Choose which business you want to add a WhatsApp group to.
+                            Choose which business and messaging platform you want to add a group to.
                         </p>
                     </div>
 
@@ -232,6 +238,19 @@
                         </select>
                     </div>
 
+                    <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <label for="platformSelect" style="display: block; font-weight: 600; margin-bottom: 0.75rem; color: var(--text-primary);">Platform *</label>
+                        <select id="platformSelect" style="width: 100%; padding: 0.75rem; border: 1px solid var(--card-border); border-radius: 8px; background: var(--card-bg); color: var(--text-primary); font-size: 0.875rem;">
+                            <option value="" disabled selected>Select a platform</option>
+                            <option value="whatsapp">
+                                <i class="fab fa-whatsapp"></i> WhatsApp
+                            </option>
+                            <option value="telegram">
+                                <i class="fab fa-telegram"></i> Telegram
+                            </option>
+                        </select>
+                    </div>
+
                     <div style="text-align: center;">
                         <button type="button" class="btn btn-primary" onclick="showSetupInstructions()" id="continueBtn" disabled>
                             <i class="fas fa-arrow-right"></i> Continue
@@ -243,10 +262,10 @@
                 <div id="setupInstructionsStep" style="display: none;">
                     <div style="background: rgba(59, 130, 246, 0.05); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
                         <h6 style="margin: 0 0 1rem 0; color: var(--info-color); display: flex; align-items: center; gap: 0.5rem;">
-                            <i class="fas fa-robot"></i> Setup Instructions for <span id="selectedBusinessName"></span>
+                            <i class="fas fa-robot"></i> Setup Instructions for <span id="selectedBusinessName"></span> - <span id="selectedPlatform"></span>
                         </h6>
                         <p style="margin: 0; color: #64748b; line-height: 1.6;">
-                            Follow these steps to add a WhatsApp group to your business.
+                            Follow these steps to add a <span id="platformName"></span> group to your business.
                         </p>
                     </div>
 
@@ -255,7 +274,7 @@
                         <ol style="margin: 0; padding-left: 1.5rem; color: var(--text-secondary); line-height: 1.8;">
                             <li style="margin-bottom: 0.75rem;">
                                 <strong style="color: var(--text-primary);">Add the Bot to Your Group</strong><br>
-                                <small>Add this WhatsApp number to your group as an admin:</small><br>
+                                <small id="botInstructions">Add this number to your group as an admin:</small><br>
                                 <div style="background: rgba(59, 130, 246, 0.1); padding: 0.75rem; border-radius: 8px; margin: 0.5rem 0; display: flex; justify-content: space-between; align-items: center;">
                                     <code id="botNumber" style="color: var(--info-color); font-weight: 600;">Loading...</code>
                                     <button type="button" class="btn btn-sm" onclick="copyBotNumber(event)" style="background: var(--info-color); color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem;">Copy</button>
@@ -263,7 +282,7 @@
                             </li>
                             <li style="margin-bottom: 0.75rem;">
                                 <strong style="color: var(--text-primary);">Run the Setup Command</strong><br>
-                                <small>In your WhatsApp group, type this command:</small><br>
+                                <small id="commandInstructions">In your group, type this command:</small><br>
                                 <div style="background: rgba(59, 130, 246, 0.1); padding: 0.75rem; border-radius: 8px; margin: 0.5rem 0; display: flex; justify-content: space-between; align-items: center;">
                                     <code id="setupCommand" style="color: var(--info-color); font-weight: 600;">Select a business first</code>
                                     <button type="button" class="btn btn-sm" onclick="copySetupCommand(event)" style="background: var(--info-color); color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem;">Copy</button>
@@ -522,10 +541,10 @@
                 if (e.target === setupInstructionsModal) hideSetupInstructionsModal();
             });
 
-            // Load bot number when page loads
-            async function loadBotInfo() {
+            // Load bot info based on selected platform
+            async function loadBotInfo(platform) {
                 try {
-                    const response = await fetch('/api/whatsapp/bot-info');
+                    const response = await fetch(`/api/${platform}/bot-info`);
                     const botInfo = await response.json();
                     
                     if (botInfo.success) {
@@ -538,24 +557,56 @@
                     document.getElementById('botNumber').textContent = 'Error loading';
                 }
             }
-            loadBotInfo();
+
+            // Load bot info when platform changes
+            platformSelect.addEventListener('change', function() {
+                if (this.value) {
+                    loadBotInfo(this.value);
+                }
+            });
 
             // Two-step modal functionality
             const businessSelect = document.getElementById('businessSelect');
+            const platformSelect = document.getElementById('platformSelect');
             const continueBtn = document.getElementById('continueBtn');
 
-            businessSelect.addEventListener('change', function() {
-                continueBtn.disabled = !this.value;
-            });
+            function updateContinueButton() {
+                continueBtn.disabled = !businessSelect.value || !platformSelect.value;
+            }
+
+            businessSelect.addEventListener('change', updateContinueButton);
+            platformSelect.addEventListener('change', updateContinueButton);
 
             window.showSetupInstructions = function() {
                 const selectedOption = businessSelect.options[businessSelect.selectedIndex];
-                if (!selectedOption || !selectedOption.value) return;
+                const selectedPlatform = platformSelect.value;
+                if (!selectedOption || !selectedOption.value || !selectedPlatform) return;
 
                 const businessName = selectedOption.getAttribute('data-business-name');
                 const setupCode = selectedOption.getAttribute('data-setup-code');
                 const hasSales = selectedOption.getAttribute('data-has-sales') === 'true';
                 const hasDelivery = selectedOption.getAttribute('data-has-delivery') === 'true';
+
+                // Update platform-specific content
+                const platformName = selectedPlatform === 'whatsapp' ? 'WhatsApp' : 'Telegram';
+                document.getElementById('selectedPlatform').textContent = platformName;
+                document.getElementById('platformName').textContent = platformName;
+                
+                // Update bot instructions based on platform
+                const botInstructions = document.getElementById('botInstructions');
+                if (selectedPlatform === 'whatsapp') {
+                    botInstructions.textContent = 'Add this WhatsApp number to your group as an admin:';
+                } else {
+                    botInstructions.textContent = 'Add this Telegram bot to your group as an admin:';
+                }
+                
+                // Update command instructions based on platform
+                const commandInstructions = document.getElementById('commandInstructions');
+                if (selectedPlatform === 'whatsapp') {
+                    commandInstructions.textContent = 'In your WhatsApp group, type this command:';
+                } else {
+                    commandInstructions.textContent = 'In your Telegram group, type this command:';
+                }
 
                 // Update setup command
                 document.getElementById('setupCommand').textContent = `/setup ${setupCode}`;
@@ -612,6 +663,7 @@
                 document.getElementById('setupInstructionsStep').style.display = 'none';
                 document.getElementById('businessSelectionStep').style.display = 'block';
                 businessSelect.value = '';
+                platformSelect.value = '';
                 continueBtn.disabled = true;
             };
 

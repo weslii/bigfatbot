@@ -20,10 +20,12 @@ process.on('restart-requested', (info) => {
 console.log('🔍 Environment Debug:');
 console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
 console.log('POSTGRES_HOST exists:', !!process.env.POSTGRES_HOST);
+console.log('TELEGRAM_BOT_TOKEN exists:', !!process.env.TELEGRAM_BOT_TOKEN);
+console.log('TELEGRAM_BOT_USERNAME exists:', !!process.env.TELEGRAM_BOT_USERNAME);
 
 // Now load database after environment check
 const database = require('./config/database');
-const WhatsAppService = require('./services/WhatsAppService');
+const BotServiceManager = require('./services/BotServiceManager');
 const SchedulerService = require('./services/SchedulerService');
 const HealthCheckService = require('./services/HealthCheckService');
 
@@ -41,9 +43,9 @@ healthApp.get('/health', (req, res) => {
 
 class DeliveryBot {
   constructor() {
-    this.whatsappService = WhatsAppService.getInstance();
-    this.schedulerService = new SchedulerService(this.whatsappService);
-    this.healthCheckService = new HealthCheckService(this.whatsappService);
+    this.botManager = BotServiceManager.getInstance();
+    this.schedulerService = new SchedulerService(this.botManager.getWhatsAppService());
+    this.healthCheckService = new HealthCheckService(this.botManager.getWhatsAppService());
     this.isShuttingDown = false;
   }
 
@@ -60,10 +62,8 @@ class DeliveryBot {
       // Initialize database
       await database.connect();
 
-      // Start WhatsApp service in the background
-      this.whatsappService.start().catch(error => {
-        logger.error('Failed to start WhatsApp service:', error);
-      });
+      // Initialize bot services (both WhatsApp and Telegram)
+      await this.botManager.initialize();
 
       // Start scheduler
       this.schedulerService.start();
@@ -80,8 +80,9 @@ class DeliveryBot {
       });
 
       logger.info('Delivery Bot started successfully!');
-      console.log('\n🤖 WhatsApp Delivery Bot is running!');
-      console.log('📱 Scan the QR code above to authenticate');
+      console.log('\n🤖 Multi-Platform Delivery Bot is running!');
+      console.log('📱 WhatsApp: Scan the QR code above to authenticate');
+      console.log('📱 Telegram: Bot is ready to receive messages');
       console.log('⚙️  Configure your group IDs in src/config/config.js');
       console.log('📊 The bot will automatically send daily reports at 10 PM');
       console.log('📋 Pending orders will be shown at 10:30 PM');
@@ -107,8 +108,8 @@ class DeliveryBot {
         // Stop health check heartbeat
         this.healthCheckService.stop();
 
-        // Stop WhatsApp service
-        await this.whatsappService.stop();
+        // Stop all bot services
+        await this.botManager.shutdown();
 
         // Close database connection
         await database.close();
@@ -144,8 +145,8 @@ async function pollBotControl() {
           restart_requested: false,
           last_restart: new Date()
         });
-        // Perform the restart
-        await WhatsAppService.getInstance().restart();
+        // Perform the restart for all platforms
+        await BotServiceManager.getInstance().restartBot('all');
       }
     } catch (err) {
       console.error('Error polling bot_control:', err);

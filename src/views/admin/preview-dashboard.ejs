@@ -163,28 +163,62 @@
                             <div class="content-card">
                                 <div class="card-header">
                                     <h3><i class="fas fa-robot text-green"></i> Novi Bot Status</h3>
-                                    <p>Monitor and manage your Novi bot connection</p>
+                                    <p>Monitor and manage your Novi bot connections</p>
                                 </div>
                                 <div class="card-content">
-                                    <div class="status-item">
-                                        <span>Connection Status</span>
-                                        <span class="status-badge <%= stats && stats.connectionStatus === 'connected' ? 'active' : 'inactive' %>"><%= stats && stats.connectionStatus ? stats.connectionStatus.charAt(0).toUpperCase() + stats.connectionStatus.slice(1) : 'Unknown' %></span>
+                                    <!-- WhatsApp Status -->
+                                    <div class="platform-status">
+                                        <div class="platform-header">
+                                            <i class="fab fa-whatsapp text-green"></i>
+                                            <span>WhatsApp</span>
+                                        </div>
+                                        <div class="status-item">
+                                            <span>Connection Status</span>
+                                            <span class="status-badge <%= stats && stats.whatsapp && stats.whatsapp.status === 'connected' ? 'active' : 'inactive' %>">
+                                                <%= stats && stats.whatsapp && stats.whatsapp.status ? stats.whatsapp.status.charAt(0).toUpperCase() + stats.whatsapp.status.slice(1) : 'Unknown' %>
+                                            </span>
+                                        </div>
+                                        <div class="status-item">
+                                            <span>Phone Number</span>
+                                            <span class="status-value"><%= stats && stats.whatsapp && stats.whatsapp.number ? stats.whatsapp.number : 'N/A' %></span>
+                                        </div>
                                     </div>
-                                    <div class="status-item">
-                                        <span>Phone Number</span>
-                                        <span class="status-value"><%= stats && stats.phoneNumber ? stats.phoneNumber : 'N/A' %></span>
+                                    
+                                    <!-- Telegram Status -->
+                                    <div class="platform-status">
+                                        <div class="platform-header">
+                                            <i class="fab fa-telegram text-blue"></i>
+                                            <span>Telegram</span>
+                                        </div>
+                                        <div class="status-item">
+                                            <span>Connection Status</span>
+                                            <span class="status-badge <%= stats && stats.telegram && stats.telegram.status === 'connected' ? 'active' : 'inactive' %>">
+                                                <%= stats && stats.telegram && stats.telegram.status ? stats.telegram.status.charAt(0).toUpperCase() + stats.telegram.status.slice(1) : 'Unknown' %>
+                                            </span>
+                                        </div>
+                                        <div class="status-item">
+                                            <span>Bot Username</span>
+                                            <span class="status-value"><%= stats && stats.telegram && stats.telegram.number ? stats.telegram.number : 'N/A' %></span>
+                                        </div>
                                     </div>
+                                    
                                     <div class="status-item">
                                         <span>Last Activity</span>
                                         <span class="status-value"><%= stats && stats.lastActivity ? new Date(stats.lastActivity).toLocaleString() : 'N/A' %></span>
                                     </div>
                                     <hr>
                                     <div class="bot-actions">
-                                        <button class="secondary-btn">
-                                            <i class="fas fa-qrcode"></i> Show QR
+                                        <button class="secondary-btn" onclick="showQRCode('whatsapp')">
+                                            <i class="fas fa-qrcode"></i> WhatsApp QR
                                         </button>
-                                        <button class="secondary-btn">
-                                            <i class="fas fa-sync-alt"></i> Restart
+                                        <button class="secondary-btn" onclick="restartBot('all')">
+                                            <i class="fas fa-sync-alt"></i> Restart All
+                                        </button>
+                                        <button class="secondary-btn" onclick="restartBot('whatsapp')">
+                                            <i class="fab fa-whatsapp"></i> Restart WhatsApp
+                                        </button>
+                                        <button class="secondary-btn" onclick="restartBot('telegram')">
+                                            <i class="fab fa-telegram"></i> Restart Telegram
                                         </button>
                                     </div>
                                 </div>

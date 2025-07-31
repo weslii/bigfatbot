@@ -1,5 +1,5 @@
 // src/controllers/api.controller.js
-const WhatsAppService = require('../services/WhatsAppService');
+const BotServiceManager = require('../services/BotServiceManager');
 const logger = require('../utils/logger');
 const db = require('../config/database');
 const { generateOrdersCSV, generateOrdersPDF, generateBusinessesCSV } = require('../utils/exportHelpers');
@@ -9,10 +9,14 @@ module.exports = {
   healthCheck: async (req, res) => {
     try {
       await db.raw('SELECT 1');
+      const botManager = BotServiceManager.getInstance();
+      const botHealth = await botManager.healthCheck();
+      
       res.status(200).json({
         status: 'ok',
         redis: 'connected',
-        database: 'connected'
+        database: 'connected',
+        bots: botHealth
       });
     } catch (error) {
       console.error('Health check failed:', error);
@@ -43,11 +47,37 @@ module.exports = {
     }
   },
 
-  // WhatsApp bot management endpoints
+  // Unified bot management endpoints
   getBotInfo: async (req, res) => {
     try {
-      const whatsappService = WhatsAppService.getInstance();
-      const botInfo = await whatsappService.getBotInfo();
+      const { platform } = req.query;
+      
+      // Check if bot services are available
+      if (process.env.NODE_ENV === 'production' && !process.env.BOT_PORT) {
+        // In production web-only mode, return status from database
+        const connectionStatus = await db.query('bot_connection_status')
+          .where('id', platform === 'telegram' ? 2 : 1)
+          .first();
+        
+        if (connectionStatus) {
+          return res.json({
+            success: true,
+            number: connectionStatus.phone_number || 'Unknown',
+            name: platform === 'telegram' ? 'Telegram Bot' : 'WhatsApp Bot',
+            status: connectionStatus.status || 'unknown'
+          });
+        } else {
+          return res.json({
+            success: true,
+            number: 'Not configured',
+            name: platform === 'telegram' ? 'Telegram Bot' : 'WhatsApp Bot',
+            status: 'disconnected'
+          });
+        }
+      }
+
+      const botManager = BotServiceManager.getInstance();
+      const botInfo = await botManager.getBotInfo(platform);
       
       res.json({ 
         success: true, 
@@ -59,7 +89,7 @@ module.exports = {
         success: false,
         error: 'Failed to get bot info',
         number: 'Not available',
-        name: 'WhatsApp Bot',
+        name: 'Bot',
         status: 'error'
       });
     }
@@ -67,13 +97,14 @@ module.exports = {
 
   changeNumber: async (req, res) => {
     try {
-      const { userId } = req.body;
+      const { userId, platform = 'whatsapp' } = req.body;
       
+      // Input validation
       if (!userId) {
         return res.status(400).json({ error: 'User ID is required' });
       }
 
-      // Check if user is admin (you can modify this logic)
+      // Validate user exists and is authorized
       const user = await db.query('users')
         .where('id', userId)
         .first();
@@ -82,41 +113,192 @@ module.exports = {
         return res.status(404).json({ error: 'User not found' });
       }
 
-      // Import WhatsAppService
-      const whatsappService = WhatsAppService.getInstance();
-
-      // Call the changeNumber method
-      await whatsappService.changeNumber();
+      // Check if user is admin (you can modify this logic)
+      const admin = await db.query('admins')
+        .where('user_id', userId)
+        .first();
       
-      res.json({ 
-        success: true, 
-        message: 'WhatsApp number change initiated. Please restart the bot to complete the process.' 
-      });
+      if (!admin) {
+        return res.status(403).json({ error: 'Admin access required' });
+      }
+
+      // Check if bot services are available
+      if (process.env.NODE_ENV === 'production' && !process.env.BOT_PORT) {
+        return res.status(503).json({ 
+          error: 'Bot services are handled by a separate service. Please use the bot service directly.' 
+        });
+      }
+
+      const botManager = BotServiceManager.getInstance();
+      const service = platform === 'whatsapp' ? botManager.getWhatsAppService() : botManager.getTelegramService();
+      
+      if (platform === 'whatsapp') {
+        await service.changeNumber();
+        res.json({ 
+          success: true, 
+          message: 'WhatsApp number change initiated. Please restart the bot to complete the process.' 
+        });
+      } else {
+        res.json({ 
+          success: true, 
+          message: 'Telegram bot number change is not supported. Bot uses the configured token.' 
+        });
+      }
     } catch (error) {
-      logger.error('Change WhatsApp number error:', error);
-      res.status(500).json({ error: 'Failed to change WhatsApp number' });
+      logger.error('Change bot number error:', error);
+      res.status(500).json({ error: 'Failed to change bot number' });
     }
   },
 
   restartBot: async (req, res) => {
     try {
-      // Set the restart_requested flag in the bot_control table
-      await db.query('bot_control').where({ id: 1 }).update({ restart_requested: true });
-      res.json({ success: true, message: 'Bot restart requested.' });
+      const { platform = 'all', userId } = req.body;
+      
+      // Input validation
+      if (!userId) {
+        return res.status(400).json({ error: 'User ID is required' });
+      }
+
+      // Validate user exists and is authorized
+      const user = await db.query('users')
+        .where('id', userId)
+        .first();
+      
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Check if user is admin
+      const admin = await db.query('admins')
+        .where('user_id', userId)
+        .first();
+      
+      if (!admin) {
+        return res.status(403).json({ error: 'Admin access required' });
+      }
+
+      // Check if bot services are available
+      if (process.env.NODE_ENV === 'production' && !process.env.BOT_PORT) {
+        return res.status(503).json({ 
+          error: 'Bot services are handled by a separate service. Please use the bot service directly.' 
+        });
+      }
+
+      const botManager = BotServiceManager.getInstance();
+      const result = await botManager.restartBot(platform);
+      
+      res.json({ 
+        success: true, 
+        message: `Bot restart initiated for ${platform}`,
+        result
+      });
     } catch (error) {
-      logger.error('RestartBot flag error:', error);
-      res.status(500).json({ success: false, message: 'Failed to request bot restart.' });
+      logger.error('Restart bot error:', error);
+      res.status(500).json({ error: 'Failed to restart bot' });
     }
   },
 
   getQrCode: async (req, res) => {
     try {
-      const whatsappService = WhatsAppService.getInstance();
-      const qrStatus = whatsappService.getLatestQrStatus();
-      res.json(qrStatus);
+      const { platform = 'whatsapp' } = req.query;
+      
+      // Check if bot services are available
+      if (process.env.NODE_ENV === 'production' && !process.env.BOT_PORT) {
+        return res.status(503).json({ 
+          success: false,
+          error: 'QR code generation is handled by the bot service',
+          qr: null,
+          authenticated: false
+        });
+      }
+
+      const botManager = BotServiceManager.getInstance();
+      const qrStatus = botManager.getLatestQrStatus(platform);
+      
+      res.json({ 
+        success: true, 
+        ...qrStatus
+      });
     } catch (error) {
-      logger.error('Get WhatsApp QR code error:', error);
-      res.status(500).json({ error: 'Failed to get WhatsApp QR code' });
+      logger.error('Get QR code error:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to get QR code',
+        qr: null,
+        authenticated: false
+      });
+    }
+  },
+
+  // Bot metrics endpoint
+  getBotMetrics: async (req, res) => {
+    try {
+      const { platform = 'all' } = req.query;
+      
+      // Check if bot services are available
+      if (process.env.NODE_ENV === 'production' && !process.env.BOT_PORT) {
+        // Return basic metrics from database
+        const metrics = await db.query('bot_metrics')
+          .where('platform', platform === 'all' ? 'like' : '=', platform === 'all' ? '%' : platform)
+          .select('*');
+        
+        return res.json({ 
+          success: true, 
+          metrics: {
+            overall: { total_messages: 0, successful_parses: 0, failed_parses: 0, average_response_time: 0 },
+            today: { total_messages: 0, successful_parses: 0, failed_parses: 0, average_response_time: 0 },
+            parsingMethods: []
+          }
+        });
+      }
+
+      const botManager = BotServiceManager.getInstance();
+      const metrics = await botManager.getBotMetrics(platform);
+      
+      res.json({ 
+        success: true, 
+        metrics
+      });
+    } catch (error) {
+      logger.error('Get bot metrics error:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to get bot metrics'
+      });
+    }
+  },
+
+  // Connection status endpoint
+  getConnectionStatus: async (req, res) => {
+    try {
+      const { platform = 'all' } = req.query;
+      
+      // Check if bot services are available
+      if (process.env.NODE_ENV === 'production' && !process.env.BOT_PORT) {
+        // Return status from database
+        const status = await db.query('bot_connection_status')
+          .where('id', platform === 'telegram' ? 2 : 1)
+          .first();
+        
+        return res.json({ 
+          success: true, 
+          status: status ? status.status : 'unknown'
+        });
+      }
+
+      const botManager = BotServiceManager.getInstance();
+      const status = await botManager.getConnectionStatus(platform);
+      
+      res.json({ 
+        success: true, 
+        status
+      });
+    } catch (error) {
+      logger.error('Get connection status error:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to get connection status'
+      });
     }
   },
 
@@ -125,40 +307,35 @@ module.exports = {
     try {
       const { orderId } = req.params;
       const { userId } = req.query;
-      
+
       // Input validation
       if (!orderId || !userId) {
         return res.status(400).json({ error: 'Order ID and User ID are required' });
       }
-      
+
       // Validate orderId format (should be a UUID)
       if (!/^[a-fA-F0-9-]{36}$/.test(orderId)) {
         return res.status(400).json({ error: 'Invalid order ID format' });
       }
-      
-      // Get user's business IDs to ensure they can only access their orders
+
+      // Get user's business IDs to ensure they can only view their orders
       const userBusinesses = await db.query('groups')
         .select('business_id')
         .where('user_id', userId)
         .groupBy('business_id');
-      
+
       const businessIds = userBusinesses.map(b => b.business_id);
-      
-      const order = await db.query('orders as o')
-        .select(
-          'o.*',
-          'g.business_name'
-        )
-        .join('groups as g', 'o.business_id', 'g.business_id')
-        .where('o.id', orderId)
-        .whereIn('o.business_id', businessIds)
+
+      const order = await db.query('orders')
+        .where('id', orderId)
+        .whereIn('business_id', businessIds)
         .first();
       
       if (!order) {
         return res.status(404).json({ error: 'Order not found' });
       }
       
-      res.json(order);
+      res.json({ success: true, order });
     } catch (error) {
       logger.error('Get order details error:', error);
       res.status(500).json({ error: 'Failed to get order details' });
@@ -168,43 +345,55 @@ module.exports = {
   updateOrderStatus: async (req, res) => {
     try {
       const { orderId } = req.params;
-      const { status, userId } = req.body;
+      const { status, deliveredBy, cancelledBy, userId } = req.body;
       
       // Input validation
       if (!orderId || !status || !userId) {
         return res.status(400).json({ error: 'Order ID, status, and User ID are required' });
       }
-      
+
       // Validate orderId format (should be a UUID)
       if (!/^[a-fA-F0-9-]{36}$/.test(orderId)) {
         return res.status(400).json({ error: 'Invalid order ID format' });
       }
-      
+
       // Validate status
       const validStatuses = ['pending', 'processing', 'delivered', 'cancelled'];
       if (!validStatuses.includes(status)) {
         return res.status(400).json({ error: 'Invalid status value' });
       }
-      
+
       // Get user's business IDs to ensure they can only update their orders
       const userBusinesses = await db.query('groups')
         .select('business_id')
         .where('user_id', userId)
         .groupBy('business_id');
-      
+
       const businessIds = userBusinesses.map(b => b.business_id);
       
-      const result = await db.query('orders')
+      const order = await db.query('orders')
         .where('id', orderId)
         .whereIn('business_id', businessIds)
-        .update({ 
-          status: status,
-          updated_at: new Date()
-        });
+        .first();
       
-      if (result === 0) {
+      if (!order) {
         return res.status(404).json({ error: 'Order not found' });
       }
+      
+      const updateData = { status, updated_at: new Date() };
+      
+      if (status === 'delivered' && deliveredBy) {
+        updateData.delivered_by = deliveredBy;
+        updateData.delivered_at = new Date();
+      } else if (status === 'cancelled' && cancelledBy) {
+        updateData.cancelled_by = cancelledBy;
+        updateData.cancelled_at = new Date();
+      }
+      
+      await db.query('orders')
+        .where('id', orderId)
+        .whereIn('business_id', businessIds)
+        .update(updateData);
       
       res.json({ success: true, message: 'Order status updated' });
     } catch (error) {
@@ -217,41 +406,41 @@ module.exports = {
     try {
       const { orderId } = req.params;
       const { userId } = req.body;
-      
+
       // Input validation
       if (!orderId || !userId) {
         return res.status(400).json({ error: 'Order ID and User ID are required' });
       }
-      
+
       // Validate orderId format (should be a UUID)
       if (!/^[a-fA-F0-9-]{36}$/.test(orderId)) {
         return res.status(400).json({ error: 'Invalid order ID format' });
       }
-      
+
       // Get user's business IDs to ensure they can only delete their orders
       const userBusinesses = await db.query('groups')
         .select('business_id')
         .where('user_id', userId)
         .groupBy('business_id');
-      
+
       const businessIds = userBusinesses.map(b => b.business_id);
-      
+
       // Check if order exists and belongs to user
       const order = await db.query('orders')
         .where('id', orderId)
         .whereIn('business_id', businessIds)
         .first();
-      
+
       if (!order) {
         return res.status(404).json({ error: 'Order not found' });
       }
-      
+
       // Delete the order
       const result = await db.query('orders')
         .where('id', orderId)
         .whereIn('business_id', businessIds)
         .del();
-      
+
       if (result === 0) {
         return res.status(404).json({ error: 'Order not found' });
       }
@@ -267,23 +456,33 @@ module.exports = {
     try {
       const { orderId } = req.params;
       const { userId, ...updateData } = req.body;
-      
+
+      // Input validation
+      if (!orderId || !userId) {
+        return res.status(400).json({ error: 'Order ID and User ID are required' });
+      }
+
+      // Validate orderId format (should be a UUID)
+      if (!/^[a-fA-F0-9-]{36}$/.test(orderId)) {
+        return res.status(400).json({ error: 'Invalid order ID format' });
+      }
+
       // Get user's business IDs to ensure they can only update their orders
       const userBusinesses = await db.query('groups')
         .select('business_id')
         .where('user_id', userId)
         .groupBy('business_id');
-      
+
       const businessIds = userBusinesses.map(b => b.business_id);
-      
+
       const result = await db.query('orders')
         .where('id', orderId)
         .whereIn('business_id', businessIds)
-        .update({ 
+        .update({
           ...updateData,
           updated_at: new Date()
         });
-      
+
       if (result === 0) {
         return res.status(404).json({ error: 'Order not found' });
       }
@@ -298,7 +497,7 @@ module.exports = {
   getOrderCount: async (req, res) => {
     try {
       const { userId, business_id, status, search, count_only } = req.query;
-      
+
       if (!userId) {
         return res.status(400).json({ error: 'User ID is required' });
       }
@@ -308,9 +507,9 @@ module.exports = {
         .select('business_id')
         .where('user_id', userId)
         .groupBy('business_id');
-      
+
       const businessIds = userBusinesses.map(b => b.business_id);
-      
+
       if (businessIds.length === 0) {
         return res.json({ count: 0 });
       }
@@ -324,11 +523,11 @@ module.exports = {
       if (business_id) {
         query = query.where('o.business_id', business_id);
       }
-      
+
       if (status) {
         query = query.where('o.status', status);
       }
-      
+
       if (search) {
         query = query.where(function() {
           this.where('o.customer_name', 'like', `%${search}%`)
@@ -337,7 +536,7 @@ module.exports = {
       }
 
       const count = await query.count('o.id as count').first();
-      
+
       res.json({ count: parseInt(count.count) });
     } catch (error) {
       logger.error('Order count error:', error);
@@ -349,13 +548,24 @@ module.exports = {
   addGroup: async (req, res) => {
     try {
       const { business_id, group_type, group_name, group_id, user_id } = req.body;
-      
+
+      // Input validation
+      if (!business_id || !group_type || !group_name || !group_id || !user_id) {
+        return res.status(400).json({ error: 'All fields are required' });
+      }
+
+      // Validate group_type
+      const validGroupTypes = ['sales', 'delivery'];
+      if (!validGroupTypes.includes(group_type)) {
+        return res.status(400).json({ error: 'Invalid group type' });
+      }
+
       // Validate user owns this business
       const business = await db.query('groups')
         .where('business_id', business_id)
         .where('user_id', user_id)
         .first();
-      
+
       if (!business) {
         return res.status(403).json({ error: 'You do not own this business' });
       }
@@ -364,7 +574,7 @@ module.exports = {
       const existingGroup = await db.query('groups')
         .where('group_id', group_id)
         .first();
-      
+
       if (existingGroup) {
         return res.status(400).json({ error: 'Group already exists' });
       }
@@ -410,17 +620,21 @@ module.exports = {
     try {
       const { groupId } = req.params;
       const { userId } = req.query;
-      
+
+      if (!groupId || !userId) {
+        return res.status(400).json({ error: 'Group ID and User ID are required' });
+      }
+
       const group = await db.query('groups')
         .where('id', groupId)
         .where('user_id', userId)
         .first();
-      
+
       if (!group) {
         return res.status(404).json({ error: 'Group not found' });
       }
-      
-      res.json(group);
+
+      res.json({ success: true, group });
     } catch (error) {
       logger.error('Get group error:', error);
       res.status(500).json({ error: 'Failed to get group' });
@@ -431,16 +645,20 @@ module.exports = {
     try {
       const { groupId } = req.params;
       const { userId } = req.query;
-      
+
+      if (!groupId || !userId) {
+        return res.status(400).json({ error: 'Group ID and User ID are required' });
+      }
+
       const result = await db.query('groups')
         .where('id', groupId)
         .where('user_id', userId)
         .del();
-      
+
       if (result === 0) {
         return res.status(404).json({ error: 'Group not found' });
       }
-      
+
       res.json({ success: true, message: 'Group removed successfully' });
     } catch (error) {
       logger.error('Remove group error:', error);
@@ -452,7 +670,12 @@ module.exports = {
   createBusiness: async (req, res) => {
     try {
       const { business_name, description, phone, email, address, user_id } = req.body;
-      
+
+      // Input validation
+      if (!business_name || !user_id) {
+        return res.status(400).json({ error: 'Business name and User ID are required' });
+      }
+
       // Validate user
       if (user_id !== req.session.userId) {
         return res.status(403).json({ error: 'Unauthorized' });
@@ -471,8 +694,8 @@ module.exports = {
         group_type: 'main'
       });
 
-      res.json({ 
-        success: true, 
+      res.json({
+        success: true,
         message: 'Business created successfully',
         business_id: businessId
       });
@@ -486,7 +709,12 @@ module.exports = {
     try {
       const { businessId } = req.params;
       const { business_name, description, phone, email, address, user_id } = req.body;
-      
+
+      // Input validation
+      if (!businessId || !business_name || !user_id) {
+        return res.status(400).json({ error: 'Business ID, business name, and User ID are required' });
+      }
+
       // Validate user owns this business
       const business = await db.query('groups')
         .where('business_id', businessId)
@@ -516,7 +744,12 @@ module.exports = {
     try {
       const { businessId } = req.params;
       const { user_id } = req.query;
-      
+
+      // Input validation
+      if (!businessId || !user_id) {
+        return res.status(400).json({ error: 'Business ID and User ID are required' });
+      }
+
       // Validate user owns this business
       const business = await db.query('groups')
         .where('business_id', businessId)
@@ -548,7 +781,12 @@ module.exports = {
   updateProfile: async (req, res) => {
     try {
       const { full_name, email, phone, timezone, address, user_id } = req.body;
-      
+
+      // Input validation
+      if (!user_id) {
+        return res.status(400).json({ error: 'User ID is required' });
+      }
+
       // Validate user owns this profile
       if (user_id !== req.session.userId) {
         return res.status(403).json({ error: 'Unauthorized' });
@@ -586,7 +824,12 @@ module.exports = {
   changePassword: async (req, res) => {
     try {
       const { current_password, new_password, user_id } = req.body;
-      
+
+      // Input validation
+      if (!current_password || !new_password || !user_id) {
+        return res.status(400).json({ error: 'Current password, new password, and User ID are required' });
+      }
+
       // Validate user owns this account
       if (user_id !== req.session.userId) {
         return res.status(403).json({ error: 'Unauthorized' });
@@ -604,7 +847,7 @@ module.exports = {
       // Verify current password
       const bcrypt = require('bcrypt');
       const isValidPassword = await bcrypt.compare(current_password, user.password);
-      
+
       if (!isValidPassword) {
         return res.status(400).json({ error: 'Current password is incorrect' });
       }
@@ -629,16 +872,21 @@ module.exports = {
 
   updateNotifications: async (req, res) => {
     try {
-      const { 
-        email_new_orders, 
-        email_daily_reports, 
+      const {
+        email_new_orders,
+        email_daily_reports,
         email_weekly_reports,
         whatsapp_new_orders,
         whatsapp_reminders,
         dashboard_alerts,
-        user_id 
+        user_id
       } = req.body;
-      
+
+      // Input validation
+      if (!user_id) {
+        return res.status(400).json({ error: 'User ID is required' });
+      }
+
       // Validate user owns this account
       if (user_id !== req.session.userId) {
         return res.status(403).json({ error: 'Unauthorized' });
@@ -668,12 +916,13 @@ module.exports = {
   exportOrders: async (req, res) => {
     try {
       const { userId, business_id, status, search, format = 'csv', streaming = 'true' } = req.query;
+      
       // Get userId from session if not provided in query
       const currentUserId = userId || (req.session && req.session.userId ? String(req.session.userId) : null);
       if (!currentUserId) {
         return res.status(400).json({ error: 'User ID is required' });
       }
-      
+
       // Get user's business IDs
       const userBusinesses = await db.query('groups')
         .select('business_id', 'business_name')
@@ -683,7 +932,7 @@ module.exports = {
       if (businessIds.length === 0) {
         return res.status(400).json({ error: 'No businesses found for this user' });
       }
-      
+
       // Build query with DISTINCT to prevent duplication
       let query = db.query('orders as o')
         .join('groups as g', 'o.business_id', 'g.business_id')
@@ -693,7 +942,7 @@ module.exports = {
           'o.*',
           'g.business_name'
         );
-      
+
       // Apply filters
       if (business_id) {
         query = query.where('o.business_id', business_id);
@@ -707,13 +956,13 @@ module.exports = {
             .orWhere('o.order_id', 'like', `%${search}%`);
         });
       }
-      
+
       // For streaming exports (CSV), use pagination
       if (format === 'csv' && streaming === 'true') {
         // Stream CSV directly to response
         res.setHeader('Content-Type', 'text/csv');
         res.setHeader('Content-Disposition', 'attachment; filename="orders.csv"');
-        
+
         // Write CSV header
         const headers = [
           'Order ID',
@@ -728,23 +977,23 @@ module.exports = {
           'Created At'
         ];
         res.write(headers.join(',') + '\n');
-        
+
         // Stream orders in batches
         const batchSize = 100;
         let offset = 0;
         let hasMore = true;
-        
+
         while (hasMore) {
           const batch = await query
             .orderBy('o.created_at', 'desc')
             .limit(batchSize)
             .offset(offset);
-          
+
           if (batch.length === 0) {
             hasMore = false;
             break;
           }
-          
+
           // Process batch and write to response
           batch.forEach(order => {
             const row = [
@@ -761,31 +1010,31 @@ module.exports = {
             ];
             res.write(row.join(',') + '\n');
           });
-          
+
           offset += batchSize;
-          
+
           // Allow garbage collection between batches
           if (global.gc) {
             global.gc();
           }
-          
+
           // Small delay to prevent overwhelming the client
           await new Promise(resolve => setTimeout(resolve, 10));
         }
-        
+
         res.end();
         return;
       }
-      
+
       // For non-streaming exports (JSON, PDF) or when streaming is disabled
       // Use a reasonable limit to prevent memory issues
       const maxLimit = 10000; // Higher limit for non-streaming
       const orders = await query.orderBy('o.created_at', 'desc').limit(maxLimit);
-      
+
       if (orders.length === maxLimit) {
         logger.warn(`Export reached limit of ${maxLimit} orders. Consider using streaming for larger exports.`);
       }
-      
+
       if (format === 'json') {
         res.setHeader('Content-Type', 'application/json');
         res.setHeader('Content-Disposition', 'attachment; filename="orders.json"');

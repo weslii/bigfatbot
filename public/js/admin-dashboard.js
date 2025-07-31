@@ -718,12 +718,15 @@ function showNotification(message, type = 'info') {
 async function handleRestartClick(event) {
   event.preventDefault();
   
+  const button = event.currentTarget;
+  const platform = button.dataset.platform || 'whatsapp';
+  const platformName = platform === 'whatsapp' ? 'WhatsApp' : 'Telegram';
+  
   // Add confirmation dialog
-  if (!confirm('Are you sure you want to restart the WhatsApp bot? This will temporarily disconnect the bot.')) {
+  if (!confirm(`Are you sure you want to restart the ${platformName} bot? This will temporarily disconnect the bot.`)) {
     return;
   }
   
-  const button = event.currentTarget;
   const originalText = button.innerHTML;
   
   try {
@@ -734,13 +737,14 @@ async function handleRestartClick(event) {
     // Get admin user ID from the page (you may need to adjust this based on your setup)
     const adminId = getAdminId(); // You'll need to implement this function
     
-    const response = await fetch('/api/whatsapp/restart', {
+    const response = await fetch(`/api/${platform}/restart`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        userId: adminId
+        userId: adminId,
+        platform: platform
       })
     });
     
@@ -750,28 +754,30 @@ async function handleRestartClick(event) {
       if (result.authenticated === false && result.message && /authenticat|qr/i.test(result.message)) {
         // Bot needs authentication
         showNotification(result.message + ' Use the "Show QR" button to authenticate.', 'warning');
-        // Highlight the QR button to draw attention
-        const qrButton = document.querySelector('.secondary-btn:has(i.fa-qrcode)');
-        if (qrButton) {
-          qrButton.style.animation = 'pulse 2s infinite';
-          setTimeout(() => {
-            qrButton.style.animation = '';
-          }, 4000);
+        // Highlight the QR button to draw attention (only for WhatsApp)
+        if (platform === 'whatsapp') {
+          const qrButton = document.querySelector('.secondary-btn:has(i.fa-qrcode)');
+          if (qrButton) {
+            qrButton.style.animation = 'pulse 2s infinite';
+            setTimeout(() => {
+              qrButton.style.animation = '';
+            }, 4000);
+          }
         }
       } else {
         // Bot is authenticated or generic success
         showNotification(result.message, 'success');
         // Refresh bot status after a short delay
         setTimeout(() => {
-          refreshBotStatus();
+          refreshBotStatus(platform);
         }, 3000);
       }
     } else {
-      showNotification('Error: ' + (result.message || 'Failed to restart WhatsApp bot'), 'error');
+      showNotification(`Error: ${result.message || `Failed to restart ${platformName} bot`}`, 'error');
     }
   } catch (error) {
     console.error('Restart error:', error);
-    showNotification('Error: Failed to restart WhatsApp bot', 'error');
+    showNotification(`Error: Failed to restart ${platformName} bot`, 'error');
   } finally {
     // Restore button state
     button.disabled = false;
@@ -779,24 +785,26 @@ async function handleRestartClick(event) {
   }
 }
 
-async function refreshBotStatus() {
+async function refreshBotStatus(platform = 'whatsapp') {
   try {
-    const response = await fetch('/api/whatsapp/bot-info');
+    const response = await fetch(`/api/${platform}/bot-info`);
     const result = await response.json();
     
     if (result.success) {
       // Update bot status display if available
-      const statusElement = document.querySelector('#botStatus');
+      const statusElement = document.querySelector(`#${platform}Status`);
       if (statusElement) {
+        const statusText = result.number || 'Unknown';
+        const statusClass = result.status === 'connected' ? 'alert-success' : 'alert-warning';
         statusElement.innerHTML = `
           <i class="fas fa-check-circle"></i> 
-          Bot is running (${result.number || 'Unknown number'})
+          ${platform.charAt(0).toUpperCase() + platform.slice(1)} Bot is running (${statusText})
         `;
-        statusElement.className = 'alert alert-success';
+        statusElement.className = `alert ${statusClass}`;
       }
     }
   } catch (error) {
-    console.error('Failed to refresh bot status:', error);
+    console.error(`Failed to refresh ${platform} bot status:`, error);
   }
 } 
 
@@ -822,6 +830,110 @@ function closeOrderDetailsModal() {
   const modal = document.getElementById('order-details-modal');
   if (modal) {
     modal.style.display = 'none';
+  }
+}
+
+// Bot restart function for both platforms
+async function restartBot(platform) {
+  const platformName = platform === 'whatsapp' ? 'WhatsApp' : platform === 'telegram' ? 'Telegram' : 'All Platforms';
+  
+  // Add confirmation dialog
+  if (!confirm(`Are you sure you want to restart the ${platformName} bot? This will temporarily disconnect the bot.`)) {
+    return;
+  }
+  
+  try {
+    // Show loading state
+    const buttons = document.querySelectorAll(`[onclick*="restartBot('${platform}')"]`);
+    buttons.forEach(button => {
+      const originalText = button.innerHTML;
+      button.disabled = true;
+      button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Restarting...';
+      
+      // Restore button after a delay
+      setTimeout(() => {
+        button.disabled = false;
+        button.innerHTML = originalText;
+      }, 5000);
+    });
+    
+    // Get admin user ID from the page
+    const adminId = getAdminId();
+    
+    const response = await fetch(`/api/bot/restart`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId: adminId,
+        platform: platform
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      if (result.authenticated === false && result.message && /authenticat|qr/i.test(result.message)) {
+        // Bot needs authentication
+        showNotification(result.message + ' Use the "Show QR" button to authenticate.', 'warning');
+        // Highlight the QR button to draw attention (only for WhatsApp)
+        if (platform === 'whatsapp') {
+          const qrButton = document.querySelector('.secondary-btn:has(i.fa-qrcode)');
+          if (qrButton) {
+            qrButton.style.animation = 'pulse 2s infinite';
+            setTimeout(() => {
+              qrButton.style.animation = '';
+            }, 4000);
+          }
+        }
+      } else {
+        // Bot is authenticated or generic success
+        showNotification(result.message, 'success');
+        // Refresh bot status after a short delay
+        setTimeout(() => {
+          if (platform === 'all') {
+            refreshBotStatus('whatsapp');
+            refreshBotStatus('telegram');
+          } else {
+            refreshBotStatus(platform);
+          }
+        }, 3000);
+      }
+    } else {
+      showNotification(`Error: ${result.message || `Failed to restart ${platformName} bot`}`, 'error');
+    }
+  } catch (error) {
+    console.error('Restart error:', error);
+    showNotification(`Error: Failed to restart ${platformName} bot`, 'error');
+  }
+}
+
+// QR code function for WhatsApp
+async function showQRCode(platform) {
+  if (platform !== 'whatsapp') {
+    showNotification('QR codes are only available for WhatsApp', 'info');
+    return;
+  }
+  
+  try {
+    const response = await fetch('/api/bot/qr?platform=whatsapp');
+    const result = await response.json();
+    
+    if (result.success && result.qr) {
+      // Show QR code in modal
+      const modal = document.getElementById('qr-modal');
+      const qrImage = document.getElementById('qr-image');
+      if (modal && qrImage) {
+        qrImage.src = result.qr;
+        modal.style.display = 'flex';
+      }
+    } else {
+      showNotification('QR code not available. Bot may already be authenticated.', 'info');
+    }
+  } catch (error) {
+    console.error('QR code error:', error);
+    showNotification('Error: Failed to get QR code', 'error');
   }
 }
 

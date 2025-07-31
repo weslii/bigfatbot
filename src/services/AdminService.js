@@ -2,7 +2,7 @@ const database = require('../config/database');
 const logger = require('../utils/logger');
 const bcrypt = require('bcryptjs');
 const ShortCodeGenerator = require('../utils/shortCodeGenerator');
-const WhatsAppService = require('./WhatsAppService');
+const BotServiceManager = require('./BotServiceManager');
 const { v4: uuidv4 } = require('uuid');
 const NotificationService = require('./NotificationService');
 
@@ -130,13 +130,14 @@ class AdminService {
 
   static async updateAdmin(id, data) {
     try {
+      if (data.password) {
+        data.password_hash = await bcrypt.hash(data.password, 10);
+        delete data.password;
+      }
+
       const [admin] = await database.query('admins')
         .where('id', id)
-        .update({
-          email: data.email,
-          role: data.role,
-          is_active: data.is_active
-        })
+        .update(data)
         .returning('*');
 
       return admin;
@@ -148,74 +149,47 @@ class AdminService {
 
   static async getAllOrdersWithDetails({ status, business, search, limit = 5, offset = 0 } = {}) {
     try {
-      const query = database.query('orders as o')
+      // Build base query for filtering
+      let baseQuery = database.query('orders as o')
+        .leftJoin('groups as g', 'o.business_id', 'g.business_id')
+        .leftJoin('users as u', 'g.user_id', 'u.id');
+
+      if (status) {
+        baseQuery = baseQuery.where('o.status', status);
+      }
+
+      if (business) {
+        baseQuery = baseQuery.where('g.business_name', 'ilike', `%${business}%`);
+      }
+
+      if (search) {
+        baseQuery = baseQuery.where(function() {
+          this.where('o.customer_name', 'ilike', `%${search}%`)
+            .orWhere('o.order_id', 'ilike', `%${search}%`)
+            .orWhere('o.customer_phone', 'ilike', `%${search}%`);
+        });
+      }
+
+      // Get total count
+      const total = await baseQuery.clone().count('o.id as count').first();
+
+      // Get orders with details
+      const orders = await baseQuery
         .select(
-          'o.id',
-          'o.order_id',
-          'o.status',
-          'o.created_at',
-          'o.updated_at',
-          'o.items',
-          'o.customer_name',
-          'o.customer_phone',
-          'o.address',
-          'o.delivery_date',
-          'o.delivery_person',
-          'o.notes',
-          'o.business_id'
+          'o.*',
+          'g.business_name',
+          'u.full_name as customer_name'
         )
         .orderBy('o.created_at', 'desc')
         .limit(limit)
         .offset(offset);
-      
-      if (status) {
-        query.where('o.status', status);
-      }
-      if (business) {
-        query.where('o.business_id', business);
-      }
-      if (search) {
-        query.where(function() {
-          this.where('o.customer_name', 'ilike', `%${search}%`)
-              .orWhere('o.order_id', 'ilike', `%${search}%`);
-        });
-      }
-      
-      const orders = await query;
-      
-      // Get business names for the orders
-      const businessIds = [...new Set(orders.map(order => order.business_id))];
-      const businessNames = {};
-      if (businessIds.length > 0) {
-        const businesses = await database.query('groups')
-          .select('business_id', 'business_name')
-          .whereIn('business_id', businessIds)
-          .distinct('business_id');
-        
-        businesses.forEach(biz => {
-          businessNames[biz.business_id] = biz.business_name;
-        });
-      }
-      
-      // Add business names to orders
-      const ordersWithBusinessNames = orders.map(order => ({
-        ...order,
-        business_name: businessNames[order.business_id] || 'Unknown Business'
-      }));
-      
-      // Get total count for pagination
-      const countQuery = database.query('orders as o');
-      if (status) countQuery.where('o.status', status);
-      if (business) countQuery.where('o.business_id', business);
-      if (search) {
-        countQuery.where(function() {
-          this.where('o.customer_name', 'ilike', `%${search}%`)
-              .orWhere('o.order_id', 'ilike', `%${search}%`);
-        });
-      }
-      const [{ count }] = await countQuery.count('o.id as count');
-      
-      return { orders: ordersWithBusinessNames, total: parseInt(count) };
+
+      return {
+        orders,
+        total: parseInt(total.count),
+        limit,
+        offset
+      };
     } catch (error) {
       logger.error('Error getting all orders with details:', error);
       throw error;
@@ -224,18 +198,27 @@ class AdminService {
 
   static async markOrderCompleted(orderId) {
     try {
-      await database.query('orders')
+      const [order] = await database.query('orders')
         .where('id', orderId)
-        .update({ status: 'completed', updated_at: database.query.fn.now() });
+        .update({
+          status: 'delivered',
+          delivered_at: new Date(),
+          updated_at: new Date()
+        })
+        .returning('*');
+
+      return order;
     } catch (error) {
-      logger.error('Error marking order as completed:', error);
+      logger.error('Error marking order completed:', error);
       throw error;
     }
   }
 
   static async deleteOrder(orderId) {
     try {
-      await database.query('orders').where('id', orderId).del();
+      await database.query('orders')
+        .where('id', orderId)
+        .del();
     } catch (error) {
       logger.error('Error deleting order:', error);
       throw error;
@@ -244,37 +227,16 @@ class AdminService {
 
   static async getOrderById(orderId) {
     try {
-      const order = await database.query('orders as o')
+      return await database.query('orders as o')
         .select(
-          'o.id',
-          'o.order_id',
-          'o.status',
-          'o.created_at',
-          'o.updated_at',
-          'o.items',
-          'o.customer_name',
-          'o.customer_phone',
-          'o.address',
-          'o.delivery_date',
-          'o.delivery_person',
-          'o.notes',
-          'o.business_id'
+          'o.*',
+          'g.business_name',
+          'u.full_name as customer_name'
         )
+        .leftJoin('groups as g', 'o.business_id', 'g.business_id')
+        .leftJoin('users as u', 'g.user_id', 'u.id')
         .where('o.id', orderId)
         .first();
-      
-      if (!order) return null;
-      
-      // Get business name separately to avoid JOIN duplicates
-      const business = await database.query('groups')
-        .select('business_name')
-        .where('business_id', order.business_id)
-        .first();
-      
-      return {
-        ...order,
-        business_name: business ? business.business_name : 'Unknown Business'
-      };
     } catch (error) {
       logger.error('Error getting order by ID:', error);
       throw error;
@@ -283,11 +245,15 @@ class AdminService {
 
   static async editOrder(orderId, data) {
     try {
-      const updateData = {};
-      if (data.status) updateData.status = data.status;
-      if (data.items) updateData.items = data.items;
-      updateData.updated_at = database.query.fn.now();
-      await database.query('orders').where('id', orderId).update(updateData);
+      const [order] = await database.query('orders')
+        .where('id', orderId)
+        .update({
+          ...data,
+          updated_at: new Date()
+        })
+        .returning('*');
+
+      return order;
     } catch (error) {
       logger.error('Error editing order:', error);
       throw error;
@@ -296,66 +262,54 @@ class AdminService {
 
   static async getAllBusinessesWithOwners(limit = 10, offset = 0, search = '', business_name = '', owner = '', status = '') {
     try {
-      const query = database.query('groups as g')
+      // Build base query for filtering
+      let baseQuery = database.query('groups as g')
+        .leftJoin('users as u', 'g.user_id', 'u.id');
+
+      if (search) {
+        baseQuery = baseQuery.where(function() {
+          this.where('g.business_name', 'ilike', `%${search}%`)
+            .orWhere('u.full_name', 'ilike', `%${search}%`);
+        });
+      }
+
+      if (business_name) {
+        baseQuery = baseQuery.where('g.business_name', 'ilike', `%${business_name}%`);
+      }
+
+      if (owner) {
+        baseQuery = baseQuery.where('u.full_name', 'ilike', `%${owner}%`);
+      }
+
+      if (status) {
+        baseQuery = baseQuery.where('g.is_active', status === 'active');
+      }
+
+      // Get total count of distinct businesses
+      const total = await baseQuery.clone().countDistinct('g.business_id as count').first();
+
+      // Get businesses with details
+      const businesses = await baseQuery
         .select(
           'g.business_id',
           'g.business_name',
-          database.query.raw('MIN(g.user_id::text) as user_id'),
-          database.query.raw('MIN(g.short_code) as short_code'),
-          database.query.raw('MIN(g.setup_identifier) as setup_identifier'),
-          database.query.raw('MAX(g.is_active::int) = 1 as is_active'),
-          database.query.raw('MIN(u.full_name) as owner_name'),
-          database.query.raw('MIN(u.email) as owner_email')
+          'g.group_type',
+          'g.is_active',
+          'g.created_at',
+          'u.full_name as owner_name',
+          'u.email as owner_email'
         )
-        .leftJoin('users as u', 'g.user_id', 'u.id')
-        .groupBy('g.business_id', 'g.business_name')
-        .orderBy('g.business_name')
+        .distinct('g.business_id')
+        .orderBy('g.created_at', 'desc')
         .limit(limit)
         .offset(offset);
-      if (search) {
-        query.where(function() {
-          this.where('g.business_name', 'ilike', `%${search}%`)
-              .orWhere('u.full_name', 'ilike', `%${search}%`);
-        });
-      }
-      if (business_name) {
-        query.where('g.business_name', 'ilike', `%${business_name}%`);
-      }
-      if (owner) {
-        query.where(function() {
-          this.where('u.full_name', 'ilike', `%${owner}%`).orWhere('u.email', 'ilike', `%${owner}%`);
-        });
-      }
-      if (status === 'active') {
-        query.where('g.is_active', true);
-      } else if (status === 'inactive') {
-        query.where('g.is_active', false);
-      }
-      const businesses = await query;
-      // Count query with filters
-      const countQuery = database.query('groups as g')
-        .leftJoin('users as u', 'g.user_id', 'u.id');
-      if (search) {
-        countQuery.where(function() {
-          this.where('g.business_name', 'ilike', `%${search}%`)
-              .orWhere('u.full_name', 'ilike', `%${search}%`);
-        });
-      }
-      if (business_name) {
-        countQuery.where('g.business_name', 'ilike', `%${business_name}%`);
-      }
-      if (owner) {
-        countQuery.where(function() {
-          this.where('u.full_name', 'ilike', `%${owner}%`).orWhere('u.email', 'ilike', `%${owner}%`);
-        });
-      }
-      if (status === 'active') {
-        countQuery.where('g.is_active', true);
-      } else if (status === 'inactive') {
-        countQuery.where('g.is_active', false);
-      }
-      const [{ count }] = await countQuery.countDistinct('g.business_id as count');
-      return { businesses, total: parseInt(count) };
+
+      return {
+        businesses,
+        total: parseInt(total.count),
+        limit,
+        offset
+      };
     } catch (error) {
       logger.error('Error getting all businesses with owners:', error);
       throw error;
@@ -368,8 +322,9 @@ class AdminService {
         .select(
           'g.business_id',
           'g.business_name',
-          'g.user_id',
+          'g.group_type',
           'g.is_active',
+          'g.created_at',
           'u.full_name as owner_name',
           'u.email as owner_email'
         )
@@ -384,31 +339,21 @@ class AdminService {
 
   static async addBusiness(data) {
     try {
-      // Generate unique business_id
-      const businessId = uuidv4();
-      // Generate short code and setup identifier
-      const { shortCode, setupIdentifier } = await ShortCodeGenerator.generateBusinessSetupCode(data.business_name);
-      // Generate required group fields
-      const groupName = `${data.business_name} - Main Group`;
-      const groupType = 'main';
-      const groupId = `main_${businessId}`;
-      await database.query('groups').insert({
-        business_id: businessId,
-        business_name: data.business_name,
-        user_id: data.user_id,
-        is_active: data.is_active !== undefined ? !!data.is_active : true,
-        short_code: shortCode,
-        setup_identifier: setupIdentifier,
-        group_name: groupName,
-        group_type: groupType,
-        group_id: groupId
-      });
-      return {
-        business_id: businessId,
-        business_name: data.business_name,
-        short_code: shortCode,
-        setup_identifier: setupIdentifier
-      };
+      const [business] = await database.query('groups')
+        .insert({
+          user_id: data.user_id,
+          business_id: uuidv4(),
+          business_name: data.business_name,
+          group_name: data.group_name,
+          group_id: data.group_id,
+          group_type: data.group_type,
+          is_active: true,
+          created_at: new Date(),
+          updated_at: new Date()
+        })
+        .returning('*');
+
+      return business;
     } catch (error) {
       logger.error('Error adding business:', error);
       throw error;
@@ -417,19 +362,15 @@ class AdminService {
 
   static async editBusiness(businessId, data) {
     try {
-      const updateData = {
-          business_name: data.business_name,
-          user_id: data.user_id
-      };
-      
-      // Only update is_active if it's explicitly provided
-      if (data.is_active !== undefined) {
-        updateData.is_active = !!data.is_active;
-      }
-      
-      await database.query('groups')
+      const [business] = await database.query('groups')
         .where('business_id', businessId)
-        .update(updateData);
+        .update({
+          ...data,
+          updated_at: new Date()
+        })
+        .returning('*');
+
+      return business;
     } catch (error) {
       logger.error('Error editing business:', error);
       throw error;
@@ -438,53 +379,30 @@ class AdminService {
 
   static async deleteBusiness(businessId, reason = null) {
     try {
-      // Get business details before deletion
-      const business = await database.query('groups')
-        .where('business_id', businessId)
-        .first();
+      // Get business details for notification
+      const business = await this.getBusinessById(businessId);
       
-      if (!business) {
-        throw new Error('Business not found');
-      }
-
-      // Get user details
-      const user = await database.query('users')
-        .where('id', business.user_id)
-        .first();
-
-      // Get order count
-      const orderCount = await database.query('orders')
+      // Delete all groups for this business
+      await database.query('groups')
         .where('business_id', businessId)
-        .count('* as count')
-        .first();
+        .del();
 
-      // Delete the business
-      await database.query('groups').where('business_id', businessId).del();
+      // Delete all orders for this business
+      await database.query('orders')
+        .where('business_id', businessId)
+        .del();
 
-      // Send business deletion notification
-      if (user) {
-        const businessData = {
-          business_name: business.business_name,
-          business_id: businessId,
-          group_id: business.group_id
-        };
-        
-        const businessDeletionReason = reason || 'Business closed by admin';
-        try {
-          await NotificationService.notifyBusinessDeletion(
-            businessData,
-            user,
-            'Admin',
-            businessDeletionReason,
-            {
-              'Deletion Method': 'Admin Dashboard',
-              'Orders Affected': parseInt(orderCount.count)
-            }
-          );
-        } catch (notificationError) {
-          logger.error('Error sending business deletion notification:', notificationError);
-        }
+      // Send notification
+      if (business) {
+        await NotificationService.notifyBusinessDeletion(
+          business,
+          { full_name: 'Admin', email: 'admin@novi.com' },
+          'Admin',
+          reason
+        );
       }
+
+      return true;
     } catch (error) {
       logger.error('Error deleting business:', error);
       throw error;
@@ -494,8 +412,8 @@ class AdminService {
   static async getAllUsers() {
     try {
       return await database.query('users')
-        .select('id', 'full_name', 'email', 'phone_number', 'created_at')
-        .orderBy('created_at', 'desc');
+        .select('id', 'full_name', 'email', 'phone_number', 'created_at', 'is_active')
+        .orderBy('full_name');
     } catch (error) {
       logger.error('Error getting all users:', error);
       throw error;
@@ -505,7 +423,6 @@ class AdminService {
   static async getUserById(userId) {
     try {
       return await database.query('users')
-        .select('id', 'full_name', 'email', 'phone_number', 'created_at')
         .where('id', userId)
         .first();
     } catch (error) {
@@ -516,11 +433,15 @@ class AdminService {
 
   static async addUser(data) {
     try {
-      await database.query('users').insert({
-        full_name: data.full_name,
-        email: data.email,
-        phone_number: data.phone_number
-      });
+      const [user] = await database.query('users')
+        .insert({
+          ...data,
+          created_at: new Date(),
+          updated_at: new Date()
+        })
+        .returning('*');
+
+      return user;
     } catch (error) {
       logger.error('Error adding user:', error);
       throw error;
@@ -529,13 +450,15 @@ class AdminService {
 
   static async editUser(userId, data) {
     try {
-      await database.query('users')
+      const [user] = await database.query('users')
         .where('id', userId)
         .update({
-          full_name: data.full_name,
-          email: data.email,
-          phone_number: data.phone_number
-        });
+          ...data,
+          updated_at: new Date()
+        })
+        .returning('*');
+
+      return user;
     } catch (error) {
       logger.error('Error editing user:', error);
       throw error;
@@ -544,91 +467,41 @@ class AdminService {
 
   static async deleteUser(userId, reason = null) {
     try {
-      // Get user details for confirmation
+      // Get user details for notification
       const user = await this.getUserById(userId);
-      if (!user) {
-        throw new Error('User not found');
-      }
-
-      // Check if user has associated businesses
+      
+      // Check if user has any businesses
       const userBusinesses = await database.query('groups')
         .where('user_id', userId)
         .select('business_id', 'business_name');
 
-      // Check if user has associated orders through their businesses
-      let totalUserOrders = 0;
       if (userBusinesses.length > 0) {
-        const businessIds = userBusinesses.map(biz => biz.business_id);
-        const userOrders = await database.query('orders')
-          .whereIn('business_id', businessIds)
-          .count('* as count')
-          .first();
-        totalUserOrders = parseInt(userOrders.count);
+        // Delete all businesses owned by this user
+        for (const business of userBusinesses) {
+          await this.deleteBusiness(business.business_id, `User deletion: ${reason}`);
+        }
       }
 
-      const hasData = userBusinesses.length > 0 || totalUserOrders > 0;
+      // Delete all groups owned by this user
+      await database.query('groups')
+        .where('user_id', userId)
+        .del();
 
-      if (hasData) {
-        // User has data - delete everything
-        // 1. Delete orders first (through business relationship)
-        if (totalUserOrders > 0) {
-          const businessIds = userBusinesses.map(biz => biz.business_id);
-          await database.query('orders').whereIn('business_id', businessIds).del();
-        }
+      // Delete the user
+      await database.query('users')
+        .where('id', userId)
+        .del();
 
-        // 2. Delete businesses (groups)
-        if (userBusinesses.length > 0) {
-          await database.query('groups').where('user_id', userId).del();
-        }
-
-        // 3. Delete user
-        await database.query('users').where('id', userId).del();
-
-        // Send user deletion notification
-        try {
-          const deletionReason = reason || 'Account terminated due to admin action';
-          await NotificationService.notifyUserDeletion(user, 'Admin', deletionReason, {
-            'Deletion Method': 'Admin Dashboard',
-            'Businesses Affected': userBusinesses.length,
-            'Orders Affected': totalUserOrders,
-            'Deletion Type': 'Bulk Delete'
-          });
-        } catch (notificationError) {
-          logger.error('Error sending user deletion notification:', notificationError);
-        }
-
-        return {
-          success: true,
-          message: `User "${user.full_name}" deleted successfully along with ${userBusinesses.length} business(es) and ${totalUserOrders} order(s).`,
-          deletedBusinesses: userBusinesses.length,
-          deletedOrders: totalUserOrders,
-          wasBulkDelete: true
-        };
-      } else {
-        // User has no data - just delete user
-        await database.query('users').where('id', userId).del();
-        
-        // Send user deletion notification
-        try {
-          const deletionReason = reason || 'Account terminated due to admin action';
-          await NotificationService.notifyUserDeletion(user, 'Admin', deletionReason, {
-            'Deletion Method': 'Admin Dashboard',
-            'Businesses Affected': 0,
-            'Orders Affected': 0,
-            'Deletion Type': 'Single Delete'
-          });
-        } catch (notificationError) {
-          logger.error('Error sending user deletion notification:', notificationError);
-        }
-        
-        return {
-          success: true,
-          message: `User "${user.full_name}" deleted successfully.`,
-          deletedBusinesses: 0,
-          deletedOrders: 0,
-          wasBulkDelete: false
-        };
+      // Send notification
+      if (user) {
+        await NotificationService.notifyUserDeletion(
+          user,
+          'Admin',
+          reason
+        );
       }
+
+      return true;
     } catch (error) {
       logger.error('Error deleting user:', error);
       throw error;
@@ -637,33 +510,36 @@ class AdminService {
 
   static async toggleUserActive(userId, reason = null) {
     try {
-      const user = await database.query('users').where('id', userId).first();
+      const user = await this.getUserById(userId);
       if (!user) {
         throw new Error('User not found');
       }
-      
+
       const newStatus = !user.is_active;
-      await database.query('users').where('id', userId).update({ is_active: newStatus });
       
-      // Send user activation/deactivation notification
-      try {
-        if (newStatus) {
-          await NotificationService.notifyUserActivation(user, 'Admin', {
-            'Activation Method': 'Admin Dashboard',
-            'Previous Status': 'Inactive'
-          });
-        } else {
-          const deactivationReason = reason || 'Account suspended by admin';
-          await NotificationService.notifyUserDeactivation(user, 'Admin', deactivationReason, {
-            'Deactivation Method': 'Admin Dashboard',
-            'Suspension Duration': 'Indefinite'
-          });
-        }
-      } catch (notificationError) {
-        logger.error('Error sending user activation/deactivation notification:', notificationError);
+      await database.query('users')
+        .where('id', userId)
+        .update({
+          is_active: newStatus,
+          updated_at: new Date()
+        });
+
+      // Also update all groups owned by this user
+      await database.query('groups')
+        .where('user_id', userId)
+        .update({
+          is_active: newStatus,
+          updated_at: new Date()
+        });
+
+      // Send notification
+      if (newStatus) {
+        await NotificationService.notifyUserActivation(user, 'Admin');
+      } else {
+        await NotificationService.notifyUserDeactivation(user, 'Admin', reason);
       }
-      
-      return { success: true, is_active: newStatus };
+
+      return { is_active: newStatus };
     } catch (error) {
       logger.error('Error toggling user active status:', error);
       throw error;
@@ -673,7 +549,7 @@ class AdminService {
   static async getAllAdmins() {
     try {
       return await database.query('admins')
-        .select('id', 'username', 'email', 'role', 'is_active', 'last_login')
+        .select('id', 'username', 'email', 'role', 'created_at', 'last_login')
         .orderBy('username');
     } catch (error) {
       logger.error('Error getting all admins:', error);
@@ -683,13 +559,14 @@ class AdminService {
 
   static async addAdmin(data) {
     try {
-      await database.query('admins').insert({
-        username: data.username,
-        email: data.email,
-        password_hash: data.password ? await require('bcryptjs').hash(data.password, 10) : '',
-        role: data.role || 'admin',
-        is_active: data.is_active !== undefined ? data.is_active : true
-      });
+      const [admin] = await database.query('admins')
+        .insert({
+          ...data,
+          created_at: new Date()
+        })
+        .returning('*');
+
+      return admin;
     } catch (error) {
       logger.error('Error adding admin:', error);
       throw error;
@@ -698,17 +575,15 @@ class AdminService {
 
   static async editAdmin(adminId, data) {
     try {
-      const updateData = {
-        email: data.email,
-        role: data.role,
-        is_active: data.is_active !== undefined ? data.is_active : true
-      };
-      if (data.password) {
-        updateData.password_hash = await require('bcryptjs').hash(data.password, 10);
-      }
-      await database.query('admins')
+      const [admin] = await database.query('admins')
         .where('id', adminId)
-        .update(updateData);
+        .update({
+          ...data,
+          updated_at: new Date()
+        })
+        .returning('*');
+
+      return admin;
     } catch (error) {
       logger.error('Error editing admin:', error);
       throw error;
@@ -720,19 +595,32 @@ class AdminService {
       const admin = await database.query('admins')
         .where('id', adminId)
         .first();
-      if (!admin) throw new Error('Admin not found');
+
+      if (!admin) {
+        throw new Error('Admin not found');
+      }
+
+      const newStatus = !admin.is_active;
+      
       await database.query('admins')
         .where('id', adminId)
-        .update({ is_active: !admin.is_active });
+        .update({
+          is_active: newStatus,
+          updated_at: new Date()
+        });
+
+      return { is_active: newStatus };
     } catch (error) {
-      logger.error('Error toggling admin active:', error);
+      logger.error('Error toggling admin active status:', error);
       throw error;
     }
   }
 
   static async deleteAdmin(adminId) {
     try {
-      await database.query('admins').where('id', adminId).del();
+      await database.query('admins')
+        .where('id', adminId)
+        .del();
     } catch (error) {
       logger.error('Error deleting admin:', error);
       throw error;
@@ -741,48 +629,63 @@ class AdminService {
 
   static async toggleBusinessActive(businessId) {
     try {
-      // Check if any group for this business is active
-      const anyActive = await database.query('groups')
+      const business = await database.query('groups')
         .where('business_id', businessId)
-        .where('is_active', true)
         .first();
-      // If any group is active, deactivate all; otherwise, activate all
-      const newStatus = !anyActive;
+
+      if (!business) {
+        throw new Error('Business not found');
+      }
+
+      const newStatus = !business.is_active;
+      
       await database.query('groups')
         .where('business_id', businessId)
-        .update({ is_active: newStatus });
+        .update({
+          is_active: newStatus,
+          updated_at: new Date()
+        });
+
+      return { is_active: newStatus };
     } catch (error) {
-      logger.error('Error toggling business active:', error);
+      logger.error('Error toggling business active status:', error);
       throw error;
     }
   }
 
   static async getPercentageChange(table, column = '*') {
-    // Get this month and last month counts
-    const now = new Date();
-    const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
-    const thisMonth = await database.query(table)
-      .where(column === '*' ? {} : { [column]: true })
-      .where('created_at', '>=', startOfThisMonth)
-      .count('* as count').first();
-    const lastMonth = await database.query(table)
-      .where(column === '*' ? {} : { [column]: true })
-      .where('created_at', '>=', startOfLastMonth)
-      .where('created_at', '<', startOfThisMonth)
-      .count('* as count').first();
-    const thisVal = parseInt(thisMonth.count);
-    const lastVal = parseInt(lastMonth.count);
-    const percent = lastVal === 0 ? 100 : ((thisVal - lastVal) / lastVal) * 100;
-    return percent;
+    try {
+      const now = new Date();
+      const yesterdayDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      
+      const [todayCount, yesterdayCount] = await Promise.all([
+        database.query(table).where('created_at', '>=', now.toISOString().split('T')[0]).count(column + ' as count').first(),
+        database.query(table).where('created_at', '>=', yesterdayDate.toISOString().split('T')[0]).where('created_at', '<', now.toISOString().split('T')[0]).count(column + ' as count').first()
+      ]);
+
+      const today = parseInt(todayCount.count);
+      const yesterday = parseInt(yesterdayCount.count);
+      
+      if (yesterday === 0) {
+        return today > 0 ? 100 : 0;
+      }
+      
+      return ((today - yesterday) / yesterday) * 100;
+    } catch (error) {
+      logger.error('Error calculating percentage change:', error);
+      return 0;
+    }
   }
 
   static async getBotManagementMetrics() {
-    const botService = WhatsAppService.getInstance();
-    const info = await botService.getBotInfo();
-    const metrics = await botService.getBotMetrics();
-    return { ...info, ...metrics };
+    try {
+      const botManager = BotServiceManager.getInstance();
+      const metrics = await botManager.getBotMetrics('all');
+      return metrics;
+    } catch (error) {
+      logger.error('Error getting bot management metrics:', error);
+      return null;
+    }
   }
 
   static async getAnalytics() {
@@ -849,9 +752,32 @@ class AdminService {
         lastActivity = botMetrics.last_activity;
       }
       
-      // Get bot connection status
-      const botService = WhatsAppService.getInstance();
-      const botInfo = await botService.getBotInfo();
+      // Get bot connection status from BotServiceManager
+      const botManager = BotServiceManager.getInstance();
+      const botInfo = await botManager.getBotInfo('all');
+      
+      // Determine overall status
+      let overallStatus = 'disconnected';
+      let overallNumber = 'Not connected';
+      
+      if (botInfo.whatsapp && botInfo.telegram) {
+        if (botInfo.whatsapp.status === 'connected' && botInfo.telegram.status === 'connected') {
+          overallStatus = 'connected';
+          overallNumber = 'Both platforms connected';
+        } else if (botInfo.whatsapp.status === 'connected') {
+          overallStatus = 'connected';
+          overallNumber = `WhatsApp: ${botInfo.whatsapp.number}`;
+        } else if (botInfo.telegram.status === 'connected') {
+          overallStatus = 'connected';
+          overallNumber = `Telegram: ${botInfo.telegram.number}`;
+        }
+      } else if (botInfo.whatsapp) {
+        overallStatus = botInfo.whatsapp.status;
+        overallNumber = botInfo.whatsapp.number;
+      } else if (botInfo.telegram) {
+        overallStatus = botInfo.telegram.status;
+        overallNumber = botInfo.telegram.number;
+      }
       
       return {
         totalRevenue: '23,584.89', // Placeholder value for dashboard
@@ -862,12 +788,15 @@ class AdminService {
         orderStatusCounts,
         businessChange,
         orderChange,
-        status: botInfo.status || 'disconnected',
-        number: botInfo.number || 'Not connected',
+        status: overallStatus,
+        number: overallNumber,
         lastActivity: lastActivity || new Date().toISOString(),
         messageSuccessRate: Math.round(messageSuccessRate * 100) / 100, // Round to 2 decimal places
         avgResponseTime: Math.round((avgResponseTime / 1000) * 10) / 10, // Convert ms to seconds, round to 1 decimal
-        dailyMessages: parseInt(dailyMessages)
+        dailyMessages: parseInt(dailyMessages),
+        // Add platform-specific info
+        whatsapp: botInfo.whatsapp || { status: 'disconnected', number: 'Not connected' },
+        telegram: botInfo.telegram || { status: 'disconnected', number: 'Not connected' }
       };
     } catch (error) {
       logger.error('Error getting analytics:', error);
@@ -900,74 +829,71 @@ class AdminService {
 
   static async getReportStats({ startDate, endDate, businessId, userId } = {}) {
     try {
-      // Businesses
-      const businessQuery = database.query('groups');
-      if (startDate) businessQuery.where('created_at', '>=', startDate);
-      if (endDate) businessQuery.where('created_at', '<=', endDate);
-      if (businessId) businessQuery.where('business_id', businessId);
-      const totalBusinesses = await businessQuery.clone().countDistinct('business_id as count').first();
-      const activeBusinesses = await businessQuery.clone().where('is_active', true).countDistinct('business_id as count').first();
-      const newBusinesses = startDate ? await businessQuery.clone().where('created_at', '>=', startDate).countDistinct('business_id as count').first() : { count: 0 };
+      let query = database.query('orders as o')
+        .select(
+          'o.*',
+          'g.business_name',
+          'u.full_name as customer_name'
+        )
+        .leftJoin('groups as g', 'o.business_id', 'g.business_id')
+        .leftJoin('users as u', 'g.user_id', 'u.id');
 
-      // Users
-      const userQuery = database.query('users');
-      if (startDate) userQuery.where('created_at', '>=', startDate);
-      if (endDate) userQuery.where('created_at', '<=', endDate);
-      if (userId) userQuery.where('id', userId);
-      const totalUsers = await userQuery.clone().count('id as count').first();
-      const newUsers = startDate ? await userQuery.clone().where('created_at', '>=', startDate).count('id as count').first() : { count: 0 };
+      if (startDate && endDate) {
+        query = query.whereBetween('o.created_at', [startDate, endDate]);
+      }
 
-      // Orders
-      const orderQuery = database.query('orders');
-      if (startDate) orderQuery.where('created_at', '>=', startDate);
-      if (endDate) orderQuery.where('created_at', '<=', endDate);
-      if (businessId) orderQuery.where('business_id', businessId);
+      if (businessId) {
+        query = query.where('o.business_id', businessId);
+      }
+
       if (userId) {
-        // Get all business IDs for this user
-        const userBusinesses = await database.query('groups').select('business_id').where('user_id', userId);
-        const businessIds = userBusinesses.map(b => b.business_id);
-        if (businessIds.length > 0) orderQuery.whereIn('business_id', businessIds);
+        query = query.where('g.user_id', userId);
       }
-      const totalOrders = await orderQuery.clone().count('id as count').first();
-      const newOrders = startDate ? await orderQuery.clone().where('created_at', '>=', startDate).count('id as count').first() : { count: 0 };
-      // All-time total orders (ignoring filters)
-      const totalOrdersAllTime = await database.query('orders').count('id as count').first();
 
-      // Parsing success rate (from bot_metrics)
-      const metrics = await database.query('bot_metrics').orderBy('created_at', 'desc').first();
-      let parsingSuccessRate = 100, parsingAttempts = 0, parsingSuccesses = 0, parsingFailures = 0, filteredMessages = 0;
-      let aiParsedOrders = 0, patternParsedOrders = 0, aiParsedPercent = 0, patternParsedPercent = 0;
-      if (metrics) {
-        parsingAttempts = metrics.parsing_attempts || 0;
-        parsingSuccesses = metrics.parsing_successes || 0;
-        parsingFailures = metrics.parsing_failures || 0;
-        filteredMessages = metrics.filtered_messages || 0;
-        aiParsedOrders = metrics.ai_parsed_orders || 0;
-        patternParsedOrders = metrics.pattern_parsed_orders || 0;
-        const totalParsed = aiParsedOrders + patternParsedOrders;
-        aiParsedPercent = totalParsed > 0 ? (aiParsedOrders / totalParsed) * 100 : 0;
-        patternParsedPercent = totalParsed > 0 ? (patternParsedOrders / totalParsed) * 100 : 0;
-        parsingSuccessRate = parsingAttempts > 0 ? (parsingSuccesses / parsingAttempts) * 100 : 100;
-      }
+      const orders = await query.orderBy('o.created_at', 'desc');
+
+      // Calculate statistics
+      const totalOrders = orders.length;
+      const totalRevenue = orders.reduce((sum, order) => sum + (parseFloat(order.total_amount) || 0), 0);
+      const pendingOrders = orders.filter(order => order.status === 'pending').length;
+      const deliveredOrders = orders.filter(order => order.status === 'delivered').length;
+      const cancelledOrders = orders.filter(order => order.status === 'cancelled').length;
+
+      // Group by status
+      const statusCounts = {};
+      orders.forEach(order => {
+        statusCounts[order.status] = (statusCounts[order.status] || 0) + 1;
+      });
+
+      // Group by business
+      const businessStats = {};
+      orders.forEach(order => {
+        const businessName = order.business_name || 'Unknown';
+        if (!businessStats[businessName]) {
+          businessStats[businessName] = {
+            totalOrders: 0,
+            totalRevenue: 0,
+            pendingOrders: 0,
+            deliveredOrders: 0,
+            cancelledOrders: 0
+          };
+        }
+        businessStats[businessName].totalOrders++;
+        businessStats[businessName].totalRevenue += parseFloat(order.total_amount) || 0;
+        if (order.status === 'pending') businessStats[businessName].pendingOrders++;
+        if (order.status === 'delivered') businessStats[businessName].deliveredOrders++;
+        if (order.status === 'cancelled') businessStats[businessName].cancelledOrders++;
+      });
 
       return {
-        totalBusinesses: parseInt(totalBusinesses.count) || 0,
-        activeBusinesses: parseInt(activeBusinesses.count) || 0,
-        newBusinesses: parseInt(newBusinesses.count) || 0,
-        totalUsers: parseInt(totalUsers.count) || 0,
-        newUsers: parseInt(newUsers.count) || 0,
-        totalOrders: parseInt(totalOrders.count) || 0,
-        newOrders: parseInt(newOrders.count) || 0,
-        totalOrdersAllTime: parseInt(totalOrdersAllTime.count) || 0,
-        parsingSuccessRate,
-        parsingAttempts,
-        parsingSuccesses,
-        parsingFailures,
-        filteredMessages,
-        aiParsedOrders,
-        patternParsedOrders,
-        aiParsedPercent,
-        patternParsedPercent
+        totalOrders,
+        totalRevenue,
+        pendingOrders,
+        deliveredOrders,
+        cancelledOrders,
+        statusCounts,
+        businessStats,
+        orders
       };
     } catch (error) {
       logger.error('Error getting report stats:', error);
@@ -977,32 +903,36 @@ class AdminService {
 
   static async getParsingSuccessTimeSeries(days = 14) {
     try {
-      const results = [];
-      const today = new Date();
-      // Get the latest bot_metrics row (should have the JSON field)
-      const metrics = await database.query('bot_metrics').orderBy('created_at', 'desc').first();
-      let parsingMetricsByDay = {};
-      if (metrics && metrics.parsing_metrics_by_day) {
-        if (typeof metrics.parsing_metrics_by_day === 'string') {
-          try { parsingMetricsByDay = JSON.parse(metrics.parsing_metrics_by_day); } catch { parsingMetricsByDay = {}; }
-        } else {
-          parsingMetricsByDay = metrics.parsing_metrics_by_day;
-        }
+      const endDate = new Date();
+      const startDate = new Date(endDate.getTime() - (days * 24 * 60 * 60 * 1000));
+
+      const metrics = await database.query('bot_metrics')
+        .where('created_at', '>=', startDate.toISOString())
+        .where('created_at', '<=', endDate.toISOString())
+        .orderBy('created_at', 'asc');
+
+      const timeSeries = [];
+      for (let i = 0; i < days; i++) {
+        const date = new Date(startDate.getTime() + (i * 24 * 60 * 60 * 1000));
+        const dateStr = date.toISOString().split('T')[0];
+        
+        const dayMetrics = metrics.filter(m => 
+          m.created_at.toISOString().split('T')[0] === dateStr
+        );
+
+        const totalMessages = dayMetrics.reduce((sum, m) => sum + (parseInt(m.total_messages) || 0), 0);
+        const successfulParses = dayMetrics.reduce((sum, m) => sum + (parseInt(m.successful_parses) || 0), 0);
+        const successRate = totalMessages > 0 ? (successfulParses / totalMessages) * 100 : 0;
+
+        timeSeries.push({
+          date: dateStr,
+          totalMessages,
+          successfulParses,
+          successRate: Math.round(successRate * 100) / 100
+        });
       }
-      for (let i = days - 1; i >= 0; i--) {
-        const date = new Date(today);
-        date.setDate(today.getDate() - i);
-        const dateStr = date.toISOString().slice(0, 10);
-        let rate = 100;
-        if (parsingMetricsByDay[dateStr]) {
-          const { attempts, successes } = parsingMetricsByDay[dateStr];
-          rate = attempts > 0 ? (successes / attempts) * 100 : 100;
-        } else {
-          rate = 0; // No data for this day
-        }
-        results.push({ date: dateStr, rate });
-      }
-      return results;
+
+      return timeSeries;
     } catch (error) {
       logger.error('Error getting parsing success time series:', error);
       return [];
@@ -1012,68 +942,62 @@ class AdminService {
   static async getRecentActivity(limit = 5) {
     try {
       const activities = [];
-      
+
       // Get recent orders
-      const recentOrders = await database.query('orders as o')
-        .select(
-          'o.id',
-          'o.order_id',
-          'o.customer_name',
-          'o.status',
-          'o.created_at',
-          'g.business_name'
-        )
-        .leftJoin('groups as g', 'o.business_id', 'g.business_id')
-        .orderBy('o.created_at', 'desc')
+      const recentOrders = await database.query('orders')
+        .select('id', 'order_id', 'customer_name', 'status', 'created_at')
+        .orderBy('created_at', 'desc')
         .limit(limit);
-      
-      // Get recent business registrations
-      const recentBusinesses = await database.query('groups as g')
-        .select(
-          'g.business_id',
-          'g.business_name',
-          'g.created_at',
-          'u.full_name as owner_name'
-        )
-        .leftJoin('users as u', 'g.user_id', 'u.id')
-        .orderBy('g.created_at', 'desc')
-        .limit(limit);
-      
+
+      recentOrders.forEach(order => {
+        activities.push({
+          type: 'order',
+          id: order.id,
+          title: `New order #${order.order_id}`,
+          description: `Order from ${order.customer_name}`,
+          status: order.status,
+          timestamp: order.created_at
+        });
+      });
+
       // Get recent user registrations
       const recentUsers = await database.query('users')
         .select('id', 'full_name', 'email', 'created_at')
         .orderBy('created_at', 'desc')
         .limit(limit);
-      
-      // Combine and sort all activities
-      const allActivities = [
-        ...recentOrders.map(order => ({
-          type: 'order',
-          title: 'New order received',
-          description: `Order #${order.order_id} from ${order.customer_name} (${order.business_name})`,
-          time: order.created_at,
-          icon: 'box'
-        })),
-        ...recentBusinesses.map(business => ({
-          type: 'business',
-          title: 'New business registered',
-          description: `${business.business_name} joined the platform`,
-          time: business.created_at,
-          icon: 'building'
-        })),
-        ...recentUsers.map(user => ({
+
+      recentUsers.forEach(user => {
+        activities.push({
           type: 'user',
-          title: 'New user registered',
-          description: `${user.full_name} (${user.email}) joined`,
-          time: user.created_at,
-          icon: 'user'
-        }))
-      ];
-      
-      // Sort by time and take the most recent
-      allActivities.sort((a, b) => new Date(b.time) - new Date(a.time));
-      
-      return allActivities.slice(0, limit);
+          id: user.id,
+          title: `New user registered`,
+          description: `${user.full_name} (${user.email})`,
+          status: 'active',
+          timestamp: user.created_at
+        });
+      });
+
+      // Get recent business additions
+      const recentBusinesses = await database.query('groups')
+        .select('business_id', 'business_name', 'created_at')
+        .orderBy('created_at', 'desc')
+        .limit(limit);
+
+      recentBusinesses.forEach(business => {
+        activities.push({
+          type: 'business',
+          id: business.business_id,
+          title: `New business added`,
+          description: business.business_name,
+          status: 'active',
+          timestamp: business.created_at
+        });
+      });
+
+      // Sort by timestamp and return top limit
+      return activities
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        .slice(0, limit);
     } catch (error) {
       logger.error('Error getting recent activity:', error);
       return [];
