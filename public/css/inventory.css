@@ -37,8 +37,8 @@
     --text-secondary: #cbd5e1;
     --text-muted: #94a3b8;
     --info-color: #60a5fa;
-    --card-bg: rgba(14, 20, 38, 0.8);
-    --card-border: rgba(14, 20, 38, 0.8);
+    --card-bg: rgba(18, 25, 45, 0.85);
+    --card-border: rgba(18, 25, 45, 0.85);
     --card-hover-transform: translateY(-4px) scale(1.02);
     --card-hover-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
 }
@@ -496,6 +496,11 @@ body {
     cursor: pointer;
     position: relative;
     min-height: 140px;
+}
+
+[data-theme="dark"] .inventory-card {
+    background: rgba(20, 28, 48, 0.88);
+    border-color: rgba(20, 28, 48, 0.88);
 }
 
 .inventory-card:hover {

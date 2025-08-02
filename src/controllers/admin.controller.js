@@ -150,7 +150,10 @@ module.exports = {
           lastActivity: analytics.lastActivity || new Date().toISOString(),
           messageSuccessRate: analytics.messageSuccessRate || 100,
           avgResponseTime: analytics.avgResponseTime || 0,
-          dailyMessages: analytics.dailyMessages || 0
+          dailyMessages: analytics.dailyMessages || 0,
+          // Include platform-specific bot info for the template
+          whatsapp: analytics.whatsapp || { status: 'disconnected', number: 'Not connected' },
+          telegram: analytics.telegram || { status: 'disconnected', number: 'Not connected' }
       };
       
       // console.log('Stats being passed to template:', stats);
@@ -204,7 +207,10 @@ module.exports = {
           lastActivity: analytics.lastActivity || new Date().toISOString(),
           messageSuccessRate: analytics.messageSuccessRate || 100,
           avgResponseTime: analytics.avgResponseTime || 0,
-          dailyMessages: analytics.dailyMessages || 0
+          dailyMessages: analytics.dailyMessages || 0,
+          // Include platform-specific bot info for the template
+          whatsapp: analytics.whatsapp || { status: 'disconnected', number: 'Not connected' },
+          telegram: analytics.telegram || { status: 'disconnected', number: 'Not connected' }
         }
       });
     } catch (error) {

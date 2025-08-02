@@ -82,7 +82,7 @@
                                 </div>
                             </div>
                             <div class="detail-row">
-                                <label class="detail-label">WhatsApp Groups</label>
+                                <label class="detail-label">Groups</label>
                                 <div class="detail-value"><%= businessGroups.length %></div>
                             </div>
                         </div>
@@ -134,7 +134,7 @@
                     <div class="content-card scroll-reveal">
                         <div class="card-header">
                             <h3 class="card-title">
-                                <i class="fas fa-comments"></i> WhatsApp Groups
+                                <i class="fas fa-comments"></i>Groups
                             </h3>
                             <button class="btn btn-primary" onclick="openAddGroupModal()">
                                 <i class="fas fa-plus"></i> Add Group
@@ -188,8 +188,8 @@
                             <% } else { %>
                                 <div class="empty-state">
                                     <i class="fas fa-comments"></i>
-                                    <h4>No WhatsApp Groups</h4>
-                                    <p>You haven't added any WhatsApp groups yet. Add your first group to start receiving orders.</p>
+                                    <h4>No Groups</h4>
+                                    <p>You haven't added any groups yet. Add your first group to start receiving orders.</p>
                                     <button class="btn btn-primary" onclick="openAddGroupModal()">
                                         <i class="fas fa-plus"></i> Add Your First Group
                                     </button>
@@ -288,7 +288,7 @@
                                 <div class="empty-state">
                                     <i class="fas fa-box-open"></i>
                                     <h4>No Orders Yet</h4>
-                                    <p>Orders will appear here when customers place them in your WhatsApp groups.</p>
+                                    <p>Orders will appear here when customers place them in your groups.</p>
                                 </div>
                             <% } %>
                         </div>
@@ -309,7 +309,7 @@
                     <div class="add-business-card">
                         <div class="add-business-header">
                             <h2 class="add-business-title">Create New Business</h2>
-                            <p class="add-business-subtitle">Set up your business to start receiving orders through WhatsApp.</p>
+                            <p class="add-business-subtitle">Set up your business to start receiving orders with Novi.</p>
                         </div>
                         <div class="add-business-body">
                             <form id="newBusinessForm" class="business-form">
@@ -333,7 +333,7 @@
     <div id="addGroupModal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Add New WhatsApp Group</h5>
+                <h5 class="modal-title">Add New Group</h5>
                 <button type="button" class="close-modal" onclick="closeModal('addGroupModal')">&times;</button>
             </div>
             <div class="modal-body">
@@ -344,7 +344,7 @@
                             <i class="fas fa-robot"></i> Setup Instructions for <%= business ? business.business_name : 'Your Business' %>
                         </h6>
                         <p style="margin: 0; color: #64748b; line-height: 1.6;">
-                            Follow these steps to add a WhatsApp group to your business.
+                            Follow these steps to add a group to your business.
                         </p>
                     </div>
 
@@ -361,7 +361,7 @@
                             </li>
                             <li style="margin-bottom: 0.75rem;">
                                 <strong style="color: var(--text-primary);">Run the Setup Command</strong><br>
-                                <small>In your WhatsApp group, type this command:</small><br>
+                                <small>In your group, copy and paste this command:</small><br>
                                 <div style="background: rgba(59, 130, 246, 0.1); padding: 0.75rem; border-radius: 8px; margin: 0.5rem 0; display: flex; justify-content: space-between; align-items: center;">
                                     <code id="setupCommand" style="color: var(--info-color); font-weight: 600;">/setup <%= business ? business.setup_identifier : '' %></code>
                                     <button type="button" class="btn btn-sm" onclick="copySetupCommand(event)" style="background: var(--info-color); color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem;">Copy</button>

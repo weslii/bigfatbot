@@ -36,6 +36,12 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+// Add EJS helpers for currency formatting
+app.locals.formatCurrency = function(amount) {
+  if (amount === null || amount === undefined) return '₦0.00';
+  return `₦${parseFloat(amount).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
 // Set trust proxy for Railway or any proxy environment
 app.set('trust proxy', 1);
 

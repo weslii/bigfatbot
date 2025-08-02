@@ -77,7 +77,21 @@
           </div>
 
           <ol>
-            <li><strong>Add the bot to your messaging group as an <span class="admin-badge">ADMIN</span></strong></li>
+            <li><strong>Add the bot to your messaging group as an <span class="admin-badge">ADMIN</span></strong>
+              <div class="bot-info-section">
+                <p><strong>For WhatsApp:</strong> Add this number to your group:</p>
+                <div class="copy-card">
+                  <span id="whatsappBotNumber" class="copy-value">Loading...</span>
+                  <button class="copy-btn" onclick="copyBotNumber(event, 'whatsapp')"><i class="far fa-copy"></i> Copy</button>
+                </div>
+                
+                <p><strong>For Telegram:</strong> Add this bot to your group:</p>
+                <div class="copy-card">
+                  <span id="telegramBotUsername" class="copy-value">Loading...</span>
+                  <button class="copy-btn" onclick="copyBotNumber(event, 'telegram')"><i class="far fa-copy"></i> Copy</button>
+                </div>
+              </div>
+            </li>
             <li>Type this command in the group: 
               <div class="copy-card">
                 <code class="setup-command">/setup <%= business.setup_identifier %></code>
@@ -380,6 +394,21 @@
   background: #10b981 !important;
   color: #fff !important;
 }
+.bot-info-section {
+  margin: 0.5rem 0;
+}
+.bot-info-section p {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+.copy-value {
+  min-width: 0;
+  max-width: 70%;
+  overflow-wrap: break-word;
+  word-break: break-all;
+  color: var(--text-primary);
+}
 .setup-command {
   background: transparent !important;
   padding: 0 !important;
@@ -574,7 +603,114 @@
         }
         setupDropdown('profileDropdown', 'profileMenu');
         window.addEventListener('click', () => document.querySelectorAll('.dropdown-content.show').forEach(m => m.classList.remove('show')));
+        
+        // Load bot info
+        loadBotInfo();
     });
+    
+    async function loadBotInfo() {
+        // Load WhatsApp bot info
+        try {
+            const whatsappResponse = await fetch('/api/whatsapp/bot-info?platform=whatsapp');
+            const whatsappInfo = await whatsappResponse.json();
+            if (whatsappInfo.success) {
+                document.getElementById('whatsappBotNumber').textContent = whatsappInfo.number;
+            } else {
+                document.getElementById('whatsappBotNumber').textContent = 'Not available';
+            }
+        } catch (error) {
+            console.error('Error loading WhatsApp bot info:', error);
+            document.getElementById('whatsappBotNumber').textContent = 'Error loading';
+        }
+
+        // Load Telegram bot info
+        try {
+            const telegramResponse = await fetch('/api/telegram/bot-info?platform=telegram');
+            const telegramInfo = await telegramResponse.json();
+            if (telegramInfo.success) {
+                document.getElementById('telegramBotUsername').textContent = telegramInfo.number;
+            } else {
+                document.getElementById('telegramBotUsername').textContent = 'Not available';
+            }
+        } catch (error) {
+            console.error('Error loading Telegram bot info:', error);
+            document.getElementById('telegramBotUsername').textContent = 'Error loading';
+        }
+    }
+    
+    function copyBotNumber(event, platform) {
+        let botNumber = '';
+        let botUsername = '';
+
+        if (platform === 'whatsapp') {
+            botNumber = document.getElementById('whatsappBotNumber').textContent;
+            if (botNumber === 'Loading...' || botNumber === 'Not available' || botNumber === 'Error loading') {
+                alert('WhatsApp bot number not available yet. Please try again in a moment.');
+                return;
+            }
+        } else if (platform === 'telegram') {
+            botUsername = document.getElementById('telegramBotUsername').textContent;
+            if (botUsername === 'Loading...' || botUsername === 'Not available' || botUsername === 'Error loading') {
+                alert('Telegram bot username not available yet. Please try again in a moment.');
+                return;
+            }
+        }
+        
+        // Fallback for older browsers
+        if (!navigator.clipboard) {
+            const textArea = document.createElement('textarea');
+            if (platform === 'whatsapp') {
+                textArea.value = botNumber;
+            } else {
+                textArea.value = botUsername;
+            }
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                const button = event.target.closest('.copy-btn');
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                button.classList.add('copied');
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            } catch (err) {
+                alert('Failed to copy. Please try again.');
+            }
+            document.body.removeChild(textArea);
+            return;
+        }
+        
+        if (platform === 'whatsapp') {
+            navigator.clipboard.writeText(botNumber).then(() => {
+                const button = event.target.closest('.copy-btn');
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                button.classList.add('copied');
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(() => {
+                alert('Failed to copy. Please try again.');
+            });
+        } else {
+            navigator.clipboard.writeText(botUsername).then(() => {
+                const button = event.target.closest('.copy-btn');
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                button.classList.add('copied');
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(() => {
+                alert('Failed to copy. Please try again.');
+            });
+        }
+    }
 
     function copySetupCommand(event) {
         const command = document.querySelector('.setup-command').textContent;

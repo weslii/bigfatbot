@@ -124,7 +124,7 @@
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Price:</span>
-                        <span class="detail-value" id="collectionPrice" data-editable="true">$<%= parseFloat(collection.price).toFixed(2) %></span>
+                        <span class="detail-value" id="collectionPrice" data-editable="true"><%= formatCurrency(collection.price) %></span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Items:</span>
@@ -168,10 +168,10 @@
                                     <h4 class="item-name"><%= item.product_name || item.other_name %></h4>
                                     <p class="item-price">
                                         <% if (item.price_override) { %>
-                                            <span class="original-price">$<%= parseFloat(item.product_price || item.other_price).toFixed(2) %></span>
-                                            <span class="override-price">$<%= parseFloat(item.price_override).toFixed(2) %></span>
+                                                                                <span class="original-price"><%= formatCurrency(item.product_price || item.other_price) %></span>
+                                    <span class="override-price"><%= formatCurrency(item.price_override) %></span>
                                         <% } else { %>
-                                            $<%= parseFloat(item.product_price || item.other_price).toFixed(2) %>
+                                            <%= formatCurrency(item.product_price || item.other_price) %>
                                         <% } %>
                                     </p>
                                     <span class="item-type"><%= item.product_name ? 'Product' : 'Fee' %></span>
@@ -210,7 +210,7 @@
                      </div>
                      <div class="collection-price-notice">
                          <i class="fas fa-info-circle"></i>
-                         <span>New items will use the collection price: $<%= parseFloat(collection.price).toFixed(2) %></span>
+                         <span>New items will use the collection price: <%= formatCurrency(collection.price) %></span>
                      </div>
                  </div>
                 
@@ -246,8 +246,8 @@
                     </div>
                     <% } %>
                     <div class="form-group">
-                        <label for="newItemImage">Image URL (Optional)</label>
-                        <input type="url" id="newItemImage" name="newItemImage" placeholder="https://example.com/image.jpg">
+                        <label for="newItemImage">Upload Image (Optional)</label>
+                        <input type="url" id="newItemImage" name="newItemImage" placeholder="Coming Soon!">
                     </div>
                 </div>
                 

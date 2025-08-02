@@ -691,6 +691,7 @@ body {
   display: flex;
   gap: 0.5rem;
   margin-top: 1rem;
+  flex-wrap: wrap;
 }
 
 .secondary-btn {
@@ -1231,6 +1232,7 @@ body {
 
   .card-content {
     padding: 1rem;
+    padding-bottom: 1.5rem;
   }
 
   /* Mobile responsive stats grid */
@@ -1269,6 +1271,16 @@ body {
   .bot-management-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
+  }
+  
+  .bot-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .bot-actions .secondary-btn {
+    flex: none;
+    width: 100%;
   }
 
   /* Mobile responsive main content */
@@ -1493,6 +1505,16 @@ body {
   }
   .card-content {
     padding: 0.5rem;
+    padding-bottom: 1rem;
+  }
+  
+  .bot-actions {
+    gap: 0.5rem;
+  }
+  
+  .bot-actions .secondary-btn {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8rem;
   }
   .stats-grid {
     gap: 0.75rem;

@@ -165,7 +165,7 @@ class CollectionManager {
       if (response.ok) {
         const element = document.getElementById(fieldId);
         if (isPrice) {
-          element.textContent = `$${parseFloat(value).toFixed(2)}`;
+          element.textContent = `₦${parseFloat(value).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         } else {
           element.textContent = value;
         }
@@ -391,8 +391,8 @@ class CollectionManager {
               </div>
               
               <div class="form-group">
-                <label for="detailsItemImage">Image URL (Optional)</label>
-                <input type="url" id="detailsItemImage" name="image_url" value="${item.image_url || ''}" placeholder="https://example.com/image.jpg">
+                <label for="detailsItemImage">Upload Image (Optional)</label>
+                <input type="url" id="detailsItemImage" name="image_url" value="${item.image_url || ''}" placeholder="Coming Soon!">
               </div>
               
               <div class="form-actions">
@@ -620,14 +620,14 @@ class CollectionManager {
       this.availableProducts.forEach(product => {
         const option = document.createElement('option');
         option.value = product.id;
-        option.textContent = `${product.name} - $${parseFloat(product.price).toFixed(2)}`;
+                    option.textContent = `${product.name} - ₦${parseFloat(product.price).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         itemSelect.appendChild(option);
       });
     } else if (collectionType === 'other') {
       this.availableOthers.forEach(other => {
         const option = document.createElement('option');
         option.value = other.id;
-        option.textContent = `${other.name} - $${parseFloat(other.price).toFixed(2)}`;
+                    option.textContent = `${other.name} - ₦${parseFloat(other.price).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         itemSelect.appendChild(option);
       });
     }

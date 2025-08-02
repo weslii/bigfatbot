@@ -66,11 +66,22 @@ window.addEventListener('DOMContentLoaded', function() {
         fetchAndRenderOrders(1);
         fetchAndRenderAnalytics(); // Refresh analytics when viewing orders
       }
+      if (btn.dataset.tab === 'bot-tab') {
+        fetchAndRenderAnalytics(); // Refresh bot status when viewing bot management
+      }
     });
   });
   // Initial load
   fetchAndRenderBusinesses(1);
   fetchAndRenderAnalytics(); // Load analytics on page load
+  
+  // Set up periodic refresh for bot status (every 30 seconds)
+  setInterval(() => {
+    const activeTab = document.querySelector('.tab-btn.active');
+    if (activeTab && (activeTab.dataset.tab === 'bot-tab' || activeTab.dataset.tab === 'orders-tab')) {
+      fetchAndRenderAnalytics();
+    }
+  }, 30000);
 
   // Header search for businesses
   const searchInput = document.getElementById('searchInput');
@@ -411,6 +422,39 @@ async function fetchAndRenderAnalytics() {
       const changeText = (data.orderChange > 0 ? '+' : '') + data.orderChange.toFixed(1) + '% from last month';
       orderChange.textContent = changeText;
       orderChange.className = `stat-change ${data.orderChange >= 0 ? 'positive' : 'negative'}`;
+    }
+    
+    // Update bot status display
+    if (data.whatsapp) {
+      const whatsappStatusBadge = document.querySelector('.platform-status:first-child .status-badge');
+      const whatsappNumber = document.querySelector('.platform-status:first-child .status-value');
+      
+      if (whatsappStatusBadge) {
+        whatsappStatusBadge.textContent = data.whatsapp.status.charAt(0).toUpperCase() + data.whatsapp.status.slice(1);
+        whatsappStatusBadge.className = `status-badge ${data.whatsapp.status === 'connected' ? 'active' : 'inactive'}`;
+        console.log('Updated WhatsApp status:', data.whatsapp.status);
+      }
+      
+      if (whatsappNumber) {
+        whatsappNumber.textContent = data.whatsapp.number || 'N/A';
+        console.log('Updated WhatsApp number:', data.whatsapp.number);
+      }
+    }
+    
+    if (data.telegram) {
+      const telegramStatusBadge = document.querySelector('.platform-status:last-child .status-badge');
+      const telegramNumber = document.querySelector('.platform-status:last-child .status-value');
+      
+      if (telegramStatusBadge) {
+        telegramStatusBadge.textContent = data.telegram.status.charAt(0).toUpperCase() + data.telegram.status.slice(1);
+        telegramStatusBadge.className = `status-badge ${data.telegram.status === 'connected' ? 'active' : 'inactive'}`;
+        console.log('Updated Telegram status:', data.telegram.status);
+      }
+      
+      if (telegramNumber) {
+        telegramNumber.textContent = data.telegram.number || 'N/A';
+        console.log('Updated Telegram number:', data.telegram.number);
+      }
     }
     
     console.log('Analytics update completed successfully');
@@ -785,26 +829,35 @@ async function handleRestartClick(event) {
   }
 }
 
-async function refreshBotStatus(platform = 'whatsapp') {
+async function refreshBotStatus(platform = 'all') {
   try {
-    const response = await fetch(`/api/${platform}/bot-info`);
-    const result = await response.json();
+    console.log('Refreshing bot status...');
     
-    if (result.success) {
-      // Update bot status display if available
-      const statusElement = document.querySelector(`#${platform}Status`);
-      if (statusElement) {
-        const statusText = result.number || 'Unknown';
-        const statusClass = result.status === 'connected' ? 'alert-success' : 'alert-warning';
-        statusElement.innerHTML = `
-          <i class="fas fa-check-circle"></i> 
-          ${platform.charAt(0).toUpperCase() + platform.slice(1)} Bot is running (${statusText})
-        `;
-        statusElement.className = `alert ${statusClass}`;
-      }
+    // Show loading state if called from button
+    const button = event?.target?.closest('.secondary-btn');
+    if (button) {
+      const originalText = button.innerHTML;
+      button.disabled = true;
+      button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+      
+      // Fetch latest analytics data
+      await fetchAndRenderAnalytics();
+      
+      // Show success message
+      showNotification('Bot status refreshed successfully', 'success');
+      
+      // Restore button state
+      setTimeout(() => {
+        button.disabled = false;
+        button.innerHTML = originalText;
+      }, 1000);
+    } else {
+      // Called programmatically, just refresh data
+      await fetchAndRenderAnalytics();
     }
   } catch (error) {
-    console.error(`Failed to refresh ${platform} bot status:`, error);
+    console.error('Error refreshing bot status:', error);
+    showNotification(`Failed to refresh bot status: ${error.message}`, 'error');
   }
 } 
 
@@ -892,12 +945,7 @@ async function restartBot(platform) {
         showNotification(result.message, 'success');
         // Refresh bot status after a short delay
         setTimeout(() => {
-          if (platform === 'all') {
-            refreshBotStatus('whatsapp');
-            refreshBotStatus('telegram');
-          } else {
-            refreshBotStatus(platform);
-          }
+          refreshBotStatus();
         }, 3000);
       }
     } else {

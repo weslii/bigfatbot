@@ -37,8 +37,8 @@
     --text-secondary: #cbd5e1;
     --text-muted: #94a3b8;
     --info-color: #60a5fa;
-    --card-bg: rgba(14, 20, 38, 0.8);
-    --card-border: rgba(14, 20, 38, 0.8);
+    --card-bg: rgba(18, 25, 45, 0.85);
+    --card-border: rgba(18, 25, 45, 0.85);
     --card-hover-transform: translateY(-4px) scale(1.02);
     --card-hover-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
 }
@@ -722,9 +722,12 @@ select:hover, input:hover, .form-select:hover, .form-input:hover {
     }
 
     .header-right {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
+        order: 3;
+        width: auto;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-top: 0;
     }
 
     .nav-link {
@@ -735,6 +738,18 @@ select:hover, input:hover, .form-select:hover, .form-input:hover {
         width: 35px;
         height: 35px;
     }
+
+    /* Hide navigation links, profile dropdown and theme toggle on mobile */
+    .nav-link,
+    #theme-toggle,
+    .dropdown {
+        display: none !important;
+    }
+
+    /* Show hamburger menu on mobile */
+    .hamburger-menu {
+        display: flex !important;
+    }
 }
 
 @media (max-width: 480px) {
@@ -744,7 +759,8 @@ select:hover, input:hover, .form-select:hover, .form-input:hover {
 
     .header-right {
         gap: 0.25rem;
-        margin-top: 0.25rem;
+        margin-top: 0;
+        justify-content: flex-end;
     }
 
     .nav-link {
@@ -754,6 +770,18 @@ select:hover, input:hover, .form-select:hover, .form-input:hover {
     .btn.btn-icon {
         width: 32px;
         height: 32px;
+    }
+
+    /* Ensure navigation links, profile dropdown and theme toggle are hidden on small screens */
+    .nav-link,
+    #theme-toggle,
+    .dropdown {
+        display: none !important;
+    }
+
+    /* Ensure hamburger menu is shown on small screens */
+    .hamburger-menu {
+        display: flex !important;
     }
 }
 
@@ -889,11 +917,24 @@ select:hover, input:hover, .form-select:hover, .form-input:hover {
     .kpi-card {
         padding: 0.75rem;
     }
-} 
+}
 
 /* Mobile Navigation Styles */
 .hamburger-menu {
     display: none;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .hamburger-menu {
+        display: flex;
+    }
+}
+
+@media (min-width: 769px) {
+    .hamburger-menu {
+        display: none;
+    }
 }
 
 .mobile-nav-overlay {
@@ -1010,54 +1051,4 @@ select:hover, input:hover, .form-select:hover, .form-input:hover {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .header-content {
-        padding: 0 1rem;
-    }
-
-    .header-left {
-        flex: 1;
-    }
-
-    .header-right {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    .header-right .nav-link,
-    .header-right .dropdown,
-    .header-right #theme-toggle {
-        display: none;
-    }
-
-    .hamburger-menu {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: rgba(0, 0, 0, 0.05);
-        color: var(--text-secondary);
-        transition: all 0.2s ease;
-    }
-
-    .hamburger-menu:hover {
-        background: rgba(0, 0, 0, 0.1);
-    }
-
-    .logo-text .main-title {
-        font-size: 1.125rem;
-    }
-}
-
-/* Hide hamburger menu on desktop */
-@media (min-width: 769px) {
-    .hamburger-menu {
-        display: none !important;
-    }
 } 
