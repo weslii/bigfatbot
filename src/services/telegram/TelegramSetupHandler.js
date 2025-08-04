@@ -52,7 +52,7 @@ class TelegramSetupHandler {
         .first();
 
       if (existingGroup) {
-        await this.core.sendMessage(chatId, '❌ This group is already registered.');
+        await this.core.sendMessage(chatId, '❌ This group is already registered😕. I can only set up each group once.');
         return;
       }
 
@@ -64,7 +64,7 @@ class TelegramSetupHandler {
         .first();
 
       if (groupCount.count >= 2) {
-        await this.core.sendMessage(chatId, '❌ This business already has both groups registered.');
+        await this.core.sendMessage(chatId, '❌ This business already has both groups registered😕. I can only set up one sales and one delivery group per business.');
         return;
       }
 
@@ -78,7 +78,7 @@ class TelegramSetupHandler {
       if (existingGroups.length === 0) {
         // First group - ask user which type and store pending setup
         await this.core.sendMessage(chatId, 
-          `🤖 *Business Setup*\n\nBusiness: ${business.business_name}\n\nIs this a sales group or delivery group?\n\nReply with "sales" or "delivery"`
+          `🤖 *Business Setup*\n\nBusiness: ${business.business_name}\n\nIs this a sales/orders group or delivery group?\n\nReply with "sales" or "delivery"`
         );
         
         // Store pending setup for this chat
@@ -143,7 +143,7 @@ class TelegramSetupHandler {
       logger.info(`Setup initiated for ${businessName} (${groupType}) in chat ${chatId}`);
     } catch (error) {
       logger.error('Error handling setup command:', error);
-      await this.core.sendMessage(chatId, '❌ Error processing setup command. Please try again.');
+              await this.core.sendMessage(chatId, '❌ I ran into an issue processing your setup command😕. Please try again.');
     }
   }
 
@@ -262,7 +262,7 @@ class TelegramSetupHandler {
         .first();
 
       if (!businessOwner) {
-        await this.core.sendMessage(chatId, '❌ Error: Business owner not found.');
+        await this.core.sendMessage(chatId, '❌ I couldn\'t find the business owner😕. Please make sure you\'re using the correct setup code.');
         return;
       }
 
@@ -284,19 +284,40 @@ class TelegramSetupHandler {
       
       logger.info(`Created Telegram group: ${chatId} for business: ${business.business_name} (${groupType})`);
 
-      // Send success message
-      await this.core.sendMessage(chatId, 
-        `✅ *Setup Completed Successfully!*\n\n` +
-        `Business: ${business.business_name}\n` +
-        `Group Type: ${groupType}\n` +
-        `Platform: Telegram\n\n` +
-        `Your group is now ready to receive orders!`
-      );
+      // Send confirmation messages
+      const welcomeMessage = `
+🤖 *Welcome to Novi!*
+
+Your business "${business.business_name}" has been successfully set up.
+
+*Sales/Orders Group:* For receiving orders
+*Delivery Group:* For managing and tracking deliveries
+
+Novi will now:
+• Process orders from the sales/orders group
+• Forward them to the delivery group
+• Track order status
+• Generate daily reports
+• Send pending order reminders
+
+For help, type /help.
+`;
+
+      await this.core.sendMessage(chatId, welcomeMessage);
 
       // Notify admin (if configured)
       try {
-        await NotificationService.sendSetupNotification({
-          businessName: business.business_name,
+        const businessData = {
+          business_name: business.business_name,
+          business_id: business.business_id
+        };
+        
+        const userData = {
+          id: businessOwner.user_id,
+          name: senderName
+        };
+        
+        await NotificationService.notifyBusinessRegistration(businessData, userData, {
           groupType: groupType,
           platform: 'telegram',
           groupId: chatId,
@@ -308,7 +329,7 @@ class TelegramSetupHandler {
 
     } catch (error) {
       logger.error('Error completing setup:', error);
-      await this.core.sendMessage(chatId, '❌ Error completing setup. Please try again.');
+              await this.core.sendMessage(chatId, '❌ I ran into an issue completing the setup😕. Please try again.');
     }
   }
 

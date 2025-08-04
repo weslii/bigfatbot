@@ -1,4 +1,5 @@
 const database = require('../config/database');
+const logger = require('../utils/logger');
 
 class InventoryService {
   // Products (reducible items)
@@ -263,6 +264,66 @@ class InventoryService {
       .where('business_id', businessId)
       .where('stock_count', '<=', 0)
       .orderBy('name');
+  }
+
+  // Get all inventory items (products, others, collections) for a business
+  async getBusinessInventoryOptimized(businessId) {
+    try {
+      const [products, others, collections] = await Promise.all([
+        database.query('products')
+          .where('business_id', businessId)
+          .select('*')
+          .then(rows => rows.map(row => ({ ...row, type: 'product' }))),
+        database.query('others')
+          .where('business_id', businessId)
+          .select('*')
+          .then(rows => rows.map(row => ({ ...row, type: 'other' }))),
+        database.query('collections')
+          .where('business_id', businessId)
+          .select('*')
+          .then(rows => rows.map(row => ({ ...row, type: 'collection' })))
+      ]);
+
+      // Get collection information for products and others
+      const productsWithCollections = await Promise.all(
+        products.map(async (product) => {
+          const collectionItems = await database.query('collection_items as ci')
+            .select('ci.price_override', 'c.name as collection_name', 'c.price as collection_price')
+            .leftJoin('collections as c', 'ci.collection_id', 'c.id')
+            .where('ci.product_id', product.id)
+            .first();
+          
+          return {
+            ...product,
+            price_override: collectionItems?.price_override || null,
+            collection_name: collectionItems?.collection_name || null,
+            collection_price: collectionItems?.collection_price || null
+          };
+        })
+      );
+
+      const othersWithCollections = await Promise.all(
+        others.map(async (other) => {
+          const collectionItems = await database.query('collection_items as ci')
+            .select('ci.price_override', 'c.name as collection_name', 'c.price as collection_price')
+            .leftJoin('collections as c', 'ci.collection_id', 'c.id')
+            .where('ci.other_id', other.id)
+            .first();
+          
+          return {
+            ...other,
+            price_override: collectionItems?.price_override || null,
+            collection_name: collectionItems?.collection_name || null,
+            collection_price: collectionItems?.collection_price || null
+          };
+        })
+      );
+
+      return [...productsWithCollections, ...othersWithCollections, ...collections].sort((a, b) => a.name.localeCompare(b.name));
+    } catch (error) {
+      logger.error('Error getting business inventory:', error);
+      return [];
+    }
   }
 }
 

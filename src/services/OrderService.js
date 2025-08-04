@@ -1,10 +1,18 @@
 const database = require('../config/database');
 const logger = require('../utils/logger');
 const cacheService = require('./CacheService');
+const InventoryMatchingService = require('./InventoryMatchingService');
+const HumanConfirmationService = require('./HumanConfirmationService');
+const InventoryService = require('./InventoryService');
 const { v4: uuidv4 } = require('uuid');
 
 class OrderService {
-  async createOrder(businessId, orderData) {
+  constructor() {
+    this.matchingService = new InventoryMatchingService();
+    this.confirmationService = null; // Will be set by message handler
+  }
+
+  async createOrder(businessId, orderData, confirmationService = null) {
     try {
       // Generate a random 3-letter uppercase code
       function randomCode() {
@@ -41,6 +49,12 @@ class OrderService {
         throw new Error('Failed to generate unique order ID after multiple attempts');
       }
       
+      // Perform inventory matching
+      const matchingResult = await this.matchingService.matchOrderItems(orderData, businessId);
+      
+      // Only store matched_items if we have actual matches
+      const matchedItemsToStore = matchingResult.status === 'needs_clarification' ? null : (matchingResult.matchedItems.length > 0 ? JSON.stringify(matchingResult.matchedItems) : null);
+      
       const [order] = await database.query('orders')
         .insert({
           id: uuidv4(),
@@ -52,7 +66,11 @@ class OrderService {
           delivery_date: orderData.delivery_date,
           notes: orderData.notes,
           status: 'pending',
-          business_id: businessId || orderData.business_id
+          business_id: businessId || orderData.business_id,
+          total_revenue: matchingResult.totalRevenue,
+          matched_items: matchedItemsToStore,
+          matching_confidence: matchingResult.confidence,
+          matching_status: matchingResult.status
         })
         .returning('*');
 
@@ -73,10 +91,163 @@ class OrderService {
         logger.warn('Failed to invalidate user order stats cache:', cacheError.message);
       }
       
+      // Handle different matching statuses
+      if (matchingResult.status === 'needs_confirmation') {
+        await this.handleConfirmationRequired(order, matchingResult, businessId, confirmationService);
+      } else if (matchingResult.status === 'needs_clarification') {
+        await this.handleClarificationRequired(order, matchingResult, businessId, confirmationService);
+      } else if (matchingResult.status === 'completed') {
+        // Reduce stock for automatically completed orders
+        await this.reduceStockForCompletedOrder(matchingResult.matchedItems, businessId);
+      }
+
+      // Record analytics
+      await this.recordMatchingAnalytics(businessId, matchingResult);
+
       return order;
     } catch (error) {
       logger.error('Error creating order:', error);
       throw error;
+    }
+  }
+
+  async handleConfirmationRequired(order, matchingResult, businessId, confirmationService = null) {
+    try {
+      if (!confirmationService && !this.confirmationService) {
+        logger.warn('Confirmation service not available');
+        return;
+      }
+      
+      const service = confirmationService || this.confirmationService;
+
+      // Get group info for this business
+      const group = await database.query('groups')
+        .where('business_id', businessId)
+        .where('group_type', 'sales')
+        .first();
+
+      if (!group) {
+        logger.error('No sales group found for business', { businessId });
+        return;
+      }
+
+      // Get inventory for confirmation
+      const inventory = await this.matchingService.inventoryService.getBusinessInventoryOptimized(businessId);
+
+      // Request confirmation for each item that needs it
+      for (const item of matchingResult.matchedItems) {
+        if (item.confidence < 0.65) {
+          await service.requestItemConfirmation(
+            item.originalItem,
+            businessId,
+            group.group_id,
+            inventory
+          );
+        }
+      }
+
+      logger.info('Requested confirmation for order', {
+        orderId: order.order_id,
+        businessId,
+        groupId: group.group_id,
+        itemsNeedingConfirmation: matchingResult.matchedItems.filter(item => item.confidence < 0.65).length
+      });
+    } catch (error) {
+      logger.error('Error handling confirmation required:', error);
+    }
+  }
+
+  async handleClarificationRequired(order, matchingResult, businessId, confirmationService = null) {
+    try {
+      logger.info('handleClarificationRequired called:', {
+        orderId: order.order_id,
+        businessId,
+        hasConfirmationService: !!(confirmationService || this.confirmationService)
+      });
+      
+      if (!confirmationService && !this.confirmationService) {
+        logger.warn('Confirmation service not available');
+        return;
+      }
+      
+      const service = confirmationService || this.confirmationService;
+
+      // Get group info for this business
+      const group = await database.query('groups')
+        .where('business_id', businessId)
+        .where('group_type', 'sales')
+        .first();
+
+      if (!group) {
+        logger.error('No sales group found for business', { businessId });
+        return;
+      }
+
+      // Use the confirmation system to handle clarification
+      logger.info('handleClarificationRequired: Sending clarification message via OrderService path');
+      await service.requestItemConfirmation(
+        { name: 'Clarification needed', quantity: 1 },
+        businessId,
+        group.group_id,
+        matchingResult.inventory || []
+      );
+
+      logger.info('Requested clarification for order', {
+        orderId: order.order_id,
+        businessId,
+        groupId: group.group_id,
+        message: matchingResult.message
+      });
+    } catch (error) {
+      logger.error('Error handling clarification required:', error);
+    }
+  }
+
+  async recordMatchingAnalytics(businessId, matchingResult) {
+    try {
+      const analytics = {
+        business_id: businessId,
+        total_items: matchingResult.matchedItems.length,
+        auto_matched: matchingResult.matchedItems.filter(item => item.confidence >= 0.85).length,
+        ai_matched: matchingResult.matchedItems.filter(item => item.confidence >= 0.65 && item.confidence < 0.85).length,
+        human_confirmed: matchingResult.matchedItems.filter(item => item.confidence < 0.65).length,
+        total_revenue: matchingResult.totalRevenue,
+        average_confidence: matchingResult.confidence,
+        created_at: new Date()
+      };
+      
+      await database.query('matching_analytics').insert(analytics);
+    } catch (error) {
+      logger.error('Error recording analytics:', error);
+    }
+  }
+
+  async reduceStockForCompletedOrder(matchedItems, businessId) {
+    try {
+      for (const item of matchedItems) {
+        // Only reduce stock for products (not for 'other' items)
+        if (item.matchedItem.type === 'product') {
+          try {
+            await InventoryService.updateStock(
+              item.matchedItem.id, 
+              businessId, 
+              -item.quantity
+            );
+            
+            logger.info('Stock reduced for automatically completed order', {
+              productId: item.matchedItem.id,
+              productName: item.matchedItem.name,
+              quantityReduced: item.quantity,
+              businessId: businessId
+            });
+          } catch (error) {
+            logger.error('Error reducing stock for product in automatic order:', error);
+            // Don't fail the entire order if one item's stock reduction fails
+          }
+        }
+      }
+    } catch (error) {
+      logger.error('Error reducing stock for completed order:', error);
     }
   }
 
@@ -271,6 +442,77 @@ class OrderService {
         totalOrders: 0,
         completedOrders: 0,
         pendingOrders: 0
+      };
+    }
+  }
+
+  async getUserRevenueStats(userId) {
+    try {
+      // Ensure userId is a string - fix for object conversion issue
+      const userIdString = String(userId);
+      
+      // Get all business IDs for the user
+      const userBusinesses = await database.query('groups')
+        .select('business_id')
+        .where('user_id', userIdString)
+        .groupBy('business_id');
+
+      const businessIds = userBusinesses.map(b => b.business_id);
+
+      if (businessIds.length === 0) {
+        return {
+          totalRevenue: 0,
+          todayRevenue: 0,
+          weekRevenue: 0,
+          monthRevenue: 0
+        };
+      }
+
+      // Get revenue statistics across all user's businesses
+      const [totalStats, todayStats, weekStats, monthStats] = await Promise.all([
+        // Total revenue
+        database.query('orders')
+          .select(database.query.raw('SUM(total_revenue) as total_revenue'))
+          .whereIn('business_id', businessIds)
+          .first(),
+        
+        // Today's revenue
+        database.query('orders')
+          .select(database.query.raw('SUM(total_revenue) as today_revenue'))
+          .whereIn('business_id', businessIds)
+          .where('created_at', '>=', database.query.raw('NOW() - INTERVAL \'1 day\''))
+          .first(),
+        
+        // This week's revenue
+        database.query('orders')
+          .select(database.query.raw('SUM(total_revenue) as week_revenue'))
+          .whereIn('business_id', businessIds)
+          .where('created_at', '>=', database.query.raw('NOW() - INTERVAL \'7 days\''))
+          .first(),
+        
+        // This month's revenue
+        database.query('orders')
+          .select(database.query.raw('SUM(total_revenue) as month_revenue'))
+          .whereIn('business_id', businessIds)
+          .where('created_at', '>=', database.query.raw('NOW() - INTERVAL \'30 days\''))
+          .first()
+      ]);
+
+      const result = {
+        totalRevenue: parseFloat(totalStats.total_revenue) || 0,
+        todayRevenue: parseFloat(todayStats.today_revenue) || 0,
+        weekRevenue: parseFloat(weekStats.week_revenue) || 0,
+        monthRevenue: parseFloat(monthStats.month_revenue) || 0
+      };
+      
+      return result;
+    } catch (error) {
+      logger.error('Error getting user revenue stats:', error);
+      return {
+        totalRevenue: 0,
+        todayRevenue: 0,
+        weekRevenue: 0,
+        monthRevenue: 0
       };
     }
   }

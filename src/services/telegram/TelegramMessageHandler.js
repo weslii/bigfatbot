@@ -6,6 +6,8 @@ const MessageService = require('../MessageService');
 const OrderParser = require('../OrderParser');
 const { parseOrderWithAI, parseOrderWithAIRetry } = require('../AIPoweredOrderParser');
 const NotificationService = require('../NotificationService');
+const { isLikelyOrder } = require('../../utils/orderDetection');
+const HumanConfirmationService = require('../HumanConfirmationService');
 
 class TelegramMessageHandler {
   constructor(coreService, orderHandler, setupHandler, metricsService) {
@@ -13,6 +15,12 @@ class TelegramMessageHandler {
     this.orderHandler = orderHandler;
     this.setupHandler = setupHandler;
     this.metrics = metricsService;
+    this.confirmationService = new HumanConfirmationService(coreService);
+    
+    // Connect the confirmation service to the order service
+    // Since OrderService is used statically, we'll need to pass the confirmation service
+    // to the OrderService methods that need it
+    logger.info('TelegramMessageHandler initialized');
     
     logger.info('TelegramMessageHandler initialized');
     // Message handler will be set up by TelegramService after bot initialization
@@ -155,6 +163,20 @@ class TelegramMessageHandler {
       const senderName = sender.first_name + (sender.last_name ? ' ' + sender.last_name : '');
       const senderUsername = sender.username;
 
+      // Handle confirmation responses
+      if (await this.confirmationService.handleConfirmationResponse(message, groupInfo.group_id)) {
+        return;
+      }
+
+
+
+      // Handle item details responses
+      if (await this.confirmationService.handleItemDetailsResponse(message, groupInfo.group_id)) {
+        return;
+      }
+
+
+
       // Handle reply-based cancellation
       if (message.reply_to_message && messageBody === 'cancel') {
         await this.orderHandler.handleReplyCancellation(message, senderName, senderUsername, groupInfo);
@@ -175,8 +197,8 @@ class TelegramMessageHandler {
       let attemptedParsing = false;
       let filteredOut = false;
       let errorMessageSent = false; // Track if error message has been sent
-      const likelyOrder = this.isLikelyOrder(messageText);
-      logger.info('[handleSalesGroupMessage] isLikelyOrder:', likelyOrder);
+      const likelyOrder = isLikelyOrder(messageText);
+      logger.debug('[handleSalesGroupMessage] isLikelyOrder:', likelyOrder);
       
       if (likelyOrder) {
         attemptedParsing = true;
@@ -219,7 +241,7 @@ class TelegramMessageHandler {
           } else if (aiTimedOut) {
             // Only send error if AI timed out and pattern matching also failed
             await this.core.sendMessage(groupInfo.group_id,
-              '❌ Could not process order. Please ensure your message is in the correct format:\n' +
+              '❌ I could not process that order😕. Please ensure your message is in the correct format:\n' +
               'Name: John Doe\n' +
               'Phone no: 08012345678\n' +
               'Address: 123 Lekki Phase 1, Lagos\n' +
@@ -242,18 +264,39 @@ class TelegramMessageHandler {
         if (attemptedParsing) {
           if (orderData) {
             orderData.business_id = groupInfo.business_id;
-            const order = await OrderService.createOrder(groupInfo.business_id, orderData);
-            const deliveryConfirmation = MessageService.formatOrderConfirmation(order);
-            const salesConfirmation = MessageService.formatSalesConfirmation(order);
-            const deliveryGroup = await database.query('groups')
-              .where('business_id', groupInfo.business_id)
-              .where('group_type', 'delivery')
-              .first();
-            if (deliveryGroup) {
-              await this.core.sendMessage(deliveryGroup.group_id, deliveryConfirmation);
+            const order = await OrderService.createOrder(groupInfo.business_id, orderData, this.confirmationService);
+            
+            // Debug: Log the order status
+            logger.debug('[handleSalesGroupMessage] Order created with status:', {
+              orderId: order.order_id,
+              matchingStatus: order.matching_status,
+              willSendConfirmations: order.matching_status !== 'needs_clarification'
+            });
+            
+            // Only send confirmations if order doesn't need clarification
+            if (order.matching_status !== 'needs_clarification') {
+              logger.debug('[handleSalesGroupMessage] Sending confirmation messages via Message Handler path');
+              logger.debug('[handleSalesGroupMessage] Order object for confirmation:', {
+                orderId: order.order_id,
+                matchedItems: order.matched_items,
+                matchedItemsType: typeof order.matched_items,
+                hasMatchedItems: !!order.matched_items
+              });
+              const deliveryConfirmation = MessageService.formatOrderConfirmation(order);
+              const salesConfirmation = MessageService.formatSalesConfirmation(order);
+              const deliveryGroup = await database.query('groups')
+                .where('business_id', groupInfo.business_id)
+                .where('group_type', 'delivery')
+                .first();
+              if (deliveryGroup) {
+                await this.core.sendMessage(deliveryGroup.group_id, deliveryConfirmation);
+              }
+              await this.core.sendMessage(groupInfo.group_id, salesConfirmation);
+            } else {
+              logger.debug('[handleSalesGroupMessage] Skipping confirmation messages - order needs clarification');
             }
-            await this.core.sendMessage(groupInfo.group_id, salesConfirmation);
-            logger.info('[handleSalesGroupMessage] Calling updateMetrics for successful parse', { attemptedParsing, filteredOut, parsedWith });
+            
+            logger.debug('[handleSalesGroupMessage] Calling updateMetrics for successful parse', { attemptedParsing, filteredOut, parsedWith });
             await this.metrics.updateMetrics({success: true, responseTime: Date.now() - start, attemptedParsing, filteredOut, parsedWith});
           } else {
             const hasValidPhone = OrderParser.extractPhoneNumbers(messageText).some(num => OrderParser.isValidPhoneNumber(num));
@@ -261,7 +304,7 @@ class TelegramMessageHandler {
             if ((hasValidPhone && addressConfidence >= 2) && !messageBody.startsWith('/')) {
               if (!errorMessageSent) {
                 await this.core.sendMessage(groupInfo.group_id, 
-                  '❌ Could not process order. Please ensure your message includes:\n' +
+                  '❌ I could not process that order😕. Please ensure your message includes:\n' +
                   '• Customer name\n' +
                   '• Phone number\n' +
                   '• Delivery address\n' +
@@ -274,13 +317,13 @@ class TelegramMessageHandler {
                 );
               }
             }
-            logger.info('[handleSalesGroupMessage] Calling updateMetrics for failed parse', { attemptedParsing, filteredOut, parsedWith: null });
+            logger.debug('[handleSalesGroupMessage] Calling updateMetrics for failed parse', { attemptedParsing, filteredOut, parsedWith: null });
             await this.metrics.updateMetrics({success: false, responseTime: Date.now() - start, attemptedParsing, filteredOut, parsedWith: null});
           }
         }
       } else {
         filteredOut = true;
-        logger.info('[handleSalesGroupMessage] Not a likely order. Calling updateMetrics', { attemptedParsing, filteredOut, parsedWith: null });
+        logger.debug('[handleSalesGroupMessage] Not a likely order. Calling updateMetrics', { attemptedParsing, filteredOut, parsedWith: null });
         await this.metrics.updateMetrics({success: false, responseTime: Date.now() - start, attemptedParsing, filteredOut, parsedWith: null});
       }
     } catch (error) {
@@ -347,122 +390,7 @@ class TelegramMessageHandler {
     }
   }
 
-  isLikelyOrder(messageText) {
-    try {
-      const text = messageText.toLowerCase().trim();
-      // New: If message contains 'name', 'phone', and 'address', always treat as likely order
-      if (text.includes('name') && text.includes('phone') && text.includes('address')) {
-        return true;
-      }
-      
-      // Skip very short messages (likely greetings, thanks, etc.)
-      if (text.length < 20) {
-        return false;
-      }
-      
-      // Skip messages that are clearly not orders
-      const nonOrderPatterns = [
-        /^(hi|hello|hey|good morning|good afternoon|good evening|thanks|thank you|ok|okay|yes|no)$/i,
-        /^(how are you|how's it going|what's up|sup)$/i,
-        /^(bye|goodbye|see you|talk to you later)$/i,
-        /^(lol|haha|😊|😄|👍|👋|🙏)$/i,
-        /^(test|testing)$/i,
-        /^(help|support|assist)$/i,
-        // Status inquiry patterns
-        /\b(how far|status|update|sent|delivered|shipped|track|tracking|where|when|did you|have you|is it|are you)\b/i,
-        // Question patterns about existing orders
-        /\b(did you send|did you deliver|have you sent|have you delivered|is it sent|is it delivered|where is|when will|what about)\b/i,
-        // General inquiry patterns
-        /\b(what about|what happened|what's the|any update|any news|any progress)\b/i
-      ];
-      
-      for (const pattern of nonOrderPatterns) {
-        if (pattern.test(text)) {
-          return false;
-        }
-      }
-      
-      // Look for order indicators
-      const orderIndicators = [
-        // Phone numbers (Nigerian format) - strong indicator
-        /\b(\+?234|0)[789][01]\d{8}\b/,
-        /\b\d{11}\b/,
-        
-        // Customer name patterns (multiple words that could be names) - strong indicator
-        /\b[A-Z][a-z]+\s+[A-Z][a-z]+\b/,
-        
-        // Specific order request patterns - strong indicator
-        /\b(i want|i need|i would like|please order|can i order|i'd like to order|i want to order|i need to order)\b/i,
-        
-        // Address indicators - medium indicator
-        /\b(address|location|deliver to|send to|house|street|road|avenue|close|drive|way|estate|phase|area|zone)\b/i,
-        
-        // Specific food items - medium indicator
-        /\b(cake|cakes|pizza|food|bread|pastry|pastries|drink|drinks|juice|water|soda)\b/i,
-        
-        // Quantity indicators - medium indicator
-        /\b\d+\s*(piece|pieces|pack|packs|kg|kilos|gram|grams|litre|litres|bottle|bottles|box|boxes|dozen|dozens)\b/i,
-        
-        // Price indicators - medium indicator
-        /\b(price|cost|amount|total|naira|₦|naira|dollar|\$|pound|£)\b/i,
-        
-        // Delivery date/time - weak indicator
-        /\b(deliver|delivery|date|time|when|today|tomorrow|next)\b/i
-      ];
-      
-      // Score order indicators with different weights
-      let score = 0;
-      
-      // Strong indicators (worth 3 points each)
-      const strongIndicators = [
-        /\b(\+?234|0)[789][01]\d{8}\b/,
-        /\b\d{11}\b/,
-        /\b[A-Z][a-z]+\s+[A-Z][a-z]+\b/,
-        /\b(i want|i need|i would like|please order|can i order|i'd like to order|i want to order|i need to order)\b/i
-      ];
-      
-      // Medium indicators (worth 2 points each)
-      const mediumIndicators = [
-        /\b(address|location|deliver to|send to|house|street|road|avenue|close|drive|way|estate|phase|area|zone)\b/i,
-        /\b(cake|cakes|pizza|food|bread|pastry|pastries|drink|drinks|juice|water|soda)\b/i,
-        /\b\d+\s*(piece|pieces|pack|packs|kg|kilos|gram|grams|litre|litres|bottle|bottles|box|boxes|dozen|dozens)\b/i,
-        /\b(price|cost|amount|total|naira|₦|naira|dollar|\$|pound|£)\b/i
-      ];
-      
-      // Weak indicators (worth 1 point each)
-      const weakIndicators = [
-        /\b(deliver|delivery|date|time|when|today|tomorrow|next)\b/i
-      ];
-      
-      // Calculate weighted score
-      for (const indicator of strongIndicators) {
-        if (indicator.test(text)) {
-          score += 3;
-        }
-      }
-      
-      for (const indicator of mediumIndicators) {
-        if (indicator.test(text)) {
-          score += 2;
-        }
-      }
-      
-      for (const indicator of weakIndicators) {
-        if (indicator.test(text)) {
-          score += 1;
-        }
-      }
-      
-      // Message is likely an order if it has a score of 4 or higher
-      // or if it's longer than 80 characters and has a score of 2 or higher
-      return score >= 4 || (text.length > 80 && score >= 2);
-      
-    } catch (error) {
-      logger.error('Error in isLikelyOrder check:', error);
-      // If there's an error, be conservative and assume it might be an order
-      return true;
-    }
-  }
+
 }
 
 module.exports = TelegramMessageHandler; 

@@ -69,4 +69,60 @@ async function parseOrderWithAIRetry(message, { maxRetries = 3, retryDelayMs = 5
   });
 }
 
-module.exports = { parseOrderWithAI, parseOrderWithAIRetry }; 
+async function matchItemWithAI(itemName, inventoryList) {
+  const prompt = `You are a strict item matching system. Your job is to determine if the given item matches any inventory item with HIGH accuracy.
+
+Given item: "${itemName}"
+Available inventory: ${inventoryList}
+
+IMPORTANT RULES:
+1. Only return a match if you are VERY confident (confidence >= 0.85)
+2. The item must be the SAME TYPE of product (e.g., "durag" should NOT match "soft brush")
+3. If the item is not clearly the same as any inventory item, return "NO_MATCH|0.0"
+4. Be extremely strict - it's better to return no match than a wrong match
+5. Consider synonyms and common variations, but only if they're clearly the same item
+
+Return format: "exact_inventory_item_name|confidence_score" or "NO_MATCH|0.0"
+
+Examples:
+- "soft brush" + ["hard brush", "soft brush"] = "soft brush|1.0"
+- "durag" + ["hard brush", "soft brush"] = "NO_MATCH|0.0"
+- "brush" + ["hard brush", "soft brush"] = "NO_MATCH|0.0" (too ambiguous)`;
+  
+  try {
+    console.log('[AI Item Matcher] Calling OpenAI API...');
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4.1-mini-2025-04-14',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0,
+    });
+    
+    let text = response.choices[0].message.content.trim();
+    console.log('[AI Item Matcher] Raw response:', text);
+    
+    // Parse the response
+    const [matchedName, confidenceStr] = text.split('|');
+    const confidence = parseFloat(confidenceStr);
+    
+    if (isNaN(confidence) || confidence < 0 || confidence > 1) {
+      console.log('[AI Item Matcher] Invalid confidence score:', confidence);
+      return null;
+    }
+    
+    // Check for NO_MATCH response
+    if (matchedName.trim() === 'NO_MATCH' || confidence < 0.85) {
+      console.log('[AI Item Matcher] No match found or confidence too low:', { matchedName, confidence });
+      return null;
+    }
+    
+    return {
+      matchedName: matchedName.trim(),
+      confidence: confidence
+    };
+  } catch (err) {
+    console.log('[AI Item Matcher] Error:', err);
+    return null;
+  }
+}
+
+module.exports = { parseOrderWithAI, parseOrderWithAIRetry, matchItemWithAI }; 

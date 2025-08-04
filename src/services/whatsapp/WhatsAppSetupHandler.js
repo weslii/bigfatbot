@@ -33,14 +33,14 @@ class WhatsAppSetupHandler {
 
       // Only allow setup in groups
       if (!chat.isGroup) {
-        await this.core.client.sendMessage(chatId, '❌ Setup can only be done in WhatsApp groups.');
+        await this.core.client.sendMessage(chatId, '❌ I can only set up your business in WhatsApp groups😕. Please try this command in a group chat.');
         return;
       }
 
       // Parse setup identifier from command
       const parts = message.body.split(' ');
       if (parts.length !== 2) {
-        await this.core.client.sendMessage(chatId, '❌ Invalid setup command. Use: /setup <businessname-CODE>\n\nExample: /setup cakeshop-ABC123');
+        await this.core.client.sendMessage(chatId, '❌ I didn\'t understand that setup command😕. Please use: /setup <businessname-CODE>\n\nExample: /setup cakeshop-ABC123');
         return;
       }
 
@@ -51,7 +51,7 @@ class WhatsAppSetupHandler {
       business = await ShortCodeGenerator.findBusinessBySetupIdentifier(setupIdentifier);
 
       if (!business) {
-        await this.core.client.sendMessage(chatId, '❌ Business not found. Please check your setup code.\n\nMake sure you\'re using the correct format: /setup businessname-CODE');
+        await this.core.client.sendMessage(chatId, '❌ I couldn\'t find that business😕. Please check your setup code.\n\nMake sure you\'re using the correct format: /setup businessname-CODE');
         return;
       }
 
@@ -61,7 +61,7 @@ class WhatsAppSetupHandler {
         .first();
 
       if (existingGroup) {
-        await this.core.client.sendMessage(chatId, '❌ This group is already registered.');
+        await this.core.client.sendMessage(chatId, '❌ This group is already registered😕. I can only set up each group once.');
         return;
       }
 
@@ -73,7 +73,7 @@ class WhatsAppSetupHandler {
         .first();
 
       if (groupCount.count >= 2) {
-        await this.core.client.sendMessage(chatId, '❌ This business already has both groups registered.');
+        await this.core.client.sendMessage(chatId, '❌ This business already has both groups registered😕. I can only set up one sales and one delivery group per business.');
         return;
       }
 
@@ -87,7 +87,7 @@ class WhatsAppSetupHandler {
       if (existingGroups.length === 0) {
         // First group - ask user which type and store pending setup
         await this.core.client.sendMessage(chatId, 
-          `🤖 *Business Setup*\n\nBusiness: ${business.business_name}\n\nIs this a sales group or delivery group?\n\nReply with "sales" or "delivery"`
+          `🤖 *Business Setup*\n\nBusiness: ${business.business_name}\n\nIs this a sales/orders group or delivery group?\n\nReply with "sales" or "delivery"`
         );
         
         // Store pending setup for this chat
@@ -193,7 +193,7 @@ class WhatsAppSetupHandler {
       // Try to send error message if we have a valid chat ID
       try {
         if (chat && chat.id && chat.id._serialized) {
-          await this.core.client.sendMessage(chat.id._serialized, '❌ Error during setup. Please try again.');
+          await this.core.client.sendMessage(chat.id._serialized, '❌ I ran into an issue during setup😕. Please try again.');
         }
       } catch (sendError) {
         logger.error('Failed to send error message:', sendError);
@@ -295,21 +295,21 @@ class WhatsAppSetupHandler {
 
       // Send confirmation messages
       const welcomeMessage = `
-🤖 *Welcome to WhatsApp Delivery Bot!*
+🤖 *Welcome to Novi!*
 
 Your business "${setup.businessName}" has been successfully set up.
 
-*Sales Group:* For receiving orders from the sales group
+*Sales/Orders Group:* For receiving orders from the sales/orders group
 *Delivery Group:* For managing and tracking deliveries
 
-The bot will now:
-• Process orders from the sales group
+Novi will now:
+• Process orders from the sales/orders group
 • Forward them to the delivery group
 • Track order status
 • Generate daily reports
 • Send pending order reminders
 
-For help, type /help in the delivery group.
+For help, type /help.
       `;
 
       await this.core.client.sendMessage(setup.salesGroupId, welcomeMessage);

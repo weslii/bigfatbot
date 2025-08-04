@@ -58,10 +58,10 @@
                 <div class="stat-header">
                     <span class="stat-title">Total Revenue</span>
                     <div class="stat-icon">
-                        <i class="fas fa-dollar-sign"></i>
+                        <i class="fas fa-naira-sign"></i>
                     </div>
                 </div>
-                <div class="stat-value">$<%= stats && stats.totalRevenue ? stats.totalRevenue : '0.00' %></div>
+                <div class="stat-value"><%= formatCurrency(stats && stats.totalRevenue ? stats.totalRevenue : 0) %></div>
                 <div class="stat-change positive">+20.1% from last month</div>
             </div>
             <div class="stat-card businesses">

@@ -23,4 +23,7 @@ router.get('/settings', userController.renderSettings);
 // Setup group
 router.get('/setup-group', userController.renderSetupGroup);
 
+// Analytics page
+router.get('/analytics', userController.renderAnalytics);
+
 module.exports = router; 

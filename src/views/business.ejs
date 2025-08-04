@@ -20,6 +20,7 @@
             <div class="header-right">
                 <a href="/dashboard" class="nav-link">Dashboard</a>
                 <a href="/orders" class="nav-link">Orders</a>
+                <a href="/analytics" class="nav-link">Analytics</a>
                 <a href="/groups" class="nav-link">Groups</a>
                 <button class="btn btn-icon" id="theme-toggle" aria-label="Toggle Theme">
                     <i class="fas fa-sun"></i>
@@ -392,11 +393,11 @@
                                 const hasDelivery = businessGroups.some(g => g.group_type === 'delivery');
                             %>
                             <% if (hasSales && hasDelivery) { %>
-                                <p style="margin: 0; color: #f59e0b;">✅ You have both sales and delivery groups set up.</p>
+                                <p style="margin: 0; color: #f59e0b;">✅ You have both sales/orders and delivery groups set up.</p>
                             <% } else if (hasSales) { %>
-                                <p style="margin: 0; color: #f59e0b;">✅ You have a sales group. You can add a delivery group.</p>
+                                <p style="margin: 0; color: #f59e0b;">✅ You have a sales/orders group. You can add a delivery group.</p>
                             <% } else if (hasDelivery) { %>
-                                <p style="margin: 0; color: #f59e0b;">✅ You have a delivery group. You can add a sales group.</p>
+                                <p style="margin: 0; color: #f59e0b;">✅ You have a delivery group. You can add a sales/orders group.</p>
                             <% } else { %>
                                 <p style="margin: 0; color: #f59e0b;">You can add both sales and delivery groups.</p>
                             <% } %>

@@ -36,6 +36,7 @@
                 <a href="/orders" class="nav-link<%= (typeof page !== 'undefined' && page === 'orders') ? ' active' : '' %>">Orders</a>
                 <a href="/groups" class="nav-link<%= (typeof page !== 'undefined' && page === 'groups') ? ' active' : '' %>">Groups</a>
                 <a href="/inventory" class="nav-link<%= (typeof page !== 'undefined' && page === 'inventory') ? ' active' : '' %>">Inventory</a>
+                <a href="/analytics" class="nav-link<%= (typeof page !== 'undefined' && page === 'analytics') ? ' active' : '' %>">Analytics</a>
                 <button class="btn btn-icon" id="theme-toggle" aria-label="Toggle Theme">
                     <i class="fas fa-sun"></i>
                     <i class="fas fa-moon"></i>
@@ -82,6 +83,14 @@
                     <i class="fas fa-boxes"></i>
                     <span>Inventory</span>
                 </a>
+                <a href="/analytics" class="mobile-nav-link">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Analytics</span>
+                </a>
+                <a href="#" class="mobile-nav-link" onclick="showRevenueTab()">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Revenue</span>
+                </a>
             </nav>
             <div class="mobile-nav-actions">
                 <button class="btn btn-icon mobile-theme-toggle" id="mobileThemeToggle" aria-label="Toggle Theme">
@@ -124,6 +133,15 @@
                 </div>
                 <div class="stat-value"><%= orderStats && orderStats.completedOrders ? orderStats.completedOrders : 0 %></div>
             </div>
+            <div class="stat-card revenue">
+                <div class="stat-header">
+                    <span class="stat-title">Total Revenue</span>
+                    <div class="stat-icon">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                </div>
+                <div class="stat-value">₦<%= revenueStats && revenueStats.totalRevenue ? revenueStats.totalRevenue.toLocaleString() : '0' %></div>
+            </div>
             <div class="stat-card pending">
                 <div class="stat-header">
                     <span class="stat-title">Pending Orders</span>
@@ -158,6 +176,9 @@
                             </button>
                             <button class="tab-btn" data-tab="orders-tab">
                                 <i class="fas fa-box"></i> Recent Orders
+                            </button>
+                            <button class="tab-btn" data-tab="revenue-tab">
+                                <i class="fas fa-money-bill-wave"></i> Revenue
                             </button>
                         </div>
                         <div class="tabs-actions">
@@ -314,6 +335,63 @@
                             </div>
                         </div>
                     </div>
+                    <!-- Revenue Tab -->
+                    <div class="tab-content" id="revenue-tab">
+                        <div class="content-card">
+                            <div class="card-header">
+                                <div class="header-info">
+                                    <h2>Revenue Overview</h2>
+                                    <p>Track your earnings across all businesses</p>
+                                </div>
+                            </div>
+                            <div class="card-content">
+                                <div class="revenue-stats-grid">
+                                    <div class="revenue-stat-card">
+                                        <div class="revenue-stat-header">
+                                            <span class="revenue-stat-title">Today's Revenue</span>
+                                            <div class="revenue-stat-icon">
+                                                <i class="fas fa-calendar-day"></i>
+                                            </div>
+                                        </div>
+                                        <div class="revenue-stat-value">₦<%= revenueStats && revenueStats.todayRevenue ? revenueStats.todayRevenue.toLocaleString() : '0' %></div>
+                                    </div>
+                                    <div class="revenue-stat-card">
+                                        <div class="revenue-stat-header">
+                                            <span class="revenue-stat-title">This Week</span>
+                                            <div class="revenue-stat-icon">
+                                                <i class="fas fa-calendar-week"></i>
+                                            </div>
+                                        </div>
+                                        <div class="revenue-stat-value">₦<%= revenueStats && revenueStats.weekRevenue ? revenueStats.weekRevenue.toLocaleString() : '0' %></div>
+                                    </div>
+                                    <div class="revenue-stat-card">
+                                        <div class="revenue-stat-header">
+                                            <span class="revenue-stat-title">This Month</span>
+                                            <div class="revenue-stat-icon">
+                                                <i class="fas fa-calendar-alt"></i>
+                                            </div>
+                                        </div>
+                                        <div class="revenue-stat-value">₦<%= revenueStats && revenueStats.monthRevenue ? revenueStats.monthRevenue.toLocaleString() : '0' %></div>
+                                    </div>
+                                    <div class="revenue-stat-card">
+                                        <div class="revenue-stat-header">
+                                            <span class="revenue-stat-title">Total Revenue</span>
+                                            <div class="revenue-stat-icon">
+                                                <i class="fas fa-chart-line"></i>
+                                            </div>
+                                        </div>
+                                        <div class="revenue-stat-value">₦<%= revenueStats && revenueStats.totalRevenue ? revenueStats.totalRevenue.toLocaleString() : '0' %></div>
+                                    </div>
+                                </div>
+                                <div class="revenue-info">
+                                    <div class="info-card">
+                                        <h3><i class="fas fa-info-circle"></i> Revenue Tracking</h3>
+                                        <p>Revenue is automatically calculated from your order items based on your inventory prices. Each order's total revenue is updated when items are matched to your inventory.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <!-- Sidebar -->
@@ -327,6 +405,7 @@
                             <a href="/dashboard" class="quick-action-btn"><i class="fas fa-home"></i> Overview</a>
                             <a href="/orders" class="quick-action-btn"><i class="fas fa-box"></i> View All Orders</a>
                             <a href="/groups" class="quick-action-btn"><i class="fas fa-users"></i> Manage Groups</a>
+                            <a href="/analytics" class="quick-action-btn"><i class="fas fa-chart-line"></i> Analytics</a>
                             <a href="/add-business" class="quick-action-btn"><i class="fas fa-building"></i> Add Business</a>
                         </div>
                     </div>
@@ -650,12 +729,12 @@
             padding: 1rem;
         }
 
-        /* Mobile responsive stats grid */
-        .stats-grid {
-            grid-template-columns: 1fr;
-            gap: 1rem;
-            margin: 0 0.5rem 1rem 0.5rem;
-        }
+            /* Mobile responsive stats grid */
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin: 0 0.5rem 1rem 0.5rem;
+    }
 
         .stat-card {
             padding: 1rem;
@@ -929,6 +1008,129 @@
             font-size: 0.75rem;
         }
     }
+    
+    /* Revenue Tab Styles */
+    .revenue-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .revenue-stat-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.2s ease;
+    }
+    
+    .revenue-stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        border-color: var(--primary-color);
+    }
+    
+    .revenue-stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .revenue-stat-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+    }
+    
+    .revenue-stat-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+        font-size: 1rem;
+    }
+    
+    .revenue-stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    
+    .revenue-info {
+        margin-top: 2rem;
+    }
+    
+    .info-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        border-left: 4px solid var(--primary-color);
+    }
+    
+    .info-card h3 {
+        color: var(--text-primary);
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .info-card p {
+        color: var(--text-muted);
+        line-height: 1.6;
+        margin: 0;
+    }
+    
+    /* Mobile responsive revenue styles */
+    @media (max-width: 768px) {
+        .revenue-stats-grid {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+        
+        .revenue-stat-card {
+            padding: 1rem;
+        }
+        
+        .revenue-stat-value {
+            font-size: 1.5rem;
+        }
+        
+        .info-card {
+            padding: 1rem;
+        }
+        
+        .info-card h3 {
+            font-size: 1rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .revenue-stat-card {
+            padding: 0.75rem;
+        }
+        
+        .revenue-stat-value {
+            font-size: 1.25rem;
+        }
+        
+        .revenue-stat-title {
+            font-size: 0.9rem;
+        }
+    }
     </style>
     <script src="/js/theme-utils.js"></script>
     <script>
@@ -1032,6 +1234,26 @@
             }
         });
     });
+    
+    // Function to show revenue tab from mobile navigation
+    function showRevenueTab() {
+        // Close mobile menu
+        closeMobileMenu();
+        
+        // Switch to revenue tab
+        const revenueTabBtn = document.querySelector('[data-tab="revenue-tab"]');
+        const revenueTabContent = document.getElementById('revenue-tab');
+        
+        if (revenueTabBtn && revenueTabContent) {
+            // Remove active from all tabs
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Add active to revenue tab
+            revenueTabBtn.classList.add('active');
+            revenueTabContent.classList.add('active');
+        }
+    }
     </script>
 </body>
 </html> 

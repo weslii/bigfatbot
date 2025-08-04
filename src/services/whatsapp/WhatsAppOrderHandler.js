@@ -29,11 +29,11 @@ class WhatsAppOrderHandler {
       if (orderId) {
         await this.markOrderAsDelivered(orderId, senderName, groupInfo);
       } else {
-        await this.core.client.sendMessage(groupInfo.group_id, '❌ Could not find order ID in the quoted message. Please try using: done #<order_id>');
+        await this.core.client.sendMessage(groupInfo.group_id, '❌ I couldn\'t find the order ID in that message😕. Please try using: done #<order_id>');
       }
     } catch (error) {
       logger.error('Error handling reply completion:', error);
-      await this.core.client.sendMessage(groupInfo.group_id, '❌ Error processing reply. Please try using: done #<order_id>');
+      await this.core.client.sendMessage(groupInfo.group_id, '❌ I ran into an issue processing your reply😕. Please try using: done #<order_id>');
     }
   }
 
@@ -58,11 +58,11 @@ class WhatsAppOrderHandler {
       if (orderId) {
         await this.cancelOrder(orderId, senderName, senderNumber, groupInfo);
       } else {
-        await this.core.client.sendMessage(groupInfo.group_id, '❌ Could not find order ID in the quoted message. Please try using: done #<order_id>');
+        await this.core.client.sendMessage(groupInfo.group_id, '❌ I couldn\'t find the order ID in that message😕. Please try using: cancel #<order_id>');
       }
     } catch (error) {
       logger.error('Error handling reply cancellation:', error);
-      await this.core.client.sendMessage(groupInfo.group_id, '❌ Error processing reply. Please try using: done #<order_id>');
+      await this.core.client.sendMessage(groupInfo.group_id, '❌ I ran into an issue processing your reply😕. Please try using: cancel #<order_id>');
     }
   }
 
@@ -72,7 +72,7 @@ class WhatsAppOrderHandler {
       logger.info(`[markOrderAsDelivered] Looking up order`, { orderId, businessId: groupInfo.business_id });
       const order = await OrderService.getOrderById(orderId, groupInfo.business_id);
       if (!order) {
-        await this.core.client.sendMessage(groupInfo.group_id, `❌ Order #${orderId} not found.`);
+        await this.core.client.sendMessage(groupInfo.group_id, `❌ I couldn\'t find order #${orderId}😕. Please check the order ID and try again.`);
         return;
       }
 
@@ -82,7 +82,7 @@ class WhatsAppOrderHandler {
       }
 
       if (order.status === 'cancelled') {
-        await this.core.client.sendMessage(groupInfo.group_id, `❌ Cannot mark cancelled order #${orderId} as delivered.`);
+        await this.core.client.sendMessage(groupInfo.group_id, `❌ I can\'t mark cancelled order #${orderId} as delivered😕. Once an order is cancelled, it can\'t be delivered.`);
         return;
       }
 
@@ -94,7 +94,7 @@ class WhatsAppOrderHandler {
       logger.info('Order marked as delivered', { orderId, deliveryPerson, businessId: groupInfo.business_id });
     } catch (error) {
       logger.error('Error marking order as delivered:', error);
-      await this.core.client.sendMessage(groupInfo.group_id, `❌ Error updating order #${orderId}. Please try again.`);
+      await this.core.client.sendMessage(groupInfo.group_id, `❌ I ran into an issue updating order #${orderId}😕. Please try again.`);
     }
   }
 
@@ -104,7 +104,7 @@ class WhatsAppOrderHandler {
       logger.info(`[cancelOrder] Looking up order`, { orderId, businessId: groupInfo.business_id });
       const order = await OrderService.getOrderById(orderId, groupInfo.business_id);
       if (!order) {
-        await this.core.client.sendMessage(groupInfo.group_id, `❌ Order #${orderId} not found.`);
+        await this.core.client.sendMessage(groupInfo.group_id, `❌ I couldn\'t find order #${orderId}😕. Please check the order ID and try again.`);
         return;
       }
 
@@ -114,7 +114,7 @@ class WhatsAppOrderHandler {
       }
 
       if (order.status === 'delivered') {
-        await this.core.client.sendMessage(groupInfo.group_id, `❌ Cannot cancel delivered order #${orderId}.`);
+        await this.core.client.sendMessage(groupInfo.group_id, `❌ I can\'t cancel delivered order #${orderId}😕. Once an order is delivered, it can\'t be cancelled.`);
         return;
       }
 
@@ -147,14 +147,17 @@ class WhatsAppOrderHandler {
       logger.info('Order cancelled', { orderId, cancelledBy, businessId: groupInfo.business_id });
     } catch (error) {
       logger.error('Error cancelling order:', error);
-      await this.core.client.sendMessage(groupInfo.group_id, `❌ Error cancelling order #${orderId}. Please try again.`);
+      await this.core.client.sendMessage(groupInfo.group_id, `❌ I ran into an issue cancelling order #${orderId}😕. Please try again.`);
     }
   }
 
   async sendHelpMessage(groupInfo) {
     try {
+      logger.info('[sendHelpMessage] Starting to send help message', { groupId: groupInfo.group_id });
       const message = MessageService.formatHelpMessage();
+      logger.info('[sendHelpMessage] Help message formatted', { messageLength: message.length });
       await this.core.client.sendMessage(groupInfo.group_id, message);
+      logger.info('[sendHelpMessage] Help message sent successfully');
     } catch (error) {
       logger.error('Error sending help message:', error);
     }
@@ -167,7 +170,7 @@ class WhatsAppOrderHandler {
       await this.core.client.sendMessage(groupInfo.group_id, message);
     } catch (error) {
       logger.error('Error sending daily report:', error);
-      await this.core.client.sendMessage(groupInfo.group_id, '❌ Error generating daily report.');
+      await this.core.client.sendMessage(groupInfo.group_id, '❌ I ran into an issue generating the daily report😕. Please try again.');
     }
   }
 
@@ -178,7 +181,7 @@ class WhatsAppOrderHandler {
       await this.core.client.sendMessage(groupInfo.group_id, message);
     } catch (error) {
       logger.error('Error sending pending orders:', error);
-      await this.core.client.sendMessage(groupInfo.group_id, '❌ Error retrieving pending orders.');
+      await this.core.client.sendMessage(groupInfo.group_id, '❌ I ran into an issue retrieving pending orders😕. Please try again.');
     }
   }
 
@@ -189,7 +192,7 @@ class WhatsAppOrderHandler {
       await this.core.client.sendMessage(groupInfo.group_id, message);
     } catch (error) {
       logger.error('Error sending weekly report:', error);
-      await this.core.client.sendMessage(groupInfo.group_id, '❌ Error generating weekly report.');
+      await this.core.client.sendMessage(groupInfo.group_id, '❌ I ran into an issue generating the weekly report😕. Please try again.');
     }
   }
 
@@ -200,7 +203,7 @@ class WhatsAppOrderHandler {
       await this.core.client.sendMessage(groupInfo.group_id, message);
     } catch (error) {
       logger.error('Error sending monthly report:', error);
-      await this.core.client.sendMessage(groupInfo.group_id, '❌ Error generating monthly report.');
+      await this.core.client.sendMessage(groupInfo.group_id, '❌ I ran into an issue generating the monthly report😕. Please try again.');
     }
   }
 

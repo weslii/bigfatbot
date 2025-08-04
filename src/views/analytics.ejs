@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Primary Meta Tags -->
+    <title>Novi Analytics</title>
+    <meta name="description" content="Comprehensive analytics dashboard for your business performance, revenue trends, and order insights.">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://novi.com.ng/analytics">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#10b981">
+    
+    <!-- Preconnect to external domains -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    
+    <!-- Chart.js for analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Existing links -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/admin-dashboard.css" rel="stylesheet">
+    <link rel="icon" href="/logo-icon copy.svg">
+</head>
+<body data-user-id="<%= userId %>">
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="/dashboard" class="logo-section" style="display:flex;align-items:center;gap:0.5rem;">
+                    <img class="theme-logo" src="/logo-animated.svg" alt="Novi Logo" style="height:56px;width:auto;display:inline-block;vertical-align:middle;">
+                </a>
+            </div>
+            <nav class="header-right" style="display: flex; align-items: center; gap: 0.75rem;">
+                <a href="/dashboard" class="nav-link">Dashboard</a>
+                <a href="/orders" class="nav-link">Orders</a>
+                <a href="/groups" class="nav-link">Groups</a>
+                <a href="/inventory" class="nav-link">Inventory</a>
+                <a href="/analytics" class="nav-link active">Analytics</a>
+                <button class="btn btn-icon" id="theme-toggle" aria-label="Toggle Theme">
+                    <i class="fas fa-sun"></i>
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-icon" id="profileDropdown"><i class="fas fa-user"></i></button>
+                    <div class="dropdown-content" id="profileMenu">
+                        <a href="/settings" class="dropdown-item"><i class="fas fa-cog"></i> Settings</a>
+                        <form action="/logout" method="post" class="dropdown-item" style="padding: 0; margin: 0;">
+                            <button type="submit" style="all: unset; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; width: 100%;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                        </form>
+                    </div>
+                </div>
+                <button class="btn btn-icon hamburger-menu" id="hamburgerMenu" aria-label="Toggle Menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Mobile Navigation Overlay -->
+    <div class="mobile-nav-overlay" id="mobileNavOverlay">
+        <div class="mobile-nav-content">
+            <div class="mobile-nav-header">
+                <span class="mobile-nav-title">Menu</span>
+                <button class="btn btn-icon close-mobile-nav" id="closeMobileNav">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <nav class="mobile-nav-menu">
+                <a href="/dashboard" class="mobile-nav-link">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/orders" class="mobile-nav-link">
+                    <i class="fas fa-box"></i>
+                    <span>Orders</span>
+                </a>
+                <a href="/groups" class="mobile-nav-link">
+                    <i class="fas fa-users"></i>
+                    <span>Groups</span>
+                </a>
+                <a href="/inventory" class="mobile-nav-link">
+                    <i class="fas fa-boxes"></i>
+                    <span>Inventory</span>
+                </a>
+                <a href="/analytics" class="mobile-nav-link active">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Analytics</span>
+                </a>
+            </nav>
+            <div class="mobile-nav-actions">
+                <button class="btn btn-icon mobile-theme-toggle" id="mobileThemeToggle" aria-label="Toggle Theme">
+                    <i class="fas fa-sun"></i>
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div class="mobile-profile-section">
+                    <a href="/settings" class="mobile-nav-link">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                    <form action="/logout" method="post" class="mobile-nav-link" style="padding: 0; margin: 0;">
+                        <button type="submit" style="all: unset; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; width: 100%; color: var(--text-primary);">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="page-title">
+                <h1>Analytics</h1>
+                <p>Comprehensive insights into your business performance</p>
+            </div>
+            <div class="page-actions">
+                <div class="date-filter">
+                    <select id="timeRange" class="form-select">
+                        <option value="7">Last 7 days</option>
+                        <option value="30" selected>Last 30 days</option>
+                        <option value="90">Last 90 days</option>
+                        <option value="365">Last year</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Overview Cards -->
+        <section class="analytics-overview">
+            <div class="overview-card">
+                <div class="overview-icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div class="overview-content">
+                    <h3>Total Revenue</h3>
+                    <p class="overview-value">₦<%= analyticsData.overview.totalRevenue.toLocaleString() %></p>
+                    <span class="overview-change <%= analyticsData.overview.revenueChange >= 0 ? 'positive' : 'negative' %>">
+                        <i class="fas fa-<%= analyticsData.overview.revenueChange >= 0 ? 'arrow-up' : 'arrow-down' %>"></i>
+                        <%= Math.abs(analyticsData.overview.revenueChange).toFixed(1) %>%
+                    </span>
+                </div>
+            </div>
+            
+            <div class="overview-card">
+                <div class="overview-icon">
+                    <i class="fas fa-box"></i>
+                </div>
+                <div class="overview-content">
+                    <h3>Total Orders</h3>
+                    <p class="overview-value"><%= analyticsData.overview.totalOrders %></p>
+                    <span class="overview-change <%= analyticsData.overview.orderChange >= 0 ? 'positive' : 'negative' %>">
+                        <i class="fas fa-<%= analyticsData.overview.orderChange >= 0 ? 'arrow-up' : 'arrow-down' %>"></i>
+                        <%= Math.abs(analyticsData.overview.orderChange).toFixed(1) %>%
+                    </span>
+                </div>
+            </div>
+            
+            <div class="overview-card">
+                <div class="overview-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="overview-content">
+                    <h3>Average Order Value</h3>
+                    <p class="overview-value">₦<%= analyticsData.overview.averageOrderValue.toLocaleString() %></p>
+                    <span class="overview-change <%= analyticsData.overview.aovChange >= 0 ? 'positive' : 'negative' %>">
+                        <i class="fas fa-<%= analyticsData.overview.aovChange >= 0 ? 'arrow-up' : 'arrow-down' %>"></i>
+                        <%= Math.abs(analyticsData.overview.aovChange).toFixed(1) %>%
+                    </span>
+                </div>
+            </div>
+            
+            <div class="overview-card">
+                <div class="overview-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="overview-content">
+                    <h3>Active Customers</h3>
+                    <p class="overview-value"><%= analyticsData.overview.activeCustomers %></p>
+                    <span class="overview-change <%= analyticsData.overview.customerChange >= 0 ? 'positive' : 'negative' %>">
+                        <i class="fas fa-<%= analyticsData.overview.customerChange >= 0 ? 'arrow-up' : 'arrow-down' %>"></i>
+                        <%= Math.abs(analyticsData.overview.customerChange).toFixed(1) %>%
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analytics Tabs -->
+        <div class="analytics-tabs">
+            <div class="tabs-header">
+                <div class="tabs-nav">
+                    <button class="tab-btn active" data-tab="financial-tab">
+                        <i class="fas fa-money-bill-wave"></i> Financial Analytics
+                    </button>
+                    <button class="tab-btn" data-tab="order-tab">
+                        <i class="fas fa-box"></i> Order Analytics
+                    </button>
+                </div>
+            </div>
+
+            <!-- Financial Analytics Tab -->
+            <div class="tab-content active" id="financial-tab">
+                <div class="analytics-grid">
+                    <!-- Revenue Trend Chart -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Revenue Trend</h3>
+                            <p>Daily revenue over the selected period</p>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Revenue by Business -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Revenue by Business</h3>
+                            <p>Revenue distribution across your businesses</p>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="businessRevenueChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Monthly Revenue Comparison -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Monthly Revenue Comparison</h3>
+                            <p>Current month vs previous month</p>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="monthlyComparisonChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Revenue Metrics -->
+                    <div class="metrics-card">
+                        <div class="metrics-header">
+                            <h3>Key Financial Metrics</h3>
+                        </div>
+                        <div class="metrics-grid">
+                            <div class="metric-item">
+                                <span class="metric-label">Highest Daily Revenue</span>
+                                <span class="metric-value">₦<%= analyticsData.highestDailyRevenue.toLocaleString() %></span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Lowest Daily Revenue</span>
+                                <span class="metric-value">₦<%= analyticsData.lowestDailyRevenue.toLocaleString() %></span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Revenue Growth Rate</span>
+                                <span class="metric-value <%= analyticsData.revenueGrowthRate >= 0 ? 'positive' : 'negative' %>">
+                                    <%= analyticsData.revenueGrowthRate >= 0 ? '+' : '' %><%= analyticsData.revenueGrowthRate.toFixed(1) %>%
+                                </span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Best Performing Day</span>
+                                <span class="metric-value"><%= analyticsData.bestPerformingDay %></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Analytics Tab -->
+            <div class="tab-content" id="order-tab">
+                <div class="analytics-grid">
+                    <!-- Order Trend Chart -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Order Trend</h3>
+                            <p>Daily orders over the selected period</p>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="orderChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Order Status Distribution -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Order Status Distribution</h3>
+                            <p>Breakdown of orders by status</p>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="orderStatusChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Orders by Business -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Orders by Business</h3>
+                            <p>Order distribution across your businesses</p>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="businessOrderChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Order Metrics -->
+                    <div class="metrics-card">
+                        <div class="metrics-header">
+                            <h3>Key Order Metrics</h3>
+                        </div>
+                        <div class="metrics-grid">
+                            <div class="metric-item">
+                                <span class="metric-label">Completion Rate</span>
+                                <span class="metric-value"><%= analyticsData.completionRate.toFixed(1) %>%</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Average Processing Time</span>
+                                <span class="metric-value"><%= analyticsData.avgProcessingTime %> hours</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Peak Order Day</span>
+                                <span class="metric-value"><%= analyticsData.peakOrderDay %></span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Order Growth Rate</span>
+                                <span class="metric-value <%= analyticsData.orderGrowthRate >= 0 ? 'positive' : 'negative' %>">
+                                    <%= analyticsData.orderGrowthRate >= 0 ? '+' : '' %><%= analyticsData.orderGrowthRate.toFixed(1) %>%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <style>
+    /* Analytics Page Styles */
+    .analytics-overview {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .overview-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.2s ease;
+    }
+
+    .overview-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        border-color: var(--primary-color);
+    }
+
+    .overview-icon {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 10px;
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .overview-content h3 {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .overview-value {
+        color: var(--text-primary);
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0 0 0.25rem 0;
+    }
+
+    .overview-change {
+        font-size: 0.8rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .overview-change.positive {
+        color: var(--success);
+    }
+
+    .overview-change.negative {
+        color: var(--danger);
+    }
+
+    .analytics-tabs {
+        background: var(--surface);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    .analytics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+
+    .chart-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .chart-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+
+    .chart-header {
+        margin-bottom: 1.5rem;
+    }
+
+    .chart-header h3 {
+        color: var(--text-primary);
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .chart-header p {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+
+    .metrics-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 1.5rem;
+    }
+
+    .metrics-header h3 {
+        color: var(--text-primary);
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0 0 1rem 0;
+    }
+
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .metric-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .metric-label {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .metric-value {
+        color: var(--text-primary);
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .metric-value.positive {
+        color: var(--success);
+    }
+
+    .metric-value.negative {
+        color: var(--danger);
+    }
+
+    .date-filter {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .form-select {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--text-primary);
+        font-size: 0.9rem;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .analytics-overview {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .analytics-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        .chart-container {
+            height: 250px;
+        }
+
+        .metrics-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .overview-card {
+            padding: 1rem;
+        }
+
+        .overview-value {
+            font-size: 1.25rem;
+        }
+
+        .chart-card {
+            padding: 1rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .overview-card {
+            flex-direction: column;
+            text-align: center;
+            gap: 0.75rem;
+        }
+
+        .overview-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            font-size: 1rem;
+        }
+
+        .chart-container {
+            height: 200px;
+        }
+    }
+    </style>
+
+    <script src="/js/theme-utils.js"></script>
+    <script>
+    // Analytics Charts
+    const analyticsData = <%- JSON.stringify(analyticsData) %>;
+    
+    // Chart.js configuration
+    Chart.defaults.color = getComputedStyle(document.documentElement).getPropertyValue('--text-primary');
+    Chart.defaults.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--border');
+    
+    // Revenue Trend Chart
+    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(revenueCtx, {
+        type: 'line',
+        data: {
+            labels: analyticsData.revenueTrend.labels,
+            datasets: [{
+                label: 'Revenue',
+                data: analyticsData.revenueTrend.data,
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₦' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Business Revenue Chart
+    const businessRevenueCtx = document.getElementById('businessRevenueChart').getContext('2d');
+    new Chart(businessRevenueCtx, {
+        type: 'doughnut',
+        data: {
+            labels: analyticsData.businessRevenue.labels,
+            datasets: [{
+                data: analyticsData.businessRevenue.data,
+                backgroundColor: [
+                    '#10b981',
+                    '#3b82f6',
+                    '#8b5cf6',
+                    '#f59e0b',
+                    '#ef4444'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Monthly Comparison Chart
+    const monthlyComparisonCtx = document.getElementById('monthlyComparisonChart').getContext('2d');
+    new Chart(monthlyComparisonCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Current Month', 'Previous Month'],
+            datasets: [{
+                label: 'Revenue',
+                data: [analyticsData.monthlyComparison.current, analyticsData.monthlyComparison.previous],
+                backgroundColor: ['#10b981', '#6b7280']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₦' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Order Trend Chart
+    const orderCtx = document.getElementById('orderChart').getContext('2d');
+    new Chart(orderCtx, {
+        type: 'line',
+        data: {
+            labels: analyticsData.orderTrend.labels,
+            datasets: [{
+                label: 'Orders',
+                data: analyticsData.orderTrend.data,
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Order Status Chart
+    const orderStatusCtx = document.getElementById('orderStatusChart').getContext('2d');
+    new Chart(orderStatusCtx, {
+        type: 'pie',
+        data: {
+            labels: analyticsData.orderStatus.labels,
+            datasets: [{
+                data: analyticsData.orderStatus.data,
+                backgroundColor: [
+                    '#10b981',
+                    '#f59e0b',
+                    '#ef4444',
+                    '#6b7280'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Business Order Chart
+    const businessOrderCtx = document.getElementById('businessOrderChart').getContext('2d');
+    new Chart(businessOrderCtx, {
+        type: 'bar',
+        data: {
+            labels: analyticsData.businessOrders.labels,
+            datasets: [{
+                label: 'Orders',
+                data: analyticsData.businessOrders.data,
+                backgroundColor: '#3b82f6'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Tab functionality
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            tabBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const tab = btn.getAttribute('data-tab');
+            tabContents.forEach(tc => {
+                tc.classList.remove('active');
+                if (tc.id === tab) tc.classList.add('active');
+            });
+        });
+    });
+
+    // Time range filter
+    document.getElementById('timeRange').addEventListener('change', function() {
+        // Reload page with new time range
+        const timeRange = this.value;
+        window.location.href = `/analytics?timeRange=${timeRange}`;
+    });
+
+    // Mobile navigation functionality
+    const hamburgerMenu = document.getElementById('hamburgerMenu');
+    const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+    const closeMobileNav = document.getElementById('closeMobileNav');
+    const mobileThemeToggle = document.getElementById('mobileThemeToggle');
+
+    hamburgerMenu.addEventListener('click', function() {
+        mobileNavOverlay.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    });
+
+    function closeMobileMenu() {
+        mobileNavOverlay.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+
+    closeMobileNav.addEventListener('click', closeMobileMenu);
+
+    mobileNavOverlay.addEventListener('click', function(e) {
+        if (e.target === mobileNavOverlay) {
+            closeMobileMenu();
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && mobileNavOverlay.classList.contains('show')) {
+            closeMobileMenu();
+        }
+    });
+
+    mobileThemeToggle.addEventListener('click', function() {
+        if (window.themeManager) {
+            window.themeManager.toggleTheme();
+        }
+    });
+
+    // Profile dropdown functionality
+    const profileDropdownBtn = document.getElementById('profileDropdown');
+    const profileMenu = document.getElementById('profileMenu');
+    
+    if (profileDropdownBtn && profileMenu) {
+        profileDropdownBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            profileDropdownBtn.parentElement.classList.toggle('active');
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (!profileMenu.contains(e.target) && !profileDropdownBtn.contains(e.target)) {
+                profileDropdownBtn.parentElement.classList.remove('active');
+            }
+        });
+    }
+    </script>
+</body>
+</html> 

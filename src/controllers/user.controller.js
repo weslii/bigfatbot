@@ -1,5 +1,6 @@
 const RegistrationService = require('../services/RegistrationService');
 const OrderService = require('../services/OrderService');
+const AnalyticsService = require('../services/AnalyticsService');
 const logger = require('../utils/logger');
 const db = require('../config/database');
 
@@ -46,10 +47,11 @@ module.exports = {
         .where('g.user_id', userId)
         .groupBy('g.business_id', 'g.business_name');
       
-      const [groups, orderStats, recentOrders] = await Promise.all([
+      const [groups, orderStats, recentOrders, revenueStats] = await Promise.all([
         RegistrationService.getUserGroups(userId),
         OrderService.getUserOrderStats(userId),
-        OrderService.getUserRecentOrders(userId, 5)
+        OrderService.getUserRecentOrders(userId, 5),
+        OrderService.getUserRevenueStats(userId)
       ]);
       
       res.render('dashboard', { 
@@ -57,7 +59,8 @@ module.exports = {
         businesses: businessesWithOrders,
         userId, 
         orderStats, 
-        recentOrders 
+        recentOrders,
+        revenueStats
       });
     } catch (error) {
       logger.error('Dashboard error:', error);
@@ -209,6 +212,38 @@ module.exports = {
     } catch (error) {
       logger.error('Setup group page error:', error);
       res.status(500).render('error', { error: 'Failed to load setup group page' });
+    }
+  },
+
+  // Analytics page
+  renderAnalytics: async (req, res) => {
+    try {
+      const userId = req.session ? req.session.userId : null;
+      if (!userId) {
+        return res.redirect('/login');
+      }
+
+      // Check if user is active
+      const user = await db.query('users').where('id', userId).select('is_active').first();
+      if (!user || !user.is_active) {
+        req.session.destroy();
+        return res.render('error', { error: 'Your account has been deactivated. Please contact support.' });
+      }
+
+      // Get time range from query params
+      const timeRange = parseInt(req.query.timeRange) || 30;
+
+      // Get analytics data
+      const analyticsData = await AnalyticsService.getUserAnalytics(userId, timeRange);
+
+      res.render('analytics', {
+        userId,
+        analyticsData,
+        timeRange
+      });
+    } catch (error) {
+      logger.error('Analytics page error:', error);
+      res.render('error', { error: 'Failed to load analytics page.' });
     }
   }
 }; 
