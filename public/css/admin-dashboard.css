@@ -1291,6 +1291,32 @@ body {
     overflow-x: hidden;
   }
 
+  /* Summary cards mobile responsive */
+  .summary-cards {
+    width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  
+  .summary-cards > div {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important;
+    gap: 0.5rem !important;
+  }
+  
+  .summary-card {
+    min-width: 0 !important;
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.9rem !important;
+  }
+  
+  .summary-card .summary-title {
+    font-size: 0.85rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+  
+  .summary-card .summary-value {
+    font-size: 1.1rem !important;
+  }
+
   /* Mobile responsive container */
   .container {
     padding: 0 0.5rem;
@@ -1577,6 +1603,26 @@ body {
   .primary-btn {
     font-size: 0.9rem !important;
     padding: 0.7rem 0.9rem !important;
+  }
+
+  /* Summary cards extra small screen responsive */
+  .summary-cards > div {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)) !important;
+    gap: 0.4rem !important;
+  }
+  
+  .summary-card {
+    padding: 0.4rem 0.6rem !important;
+    font-size: 0.8rem !important;
+  }
+  
+  .summary-card .summary-title {
+    font-size: 0.75rem !important;
+    margin-bottom: 0.2rem !important;
+  }
+  
+  .summary-card .summary-value {
+    font-size: 1rem !important;
   }
 }
 

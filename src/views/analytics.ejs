@@ -240,28 +240,28 @@
                     </div>
 
                     <!-- Revenue Metrics -->
-                    <div class="metrics-card">
-                        <div class="metrics-header">
+                    <div class="metrics-group-card">
+                        <div class="metrics-group-header">
                             <h3>Key Financial Metrics</h3>
                         </div>
-                        <div class="metrics-grid">
+                        <div class="metrics-group-grid">
                             <div class="metric-item">
-                                <span class="metric-label">Highest Daily Revenue</span>
-                                <span class="metric-value">₦<%= analyticsData.highestDailyRevenue.toLocaleString() %></span>
+                                <div class="metric-label">Highest Daily Revenue</div>
+                                <div class="metric-value">₦<%= analyticsData.highestDailyRevenue.toLocaleString() %></div>
                             </div>
                             <div class="metric-item">
-                                <span class="metric-label">Lowest Daily Revenue</span>
-                                <span class="metric-value">₦<%= analyticsData.lowestDailyRevenue.toLocaleString() %></span>
+                                <div class="metric-label">Lowest Daily Revenue</div>
+                                <div class="metric-value">₦<%= analyticsData.lowestDailyRevenue.toLocaleString() %></div>
                             </div>
                             <div class="metric-item">
-                                <span class="metric-label">Revenue Growth Rate</span>
-                                <span class="metric-value <%= analyticsData.revenueGrowthRate >= 0 ? 'positive' : 'negative' %>">
+                                <div class="metric-label">Revenue Growth Rate</div>
+                                <div class="metric-value <%= analyticsData.revenueGrowthRate >= 0 ? 'positive' : 'negative' %>">
                                     <%= analyticsData.revenueGrowthRate >= 0 ? '+' : '' %><%= analyticsData.revenueGrowthRate.toFixed(1) %>%
-                                </span>
+                                </div>
                             </div>
                             <div class="metric-item">
-                                <span class="metric-label">Best Performing Day</span>
-                                <span class="metric-value"><%= analyticsData.bestPerformingDay %></span>
+                                <div class="metric-label">Best Performing Day</div>
+                                <div class="metric-value"><%= analyticsData.bestPerformingDay %></div>
                             </div>
                         </div>
                     </div>
@@ -305,28 +305,28 @@
                     </div>
 
                     <!-- Order Metrics -->
-                    <div class="metrics-card">
-                        <div class="metrics-header">
+                    <div class="metrics-group-card">
+                        <div class="metrics-group-header">
                             <h3>Key Order Metrics</h3>
                         </div>
-                        <div class="metrics-grid">
+                        <div class="metrics-group-grid">
                             <div class="metric-item">
-                                <span class="metric-label">Completion Rate</span>
-                                <span class="metric-value"><%= analyticsData.completionRate.toFixed(1) %>%</span>
+                                <div class="metric-label">Completion Rate</div>
+                                <div class="metric-value"><%= analyticsData.completionRate.toFixed(1) %>%</div>
                             </div>
                             <div class="metric-item">
-                                <span class="metric-label">Average Processing Time</span>
-                                <span class="metric-value"><%= analyticsData.avgProcessingTime %> hours</span>
+                                <div class="metric-label">Average Processing Time</div>
+                                <div class="metric-value"><%= analyticsData.avgProcessingTime %> hours</div>
                             </div>
                             <div class="metric-item">
-                                <span class="metric-label">Peak Order Day</span>
-                                <span class="metric-value"><%= analyticsData.peakOrderDay %></span>
+                                <div class="metric-label">Peak Order Day</div>
+                                <div class="metric-value"><%= analyticsData.peakOrderDay %></div>
                             </div>
                             <div class="metric-item">
-                                <span class="metric-label">Order Growth Rate</span>
-                                <span class="metric-value <%= analyticsData.orderGrowthRate >= 0 ? 'positive' : 'negative' %>">
+                                <div class="metric-label">Order Growth Rate</div>
+                                <div class="metric-value <%= analyticsData.orderGrowthRate >= 0 ? 'positive' : 'negative' %>">
                                     <%= analyticsData.orderGrowthRate >= 0 ? '+' : '' %><%= analyticsData.orderGrowthRate.toFixed(1) %>%
-                                </span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -499,6 +499,106 @@
         color: var(--danger);
     }
 
+    /* Standalone Metric Cards */
+    .metric-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 120px;
+    }
+
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        border-color: var(--primary-color);
+    }
+
+    .metric-header h3 {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin: 0 0 1rem 0;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .metric-content {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .metric-content .metric-value {
+        color: var(--text-primary);
+        font-size: 1.5rem;
+        font-weight: 700;
+        text-align: center;
+        line-height: 1.2;
+    }
+
+    /* Metrics Group Cards */
+    .metrics-group-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .metrics-group-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+
+    .metrics-group-header h3 {
+        color: var(--text-primary);
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0 0 1.5rem 0;
+    }
+
+    .metrics-group-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .metric-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 1rem;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .metric-item:hover {
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .metric-label {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .metric-value {
+        color: var(--text-primary);
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+
     .date-filter {
         display: flex;
         align-items: center;
@@ -522,8 +622,49 @@
         }
 
         .analytics-grid {
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 1rem;
+        }
+
+        .metric-card {
+            min-height: 100px;
+            padding: 1rem;
+        }
+
+        .metric-header h3 {
+            font-size: 0.8rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .metric-content .metric-value {
+            font-size: 1.25rem;
+        }
+
+        .metrics-group-card {
+            padding: 1rem;
+        }
+
+        .metrics-group-header h3 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .metrics-group-grid {
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .metric-item {
+            padding: 0.75rem;
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+        }
+
+        .metric-value {
+            font-size: 1.1rem;
+        }
             padding: 1rem;
         }
 
@@ -563,6 +704,51 @@
 
         .chart-container {
             height: 200px;
+        }
+
+        .analytics-grid {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+
+        .metric-card {
+            min-height: 80px;
+            padding: 0.75rem;
+        }
+
+        .metric-header h3 {
+            font-size: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-content .metric-value {
+            font-size: 1.1rem;
+        }
+
+        .metrics-group-card {
+            padding: 0.75rem;
+        }
+
+        .metrics-group-header h3 {
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .metrics-group-grid {
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.5rem;
+        }
+
+        .metric-item {
+            padding: 0.5rem;
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+        }
+
+        .metric-value {
+            font-size: 1rem;
         }
     }
     </style>

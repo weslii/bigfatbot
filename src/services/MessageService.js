@@ -185,75 +185,100 @@ class MessageService {
 
   static formatPendingOrders(orders) {
     try {
+      // Dashboard encouragement message
+      const dashboardUrl = process.env.NODE_ENV === 'production' ? 'novi.com.ng/dashboard' : 'localhost:3000/dashboard';
+      
       if (!orders || orders.length === 0) {
         return `🟢 *No Pending Orders!*
 
-There are currently no pending orders. 🎉`;
+There are currently no pending orders. 🎉
+
+💡 *Pro Tip:* Visit your dashboard at ${dashboardUrl} to manage orders, track delivery status, and view real-time analytics!`;
       }
 
-      let message = `📋 *Pending Orders*\n\n`;
-    
-    orders.forEach((order, index) => {
-        message += `*${index + 1}. Order ID:* ${order.order_id}\n`;
-        message += `*Customer:* ${order.customer_name}\n`;
-        message += `*Phone:* ${order.customer_phone}\n`;
-        message += `*Address:* ${order.address}\n`;
+      const totalOrders = orders.length;
+      const maxDisplayOrders = 10; // Reduced from 20 to 10
+      const displayOrders = orders.slice(0, maxDisplayOrders);
+      const remainingOrders = totalOrders - maxDisplayOrders;
+
+      let message = `💡 *Pro Tip:* Visit your dashboard at ${dashboardUrl} to manage orders, track delivery status, and view real-time analytics!\n\n`;
+      message += `📋 *Pending Orders Summary*\n\n`;
+      message += `📊 *Total Pending Orders:* ${totalOrders}\n\n`;
+      
+      // Get user-friendly display URL (without protocol)
+      const getDisplayUrl = () => {
+        if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+          return `${process.env.RAILWAY_PUBLIC_DOMAIN}/dashboard`;
+        } else if (process.env.BASE_URL) {
+          const baseUrl = process.env.BASE_URL.replace(/^https?:\/\//, '');
+          return `${baseUrl}/dashboard`;
+        } else if (process.env.NODE_ENV === 'production') {
+          return 'novi.com.ng/dashboard';
+        } else {
+          return `localhost:${process.env.PORT || 3000}/dashboard`;
+        }
+      };
+
+      if (remainingOrders > 0) {
+        message += `📝 *Showing first ${maxDisplayOrders} orders*\n\n`;
+        message += `📱 Visit your dashboard at ${getDisplayUrl()} to view all ${totalOrders} orders\n\n`;
+      }
+
+      displayOrders.forEach((order, index) => {
+        message += `*${index + 1}. ${order.order_id}*\n`;
+        message += `👤 ${order.customer_name} | 📞 ${order.customer_phone}\n`;
+        message += `📍 ${order.address}\n`;
         
-                 // Add matched items if available
-         if (order.matched_items) {
-           try {
-             let matchedItems;
-             // Handle both string and object formats
-             if (typeof order.matched_items === 'string') {
-               matchedItems = JSON.parse(order.matched_items);
-             } else if (Array.isArray(order.matched_items)) {
-               matchedItems = order.matched_items;
-             } else {
-               logger.warn('matched_items is neither string nor array:', typeof order.matched_items);
-               message += `*Items:* ${order.items}\n`;
-             }
-             
-             if (matchedItems && matchedItems.length > 0) {
-               message += `*Matched Items:*\n`;
-               matchedItems.forEach((item, itemIndex) => {
-                 // Only show matched item name - if there's no matched item, the clarification process should handle it
-                 const itemName = item.matchedItem?.name || 'Unknown Item';
-                 
-                 // Debug: Log when we get "Unknown Item"
-                 if (itemName === 'Unknown Item') {
-                   logger.warn('Unknown Item detected in pending orders - matchedItem structure issue:', {
-                     hasMatchedItem: !!item.matchedItem,
-                     matchedItemType: typeof item.matchedItem,
-                     matchedItemKeys: item.matchedItem ? Object.keys(item.matchedItem) : 'N/A',
-                     matchedItemName: item.matchedItem?.name,
-                     originalItem: item.originalItem,
-                     fullItem: item
-                   });
-                 }
-                 
-                 message += `• ${itemName} (${item.quantity}x)\n`;
-               });
-             } else {
-               message += `*Items:* ${order.items}\n`;
-             }
-           } catch (parseError) {
-             logger.error('Error parsing matched items:', parseError);
-             message += `*Items:* ${order.items}\n`;
-           }
-         } else {
-           message += `*Items:* ${order.items}\n`;
-         }
+        // Add matched items if available
+        if (order.matched_items) {
+          try {
+            let matchedItems;
+            // Handle both string and object formats
+            if (typeof order.matched_items === 'string') {
+              matchedItems = JSON.parse(order.matched_items);
+            } else if (Array.isArray(order.matched_items)) {
+              matchedItems = order.matched_items;
+            } else {
+              logger.warn('matched_items is neither string nor array:', typeof order.matched_items);
+              message += `*Items:* ${order.items}\n`;
+            }
+            
+            if (matchedItems && matchedItems.length > 0) {
+              message += `📦 `;
+              const itemNames = matchedItems.map(item => {
+                const itemName = item.matchedItem?.name || 'Unknown Item';
+                return `${itemName} (${item.quantity}x)`;
+              }).join(', ');
+              message += `${itemNames}\n`;
+            } else {
+              message += `📦 ${order.items}\n`;
+            }
+          } catch (parseError) {
+            logger.error('Error parsing matched items:', parseError);
+            message += `📦 ${order.items}\n`;
+          }
+        } else {
+          message += `📦 ${order.items}\n`;
+        }
         
         if (order.delivery_date) {
-          message += `*Delivery Date:* ${moment(order.delivery_date).format('DD/MM/YYYY')}\n`;
+          message += `📅 ${moment(order.delivery_date).format('DD/MM/YYYY')}\n`;
         }
         
         if (order.notes) {
-          message += `*Notes:* ${order.notes}\n`;
+          message += `📝 ${order.notes}\n`;
         }
         
         message += '\n';
       });
+
+      if (remainingOrders > 0) {
+        message += `📊 *Summary*\n`;
+        message += `• Showing: ${displayOrders.length} orders\n`;
+        message += `• Remaining: ${remainingOrders} orders\n`;
+        message += `• Total: ${totalOrders} pending orders\n\n`;
+        message += `📱 Visit your dashboard at "${getDisplayUrl()}" to view all ${totalOrders} orders`;
+      }
 
       return message;
     } catch (error) {
@@ -264,7 +289,9 @@ There are currently no pending orders. 🎉`;
 
   static formatDailyReport(report) {
     try {
-      let message = `📊 *Daily Report*\n\n`;
+      const dashboardUrl = process.env.NODE_ENV === 'production' ? 'novi.com.ng/dashboard' : 'localhost:3000/dashboard';
+      let message = `💡 *Pro Tip:* Visit your dashboard at ${dashboardUrl} for detailed charts, revenue tracking, and comprehensive daily insights!\n\n`;
+      message += `📊 *Daily Report*\n\n`;
       message += `*Total Orders:* ${report.total_orders}\n`;
       message += `*Delivered:* ${report.delivered_orders}\n`;
       message += `*Cancelled:* ${report.cancelled_orders}\n`;
@@ -278,7 +305,9 @@ There are currently no pending orders. 🎉`;
 
   static formatWeeklyReport(report) {
     try {
-      let message = `📊 *Weekly Report*\n\n`;
+      const dashboardUrl = process.env.NODE_ENV === 'production' ? 'novi.com.ng/dashboard' : 'localhost:3000/dashboard';
+      let message = `💡 *Pro Tip:* Visit your dashboard at ${dashboardUrl} for weekly trends, performance metrics, and business insights!\n\n`;
+      message += `📊 *Weekly Report*\n\n`;
       message += `*Total Orders:* ${report.total_orders}\n`;
       message += `*Delivered:* ${report.delivered_orders}\n`;
       message += `*Cancelled:* ${report.cancelled_orders}\n`;
@@ -292,7 +321,9 @@ There are currently no pending orders. 🎉`;
 
   static formatMonthlyReport(report) {
     try {
-      let message = `📊 *Monthly Report*\n\n`;
+      const dashboardUrl = process.env.NODE_ENV === 'production' ? 'novi.com.ng/dashboard' : 'localhost:3000/dashboard';
+      let message = `💡 *Pro Tip:* Visit your dashboard at ${dashboardUrl} for monthly analytics, growth tracking, and business intelligence!\n\n`;
+      message += `📊 *Monthly Report*\n\n`;
       message += `*Total Orders:* ${report.total_orders}\n`;
       message += `*Delivered:* ${report.delivered_orders}\n`;
       message += `*Cancelled:* ${report.cancelled_orders}\n`;
@@ -305,7 +336,9 @@ There are currently no pending orders. 🎉`;
   }
 
   static formatHelpMessage() {
-    return `*Available Commands:*\n\n` +
+    const dashboardUrl = process.env.NODE_ENV === 'production' ? 'novi.com.ng/dashboard' : 'localhost:3000/dashboard';
+    return `💡 *Pro Tip:* Visit your dashboard at ${dashboardUrl} for advanced order management, analytics, and business tools!\n\n` +
+           `*Available Commands:*\n\n` +
            `*Order Management:*\n` +
            `• /pending - View pending orders\n` +
            `• done #<order_id> - Mark order as delivered\n` +

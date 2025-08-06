@@ -1813,9 +1813,17 @@
     function viewOrder(orderId) {
         fetch(`/api/orders/${orderId}?userId=<%= userId %>`)
             .then(response => response.json())
-            .then(order => {
+            .then(data => {
+                // Extract order data from the response
+                const order = data.order || data;
+                
                 if (order.error) {
                     alert('Failed to load order details: ' + order.error);
+                    return;
+                }
+                
+                if (!order) {
+                    alert('No order data received');
                     return;
                 }
                 

@@ -56,62 +56,62 @@ async function fetchAndRenderStats() {
 function renderSummaryCards(stats) {
   const summaryCards = document.getElementById('summary-cards');
   summaryCards.innerHTML = `
-    <div style="display: flex; flex-wrap: wrap; gap: 0.7rem; width: 100%;">
-      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
-        <div class="summary-title" style="font-size: 0.97rem;">Total Businesses</div>
-        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.totalBusinesses}</div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.7rem; width: 100%;">
+      <div class="summary-card" style="padding: 0.7rem 1rem; font-size: 0.97rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);">
+        <div class="summary-title" style="font-size: 0.97rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Total Businesses</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">${stats.totalBusinesses || 0}</div>
       </div>
-      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
-        <div class="summary-title" style="font-size: 0.97rem;">Active Businesses</div>
-        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.activeBusinesses}</div>
+      <div class="summary-card" style="padding: 0.7rem 1rem; font-size: 0.97rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);">
+        <div class="summary-title" style="font-size: 0.97rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Active Businesses</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">${stats.activeBusinesses || 0}</div>
       </div>
-      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
-        <div class="summary-title" style="font-size: 0.97rem;">New Businesses</div>
-        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.newBusinesses}</div>
+      <div class="summary-card" style="padding: 0.7rem 1rem; font-size: 0.97rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);">
+        <div class="summary-title" style="font-size: 0.97rem; color: var(--text-secondary); margin-bottom: 0.5rem;">New Businesses</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">${stats.newBusinesses || 0}</div>
       </div>
-      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
-        <div class="summary-title" style="font-size: 0.97rem;">Total Users</div>
-        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.totalUsers}</div>
+      <div class="summary-card" style="padding: 0.7rem 1rem; font-size: 0.97rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);">
+        <div class="summary-title" style="font-size: 0.97rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Total Users</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">${stats.totalUsers || 0}</div>
       </div>
-      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
-        <div class="summary-title" style="font-size: 0.97rem;">New Users</div>
-        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.newUsers}</div>
+      <div class="summary-card" style="padding: 0.7rem 1rem; font-size: 0.97rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);">
+        <div class="summary-title" style="font-size: 0.97rem; color: var(--text-secondary); margin-bottom: 0.5rem;">New Users</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">${stats.newUsers || 0}</div>
       </div>
-      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
-        <div class="summary-title" style="font-size: 0.97rem;">Total Orders</div>
-        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.totalOrders}</div>
+      <div class="summary-card" style="padding: 0.7rem 1rem; font-size: 0.97rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);">
+        <div class="summary-title" style="font-size: 0.97rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Filtered Orders</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">${stats.totalOrders || 0}</div>
       </div>
-      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
-        <div class="summary-title" style="font-size: 0.97rem;">New Orders</div>
-        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.newOrders}</div>
+      <div class="summary-card" style="padding: 0.7rem 1rem; font-size: 0.97rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);">
+        <div class="summary-title" style="font-size: 0.97rem; color: var(--text-secondary); margin-bottom: 0.5rem;">New Orders</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">${stats.newOrders || 0}</div>
       </div>
-      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
-        <div class="summary-title" style="font-size: 0.97rem;">Parsing Success Rate</div>
-        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.parsingSuccessRate.toFixed(2)}%</div>
+      <div class="summary-card" style="padding: 0.7rem 1rem; font-size: 0.97rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);">
+        <div class="summary-title" style="font-size: 0.97rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Parsing Success Rate</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">${(stats.parsingSuccessRate || 0).toFixed(2)}%</div>
       </div>
-      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
-        <div class="summary-title" style="font-size: 0.97rem;">Parsing Attempts</div>
-        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.parsingAttempts}</div>
+      <div class="summary-card" style="padding: 0.7rem 1rem; font-size: 0.97rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);">
+        <div class="summary-title" style="font-size: 0.97rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Parsing Attempts</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">${stats.parsingAttempts || 0}</div>
       </div>
-      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
-        <div class="summary-title" style="font-size: 0.97rem;">Parsing Successes</div>
-        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.parsingSuccesses}</div>
+      <div class="summary-card" style="padding: 0.7rem 1rem; font-size: 0.97rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);">
+        <div class="summary-title" style="font-size: 0.97rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Parsing Successes</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">${stats.parsingSuccesses || 0}</div>
       </div>
-      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
-        <div class="summary-title" style="font-size: 0.97rem;">Parsing Failures</div>
-        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.parsingFailures}</div>
+      <div class="summary-card" style="padding: 0.7rem 1rem; font-size: 0.97rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);">
+        <div class="summary-title" style="font-size: 0.97rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Parsing Failures</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">${stats.parsingFailures || 0}</div>
       </div>
-      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem;">
-        <div class="summary-title" style="font-size: 0.97rem;">Filtered Messages</div>
-        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.filteredMessages}</div>
+      <div class="summary-card" style="padding: 0.7rem 1rem; font-size: 0.97rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);">
+        <div class="summary-title" style="font-size: 0.97rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Filtered Messages</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">${stats.filteredMessages || 0}</div>
       </div>
-      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem; background: #e0f2fe;">
-        <div class="summary-title" style="font-size: 0.97rem;">AI Parsed Orders</div>
-        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.aiParsedOrders} <span style='font-size:0.95rem; color:#0ea5e9;'>(${stats.aiParsedPercent.toFixed(1)}%)</span></div>
+      <div class="summary-card" style="padding: 0.7rem 1rem; font-size: 0.97rem; background: #e0f2fe; border: 1px solid #0ea5e9; border-radius: var(--radius); box-shadow: var(--shadow);">
+        <div class="summary-title" style="font-size: 0.97rem; color: #0ea5e9; margin-bottom: 0.5rem;">AI Parsed Orders</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700; color: #0ea5e9;">${stats.aiParsedOrders || 0} <span style='font-size:0.95rem; color:#0ea5e9;'>(${(stats.aiParsedPercent || 0).toFixed(1)}%)</span></div>
       </div>
-      <div class="summary-card" style="flex: 1 1 180px; min-width: 140px; padding: 0.7rem 1rem; font-size: 0.97rem; background: #fef9c3;">
-        <div class="summary-title" style="font-size: 0.97rem;">Pattern Parsed Orders</div>
-        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700;">${stats.patternParsedOrders} <span style='font-size:0.95rem; color:#f59e0b;'>(${stats.patternParsedPercent.toFixed(1)}%)</span></div>
+      <div class="summary-card" style="padding: 0.7rem 1rem; font-size: 0.97rem; background: #fef9c3; border: 1px solid #f59e0b; border-radius: var(--radius); box-shadow: var(--shadow);">
+        <div class="summary-title" style="font-size: 0.97rem; color: #f59e0b; margin-bottom: 0.5rem;">Pattern Parsed Orders</div>
+        <div class="summary-value" style="font-size: 1.25rem; font-weight: 700; color: #f59e0b;">${stats.patternParsedOrders || 0} <span style='font-size:0.95rem; color:#f59e0b;'>(${(stats.patternParsedPercent || 0).toFixed(1)}%)</span></div>
       </div>
     </div>
   `;
@@ -121,8 +121,8 @@ function renderTotalOrdersHandledCard(stats) {
   const card = document.getElementById('total-orders-handled-card');
   card.innerHTML = `
     <div class="summary-card" style="min-width: 200px; padding: 1.5rem 2rem; font-size: 1.1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow-lg); margin-bottom: 1rem;">
-      <div class="summary-title" style="font-size: 1.1rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.5rem;">Total Orders Handled</div>
-      <div class="summary-value" style="font-size: 2.5rem; font-weight: 800; color: var(--primary-color); line-height: 1;">${stats.totalOrdersAllTime}</div>
+      <div class="summary-title" style="font-size: 1.1rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.5rem;">All-Time Total Orders</div>
+      <div class="summary-value" style="font-size: 2.5rem; font-weight: 800; color: var(--primary-color); line-height: 1;">${stats.totalOrdersAllTime || 0}</div>
     </div>
   `;
 }
@@ -133,20 +133,20 @@ function exportStatsAsCSV() {
   if (!stats) return;
   const rows = [
     ['Metric', 'Value'],
-    ['Total Businesses', stats.totalBusinesses],
-    ['Active Businesses', stats.activeBusinesses],
-    ['New Businesses', stats.newBusinesses],
-    ['Total Users', stats.totalUsers],
-    ['New Users', stats.newUsers],
-    ['Total Orders', stats.totalOrders],
-    ['New Orders', stats.newOrders],
-    ['Parsing Success Rate', stats.parsingSuccessRate.toFixed(2) + '%'],
-    ['Parsing Attempts', stats.parsingAttempts],
-    ['Parsing Successes', stats.parsingSuccesses],
-    ['Parsing Failures', stats.parsingFailures],
-    ['Filtered Messages', stats.filteredMessages],
-    ['AI Parsed Orders', stats.aiParsedOrders + ' (' + stats.aiParsedPercent.toFixed(1) + '%)'],
-    ['Pattern Parsed Orders', stats.patternParsedOrders + ' (' + stats.patternParsedPercent.toFixed(1) + '%)'],
+    ['Total Businesses', stats.totalBusinesses || 0],
+    ['Active Businesses', stats.activeBusinesses || 0],
+    ['New Businesses', stats.newBusinesses || 0],
+    ['Total Users', stats.totalUsers || 0],
+    ['New Users', stats.newUsers || 0],
+    ['Total Orders', stats.totalOrders || 0],
+    ['New Orders', stats.newOrders || 0],
+    ['Parsing Success Rate', (stats.parsingSuccessRate || 0).toFixed(2) + '%'],
+    ['Parsing Attempts', stats.parsingAttempts || 0],
+    ['Parsing Successes', stats.parsingSuccesses || 0],
+    ['Parsing Failures', stats.parsingFailures || 0],
+    ['Filtered Messages', stats.filteredMessages || 0],
+    ['AI Parsed Orders', (stats.aiParsedOrders || 0) + ' (' + (stats.aiParsedPercent || 0).toFixed(1) + '%)'],
+    ['Pattern Parsed Orders', (stats.patternParsedOrders || 0) + ' (' + (stats.patternParsedPercent || 0).toFixed(1) + '%)'],
   ];
   const csv = rows.map(r => r.map(x => '"' + String(x).replace(/"/g, '""') + '"').join(',')).join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
@@ -160,31 +160,15 @@ function exportStatsAsCSV() {
   URL.revokeObjectURL(url);
 }
 
-// Simulate time-series data for parsing success rate (replace with real API if available)
-function getParsingSuccessTimeSeries() {
-  // Simulate 14 days of data
-  const today = new Date();
-  const data = [];
-  for (let i = 13; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - i);
-    data.push({
-      date: d.toISOString().slice(0, 10),
-      rate: 90 + Math.random() * 10 // Simulate 90-100% success
-    });
-  }
-  return data;
-}
-
-async function getParsingSuccessTimeSeriesReal() {
+async function getParsingSuccessTimeSeries() {
   try {
     const res = await fetch('/admin/api/reports/parsing-time-series?days=14');
     const { success, data } = await res.json();
     if (!success) throw new Error('API error');
-    return data;
+    return data || [];
   } catch (err) {
-    console.error('Failed to fetch real parsing time-series', err);
-    throw err;
+    console.error('Failed to fetch parsing time-series', err);
+    return [];
   }
 }
 
@@ -192,7 +176,7 @@ async function renderParsingSuccessChart() {
   const chartContainer = document.getElementById('parsing-success-chart');
   try {
     const ctx = chartContainer.getContext('2d');
-    const timeSeries = await getParsingSuccessTimeSeriesReal();
+    const timeSeries = await getParsingSuccessTimeSeries();
     const labels = timeSeries.map(d => d.date);
     const data = timeSeries.map(d => d.rate);
     if (window.parsingChart) window.parsingChart.destroy();

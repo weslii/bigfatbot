@@ -326,9 +326,11 @@ module.exports = {
 
       const businessIds = userBusinesses.map(b => b.business_id);
 
-      const order = await db.query('orders')
-        .where('id', orderId)
-        .whereIn('business_id', businessIds)
+      const order = await db.query('orders as o')
+        .select('o.*', 'g.business_name')
+        .leftJoin('groups as g', 'o.business_id', 'g.business_id')
+        .where('o.id', orderId)
+        .whereIn('o.business_id', businessIds)
         .first();
       
       if (!order) {
