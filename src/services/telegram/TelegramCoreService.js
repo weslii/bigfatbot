@@ -14,6 +14,7 @@ class TelegramCoreService {
     this.messageHistory = []; // Store recent messages only
     this.cleanupInterval = null;
     this.botInfo = null;
+    this.connectionMode = 'unknown'; // 'webhook' or 'polling'
   }
 
   async start() {
@@ -27,7 +28,40 @@ class TelegramCoreService {
         throw new Error('TELEGRAM_BOT_TOKEN environment variable is required');
       }
 
-      this.bot = new TelegramBot(token, { polling: true });
+      // Try webhook first, fallback to polling
+      const webhookUrl = await this.setupWebhook(token);
+      
+      if (webhookUrl) {
+        // Use webhook mode
+        this.bot = new TelegramBot(token, { 
+          webHook: { 
+            port: process.env.PORT || 3000,
+            host: '0.0.0.0'
+          } 
+        });
+        
+        // Set webhook URL
+        await this.bot.setWebHook(webhookUrl);
+        
+        logger.info('Telegram webhook mode enabled:', webhookUrl);
+        this.connectionMode = 'webhook';
+      } else {
+        // Fallback to polling mode
+        this.bot = new TelegramBot(token, {
+          polling: {
+            timeout: 10,           // Request timeout in seconds
+            limit: 100,            // Number of messages to retrieve per request
+            retryTimeout: 5000,    // Retry delay on failure (5 seconds)
+            autoStart: true,       // Start polling immediately
+            params: {
+              timeout: 10          // Additional timeout for requests
+            }
+          }
+        });
+        
+        logger.info('Telegram polling mode enabled (webhook fallback)');
+        this.connectionMode = 'polling';
+      }
       
       // Get bot info
       this.botInfo = await this.bot.getMe();
@@ -307,6 +341,72 @@ class TelegramCoreService {
 
   getBotInfo() {
     return this.botInfo;
+  }
+
+  async setupWebhook(token) {
+    try {
+      // Check if we have a public domain
+      const publicDomain = process.env.RAILWAY_PUBLIC_DOMAIN || 
+                          process.env.CUSTOM_DOMAIN || 
+                          'novi.com.ng';
+      
+      if (!publicDomain || publicDomain === 'localhost') {
+        logger.info('No public domain available, will use polling');
+        return null;
+      }
+
+      // Construct webhook URL
+      const webhookUrl = `https://${publicDomain}/webhook/telegram`;
+      
+      logger.info('Attempting to set up webhook:', webhookUrl);
+      
+      // Test if the webhook endpoint is accessible
+      const testBot = new TelegramBot(token);
+      
+      // Try to set webhook (this will fail if domain is not accessible)
+      await testBot.setWebHook(webhookUrl);
+      
+      logger.info('Webhook setup successful');
+      return webhookUrl;
+      
+    } catch (error) {
+      logger.warn('Webhook setup failed, will use polling:', error.message);
+      return null;
+    }
+  }
+
+  async switchToPolling() {
+    if (this.bot && this.connectionMode === 'webhook') {
+      try {
+        // Delete webhook
+        await this.bot.deleteWebHook();
+        
+        // Restart with polling
+        await this.stop();
+        await this.start();
+        
+        logger.info('Switched from webhook to polling mode');
+      } catch (error) {
+        logger.error('Error switching to polling:', error);
+      }
+    }
+  }
+
+  async switchToWebhook() {
+    if (this.bot && this.connectionMode === 'polling') {
+      try {
+        // Stop polling
+        await this.bot.stopPolling();
+        
+        // Restart with webhook
+        await this.stop();
+        await this.start();
+        
+        logger.info('Switched from polling to webhook mode');
+      } catch (error) {
+        logger.error('Error switching to webhook:', error);
+      }
+    }
   }
 }
 

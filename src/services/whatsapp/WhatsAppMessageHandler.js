@@ -7,6 +7,7 @@ const OrderParser = require('../OrderParser');
 const { parseOrderWithAI, parseOrderWithAIRetry } = require('../AIPoweredOrderParser');
 const NotificationService = require('../NotificationService');
 const { isLikelyOrder } = require('../../utils/orderDetection');
+const HumanConfirmationService = require('../HumanConfirmationService');
 
 class WhatsAppMessageHandler {
   constructor(coreService, orderHandler, setupHandler, metricsService) {
@@ -14,7 +15,13 @@ class WhatsAppMessageHandler {
     this.orderHandler = orderHandler;
     this.setupHandler = setupHandler;
     this.metrics = metricsService;
+    this.confirmationService = new HumanConfirmationService(coreService);
     this.core.client.on('message', this.handleMessage.bind(this));
+    
+    // Connect the confirmation service to the order service
+    // Since OrderService is used statically, we'll need to pass the confirmation service
+    // to the OrderService methods that need it
+    logger.info('WhatsAppMessageHandler initialized');
   }
 
   async handleMessage(message) {
@@ -156,15 +163,13 @@ class WhatsAppMessageHandler {
         await this.orderHandler.handleReplyCancellation(message, senderName, senderNumber, groupInfo);
         return;
       }
-      // Handle confirmation responses first
-      if (this.confirmationService && await this.confirmationService.handleConfirmationResponse(message, groupInfo.group_id)) {
-        logger.info('Confirmation response handled successfully in WhatsApp');
+      // Handle item details responses first (more specific)
+      if (await this.confirmationService.handleItemDetailsResponse(message, groupInfo.group_id)) {
         return;
       }
 
-      // Handle item details responses
-      if (this.confirmationService && await this.confirmationService.handleItemDetailsResponse(message, groupInfo.group_id)) {
-        logger.info('Item details response handled successfully in WhatsApp');
+      // Handle confirmation responses
+      if (await this.confirmationService.handleConfirmationResponse(message, groupInfo.group_id)) {
         return;
       }
 
@@ -219,7 +224,7 @@ class WhatsAppMessageHandler {
           onSlow: async () => {
             if (!sentProcessingMsg) {
               sentProcessingMsg = true;
-              await this.core.client.sendMessage(groupInfo.group_id, '⏳ Processing your order, please wait a moment...');
+              await this.core.sendMessage(groupInfo.group_id, '⏳ Processing your order, please wait a moment...');
             }
           }
         });
@@ -246,7 +251,7 @@ class WhatsAppMessageHandler {
             parsedWith = 'pattern-matching';
           } else if (aiTimedOut) {
             // Only send error if AI timed out and pattern matching also failed
-            await this.core.client.sendMessage(groupInfo.group_id,
+            await this.core.sendMessage(groupInfo.group_id,
               '❌ I could not process that order😕. Please ensure your message is in the correct format:\n' +
               'Name: John Doe\n' +
               'Phone no: 08012345678\n' +
@@ -268,7 +273,7 @@ class WhatsAppMessageHandler {
         if (attemptedParsing) {
           if (orderData) {
             orderData.business_id = groupInfo.business_id;
-            const order = await OrderService.createOrder(groupInfo.business_id, orderData);
+            const order = await OrderService.createOrder(groupInfo.business_id, orderData, this.confirmationService);
             
             // Debug: Log the order status
             logger.debug('[handleSalesGroupMessage] Order created with status:', {
@@ -277,8 +282,8 @@ class WhatsAppMessageHandler {
               willSendConfirmations: order.matching_status !== 'needs_clarification'
             });
             
-            // Only send confirmations if order doesn't need clarification
-            if (order.matching_status !== 'needs_clarification') {
+            // Only send confirmations if order doesn't need clarification or confirmation
+            if (order.matching_status !== 'needs_clarification' && order.matching_status !== 'needs_confirmation') {
               logger.debug('[handleSalesGroupMessage] Sending confirmation messages via Message Handler path');
               logger.debug('[handleSalesGroupMessage] Order object for confirmation:', {
                 orderId: order.order_id,
@@ -293,9 +298,9 @@ class WhatsAppMessageHandler {
                 .where('group_type', 'delivery')
                 .first();
               if (deliveryGroup) {
-                await this.core.client.sendMessage(deliveryGroup.group_id, deliveryConfirmation);
+                await this.core.sendMessage(deliveryGroup.group_id, deliveryConfirmation);
               }
-              await this.core.client.sendMessage(groupInfo.group_id, salesConfirmation);
+              await this.core.sendMessage(groupInfo.group_id, salesConfirmation);
             } else {
               logger.debug('[handleSalesGroupMessage] Skipping confirmation messages - order needs clarification');
             }
@@ -307,7 +312,7 @@ class WhatsAppMessageHandler {
             const addressConfidence = OrderParser.calculatePatternScore(messageText, OrderParser.addressPatterns);
             if ((hasValidPhone && addressConfidence >= 2) && !messageBody.startsWith('/')) {
               if (!errorMessageSent) {
-                await this.core.client.sendMessage(groupInfo.group_id, 
+                await this.core.sendMessage(groupInfo.group_id, 
                   '❌ I could not process that order😕. Please ensure your message includes:\n' +
                   '• Customer name\n' +
                   '• Phone number\n' +

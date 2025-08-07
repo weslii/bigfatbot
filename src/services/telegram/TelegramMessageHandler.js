@@ -163,15 +163,15 @@ class TelegramMessageHandler {
       const senderName = sender.first_name + (sender.last_name ? ' ' + sender.last_name : '');
       const senderUsername = sender.username;
 
-      // Handle confirmation responses
-      if (await this.confirmationService.handleConfirmationResponse(message, groupInfo.group_id)) {
+      // Handle item details responses first (more specific)
+      if (await this.confirmationService.handleItemDetailsResponse(message, groupInfo.group_id)) {
         return;
       }
 
 
 
-      // Handle item details responses
-      if (await this.confirmationService.handleItemDetailsResponse(message, groupInfo.group_id)) {
+      // Handle confirmation responses
+      if (await this.confirmationService.handleConfirmationResponse(message, groupInfo.group_id)) {
         return;
       }
 
@@ -273,8 +273,8 @@ class TelegramMessageHandler {
               willSendConfirmations: order.matching_status !== 'needs_clarification'
             });
             
-            // Only send confirmations if order doesn't need clarification
-            if (order.matching_status !== 'needs_clarification') {
+            // Only send confirmations if order doesn't need clarification or confirmation
+            if (order.matching_status !== 'needs_clarification' && order.matching_status !== 'needs_confirmation') {
               logger.debug('[handleSalesGroupMessage] Sending confirmation messages via Message Handler path');
               logger.debug('[handleSalesGroupMessage] Order object for confirmation:', {
                 orderId: order.order_id,

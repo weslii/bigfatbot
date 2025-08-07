@@ -136,7 +136,7 @@ class OrderService {
 
       // Request confirmation for each item that needs it
       for (const item of matchingResult.matchedItems) {
-        if (item.confidence < 0.65) {
+        if (item.confidence < 0.65 || item.needsClarification) {
           await service.requestItemConfirmation(
             item.originalItem,
             businessId,
@@ -150,7 +150,7 @@ class OrderService {
         orderId: order.order_id,
         businessId,
         groupId: group.group_id,
-        itemsNeedingConfirmation: matchingResult.matchedItems.filter(item => item.confidence < 0.65).length
+        itemsNeedingConfirmation: matchingResult.matchedItems.filter(item => item.confidence < 0.65 || item.needsClarification).length
       });
     } catch (error) {
       logger.error('Error handling confirmation required:', error);

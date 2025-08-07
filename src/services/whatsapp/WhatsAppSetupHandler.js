@@ -33,14 +33,14 @@ class WhatsAppSetupHandler {
 
       // Only allow setup in groups
       if (!chat.isGroup) {
-        await this.core.client.sendMessage(chatId, '❌ I can only set up your business in WhatsApp groups😕. Please try this command in a group chat.');
+        await this.core.sendMessage(chatId, '❌ I can only set up your business in WhatsApp groups😕. Please try this command in a group chat.');
         return;
       }
 
       // Parse setup identifier from command
       const parts = message.body.split(' ');
       if (parts.length !== 2) {
-        await this.core.client.sendMessage(chatId, '❌ I didn\'t understand that setup command😕. Please use: /setup <businessname-CODE>\n\nExample: /setup cakeshop-ABC123');
+        await this.core.sendMessage(chatId, '❌ I didn\'t understand that setup command😕. Please use: /setup <businessname-CODE>\n\nExample: /setup cakeshop-ABC123');
         return;
       }
 
@@ -51,7 +51,7 @@ class WhatsAppSetupHandler {
       business = await ShortCodeGenerator.findBusinessBySetupIdentifier(setupIdentifier);
 
       if (!business) {
-        await this.core.client.sendMessage(chatId, '❌ I couldn\'t find that business😕. Please check your setup code.\n\nMake sure you\'re using the correct format: /setup businessname-CODE');
+        await this.core.sendMessage(chatId, '❌ I couldn\'t find that business😕. Please check your setup code.\n\nMake sure you\'re using the correct format: /setup businessname-CODE');
         return;
       }
 
@@ -61,7 +61,7 @@ class WhatsAppSetupHandler {
         .first();
 
       if (existingGroup) {
-        await this.core.client.sendMessage(chatId, '❌ This group is already registered😕. I can only set up each group once.');
+        await this.core.sendMessage(chatId, '❌ This group is already registered😕. I can only set up each group once.');
         return;
       }
 
@@ -73,7 +73,7 @@ class WhatsAppSetupHandler {
         .first();
 
       if (groupCount.count >= 2) {
-        await this.core.client.sendMessage(chatId, '❌ This business already has both groups registered😕. I can only set up one sales and one delivery group per business.');
+        await this.core.sendMessage(chatId, '❌ This business already has both groups registered😕. I can only set up one sales and one delivery group per business.');
         return;
       }
 
@@ -193,7 +193,7 @@ class WhatsAppSetupHandler {
       // Try to send error message if we have a valid chat ID
       try {
         if (chat && chat.id && chat.id._serialized) {
-          await this.core.client.sendMessage(chat.id._serialized, '❌ I ran into an issue during setup😕. Please try again.');
+          await this.core.sendMessage(chat.id._serialized, '❌ I ran into an issue during setup😕. Please try again.');
         }
       } catch (sendError) {
         logger.error('Failed to send error message:', sendError);
@@ -312,8 +312,8 @@ Novi will now:
 For help, type /help.
       `;
 
-      await this.core.client.sendMessage(setup.salesGroupId, welcomeMessage);
-      await this.core.client.sendMessage(setup.deliveryGroupId, welcomeMessage);
+      await this.core.sendMessage(setup.salesGroupId, welcomeMessage);
+      await this.core.sendMessage(setup.deliveryGroupId, welcomeMessage);
 
       // Mark setup as complete
       setup.status = 'complete';

@@ -94,6 +94,18 @@ class InventoryMatchingService {
           }
         } else {
           // No match found - needs clarification
+          // Create a placeholder match for items that need clarification
+          const clarificationItem = {
+            originalItem: item,
+            matchedItem: null,
+            quantity: item.quantity,
+            unitPrice: 0,
+            totalPrice: 0,
+            confidence: 0,
+            type: 'product',
+            needsClarification: true
+          };
+          matchedItems.push(clarificationItem);
           needsHumanConfirmation = true;
         }
       }

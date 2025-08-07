@@ -22,19 +22,61 @@ class TelegramEventHandler {
 
     logger.info('Setting up Telegram event handlers...');
 
-    // Handle polling errors
+    // Handle polling errors with intelligent error classification
     this.core.bot.on('polling_error', async (error) => {
-      logger.error('Telegram polling error:', error);
-      this.core.isAuthenticated = false;
+      // Log the error with more context
+      logger.error('Telegram polling error:', {
+        message: error.message,
+        code: error.code,
+        stack: error.stack?.split('\n')[0], // First line of stack trace
+        timestamp: new Date().toISOString()
+      });
       
-      // Store connection status in database
-      await this.core.storeConnectionStatus('polling_error', null);
+      // Classify the error type
+      const isNetworkError = error.code === 'ECONNRESET' || 
+                            error.code === 'ETIMEDOUT' || 
+                            error.code === 'ENOTFOUND' ||
+                            error.message?.includes('socket hang up') ||
+                            error.message?.includes('timeout');
       
-      // Start continuous error notification
+      const isAuthError = error.code === 401 || 
+                         error.message?.includes('Unauthorized') ||
+                         error.message?.includes('Forbidden');
+      
+      const isRateLimitError = error.code === 429 || 
+                              error.message?.includes('Too Many Requests');
+      
+      // For network errors, be more lenient (they're usually temporary)
+      if (isNetworkError) {
+        logger.warn('Network-related polling error (likely temporary):', {
+          code: error.code,
+          message: error.message
+        });
+        
+        // Don't mark as unauthenticated for network errors
+        // The bot will automatically retry
+        return;
+      }
+      
+      // For auth errors, mark as unauthenticated
+      if (isAuthError) {
+        logger.error('Authentication error - bot token may be invalid');
+        this.core.isAuthenticated = false;
+        await this.core.storeConnectionStatus('auth_error', null);
+      } else {
+        // For other errors, mark as polling error
+        this.core.isAuthenticated = false;
+        await this.core.storeConnectionStatus('polling_error', null);
+      }
+      
+      // Start continuous error notification (keeping aggressive notifications as requested)
       try {
         NotificationService.startContinuousErrorNotification('connection', error, {
           'Component': 'Telegram Bot',
-          'Error Type': 'Polling Error',
+          'Error Type': isAuthError ? 'Authentication Error' : 'Polling Error',
+          'Error Code': error.code || 'UNKNOWN',
+          'Is Network Error': isNetworkError,
+          'Is Rate Limited': isRateLimitError,
           'Time': new Date().toISOString()
         });
       } catch (notificationError) {

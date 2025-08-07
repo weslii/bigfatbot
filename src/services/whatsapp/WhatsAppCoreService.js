@@ -349,6 +349,65 @@ class WhatsAppCoreService {
       };
     }
   }
+
+  async sendMessage(chatId, message, options = {}) {
+    try {
+      if (!this.client || !this.isAuthenticated) {
+        logger.error('Cannot send message: WhatsApp client not authenticated');
+        throw new Error('WhatsApp client not authenticated');
+      }
+
+      const sentMessage = await this.client.sendMessage(chatId, message, options);
+      
+      // Update message history with proper error handling
+      try {
+        const messageId = sentMessage?.id?._serialized || sentMessage?.id || 'unknown';
+        this.messageHistory.push({
+          id: messageId,
+          chatId: chatId,
+          message: message.substring(0, 100) + (message.length > 100 ? '...' : ''),
+          timestamp: Date.now()
+        });
+
+        // Keep only recent messages
+        if (this.messageHistory.length > this.maxMessageHistory) {
+          this.messageHistory = this.messageHistory.slice(-this.maxMessageHistory);
+        }
+
+        this.lastMessageTime = Date.now();
+        this.messageCount++;
+        
+        logger.debug('Message sent successfully', {
+          messageId: messageId,
+          chatId: chatId,
+          messageLength: message.length
+        });
+      } catch (historyError) {
+        logger.warn('Error updating message history:', historyError);
+        // Don't fail the entire send operation if history update fails
+      }
+
+      return sentMessage;
+    } catch (error) {
+      logger.error('Error sending WhatsApp message:', error);
+      throw error;
+    }
+  }
+
+  async deleteMessage(chatId, messageId) {
+    try {
+      if (!this.client || !this.isAuthenticated) {
+        logger.error('Cannot delete message: WhatsApp client not authenticated');
+        throw new Error('WhatsApp client not authenticated');
+      }
+
+      await this.client.deleteMessage(chatId, messageId);
+      logger.debug('Message deleted successfully', { messageId, chatId });
+    } catch (error) {
+      logger.error('Error deleting WhatsApp message:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = WhatsAppCoreService; 

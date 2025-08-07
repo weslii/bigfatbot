@@ -601,8 +601,10 @@ class CollectionManager {
       if (priceInput) {
         const collectionPriceElement = document.getElementById('collectionPrice');
         if (collectionPriceElement) {
-          const collectionPrice = collectionPriceElement.textContent.replace('$', '');
-          priceInput.value = collectionPrice;
+          // Extract price from text content, handling different currency formats
+          const priceText = collectionPriceElement.textContent;
+          const cleanPrice = priceText.replace(/[₦$,]/g, '').trim();
+          priceInput.value = cleanPrice;
         }
       }
     }
@@ -645,7 +647,8 @@ class CollectionManager {
       activeTab,
       itemId: formData.get('itemId'),
       newItemName: formData.get('newItemName'),
-      newItemPrice: formData.get('newItemPrice')
+      newItemPrice: formData.get('newItemPrice'),
+      formDataEntries: Array.from(formData.entries())
     });
     
     if (activeTab === 'existing') {
@@ -689,7 +692,15 @@ class CollectionManager {
              // Create new item and add to collection
        // Always use collection price for new items
        const collectionPriceElement = document.getElementById('collectionPrice');
-       const collectionPrice = collectionPriceElement ? parseFloat(collectionPriceElement.textContent.replace('$', '')) : 0;
+       let collectionPrice = 0;
+       
+       if (collectionPriceElement) {
+         // Extract price from text content, handling different currency formats
+         const priceText = collectionPriceElement.textContent;
+         // Remove currency symbols and commas, then parse
+         const cleanPrice = priceText.replace(/[₦$,]/g, '').trim();
+         collectionPrice = parseFloat(cleanPrice) || 0;
+       }
        
        const newItemData = {
          name: formData.get('newItemName'),
@@ -701,6 +712,16 @@ class CollectionManager {
       if (type === 'product') {
         newItemData.stock_count = parseInt(formData.get('newItemStock')) || 0;
       }
+      
+      // Debug logging
+      console.log('New item data validation:', {
+        name: newItemData.name,
+        price: newItemData.price,
+        hasName: !!newItemData.name,
+        hasPrice: !!newItemData.price,
+        collectionPriceElement: !!collectionPriceElement,
+        priceText: collectionPriceElement ? collectionPriceElement.textContent : 'N/A'
+      });
       
       if (!newItemData.name || !newItemData.price) {
         this.showNotification('Please fill in all required fields', 'error');

@@ -353,6 +353,25 @@ class TelegramService {
   isLikelyOrder = TelegramUtils.isLikelyOrder;
   extractOrderIdFromMessage = TelegramUtils.extractOrderIdFromMessage;
   fallbackExtractOrderId = TelegramUtils.fallbackExtractOrderId;
+
+  // Handle webhook messages
+  async handleMessage(message) {
+    try {
+      logger.info('Telegram webhook message received:', {
+        messageId: message.message_id,
+        chatId: message.chat.id,
+        from: message.from?.username || message.from?.first_name,
+        text: message.text?.substring(0, 100) + (message.text?.length > 100 ? '...' : '')
+      });
+
+      // Use the message handler to process the message
+      await this.messageHandler.handleMessage(message);
+      
+    } catch (error) {
+      logger.error('Error handling webhook message:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = TelegramService; 

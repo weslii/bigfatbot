@@ -127,17 +127,17 @@ class MessageService {
           
           if (matchedItems && matchedItems.length > 0) {
             message += `*Matched Items:*\n`;
-                                    matchedItems.forEach((item, index) => {
-                          logger.debug('Processing matched item in formatSalesConfirmation:', {
-              item,
-              itemKeys: Object.keys(item || {}),
-              matchedItem: item.matchedItem,
-              matchedItemKeys: Object.keys(item.matchedItem || {}),
-              hasName: !!item.matchedItem?.name,
-              name: item.matchedItem?.name,
-              originalItem: item.originalItem,
-              quantity: item.quantity
-            });
+            matchedItems.forEach((item, index) => {
+              logger.debug('Processing matched item in formatSalesConfirmation:', {
+                item,
+                itemKeys: Object.keys(item || {}),
+                matchedItem: item.matchedItem,
+                matchedItemKeys: Object.keys(item.matchedItem || {}),
+                hasName: !!item.matchedItem?.name,
+                name: item.matchedItem?.name,
+                originalItem: item.originalItem,
+                quantity: item.quantity
+              });
               
               // Only show matched item name - if there's no matched item, the clarification process should handle it
               const itemName = item.matchedItem?.name || 'Unknown Item';
@@ -221,7 +221,7 @@ There are currently no pending orders. 🎉
 
       if (remainingOrders > 0) {
         message += `📝 *Showing first ${maxDisplayOrders} orders*\n\n`;
-        message += `📱 Visit your dashboard at ${getDisplayUrl()} to view all ${totalOrders} orders\n\n`;
+        message += `📱 Visit your dashboard to view all ${totalOrders} orders\n\n`;
       }
 
       displayOrders.forEach((order, index) => {

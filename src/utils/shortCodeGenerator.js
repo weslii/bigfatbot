@@ -89,21 +89,66 @@ class ShortCodeGenerator {
 
   static async findBusinessBySetupIdentifier(setupIdentifier) {
     try {
-      // First try exact match
+      // First try the old approach (without group_type filter) - for backward compatibility
       let business = await database.query('groups')
         .where('setup_identifier', setupIdentifier)
         .first();
       
       if (business) {
+        logger.debug('Found business using old approach (no group_type filter)', {
+          setupIdentifier,
+          businessId: business.business_id,
+          groupType: business.group_type
+        });
         return business;
       }
       
-      // If not found, try case-insensitive search
+      // If not found, try case-insensitive search with old approach
       business = await database.query('groups')
         .whereRaw('LOWER(setup_identifier) = LOWER(?)', [setupIdentifier])
         .first();
       
-      return business;
+      if (business) {
+        logger.debug('Found business using old approach with case-insensitive search', {
+          setupIdentifier,
+          businessId: business.business_id,
+          groupType: business.group_type
+        });
+        return business;
+      }
+      
+      // If still not found, try the new approach (with group_type = 'main' filter)
+      let mainGroup = await database.query('groups')
+        .where('setup_identifier', setupIdentifier)
+        .where('group_type', 'main')
+        .first();
+      
+      if (mainGroup) {
+        logger.debug('Found business using new approach (group_type = main)', {
+          setupIdentifier,
+          businessId: mainGroup.business_id,
+          groupType: mainGroup.group_type
+        });
+        return mainGroup;
+      }
+      
+      // Finally, try case-insensitive search with new approach
+      mainGroup = await database.query('groups')
+        .whereRaw('LOWER(setup_identifier) = LOWER(?)', [setupIdentifier])
+        .where('group_type', 'main')
+        .first();
+      
+      if (mainGroup) {
+        logger.debug('Found business using new approach with case-insensitive search', {
+          setupIdentifier,
+          businessId: mainGroup.business_id,
+          groupType: mainGroup.group_type
+        });
+        return mainGroup;
+      }
+      
+      logger.debug('No business found for setup identifier', { setupIdentifier });
+      return null;
     } catch (error) {
       logger.error('Error finding business by setup identifier:', error);
       return null;

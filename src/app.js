@@ -138,6 +138,35 @@ function setupRoutes() {
   
   // Inventory routes
   app.use('/inventory', inventoryRoutes);
+  
+  // Telegram webhook route
+  app.post('/webhook/telegram', async (req, res) => {
+    try {
+      const update = req.body;
+      
+      // Get the bot manager instance
+      const botManager = BotServiceManager.getInstance();
+      const telegramService = botManager.getTelegramService();
+      
+      if (!telegramService) {
+        logger.error('Telegram service not available for webhook');
+        return res.status(500).json({ error: 'Telegram service not available' });
+      }
+      
+      // Handle the webhook update
+      if (update.message) {
+        await telegramService.handleMessage(update.message);
+      } else if (update.callback_query) {
+        // Handle callback queries if needed
+        logger.debug('Webhook callback query received:', update.callback_query);
+      }
+      
+      res.status(200).json({ ok: true });
+    } catch (error) {
+      logger.error('Webhook error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
 }
 
 // Graceful shutdown

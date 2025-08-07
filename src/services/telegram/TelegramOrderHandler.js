@@ -25,7 +25,7 @@ class TelegramOrderHandler {
       }
 
       if (order.status === 'cancelled') {
-        await this.core.sendMessage(groupInfo.group_id, `❌ I can\'t mark cancelled order #${orderId} as delivered😕. Once an order is cancelled, it can\'t be delivered.`);
+        await this.core.sendMessage(groupInfo.group_id, `❌ I can\'t mark order #${orderId} as delivered😕. It was cancelled.`);
         return;
       }
 

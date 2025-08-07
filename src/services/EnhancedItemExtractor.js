@@ -10,39 +10,63 @@ class EnhancedItemExtractor {
     const items = [];
     const text = itemsText.trim();
     
-    // Multiple patterns for different formats
-    const patterns = [
-      { regex: /(\d+)\s+([A-Za-z\s]+)/g, quantityIndex: 1, nameIndex: 2 },
-      { regex: /([A-Za-z\s]+)\s*x\s*(\d+)/gi, quantityIndex: 2, nameIndex: 1 },
-      { regex: /(\d+)x\s+([A-Za-z\s]+)/gi, quantityIndex: 1, nameIndex: 2 },
-      { regex: /([A-Za-z\s]+)\s+(\d+)/g, quantityIndex: 2, nameIndex: 1 }
+    // First, try to split by common conjunctions and separators
+    const splitPatterns = [
+      /\s+and\s+/i,
+      /\s*,\s*/,
+      /\s*;\s*/,
+      /\s*\|\s*/
     ];
     
-    for (const pattern of patterns) {
-      const matches = text.matchAll(pattern.regex);
-      for (const match of matches) {
-        const name = match[pattern.nameIndex].trim();
-        const quantity = parseInt(match[pattern.quantityIndex]);
-        
-        if (name && quantity > 0) {
-          items.push({
-            id: uuidv4(),
-            name: name,
-            quantity: quantity,
-            originalText: match[0]
-          });
-        }
+    let itemParts = [text];
+    for (const pattern of splitPatterns) {
+      if (itemParts.length === 1) {
+        itemParts = itemParts[0].split(pattern);
       }
     }
     
-    // If no patterns matched, treat as single item with quantity 1
-    if (items.length === 0 && text.length > 0) {
-      items.push({
-        id: uuidv4(),
-        name: text,
-        quantity: 1,
-        originalText: text
-      });
+    // Process each part
+    for (const part of itemParts) {
+      const trimmedPart = part.trim();
+      if (!trimmedPart) continue;
+      
+      // Multiple patterns for different formats
+      const patterns = [
+        { regex: /(\d+)\s+([A-Za-z\s]+)/g, quantityIndex: 1, nameIndex: 2 },
+        { regex: /([A-Za-z\s]+)\s*x\s*(\d+)/gi, quantityIndex: 2, nameIndex: 1 },
+        { regex: /(\d+)x\s+([A-Za-z\s]+)/gi, quantityIndex: 1, nameIndex: 2 },
+        { regex: /([A-Za-z\s]+)\s+(\d+)/g, quantityIndex: 2, nameIndex: 1 }
+      ];
+      
+      let partMatched = false;
+      for (const pattern of patterns) {
+        const matches = trimmedPart.matchAll(pattern.regex);
+        for (const match of matches) {
+          const name = match[pattern.nameIndex].trim();
+          const quantity = parseInt(match[pattern.quantityIndex]);
+          
+          if (name && quantity > 0) {
+            items.push({
+              id: uuidv4(),
+              name: name,
+              quantity: quantity,
+              originalText: match[0]
+            });
+            partMatched = true;
+          }
+        }
+        if (partMatched) break;
+      }
+      
+      // If no patterns matched for this part, treat as single item with quantity 1
+      if (!partMatched && trimmedPart.length > 0) {
+        items.push({
+          id: uuidv4(),
+          name: trimmedPart,
+          quantity: 1,
+          originalText: trimmedPart
+        });
+      }
     }
     
     // Remove duplicates and merge quantities for same items
