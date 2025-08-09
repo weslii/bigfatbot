@@ -32,7 +32,7 @@
                 </a>
             </div>
             <nav class="header-right" style="display: flex; align-items: center; gap: 0.75rem;">
-                <a href="/dashboard" class="nav-link<%= (typeof page !== 'undefined' && page === 'dashboard') ? ' active' : '' %>">Dashboard</a>
+                <a href="/dashboard" class="nav-link nav-dashboard-link<%= (typeof page !== 'undefined' && page === 'dashboard') ? ' active' : '' %>">Dashboard</a>
                 <a href="/orders" class="nav-link<%= (typeof page !== 'undefined' && page === 'orders') ? ' active' : '' %>">Orders</a>
                 <a href="/groups" class="nav-link<%= (typeof page !== 'undefined' && page === 'groups') ? ' active' : '' %>">Groups</a>
                 <a href="/inventory" class="nav-link<%= (typeof page !== 'undefined' && page === 'inventory') ? ' active' : '' %>">Inventory</a>
@@ -115,6 +115,15 @@
     <main class="main-content">
         <!-- Stats Overview -->
         <section class="stats-grid">
+            <div class="stat-card revenue">
+                <div class="stat-header">
+                    <span class="stat-title">Total Revenue</span>
+                    <div class="stat-icon">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                </div>
+                <div class="stat-value">₦<%= revenueStats && revenueStats.totalRevenue ? revenueStats.totalRevenue.toLocaleString() : '0' %></div>
+            </div>
             <div class="stat-card orders">
                 <div class="stat-header">
                     <span class="stat-title">Total Orders</span>
@@ -132,15 +141,6 @@
                     </div>
                 </div>
                 <div class="stat-value"><%= orderStats && orderStats.completedOrders ? orderStats.completedOrders : 0 %></div>
-            </div>
-            <div class="stat-card revenue">
-                <div class="stat-header">
-                    <span class="stat-title">Total Revenue</span>
-                    <div class="stat-icon">
-                        <i class="fas fa-money-bill-wave"></i>
-                    </div>
-                </div>
-                <div class="stat-value">₦<%= revenueStats && revenueStats.totalRevenue ? revenueStats.totalRevenue.toLocaleString() : '0' %></div>
             </div>
             <div class="stat-card pending">
                 <div class="stat-header">
@@ -607,29 +607,22 @@
     }
     /* Mobile Responsive Header */
     @media (max-width: 768px) {
-        .header-content {
-            padding: 0 1rem;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
+        /* Hide Dashboard link on mobile */
+        .header-right .nav-dashboard-link { display: none; }
 
-        .header-left {
-            flex: 1;
-            min-width: 0;
-        }
+        /* Keep hamburger aligned on the same line as logo */
+        .hamburger-menu { order: 0; }
+        .header-left { order: 0; }
+        .header-right { order: 1; }
+        .header-content { padding: 0 1rem; display: flex; align-items: center; justify-content: space-between; }
+
+        .header-left { display: flex; align-items: center; }
 
         .logo-text .main-title {
             font-size: 1.2rem;
         }
 
-        .header-right {
-            order: 3;
-            width: 100%;
-            justify-content: center;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-            margin-top: 0.5rem;
-        }
+        .header-right { margin-left: auto; display: flex; align-items: center; gap: 0.5rem; }
 
         .header-right .nav-link {
             font-size: 0.8rem;
@@ -818,6 +811,41 @@
 
     /* Mobile responsive fixes for dashboard specific components */
     @media (max-width: 768px) {
+        /* Make tab section behave like full-width cards on mobile */
+        .tabs-container { background: transparent; box-shadow: none; border-radius: 0; }
+        .tab-content { padding: 0; }
+
+        /* Ensure each tab's main card spans full width */
+        #businesses-tab .content-card,
+        #groups-tab .content-card,
+        #orders-tab .content-card,
+        #revenue-tab .content-card {
+            width: 100%;
+            box-sizing: border-box;
+            margin: 0 0 1rem 0;
+            overflow: hidden;
+        }
+
+        /* Tables inside tab cards shouldn't overflow */
+        #businesses-tab .table-container,
+        #groups-tab .table-container,
+        #orders-tab .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        /* Make tab subcards full-width main cards on mobile */
+        .tab-content .content-card { width: 100%; box-sizing: border-box; overflow: hidden; }
+        .tab-content .card-content { padding: 1rem; }
+
+        /* Ensure revenue stats/cards fit within screen width */
+        #revenue-tab .revenue-stats-grid { grid-template-columns: 1fr; }
+        #revenue-tab .revenue-stat-card { width: 100%; padding: 1rem; }
+
+        /* Ensure any tables within tab cards don’t overflow */
+        .tab-content .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+        /* Prevent horizontal scroll on main content */
+        .main-content { overflow-x: hidden; }
         /* Tabs container mobile fixes */
         .tabs-container {
             overflow-x: hidden;

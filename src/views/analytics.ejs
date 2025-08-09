@@ -616,15 +616,47 @@
 
     /* Mobile Responsive */
     @media (max-width: 768px) {
+        /* Make tab contents behave like full-width main cards on mobile */
+        .analytics-tabs {
+            background: transparent;
+            box-shadow: none;
+            border-radius: 0;
+        }
+
+        .tab-content {
+            padding: 0;
+        }
+
         .analytics-overview {
             grid-template-columns: 1fr;
             gap: 1rem;
         }
 
         .analytics-grid {
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: 1fr; /* Each card takes full width */
             gap: 1rem;
+            padding: 0; /* Remove inner padding so cards are full-width */
         }
+
+        /* Ensure each analytics card is a standalone main card */
+        .chart-card,
+        .metrics-group-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1rem;
+            width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        /* Prevent horizontal scroll and ensure financial tab cards fit */
+        .main-content { overflow-x: hidden; }
+        #financial-tab .analytics-grid { grid-template-columns: 1fr; }
+        #financial-tab .chart-card, 
+        #financial-tab .metrics-group-card { margin: 0; width: 100%; }
+        #financial-tab .chart-container { width: 100%; }
+        #financial-tab .chart-container canvas { width: 100% !important; max-width: 100%; height: auto; }
 
         .metric-card {
             min-height: 100px;
@@ -665,12 +697,9 @@
         .metric-value {
             font-size: 1.1rem;
         }
-            padding: 1rem;
-        }
 
-        .chart-container {
-            height: 250px;
-        }
+        /* Increase chart height on mobile for readability */
+        .chart-container { height: 320px; }
 
         .metrics-grid {
             grid-template-columns: 1fr;
@@ -702,9 +731,8 @@
             font-size: 1rem;
         }
 
-        .chart-container {
-            height: 200px;
-        }
+        /* Slightly reduce but keep larger than before for readability */
+        .chart-container { height: 280px; }
 
         .analytics-grid {
             grid-template-columns: 1fr;
@@ -754,9 +782,10 @@
     </style>
 
     <script src="/js/theme-utils.js"></script>
+    <script id="analyticsDataScript" type="application/json"><%- JSON.stringify(analyticsData) %></script>
     <script>
     // Analytics Charts
-    const analyticsData = <%- JSON.stringify(analyticsData) %>;
+    const analyticsData = JSON.parse(document.getElementById('analyticsDataScript')?.textContent || '{}');
     
     // Chart.js configuration
     Chart.defaults.color = getComputedStyle(document.documentElement).getPropertyValue('--text-primary');
