@@ -476,7 +476,8 @@
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
-      const order = await response.json();
+                const data = await response.json();
+                const order = data.order || data;
       
                 let itemsHtml = 'No items listed.';
                 if (order.items && order.items.trim()) {
@@ -525,7 +526,8 @@
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
-                const order = await response.json();
+                const data = await response.json();
+                const order = data.order || data;
 
                 // Items are stored as plain text, so no JSON parsing needed
                 const itemsText = order.items || '';
@@ -718,7 +720,7 @@
         }
 
         // Parse chart data from backend
-        const chartData = <%- JSON.stringify(chartData) %>;
+        const chartData = JSON.parse(document.getElementById('chartDataScript').textContent || '{}');
         // Prepare status chart data
         const statusLabels = ['pending', 'processing', 'delivered', 'cancelled'];
         const statusCountsMap = {};

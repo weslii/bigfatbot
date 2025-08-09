@@ -28,6 +28,46 @@ class TelegramCoreService {
         throw new Error('TELEGRAM_BOT_TOKEN environment variable is required');
       }
 
+      // Force polling in development (or when explicitly requested)
+      const forcePolling = process.env.TELEGRAM_FORCE_POLLING === 'true' || process.env.NODE_ENV !== 'production';
+      if (forcePolling) {
+        try {
+          const tempBot = new TelegramBot(token);
+          await tempBot.deleteWebHook({ drop_pending_updates: false });
+          logger.info('Deleted Telegram webhook (dev) before starting polling');
+        } catch (err) {
+          logger.warn('Could not delete webhook in dev (continuing with polling):', err.message);
+        }
+
+        this.bot = new TelegramBot(token, {
+          polling: {
+            timeout: 10,
+            limit: 100,
+            retryTimeout: 5000,
+            autoStart: true,
+            params: { timeout: 10 }
+          }
+        });
+        this.connectionMode = 'polling';
+
+        // Get bot info
+        this.botInfo = await this.bot.getMe();
+        this.isAuthenticated = true;
+        await this.storeConnectionStatus('connected', this.botInfo.username);
+        logger.info('Telegram started in polling mode (development)');
+        
+        // Send service restart notification (non-blocking)
+        try {
+          await NotificationService.notifyServiceRestart('Telegram Service', {
+            'Start Time': new Date().toISOString(),
+            'Status': 'Running (Polling - Dev)',
+            'Bot Username': this.botInfo.username
+          });
+        } catch (_) {}
+        
+        return; // Done for dev
+      }
+
       // Try webhook first, fallback to polling
       const webhookUrl = await this.setupWebhook(token);
       
@@ -91,6 +131,16 @@ class TelegramCoreService {
         logger.warn('Telegram webhook rate-limited. Retrying after backoff and using polling fallback', { retryAfter });
         await new Promise(r => setTimeout(r, (retryAfter + 1) * 1000));
         try {
+          // Ensure webhook is cleared before switching to polling
+          try {
+            const token = process.env.TELEGRAM_BOT_TOKEN;
+            const tempBot = new TelegramBot(token);
+            await tempBot.deleteWebHook({ drop_pending_updates: false });
+            logger.info('Deleted Telegram webhook before starting polling');
+          } catch (delErr) {
+            logger.warn('Failed to delete webhook before polling (continuing):', delErr.message);
+          }
+
           // Start in polling mode directly
           const token = process.env.TELEGRAM_BOT_TOKEN;
           this.bot = new TelegramBot(token, {
