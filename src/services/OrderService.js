@@ -141,7 +141,7 @@ class OrderService {
             item.originalItem,
             businessId,
             group.group_id,
-            inventory
+            inventory // Pass inventory but method will use fresh data
           );
         }
       }
@@ -189,7 +189,7 @@ class OrderService {
         { name: 'Clarification needed', quantity: 1 },
         businessId,
         group.group_id,
-        matchingResult.inventory || []
+        matchingResult.inventory || [] // Pass inventory but method will use fresh data
       );
 
       logger.info('Requested clarification for order', {

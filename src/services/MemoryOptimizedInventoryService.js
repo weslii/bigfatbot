@@ -8,11 +8,12 @@ class MemoryOptimizedInventoryService {
     this.cacheTTL = 5 * 60 * 1000; // 5 minutes
   }
 
-  async getBusinessInventoryOptimized(businessId) {
+  async getBusinessInventoryOptimized(businessId, options = {}) {
+    const { forceRefresh = false } = options;
     const cacheKey = `inventory_${businessId}`;
     
-    // Check cache first
-    if (this.cache.has(cacheKey)) {
+    // Check cache first (unless forced)
+    if (!forceRefresh && this.cache.has(cacheKey)) {
       const cached = this.cache.get(cacheKey);
       if (Date.now() - cached.timestamp < this.cacheTTL) {
         logger.debug('Returning cached inventory', { businessId });
@@ -138,6 +139,15 @@ class MemoryOptimizedInventoryService {
     this.cache.clear();
     logger.info('Cleared all inventory cache', { clearedEntries: size });
   }
+
+  clearCacheForBusiness(businessId) {
+    const cacheKey = `inventory_${businessId}`;
+    if (this.cache.has(cacheKey)) {
+      this.cache.delete(cacheKey);
+      logger.info('Cleared inventory cache for business:', businessId);
+    }
+  }
 }
 
-module.exports = MemoryOptimizedInventoryService; 
+// Export a singleton instance so all consumers share the same cache
+module.exports = new MemoryOptimizedInventoryService(); 

@@ -169,6 +169,33 @@ class InventoryController {
       };
       
       const product = await InventoryService.createProduct(productData);
+      
+      // Clear inventory cache for this business (singleton)
+      try {
+        const InventoryCache = require('../services/MemoryOptimizedInventoryService');
+        InventoryCache.clearCacheForBusiness(businessId);
+        logger.info('Cleared inventory cache for business:', businessId);
+      } catch (cacheError) {
+        logger.warn('Failed to clear inventory cache:', cacheError);
+      }
+      
+      // Refresh bot confirmation inventory for this business
+      try {
+        const BotServiceManager = require('../services/BotServiceManager');
+        const botManager = BotServiceManager.getInstance();
+        const telegramService = botManager.getTelegramService();
+        const whatsappService = botManager.getWhatsAppService();
+        
+        if (telegramService && telegramService.confirmationService) {
+          await telegramService.confirmationService.refreshAllConfirmationsForBusiness(businessId);
+        }
+        if (whatsappService && whatsappService.confirmationService) {
+          await whatsappService.confirmationService.refreshAllConfirmationsForBusiness(businessId);
+        }
+      } catch (refreshError) {
+        logger.warn('Failed to refresh bot confirmation inventory:', refreshError);
+      }
+      
       res.json(product[0]);
     } catch (error) {
       logger.error('Error creating product:', error);
@@ -217,6 +244,33 @@ class InventoryController {
       const businessId = userGroup.business_id;
       
       await InventoryService.deleteProduct(id, businessId);
+      
+      // Clear inventory cache for this business (singleton)
+      try {
+        const InventoryCache = require('../services/MemoryOptimizedInventoryService');
+        InventoryCache.clearCacheForBusiness(businessId);
+        logger.info('Cleared inventory cache for business:', businessId);
+      } catch (cacheError) {
+        logger.warn('Failed to clear inventory cache:', cacheError);
+      }
+      
+      // Refresh bot confirmation inventory for this business
+      try {
+        const BotServiceManager = require('../services/BotServiceManager');
+        const botManager = BotServiceManager.getInstance();
+        const telegramService = botManager.getTelegramService();
+        const whatsappService = botManager.getWhatsAppService();
+        
+        if (telegramService && telegramService.confirmationService) {
+          await telegramService.confirmationService.refreshAllConfirmationsForBusiness(businessId);
+        }
+        if (whatsappService && whatsappService.confirmationService) {
+          await whatsappService.confirmationService.refreshAllConfirmationsForBusiness(businessId);
+        }
+      } catch (refreshError) {
+        logger.warn('Failed to refresh bot confirmation inventory:', refreshError);
+      }
+      
       res.json({ success: true });
     } catch (error) {
       logger.error('Error deleting product:', error);
@@ -310,6 +364,33 @@ class InventoryController {
       };
       
       const other = await InventoryService.createOther(otherData);
+      
+      // Clear inventory cache for this business (singleton)
+      try {
+        const InventoryCache = require('../services/MemoryOptimizedInventoryService');
+        InventoryCache.clearCacheForBusiness(businessId);
+        logger.info('Cleared inventory cache for business:', businessId);
+      } catch (cacheError) {
+        logger.warn('Failed to clear inventory cache:', cacheError);
+      }
+      
+      // Refresh bot confirmation inventory for this business
+      try {
+        const BotServiceManager = require('../services/BotServiceManager');
+        const botManager = BotServiceManager.getInstance();
+        const telegramService = botManager.getTelegramService();
+        const whatsappService = botManager.getWhatsAppService();
+        
+        if (telegramService && telegramService.confirmationService) {
+          await telegramService.confirmationService.refreshAllConfirmationsForBusiness(businessId);
+        }
+        if (whatsappService && whatsappService.confirmationService) {
+          await whatsappService.confirmationService.refreshAllConfirmationsForBusiness(businessId);
+        }
+      } catch (refreshError) {
+        logger.warn('Failed to refresh bot confirmation inventory:', refreshError);
+      }
+      
       res.json(other[0]);
     } catch (error) {
       logger.error('Error creating other:', error);
@@ -358,6 +439,33 @@ class InventoryController {
       const businessId = userGroup.business_id;
       
       await InventoryService.deleteOther(id, businessId);
+      
+      // Clear inventory cache for this business (singleton)
+      try {
+        const InventoryCache = require('../services/MemoryOptimizedInventoryService');
+        InventoryCache.clearCacheForBusiness(businessId);
+        logger.info('Cleared inventory cache for business:', businessId);
+      } catch (cacheError) {
+        logger.warn('Failed to clear inventory cache:', cacheError);
+      }
+      
+      // Refresh bot confirmation inventory for this business
+      try {
+        const BotServiceManager = require('../services/BotServiceManager');
+        const botManager = BotServiceManager.getInstance();
+        const telegramService = botManager.getTelegramService();
+        const whatsappService = botManager.getWhatsAppService();
+        
+        if (telegramService && telegramService.confirmationService) {
+          await telegramService.confirmationService.refreshAllConfirmationsForBusiness(businessId);
+        }
+        if (whatsappService && whatsappService.confirmationService) {
+          await whatsappService.confirmationService.refreshAllConfirmationsForBusiness(businessId);
+        }
+      } catch (refreshError) {
+        logger.warn('Failed to refresh bot confirmation inventory:', refreshError);
+      }
+      
       res.json({ success: true });
     } catch (error) {
       logger.error('Error deleting other:', error);

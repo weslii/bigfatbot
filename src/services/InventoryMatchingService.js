@@ -1,7 +1,7 @@
 const Fuse = require('fuse.js');
 const { parseOrderWithAI, matchItemWithAI } = require('./AIPoweredOrderParser');
 const EnhancedItemExtractor = require('./EnhancedItemExtractor');
-const MemoryOptimizedInventoryService = require('./MemoryOptimizedInventoryService');
+const MemoryOptimizedInventory = require('./MemoryOptimizedInventoryService');
 const AdaptiveConfidenceService = require('./AdaptiveConfidenceService');
 const inventoryMemoryMonitor = require('../utils/inventoryMemoryMonitor');
 const database = require('../config/database');
@@ -11,7 +11,8 @@ const { v4: uuidv4 } = require('uuid');
 
 class InventoryMatchingService {
   constructor() {
-    this.inventoryService = new MemoryOptimizedInventoryService();
+    // Use singleton inventory service
+    this.inventoryService = MemoryOptimizedInventory;
     this.confidenceService = new AdaptiveConfidenceService();
     this.fuseOptions = {
       threshold: 0.1, // Much stricter threshold for fuzzy matching
@@ -64,8 +65,8 @@ class InventoryMatchingService {
         return this.handleNoItemsCase(orderData, businessId);
       }
 
-      // Get business inventory
-      const inventory = await this.inventoryService.getBusinessInventoryOptimized(businessId);
+      // Get business inventory (force refresh to ensure freshness before matching)
+      const inventory = await this.inventoryService.getBusinessInventoryOptimized(businessId, { forceRefresh: true });
       
       if (inventory.length === 0) {
         return { 

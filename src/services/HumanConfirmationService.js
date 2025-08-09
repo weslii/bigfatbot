@@ -16,33 +16,108 @@ class HumanConfirmationService {
     this.inventoryService = InventoryService;
   }
 
-  async requestItemConfirmation(item, businessId, groupId, inventory) {
+  // Method to refresh inventory for a business
+  async refreshInventory(businessId) {
+    try {
+      logger.debug('Refreshing inventory for business:', businessId);
+      const freshInventory = await this.inventoryService.getBusinessInventoryOptimized(businessId);
+      logger.debug('Inventory refreshed:', {
+        businessId,
+        itemCount: freshInventory.length,
+        items: freshInventory.map(item => item.name)
+      });
+      return freshInventory;
+    } catch (error) {
+      logger.error('Error refreshing inventory:', error);
+      return [];
+    }
+  }
+
+  // Method to refresh inventory in a confirmation
+  async refreshConfirmationInventory(confirmation) {
+    try {
+      const freshInventory = await this.refreshInventory(confirmation.businessId);
+      return {
+        ...confirmation,
+        inventory: freshInventory
+      };
+    } catch (error) {
+      logger.error('Error refreshing confirmation inventory:', error);
+      return confirmation; // Return original if refresh fails
+    }
+  }
+
+  // Method to refresh all confirmations for a business
+  async refreshAllConfirmationsForBusiness(businessId) {
+    try {
+      logger.debug('Refreshing all confirmations for business:', businessId);
+      const freshInventory = await this.refreshInventory(businessId);
+      
+      // Update all confirmations for this business
+      for (const [id, confirmation] of this.pendingConfirmations.entries()) {
+        if (confirmation.businessId === businessId) {
+          const refreshedConfirmation = {
+            ...confirmation,
+            inventory: freshInventory
+          };
+          this.pendingConfirmations.set(id, refreshedConfirmation);
+          logger.debug('Updated confirmation inventory:', {
+            confirmationId: id,
+            groupId: confirmation.groupId,
+            itemCount: freshInventory.length
+          });
+        }
+      }
+      
+      logger.info('Refreshed inventory for all confirmations in business:', {
+        businessId,
+        confirmationsUpdated: Array.from(this.pendingConfirmations.values())
+          .filter(conf => conf.businessId === businessId).length,
+        freshInventoryCount: freshInventory.length
+      });
+    } catch (error) {
+      logger.error('Error refreshing all confirmations for business:', error);
+    }
+  }
+
+  async requestItemConfirmation(item, businessId, groupId, inventory = null) {
     const confirmationId = uuidv4();
+    
+    // Always use fresh inventory for confirmation requests (ignore passed inventory parameter)
+    const freshInventory = await this.refreshInventory(businessId);
+    
+    logger.debug('requestItemConfirmation: Using fresh inventory instead of passed inventory', {
+      passedInventoryCount: inventory?.length || 0,
+      freshInventoryCount: freshInventory.length,
+      businessId,
+      itemName: item.name
+    });
     
     const message = `❓ **Item Matching Required**\n\n` +
                    `*Original Item:* ${item.name} (${item.quantity})\n\n` +
                    `Please swipe to reply with what item you mean to order OR if you would like to add this item to your inventory, swipe to reply this message with *new item*\n\n` +
-                   `Available items:\n${inventory.slice(0, 10).map(i => `• ${i.name} - ₦${i.price}`).join('\n')}` +
-                   `${inventory.length > 10 ? `\n... and ${inventory.length - 10} more items` : ''}`;
+                   `Available items:\n${freshInventory.slice(0, 10).map(i => `• ${i.name} - ₦${i.price}`).join('\n')}` +
+                   `${freshInventory.length > 10 ? `\n... and ${freshInventory.length - 10} more items` : ''}`;
     
-    // Store pending confirmation with unique identifier
+    // Store pending confirmation with unique identifier using fresh inventory
     this.pendingConfirmations.set(confirmationId, {
       confirmationId, // Add the ID to the confirmation object
       item,
       businessId,
       groupId,
-      inventory,
+      inventory: freshInventory, // Use fresh inventory instead of passed parameter
       timestamp: Date.now()
     });
     
     // Clean up old confirmations
     this.cleanupOldConfirmations();
     
-    logger.debug('Requested item confirmation', {
+    logger.debug('Requested item confirmation with fresh inventory', {
       confirmationId,
       itemName: item.name,
       businessId,
       groupId,
+      freshInventoryCount: freshInventory.length,
       pendingConfirmationsCount: this.pendingConfirmations.size
     });
     
@@ -115,6 +190,12 @@ class HumanConfirmationService {
       logger.debug('No pending confirmation found for group', { groupId });
       return false;
     }
+
+    // Refresh inventory before processing the response
+    targetConfirmation = await this.refreshConfirmationInventory(targetConfirmation);
+    
+    // Update the confirmation with fresh inventory
+    this.pendingConfirmations.set(targetConfirmationId, targetConfirmation);
     
     // Check if there are multiple pending confirmations for this group
     const pendingConfirmationsForGroup = Array.from(this.pendingConfirmations.values())
@@ -383,6 +464,9 @@ class HumanConfirmationService {
       
       // Add new item to inventory
       const newItem = await this.addNewItemToInventory(itemData, group.business_id);
+      
+      // Refresh all pending confirmations for this business with fresh inventory
+      await this.refreshAllConfirmationsForBusiness(group.business_id);
       
       // Complete the original matching and get the updated order
       const confirmation = this.findConfirmationByGroupId(groupId);
@@ -734,6 +818,14 @@ class HumanConfirmationService {
           stock_count: 0
         }).returning('*');
         
+        // Invalidate inventory cache for this business so matching sees the new item immediately
+        try {
+          const InventoryCache = require('./MemoryOptimizedInventoryService');
+          InventoryCache.clearCacheForBusiness(businessId);
+        } catch (e) {
+          logger.warn('Failed to clear inventory cache after adding product', { businessId, error: e.message });
+        }
+
         return { ...product, type: 'product' };
       } else {
         const [other] = await database.query('others').insert({
@@ -742,6 +834,14 @@ class HumanConfirmationService {
           price: parseFloat(price)
         }).returning('*');
         
+        // Invalidate inventory cache for this business so matching sees the new item immediately
+        try {
+          const InventoryCache = require('./MemoryOptimizedInventoryService');
+          InventoryCache.clearCacheForBusiness(businessId);
+        } catch (e) {
+          logger.warn('Failed to clear inventory cache after adding other', { businessId, error: e.message });
+        }
+
         return { ...other, type: 'other' };
       }
     } catch (error) {
@@ -751,9 +851,22 @@ class HumanConfirmationService {
   }
 
   async requestCorrectItem(confirmation) {
+    // Refresh inventory before showing clarification
+    const refreshedConfirmation = await this.refreshConfirmationInventory(confirmation);
+    
     const message = `❓ **Item Clarification**\n\n` +
                    `*Original Item:* ${confirmation.item.name}\n\n` +
-                   `Please specify the correct item name from the inventory, or reply with a new item name.`;
+                   `Please specify the correct item name from the inventory, or reply with a new item name.\n\n` +
+                   `Available items:\n${refreshedConfirmation.inventory.slice(0, 10).map(i => `• ${i.name} - ₦${i.price}`).join('\n')}` +
+                   `${refreshedConfirmation.inventory.length > 10 ? `\n... and ${refreshedConfirmation.inventory.length - 10} more items` : ''}`;
+    
+    // Update the confirmation with fresh inventory
+    const confirmationId = Array.from(this.pendingConfirmations.entries())
+      .find(([id, conf]) => conf.groupId === confirmation.groupId)?.[0];
+    
+    if (confirmationId) {
+      this.pendingConfirmations.set(confirmationId, refreshedConfirmation);
+    }
     
     await this.core.sendMessage(confirmation.groupId, message);
   }
@@ -773,6 +886,17 @@ class HumanConfirmationService {
     );
     
     return partialMatch;
+  }
+
+  // Method to find best match with fresh inventory
+  async findBestMatchWithFreshInventory(item, businessId) {
+    try {
+      const freshInventory = await this.refreshInventory(businessId);
+      return this.findBestMatch(item, freshInventory);
+    } catch (error) {
+      logger.error('Error finding best match with fresh inventory:', error);
+      return null;
+    }
   }
 
   async completeMatching(confirmation, matchedItem, userConfirmed, businessId = null) {

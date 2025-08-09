@@ -39,10 +39,7 @@ class TelegramCoreService {
             host: '0.0.0.0'
           } 
         });
-        
-        // Set webhook URL
-        await this.bot.setWebHook(webhookUrl);
-        
+        // Webhook was set (or already correct) inside setupWebhook
         logger.info('Telegram webhook mode enabled:', webhookUrl);
         this.connectionMode = 'webhook';
       } else {
@@ -87,6 +84,29 @@ class TelegramCoreService {
         logger.error('Error sending service start notification:', notificationError);
       }
     } catch (error) {
+      // Handle rate limit specifically: back off and fall back to polling
+      const tooMany = error?.response?.body?.error_code === 429 || /Too Many Requests/i.test(error?.message || '');
+      if (tooMany) {
+        const retryAfter = Number(error?.response?.headers?.['retry-after'] || error?.response?.body?.parameters?.retry_after || 1);
+        logger.warn('Telegram webhook rate-limited. Retrying after backoff and using polling fallback', { retryAfter });
+        await new Promise(r => setTimeout(r, (retryAfter + 1) * 1000));
+        try {
+          // Start in polling mode directly
+          const token = process.env.TELEGRAM_BOT_TOKEN;
+          this.bot = new TelegramBot(token, {
+            polling: { timeout: 10, limit: 100, retryTimeout: 5000, autoStart: true, params: { timeout: 10 } }
+          });
+          this.connectionMode = 'polling';
+          this.botInfo = await this.bot.getMe();
+          this.isAuthenticated = true;
+          await this.storeConnectionStatus('connected', this.botInfo.username);
+          logger.info('Telegram started in polling mode after webhook rate-limit');
+          return; // Successful fallback
+        } catch (pollErr) {
+          logger.error('Polling fallback failed after webhook 429:', pollErr);
+        }
+      }
+
       logger.error('Failed to start Telegram service:', error);
       // Store error status
       await this.storeConnectionStatus('error', null);
@@ -357,19 +377,35 @@ class TelegramCoreService {
 
       // Construct webhook URL
       const webhookUrl = `https://${publicDomain}/webhook/telegram`;
-      
       logger.info('Attempting to set up webhook:', webhookUrl);
-      
-      // Test if the webhook endpoint is accessible
+
       const testBot = new TelegramBot(token);
-      
-      // Try to set webhook (this will fail if domain is not accessible)
+
+      // Check existing webhook
+      try {
+        const info = await testBot.getWebHookInfo();
+        const currentUrl = info?.url || '';
+        if (currentUrl === webhookUrl) {
+          logger.info('Webhook already set to desired URL, reusing existing webhook');
+          return webhookUrl;
+        }
+      } catch (iErr) {
+        logger.warn('Could not fetch existing webhook info, continuing:', iErr.message);
+      }
+
+      // Try to set webhook (this may be rate-limited)
       await testBot.setWebHook(webhookUrl);
-      
       logger.info('Webhook setup successful');
       return webhookUrl;
       
     } catch (error) {
+      // Handle rate limiting gracefully here too
+      const tooMany = error?.response?.body?.error_code === 429 || /Too Many Requests/i.test(error?.message || '');
+      if (tooMany) {
+        const retryAfter = Number(error?.response?.headers?.['retry-after'] || error?.response?.body?.parameters?.retry_after || 1);
+        logger.warn('Webhook setup rate-limited. Will skip webhook and use polling', { retryAfter });
+        return null;
+      }
       logger.warn('Webhook setup failed, will use polling:', error.message);
       return null;
     }
