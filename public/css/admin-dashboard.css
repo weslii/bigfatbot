@@ -53,12 +53,6 @@ body {
   width: 100%;
 }
 
-body.mobile-nav-open {
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
-}
-
 [data-theme="dark"] body {
   background: linear-gradient(135deg, #020617 0%, #0f172a 25%, #1e293b 50%, #0f172a 75%, #020617 100%);
   background-attachment: fixed;
@@ -68,7 +62,7 @@ body.mobile-nav-open {
 .header {
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 50;
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
@@ -298,8 +292,6 @@ body.mobile-nav-open {
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
-  position: relative;
-  z-index: 1;
 }
 
 /* Stats Grid */
@@ -2150,39 +2142,33 @@ a, .nav-link, .no-underline {
 /* Mobile Navigation Styles */
 .hamburger-menu {
     display: none;
-    position: relative;
-    z-index: 101;
 }
 
 .mobile-nav-overlay {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(4px);
-    z-index: 9999;
+    z-index: 2000;
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s ease;
-    pointer-events: none;
-    margin: 0;
-    padding: 0;
 }
 
 .mobile-nav-overlay.show {
     opacity: 1;
     visibility: visible;
-    pointer-events: auto;
 }
 
 .mobile-nav-content {
-    position: fixed;
+    position: absolute;
     top: 0;
     right: 0;
     width: 280px;
-    height: 100vh;
+    height: 100%;
     background: var(--card-bg);
     backdrop-filter: blur(16px);
     border-left: 1px solid var(--card-border);
@@ -2191,10 +2177,6 @@ a, .nav-link, .no-underline {
     flex-direction: column;
     transform: translateX(100%);
     transition: transform 0.3s ease;
-    z-index: 10000;
-    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
-    overflow-y: auto;
-    overflow-x: hidden;
 }
 
 .mobile-nav-overlay.show .mobile-nav-content {
@@ -2310,7 +2292,6 @@ a, .nav-link, .no-underline {
         background: rgba(0, 0, 0, 0.05);
         color: var(--text-secondary);
         transition: all 0.2s ease;
-        z-index: 101;
     }
 
     .hamburger-menu:hover {
@@ -2319,14 +2300,5 @@ a, .nav-link, .no-underline {
 
     .logo-text .main-title {
         font-size: 1.125rem;
-    }
-    
-    /* Ensure mobile navigation doesn't interfere with header */
-    .mobile-nav-overlay {
-        z-index: 9999;
-    }
-    
-    .mobile-nav-content {
-        z-index: 10000;
     }
 } 

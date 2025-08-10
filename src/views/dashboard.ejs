@@ -539,7 +539,7 @@
     .header {
         background: rgba(255,255,255,0.5);
         backdrop-filter: blur(16px);
-        border-bottom: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color, rgba(0, 0, 0, 0.1));
         padding: 0.75rem 0; /* Reduced from 1.25rem to make header thinner */
         position: sticky;
         top: 0;
@@ -605,6 +605,162 @@
         background: rgba(16,185,129,0.04);
         border-radius: 8px;
     }
+    /* Mobile Navigation Styles - High Specificity */
+    body .hamburger-menu {
+        display: none !important;
+    }
+
+    body .mobile-nav-overlay {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background: rgba(0, 0, 0, 0.5) !important;
+        backdrop-filter: blur(4px) !important;
+        -webkit-backdrop-filter: blur(4px) !important;
+        z-index: 2000 !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        transition: all 0.3s ease !important;
+        pointer-events: none !important;
+    }
+
+    body .mobile-nav-overlay.show {
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+    }
+
+    body .mobile-nav-overlay.show {
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+
+    body .mobile-nav-content {
+        position: absolute !important;
+        top: 0 !important;
+        right: 0 !important;
+        width: 280px !important;
+        height: 100vh !important;
+        background: var(--card-bg, rgba(255, 255, 255, 0.95)) !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+        border-left: 1px solid var(--card-border, rgba(0, 0, 0, 0.1)) !important;
+        padding: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        transform: translateX(100%) !important;
+        transition: transform 0.3s ease !important;
+        box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    body .mobile-nav-overlay.show .mobile-nav-content {
+        transform: translateX(0) !important;
+    }
+
+    body .mobile-nav-header {
+        padding: 1.5rem !important;
+        border-bottom: 1px solid var(--card-border, rgba(0, 0, 0, 0.1)) !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+    }
+
+    body .mobile-nav-title {
+        font-size: 1.125rem !important;
+        font-weight: 600 !important;
+        color: var(--text-primary, #1e293b) !important;
+    }
+
+    body .close-mobile-nav {
+        width: 40px !important;
+        height: 40px !important;
+        border-radius: 50% !important;
+        background: rgba(0, 0, 0, 0.05) !important;
+        color: var(--text-secondary, #64748b) !important;
+        transition: all 0.2s ease !important;
+        border: none !important;
+        cursor: pointer !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    body .close-mobile-nav:hover {
+        background: rgba(0, 0, 0, 0.1) !important;
+    }
+
+    body .mobile-nav-menu {
+        flex: 1 !important;
+        padding: 1rem 0 !important;
+    }
+
+    body .mobile-nav-link {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.75rem !important;
+        padding: 0.75rem 1.5rem !important;
+        color: var(--text-primary, #1e293b) !important;
+        text-decoration: none !important;
+        transition: all 0.2s ease !important;
+        border: none !important;
+        background: none !important;
+        width: 100% !important;
+        text-align: left !important;
+        cursor: pointer !important;
+        font-size: 1rem !important;
+    }
+
+    body .mobile-nav-link:hover,
+    body .mobile-nav-link.active {
+        background: rgba(16, 185, 129, 0.1) !important;
+        color: var(--primary-color, #10b981) !important;
+    }
+
+    body .mobile-nav-link i {
+        width: 20px !important;
+        text-align: center !important;
+        font-size: 1rem !important;
+    }
+
+    body .mobile-nav-actions {
+        padding: 1rem 1.5rem !important;
+        border-top: 1px solid var(--card-border, rgba(0, 0, 0, 0.1)) !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+    }
+
+    body .mobile-theme-toggle {
+        align-self: flex-start !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    body .mobile-profile-section {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.25rem !important;
+    }
+
+    /* Additional mobile navigation fixes for production */
+    @media (max-width: 480px) {
+        body .mobile-nav-content {
+            width: 100vw !important;
+            right: 0 !important;
+        }
+    }
+
+    /* Ensure mobile navigation works on all browsers */
+    @supports not (backdrop-filter: blur(4px)) {
+        body .mobile-nav-overlay {
+            background: rgba(0, 0, 0, 0.7) !important;
+        }
+        body .mobile-nav-content {
+            background: var(--card-bg, rgba(255, 255, 255, 1)) !important;
+        }
+    }
+
     /* Mobile Responsive Header */
     @media (max-width: 768px) {
         /* Hide Dashboard link on mobile */
@@ -633,6 +789,32 @@
             width: 35px;
             height: 35px;
             font-size: 1rem;
+        }
+
+        /* Show hamburger menu on mobile */
+        body .hamburger-menu {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 40px !important;
+            height: 40px !important;
+            border-radius: 50% !important;
+            background: rgba(0, 0, 0, 0.05) !important;
+            color: var(--text-secondary, #64748b) !important;
+            transition: all 0.2s ease !important;
+            border: none !important;
+            cursor: pointer !important;
+        }
+
+        body .hamburger-menu:hover {
+            background: rgba(0, 0, 0, 0.1) !important;
+        }
+
+        /* Hide desktop navigation on mobile */
+        body .header-right .nav-link,
+        body .header-right .dropdown,
+        body .header-right #theme-toggle {
+            display: none !important;
         }
     }
 
@@ -1221,13 +1403,13 @@
     // Open mobile menu
     hamburgerMenu.addEventListener('click', function() {
         mobileNavOverlay.classList.add('show');
-        document.body.classList.add('mobile-nav-open');
+        document.body.style.overflow = 'hidden';
     });
 
     // Close mobile menu
     function closeMobileMenu() {
         mobileNavOverlay.classList.remove('show');
-        document.body.classList.remove('mobile-nav-open');
+        document.body.style.overflow = '';
     }
 
     closeMobileNav.addEventListener('click', closeMobileMenu);
