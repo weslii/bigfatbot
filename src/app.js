@@ -27,6 +27,11 @@ const inventoryRoutes = require('./routes/inventory.routes');
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Log port information for debugging
+console.log(`🌐 Web service will use port: ${port}`);
+console.log(`🌐 Environment: ${process.env.NODE_ENV}`);
+console.log(`🌐 PORT: ${process.env.PORT}`);
+
 // Basic middleware setup (must be before routes)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

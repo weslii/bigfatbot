@@ -33,9 +33,21 @@ const HealthCheckService = require('./services/HealthCheckService');
 const express = require('express');
 const healthApp = express();
 const isProduction = process.env.NODE_ENV === 'production';
-const HEALTH_PORT = isProduction
-  ? process.env.PORT
-  : (process.env.BOT_PORT || 3001);
+
+// Determine the correct port for the bot service
+let HEALTH_PORT;
+if (isProduction) {
+  // In production, prefer BOT_PORT, fallback to PORT+1, then 3001
+  HEALTH_PORT = process.env.BOT_PORT || (process.env.PORT ? parseInt(process.env.PORT) + 1 : 3001);
+} else {
+  // In development, use BOT_PORT or 3001
+  HEALTH_PORT = process.env.BOT_PORT || 3001;
+}
+
+console.log(`🔧 Bot service will use port: ${HEALTH_PORT}`);
+console.log(`🔧 Environment: ${process.env.NODE_ENV}`);
+console.log(`🔧 BOT_PORT: ${process.env.BOT_PORT}`);
+console.log(`🔧 PORT: ${process.env.PORT}`);
 
 healthApp.get('/health', (req, res) => {
   res.status(200).send('ok');
@@ -75,8 +87,22 @@ class DeliveryBot {
       this.setupGracefulShutdown();
 
       // Start health check server after bot is initialized
-      healthApp.listen(HEALTH_PORT, () => {
+      const server = healthApp.listen(HEALTH_PORT, () => {
         console.log(`Bot health check server running on port ${HEALTH_PORT}`);
+      });
+
+      // Handle server errors
+      server.on('error', (error) => {
+        if (error.code === 'EADDRINUSE') {
+          console.error(`Port ${HEALTH_PORT} is already in use. Trying alternative port...`);
+          // Try alternative port
+          const alternativePort = HEALTH_PORT + 1;
+          healthApp.listen(alternativePort, () => {
+            console.log(`Bot health check server running on alternative port ${alternativePort}`);
+          });
+        } else {
+          console.error('Server error:', error);
+        }
       });
 
       logger.info('Delivery Bot started successfully!');

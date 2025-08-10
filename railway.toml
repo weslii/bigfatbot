@@ -2,8 +2,6 @@
 builder = "nixpacks"
 buildCommand = "npm run build"
 
-
-
 [services]
 [[services.web]]
 name = "web"
@@ -17,4 +15,8 @@ name = "whatsapp-bot"
 command = "npm start"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
-memoryLimit = "512M" 
+memoryLimit = "512M"
+
+# Environment variables for port separation
+[env]
+BOT_PORT = "3001" 
