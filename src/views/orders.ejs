@@ -1352,25 +1352,43 @@
             const closeMobileNav = document.getElementById('closeMobileNav');
             const mobileThemeToggle = document.getElementById('mobileThemeToggle');
 
+            // Debug logging
+            console.log('Mobile navigation elements:', {
+                hamburgerMenu: !!hamburgerMenu,
+                mobileNavOverlay: !!mobileNavOverlay,
+                closeMobileNav: !!closeMobileNav,
+                mobileThemeToggle: !!mobileThemeToggle
+            });
+
             // Check if elements exist before adding event listeners
             if (hamburgerMenu && mobileNavOverlay && closeMobileNav) {
                 // Open mobile menu
-                hamburgerMenu.addEventListener('click', function() {
+                hamburgerMenu.addEventListener('click', function(e) {
+                    console.log('Hamburger menu clicked');
+                    e.preventDefault();
+                    e.stopPropagation();
                     mobileNavOverlay.classList.add('show');
                     document.body.style.overflow = 'hidden';
                 });
 
                 // Close mobile menu
                 function closeMobileMenu() {
+                    console.log('Closing mobile menu');
                     mobileNavOverlay.classList.remove('show');
                     document.body.style.overflow = '';
                 }
 
-                closeMobileNav.addEventListener('click', closeMobileMenu);
+                closeMobileNav.addEventListener('click', function(e) {
+                    console.log('Close button clicked');
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeMobileMenu();
+                });
 
                 // Close mobile menu when clicking outside
                 mobileNavOverlay.addEventListener('click', function(e) {
                     if (e.target === mobileNavOverlay) {
+                        console.log('Clicked outside mobile menu');
                         closeMobileMenu();
                     }
                 });
@@ -1378,6 +1396,7 @@
                 // Close mobile menu with Escape key
                 document.addEventListener('keydown', function(e) {
                     if (e.key === 'Escape' && mobileNavOverlay.classList.contains('show')) {
+                        console.log('Escape key pressed');
                         closeMobileMenu();
                     }
                 });
@@ -1387,15 +1406,23 @@
                 mobileNavLinks.forEach(link => {
                     link.addEventListener('click', function() {
                         if (!this.classList.contains('mobile-theme-toggle')) {
+                            console.log('Navigation link clicked');
                             closeMobileMenu();
                         }
                     });
+                });
+            } else {
+                console.error('Some mobile navigation elements are missing:', {
+                    hamburgerMenu: !!hamburgerMenu,
+                    mobileNavOverlay: !!mobileNavOverlay,
+                    closeMobileNav: !!closeMobileNav
                 });
             }
 
             // Mobile theme toggle
             if (mobileThemeToggle) {
                 mobileThemeToggle.addEventListener('click', function() {
+                    console.log('Mobile theme toggle clicked');
                     if (window.themeManager) {
                         window.themeManager.toggleTheme();
                     }
