@@ -55,12 +55,33 @@ healthApp.get('/health', (req, res) => {
   console.log('🔧 Request method:', req.method);
   console.log('🔧 Request path:', req.path);
   
+  // Check if bot services are initialized
+  let botStatus = 'unknown';
+  try {
+    const botManager = BotServiceManager.getInstance();
+    const whatsappService = botManager.getWhatsAppService();
+    const telegramService = botManager.getTelegramService();
+    
+    if (whatsappService && telegramService) {
+      botStatus = 'initialized';
+    } else if (whatsappService || telegramService) {
+      botStatus = 'partial';
+    } else {
+      botStatus = 'not_initialized';
+    }
+  } catch (error) {
+    botStatus = 'error';
+    console.error('🔧 Error checking bot status:', error);
+  }
+  
   res.status(200).json({
     status: 'ok',
     timestamp: new Date().toISOString(),
     service: 'bot',
     environment: process.env.NODE_ENV || 'development',
-    port: HEALTH_PORT
+    port: HEALTH_PORT,
+    bot_status: botStatus,
+    uptime: process.uptime()
   });
 });
 
@@ -70,7 +91,21 @@ healthApp.get('/', (req, res) => {
   res.status(200).json({
     status: 'ok',
     service: 'bot',
-    message: 'BigFatBot Bot Service is running'
+    message: 'BigFatBot Bot Service is running',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+// Simple startup health check
+healthApp.get('/startup', (req, res) => {
+  console.log('🔧 Bot service startup health check accessed');
+  res.status(200).json({
+    status: 'ok',
+    service: 'bot',
+    message: 'Bot service is starting up',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
   });
 });
 
@@ -92,22 +127,8 @@ class DeliveryBot {
 
       logger.info('Starting Delivery Bot...');
 
-      // Initialize database
-      await database.connect();
-
-      // Initialize bot services (both WhatsApp and Telegram)
-      await this.botManager.initialize();
-
-      // Start scheduler
-      this.schedulerService.start();
-
-      // Start health check heartbeat
-      this.healthCheckService.start();
-
-      // Setup graceful shutdown
-      this.setupGracefulShutdown();
-
-      // Start health check server after bot is initialized
+      // Start health check server IMMEDIATELY (before anything else)
+      console.log('🔧 Starting health check server...');
       const server = healthApp.listen(HEALTH_PORT, () => {
         console.log(`🔧 Bot health check server running on port ${HEALTH_PORT}`);
         console.log(`🔧 Health check available at: http://localhost:${HEALTH_PORT}/health`);
@@ -132,6 +153,25 @@ class DeliveryBot {
         }
       });
 
+      // Initialize database
+      console.log('🔧 Initializing database...');
+      await database.connect();
+
+      // Initialize bot services (both WhatsApp and Telegram)
+      console.log('🔧 Initializing bot services...');
+      await this.botManager.initialize();
+
+      // Start scheduler
+      console.log('🔧 Starting scheduler...');
+      this.schedulerService.start();
+
+      // Start health check heartbeat
+      console.log('🔧 Starting health check heartbeat...');
+      this.healthCheckService.start();
+
+      // Setup graceful shutdown
+      this.setupGracefulShutdown();
+
       logger.info('Delivery Bot started successfully!');
       console.log('\n🤖 Multi-Platform Delivery Bot is running!');
       console.log('📱 WhatsApp: Scan the QR code above to authenticate');
@@ -143,7 +183,9 @@ class DeliveryBot {
 
     } catch (error) {
       logger.error('Failed to start Delivery Bot:', error);
-      process.exit(1);
+      console.error('🔧 Bot initialization failed, but health check server should still be running');
+      // Don't exit immediately - let the health check server continue running
+      // process.exit(1);
     }
   }
 
