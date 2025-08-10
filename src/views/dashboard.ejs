@@ -1221,13 +1221,13 @@
     // Open mobile menu
     hamburgerMenu.addEventListener('click', function() {
         mobileNavOverlay.classList.add('show');
-        document.body.style.overflow = 'hidden';
+        document.body.classList.add('mobile-nav-open');
     });
 
     // Close mobile menu
     function closeMobileMenu() {
         mobileNavOverlay.classList.remove('show');
-        document.body.style.overflow = '';
+        document.body.classList.remove('mobile-nav-open');
     }
 
     closeMobileNav.addEventListener('click', closeMobileMenu);
