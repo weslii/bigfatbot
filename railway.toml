@@ -19,4 +19,5 @@ memoryLimit = "512M"
 
 # Environment variables for port separation
 [env]
-BOT_PORT = "3001" 
+BOT_PORT = "3001"
+NODE_ENV = "production" 

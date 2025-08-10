@@ -50,7 +50,28 @@ console.log(`🔧 BOT_PORT: ${process.env.BOT_PORT}`);
 console.log(`🔧 PORT: ${process.env.PORT}`);
 
 healthApp.get('/health', (req, res) => {
-  res.status(200).send('ok');
+  console.log('🔧 Bot service health check accessed');
+  console.log('🔧 Request headers:', req.headers);
+  console.log('🔧 Request method:', req.method);
+  console.log('🔧 Request path:', req.path);
+  
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    service: 'bot',
+    environment: process.env.NODE_ENV || 'development',
+    port: HEALTH_PORT
+  });
+});
+
+// Additional health check for Railway
+healthApp.get('/', (req, res) => {
+  console.log('🔧 Bot service root endpoint accessed');
+  res.status(200).json({
+    status: 'ok',
+    service: 'bot',
+    message: 'BigFatBot Bot Service is running'
+  });
 });
 
 class DeliveryBot {
@@ -88,20 +109,26 @@ class DeliveryBot {
 
       // Start health check server after bot is initialized
       const server = healthApp.listen(HEALTH_PORT, () => {
-        console.log(`Bot health check server running on port ${HEALTH_PORT}`);
+        console.log(`🔧 Bot health check server running on port ${HEALTH_PORT}`);
+        console.log(`🔧 Health check available at: http://localhost:${HEALTH_PORT}/health`);
       });
 
       // Handle server errors
       server.on('error', (error) => {
         if (error.code === 'EADDRINUSE') {
-          console.error(`Port ${HEALTH_PORT} is already in use. Trying alternative port...`);
+          console.error(`🔧 Port ${HEALTH_PORT} is already in use. Trying alternative port...`);
           // Try alternative port
           const alternativePort = HEALTH_PORT + 1;
-          healthApp.listen(alternativePort, () => {
-            console.log(`Bot health check server running on alternative port ${alternativePort}`);
+          const altServer = healthApp.listen(alternativePort, () => {
+            console.log(`🔧 Bot health check server running on alternative port ${alternativePort}`);
+            console.log(`🔧 Health check available at: http://localhost:${alternativePort}/health`);
+          });
+          
+          altServer.on('error', (altError) => {
+            console.error('🔧 Alternative port also failed:', altError);
           });
         } else {
-          console.error('Server error:', error);
+          console.error('🔧 Server error:', error);
         }
       });
 

@@ -52,12 +52,27 @@ app.set('trust proxy', 1);
 
 // Simple health check endpoint (must be BEFORE session middleware)
 app.get('/health', (req, res) => {
-  console.log('Health check endpoint accessed');
+  console.log('🌐 Web service health check accessed');
+  console.log('🌐 Request headers:', req.headers);
+  console.log('🌐 Request method:', req.method);
+  console.log('🌐 Request path:', req.path);
+  
   res.status(200).json({
     status: 'ok',
     timestamp: new Date().toISOString(),
     service: 'web',
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    port: process.env.PORT || 3000
+  });
+});
+
+// Additional health check for Railway
+app.get('/', (req, res) => {
+  console.log('🌐 Root endpoint accessed');
+  res.status(200).json({
+    status: 'ok',
+    service: 'web',
+    message: 'BigFatBot Web Service is running'
   });
 });
 
