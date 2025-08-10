@@ -50,6 +50,17 @@ app.locals.formatCurrency = function(amount) {
 // Set trust proxy for Railway or any proxy environment
 app.set('trust proxy', 1);
 
+// Simple health check endpoint (must be BEFORE session middleware)
+app.get('/health', (req, res) => {
+  console.log('Health check endpoint accessed');
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    service: 'web',
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 // Initialize session middleware
 async function initializeSession() {
   try {
