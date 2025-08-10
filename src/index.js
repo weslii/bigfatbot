@@ -38,7 +38,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 let HEALTH_PORT;
 if (isProduction) {
   // In production, use Railway's assigned PORT
-  HEALTH_PORT = 39483;
+  HEALTH_PORT = process.env.PORT || 3001;
 } else {
   // In development, use BOT_PORT or 3001
   HEALTH_PORT = process.env.BOT_PORT || 3001;
@@ -48,6 +48,8 @@ console.log(`🔧 Bot service will use port: ${HEALTH_PORT}`);
 console.log(`🔧 Environment: ${process.env.NODE_ENV}`);
 console.log(`🔧 BOT_PORT: ${process.env.BOT_PORT}`);
 console.log(`🔧 PORT: ${process.env.PORT}`);
+console.log(`🔧 RAILWAY_SERVICE_NAME: ${process.env.RAILWAY_SERVICE_NAME}`);
+console.log(`🔧 RAILWAY_PUBLIC_DOMAIN: ${process.env.RAILWAY_PUBLIC_DOMAIN}`);
 
 healthApp.get('/health', (req, res) => {
   console.log('🔧 Bot service health check accessed');
