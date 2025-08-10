@@ -74,24 +74,8 @@ class DeliveryBot {
 
       logger.info('Starting Delivery Bot...');
 
-      // Start health check server after bot is initialized
-      const server = healthApp.listen(HEALTH_PORT, () => {
-        console.log(`Bot health check server running on port ${HEALTH_PORT}`);
-      });
-
-      // Handle server errors
-      server.on('error', (error) => {
-        if (error.code === 'EADDRINUSE') {
-          console.error(`Port ${HEALTH_PORT} is already in use. Trying alternative port...`);
-          // Try alternative port
-          const alternativePort = HEALTH_PORT + 1;
-          healthApp.listen(alternativePort, () => {
-            console.log(`Bot health check server running on alternative port ${alternativePort}`);
-          });
-        } else {
-          console.error('Server error:', error);
-        }
-      });
+      // Health check server is already started at the top level
+      console.log('🔧 Health check server is already running');
 
       // Initialize database
       console.log('🔧 Initializing database...');
@@ -195,7 +179,33 @@ if (process.env.NODE_ENV === 'production') {
   logger.info('Memory monitoring started (bot process)');
 }
 
-// Health check server will be started after bot initialization (matching basic-novi approach)
+// Start health check server IMMEDIATELY (before anything else)
+console.log('🔧 Starting health check server immediately...');
+console.log('🔧 Health check server will listen on port:', HEALTH_PORT);
+
+const server = healthApp.listen(HEALTH_PORT, () => {
+  console.log(`🔧 Bot health check server running on port ${HEALTH_PORT}`);
+  console.log(`🔧 Health check available at: http://localhost:${HEALTH_PORT}/health`);
+});
+
+// Handle server errors
+server.on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`🔧 Port ${HEALTH_PORT} is already in use. Trying alternative port...`);
+    // Try alternative port
+    const alternativePort = HEALTH_PORT + 1;
+    const altServer = healthApp.listen(alternativePort, () => {
+      console.log(`🔧 Bot health check server running on alternative port ${alternativePort}`);
+      console.log(`🔧 Health check available at: http://localhost:${alternativePort}/health`);
+    });
+    
+    altServer.on('error', (altError) => {
+      console.error('🔧 Alternative port also failed:', altError);
+    });
+  } else {
+    console.error('🔧 Server error:', error);
+  }
+});
 
 // Start the bot
 const bot = new DeliveryBot();
