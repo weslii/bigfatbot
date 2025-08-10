@@ -15,8 +15,7 @@
     "migrate:make": "knex migrate:make",
     "build": "npm install",
     "wait-for-db": "node scripts/wait-for-db.js",
-    "start:prod": "npm run wait-for-db && npm run migrate && concurrently \"npm run start:web\" \"npm run start:bot\"",
-    "start:bot": "node --max-old-space-size=512 --expose-gc src/index.js",
+    "start:prod": "npm run wait-for-db && npm run migrate && npm run start:web",
     "start:optimized": "NODE_OPTIONS='--max-old-space-size=512 --expose-gc' npm run start:web"
   },
   "dependencies": {

@@ -4,12 +4,26 @@ buildCommand = "npm run build"
 
 [services]
 [[services.web]]
-name = "novi-app"
+name = "web"
 command = "npm run start:prod"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
-memoryLimit = "1G"
+memoryLimit = "512M"
+
+[[services.workers]]
+name = "whatsapp-bot"
+command = "npm start"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+memoryLimit = "512M"
 
 # Environment variables
 [env]
-NODE_ENV = "production" 
+NODE_ENV = "production"
+
+# Service-specific environment variables
+[[services.web.env]]
+WEB_ONLY = "true"
+
+[[services.workers.env]]
+BOT_ONLY = "true" 
