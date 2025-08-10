@@ -29,30 +29,8 @@ const BotServiceManager = require('./services/BotServiceManager');
 const SchedulerService = require('./services/SchedulerService');
 const HealthCheckService = require('./services/HealthCheckService');
 
-// --- Health check endpoint for Railway worker ---
-const express = require('express');
-const healthApp = express();
-const isProduction = process.env.NODE_ENV === 'production';
-
-// Determine the correct port for the bot service
-let HEALTH_PORT;
-if (isProduction) {
-  // In production, use Railway's assigned PORT
-  HEALTH_PORT = process.env.PORT || 3001;
-} else {
-  // In development, use BOT_PORT or 3001
-  HEALTH_PORT = process.env.BOT_PORT || 3001;
-}
-
-console.log(`🔧 Bot service will use port: ${HEALTH_PORT}`);
-console.log(`🔧 Environment: ${process.env.NODE_ENV}`);
-console.log(`🔧 BOT_PORT: ${process.env.BOT_PORT}`);
-console.log(`🔧 PORT: ${process.env.PORT}`);
-
-healthApp.get('/health', (req, res) => {
-  console.log('🔧 Bot service health check accessed');
-  res.status(200).send('ok');
-});
+// Bot service - no health check server needed since web service handles it
+console.log('🔧 Bot service starting (health check handled by web service)');
 
 
 
@@ -179,33 +157,7 @@ if (process.env.NODE_ENV === 'production') {
   logger.info('Memory monitoring started (bot process)');
 }
 
-// Start health check server IMMEDIATELY (before anything else)
-console.log('🔧 Starting health check server immediately...');
-console.log('🔧 Health check server will listen on port:', HEALTH_PORT);
-
-const server = healthApp.listen(HEALTH_PORT, () => {
-  console.log(`🔧 Bot health check server running on port ${HEALTH_PORT}`);
-  console.log(`🔧 Health check available at: http://localhost:${HEALTH_PORT}/health`);
-});
-
-// Handle server errors
-server.on('error', (error) => {
-  if (error.code === 'EADDRINUSE') {
-    console.error(`🔧 Port ${HEALTH_PORT} is already in use. Trying alternative port...`);
-    // Try alternative port
-    const alternativePort = HEALTH_PORT + 1;
-    const altServer = healthApp.listen(alternativePort, () => {
-      console.log(`🔧 Bot health check server running on alternative port ${alternativePort}`);
-      console.log(`🔧 Health check available at: http://localhost:${alternativePort}/health`);
-    });
-    
-    altServer.on('error', (altError) => {
-      console.error('🔧 Alternative port also failed:', altError);
-    });
-  } else {
-    console.error('🔧 Server error:', error);
-  }
-});
+// Bot service starts without health check server
 
 // Start the bot
 const bot = new DeliveryBot();
