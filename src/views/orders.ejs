@@ -11,9 +11,25 @@
         /* Test styles to ensure mobile navigation works */
         .mobile-nav-overlay {
             z-index: 2000 !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+        .mobile-nav-overlay.show {
+            opacity: 1 !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+        }
+        .mobile-nav-content {
+            transform: translateX(100%) !important;
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-left: 1px solid rgba(0, 0, 0, 0.1) !important;
+        }
+        .mobile-nav-overlay.show .mobile-nav-content {
+            transform: translateX(0) !important;
         }
         .hamburger-menu {
-            display: none;
+            display: none !important;
         }
         @media (max-width: 768px) {
             .hamburger-menu {
@@ -1320,8 +1336,9 @@
         }
 
         // Mobile navigation functionality
+        console.log('Script loaded, waiting for DOM...');
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Setting up mobile navigation...');
+            console.log('DOM loaded, setting up mobile navigation...');
             const hamburgerMenu = document.getElementById('hamburgerMenu');
             const mobileNavOverlay = document.getElementById('mobileNavOverlay');
             const closeMobileNav = document.getElementById('closeMobileNav');
@@ -1334,10 +1351,23 @@
                 mobileThemeToggle: !!mobileThemeToggle
             });
 
+            // Debug element positions and styles
+            if (mobileNavOverlay) {
+                const styles = window.getComputedStyle(mobileNavOverlay);
+                console.log('Mobile nav overlay styles:', {
+                    position: styles.position,
+                    zIndex: styles.zIndex,
+                    opacity: styles.opacity,
+                    visibility: styles.visibility,
+                    display: styles.display
+                });
+            }
+
             if (hamburgerMenu && mobileNavOverlay && closeMobileNav) {
                 // Open mobile menu
                 hamburgerMenu.addEventListener('click', function() {
                     console.log('Hamburger clicked!');
+                    alert('Hamburger menu clicked!'); // Test alert
                     mobileNavOverlay.classList.add('show');
                     document.body.style.overflow = 'hidden';
                 });

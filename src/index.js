@@ -34,11 +34,11 @@ const express = require('express');
 const healthApp = express();
 const isProduction = process.env.NODE_ENV === 'production';
 
-// Determine the correct port for the bot service
+// Determine the correct port for the bot service (matching basic-novi approach)
 let HEALTH_PORT;
 if (isProduction) {
-  // In production, prefer BOT_PORT, fallback to PORT+1, then 3001
-  HEALTH_PORT = process.env.BOT_PORT || (process.env.PORT ? parseInt(process.env.PORT) + 1 : 3001);
+  // In production, use PORT (same as web service)
+  HEALTH_PORT = process.env.PORT;
 } else {
   // In development, use BOT_PORT or 3001
   HEALTH_PORT = process.env.BOT_PORT || 3001;
@@ -51,60 +51,10 @@ console.log(`🔧 PORT: ${process.env.PORT}`);
 
 healthApp.get('/health', (req, res) => {
   console.log('🔧 Bot service health check accessed');
-  console.log('🔧 Request headers:', req.headers);
-  console.log('🔧 Request method:', req.method);
-  console.log('🔧 Request path:', req.path);
-  console.log('🔧 User agent:', req.headers['user-agent']);
-  console.log('🔧 Host:', req.headers.host);
-  
-  // Simple health check that always works
-  res.status(200).json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    service: 'bot',
-    environment: process.env.NODE_ENV || 'development',
-    port: HEALTH_PORT,
-    uptime: process.uptime(),
-    message: 'Bot service is running'
-  });
+  res.status(200).send('ok');
 });
 
-// Additional health check for Railway
-healthApp.get('/', (req, res) => {
-  console.log('🔧 Bot service root endpoint accessed');
-  res.status(200).json({
-    status: 'ok',
-    service: 'bot',
-    message: 'BigFatBot Bot Service is running',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
-});
 
-// Simple startup health check
-healthApp.get('/startup', (req, res) => {
-  console.log('🔧 Bot service startup health check accessed');
-  res.status(200).json({
-    status: 'ok',
-    service: 'bot',
-    message: 'Bot service is starting up',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
-});
-
-// Catch-all route for any unexpected requests
-healthApp.use('*', (req, res) => {
-  console.log('🔧 Bot service received unexpected request:', req.method, req.path);
-  console.log('🔧 Request headers:', req.headers);
-  res.status(200).json({
-    status: 'ok',
-    service: 'bot',
-    message: 'Bot service is running',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
-});
 
 class DeliveryBot {
   constructor() {
@@ -124,8 +74,10 @@ class DeliveryBot {
 
       logger.info('Starting Delivery Bot...');
 
-      // Health check server is already started at the top level
-      console.log('🔧 Health check server is already running');
+      // Start health check server after bot is initialized (matching basic-novi approach)
+      healthApp.listen(HEALTH_PORT, () => {
+        console.log(`Bot health check server running on port ${HEALTH_PORT}`);
+      });
 
       // Initialize database
       console.log('🔧 Initializing database...');
@@ -229,40 +181,7 @@ if (process.env.NODE_ENV === 'production') {
   logger.info('Memory monitoring started (bot process)');
 }
 
-// Start health check server IMMEDIATELY (before anything else)
-console.log('🔧 ==========================================');
-console.log('🔧 STARTING BOT SERVICE');
-console.log('🔧 ==========================================');
-console.log('🔧 Starting health check server immediately...');
-console.log('🔧 Health check server will listen on port:', HEALTH_PORT);
-console.log('🔧 Environment:', process.env.NODE_ENV);
-console.log('🔧 BOT_PORT:', process.env.BOT_PORT);
-console.log('🔧 PORT:', process.env.PORT);
-
-const server = healthApp.listen(HEALTH_PORT, () => {
-  console.log(`🔧 Bot health check server running on port ${HEALTH_PORT}`);
-  console.log(`🔧 Health check available at: http://localhost:${HEALTH_PORT}/health`);
-  console.log(`🔧 Health check server started successfully!`);
-});
-
-// Handle server errors
-server.on('error', (error) => {
-  if (error.code === 'EADDRINUSE') {
-    console.error(`🔧 Port ${HEALTH_PORT} is already in use. Trying alternative port...`);
-    // Try alternative port
-    const alternativePort = HEALTH_PORT + 1;
-    const altServer = healthApp.listen(alternativePort, () => {
-      console.log(`🔧 Bot health check server running on alternative port ${alternativePort}`);
-      console.log(`🔧 Health check available at: http://localhost:${alternativePort}/health`);
-    });
-    
-    altServer.on('error', (altError) => {
-      console.error('🔧 Alternative port also failed:', altError);
-    });
-  } else {
-    console.error('🔧 Server error:', error);
-  }
-});
+// Health check server will be started after bot initialization (matching basic-novi approach)
 
 // Start the bot
 const bot = new DeliveryBot();

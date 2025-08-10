@@ -17,7 +17,6 @@ healthcheckPath = "/health"
 healthcheckTimeout = 300
 memoryLimit = "512M"
 
-# Environment variables for port separation
+# Environment variables
 [env]
-BOT_PORT = "3001"
 NODE_ENV = "production" 
