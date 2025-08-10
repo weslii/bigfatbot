@@ -9,50 +9,7 @@
     <link href="/css/orders-dashboard.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-    <style>
-        /* Ensure header has proper z-index and positioning */
-        .header {
-            position: sticky !important;
-            top: 0 !important;
-            z-index: 100 !important;
-            background: rgba(255,255,255,0.5) !important;
-            backdrop-filter: blur(16px) !important;
-            -webkit-backdrop-filter: blur(16px) !important;
-            border-bottom: 1px solid var(--border-color, rgba(0, 0, 0, 0.1)) !important;
-        }
-        
-        /* Ensure mobile navigation overlay is above header */
-        body .mobile-nav-overlay {
-            z-index: 2000 !important;
-        }
-        
-        /* Debug styles to ensure elements are visible */
-        body .hamburger-menu {
-            display: none !important;
-        }
-        
-        @media (max-width: 768px) {
-            body .hamburger-menu {
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                width: 40px !important;
-                height: 40px !important;
-                border-radius: 50% !important;
-                background: rgba(0, 0, 0, 0.05) !important;
-                color: var(--text-secondary, #64748b) !important;
-                transition: all 0.2s ease !important;
-                border: none !important;
-                cursor: pointer !important;
-            }
-            
-            body .header-right .nav-link,
-            body .header-right .dropdown,
-            body .header-right #theme-toggle {
-                display: none !important;
-            }
-        }
-    </style>
+
 </head>
 <body>
     <!-- Header -->
@@ -1346,88 +1303,54 @@
         }
 
         // Mobile navigation functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const hamburgerMenu = document.getElementById('hamburgerMenu');
-            const mobileNavOverlay = document.getElementById('mobileNavOverlay');
-            const closeMobileNav = document.getElementById('closeMobileNav');
-            const mobileThemeToggle = document.getElementById('mobileThemeToggle');
+        const hamburgerMenu = document.getElementById('hamburgerMenu');
+        const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+        const closeMobileNav = document.getElementById('closeMobileNav');
+        const mobileThemeToggle = document.getElementById('mobileThemeToggle');
 
-            // Debug logging
-            console.log('Mobile navigation elements:', {
-                hamburgerMenu: !!hamburgerMenu,
-                mobileNavOverlay: !!mobileNavOverlay,
-                closeMobileNav: !!closeMobileNav,
-                mobileThemeToggle: !!mobileThemeToggle
-            });
+        // Open mobile menu
+        hamburgerMenu.addEventListener('click', function() {
+            mobileNavOverlay.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        });
 
-            // Check if elements exist before adding event listeners
-            if (hamburgerMenu && mobileNavOverlay && closeMobileNav) {
-                // Open mobile menu
-                hamburgerMenu.addEventListener('click', function(e) {
-                    console.log('Hamburger menu clicked');
-                    e.preventDefault();
-                    e.stopPropagation();
-                    mobileNavOverlay.classList.add('show');
-                    document.body.style.overflow = 'hidden';
-                });
+        // Close mobile menu
+        function closeMobileMenu() {
+            mobileNavOverlay.classList.remove('show');
+            document.body.style.overflow = '';
+        }
 
-                // Close mobile menu
-                function closeMobileMenu() {
-                    console.log('Closing mobile menu');
-                    mobileNavOverlay.classList.remove('show');
-                    document.body.style.overflow = '';
-                }
+        closeMobileNav.addEventListener('click', closeMobileMenu);
 
-                closeMobileNav.addEventListener('click', function(e) {
-                    console.log('Close button clicked');
-                    e.preventDefault();
-                    e.stopPropagation();
+        // Close mobile menu when clicking outside
+        mobileNavOverlay.addEventListener('click', function(e) {
+            if (e.target === mobileNavOverlay) {
+                closeMobileMenu();
+            }
+        });
+
+        // Close mobile menu with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && mobileNavOverlay.classList.contains('show')) {
+                closeMobileMenu();
+            }
+        });
+
+        // Mobile theme toggle
+        mobileThemeToggle.addEventListener('click', function() {
+            if (window.themeManager) {
+                window.themeManager.toggleTheme();
+            }
+        });
+
+        // Close mobile menu when clicking on navigation links
+        const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+        mobileNavLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                if (!this.classList.contains('mobile-theme-toggle')) {
                     closeMobileMenu();
-                });
-
-                // Close mobile menu when clicking outside
-                mobileNavOverlay.addEventListener('click', function(e) {
-                    if (e.target === mobileNavOverlay) {
-                        console.log('Clicked outside mobile menu');
-                        closeMobileMenu();
-                    }
-                });
-
-                // Close mobile menu with Escape key
-                document.addEventListener('keydown', function(e) {
-                    if (e.key === 'Escape' && mobileNavOverlay.classList.contains('show')) {
-                        console.log('Escape key pressed');
-                        closeMobileMenu();
-                    }
-                });
-
-                // Close mobile menu when clicking on navigation links
-                const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
-                mobileNavLinks.forEach(link => {
-                    link.addEventListener('click', function() {
-                        if (!this.classList.contains('mobile-theme-toggle')) {
-                            console.log('Navigation link clicked');
-                            closeMobileMenu();
-                        }
-                    });
-                });
-            } else {
-                console.error('Some mobile navigation elements are missing:', {
-                    hamburgerMenu: !!hamburgerMenu,
-                    mobileNavOverlay: !!mobileNavOverlay,
-                    closeMobileNav: !!closeMobileNav
-                });
-            }
-
-            // Mobile theme toggle
-            if (mobileThemeToggle) {
-                mobileThemeToggle.addEventListener('click', function() {
-                    console.log('Mobile theme toggle clicked');
-                    if (window.themeManager) {
-                        window.themeManager.toggleTheme();
-                    }
-                });
-            }
+                }
+            });
         });
     </script>
 
@@ -1461,26 +1384,5 @@
     </div>
 
     <script src="/js/theme-utils.js"></script>
-    <script>
-        // Initialize theme manager when DOM is ready
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize theme manager if not already initialized
-            if (!window.themeManager) {
-                window.themeManager = new ThemeManager();
-            }
-            
-            // Ensure theme toggle buttons are properly set up
-            const themeToggle = document.getElementById('theme-toggle');
-            const mobileThemeToggle = document.getElementById('mobileThemeToggle');
-            
-            if (themeToggle && window.themeManager) {
-                window.themeManager.updateThemeToggleUI();
-            }
-            
-            if (mobileThemeToggle && window.themeManager) {
-                window.themeManager.updateThemeToggleUI();
-            }
-        });
-    </script>
 </body>
 </html> 
