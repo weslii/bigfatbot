@@ -57,19 +57,6 @@ healthApp.get('/health', (req, res) => {
   console.log('🔧 User agent:', req.headers['user-agent']);
   console.log('🔧 Host:', req.headers.host);
   
-  // Check database connection status
-  let dbStatus = 'unknown';
-  try {
-    const database = require('./config/database');
-    if (database && database.isConnected && database.isConnected()) {
-      dbStatus = 'connected';
-    } else {
-      dbStatus = 'disconnected';
-    }
-  } catch (error) {
-    dbStatus = 'error';
-  }
-  
   // Simple health check that always works
   res.status(200).json({
     status: 'ok',
@@ -78,7 +65,6 @@ healthApp.get('/health', (req, res) => {
     environment: process.env.NODE_ENV || 'development',
     port: HEALTH_PORT,
     uptime: process.uptime(),
-    database_status: dbStatus,
     message: 'Bot service is running'
   });
 });
@@ -138,81 +124,36 @@ class DeliveryBot {
 
       logger.info('Starting Delivery Bot...');
 
-      // Start health check server IMMEDIATELY (before anything else)
-      console.log('🔧 Starting health check server...');
-      console.log('🔧 Health check server will listen on port:', HEALTH_PORT);
-      
-      const server = healthApp.listen(HEALTH_PORT, () => {
-        console.log(`🔧 Bot health check server running on port ${HEALTH_PORT}`);
-        console.log(`🔧 Health check available at: http://localhost:${HEALTH_PORT}/health`);
-        console.log(`🔧 Health check server started successfully!`);
-      });
+      // Health check server is already started at the top level
+      console.log('🔧 Health check server is already running');
 
-      // Handle server errors
-      server.on('error', (error) => {
-        if (error.code === 'EADDRINUSE') {
-          console.error(`🔧 Port ${HEALTH_PORT} is already in use. Trying alternative port...`);
-          // Try alternative port
-          const alternativePort = HEALTH_PORT + 1;
-          const altServer = healthApp.listen(alternativePort, () => {
-            console.log(`🔧 Bot health check server running on alternative port ${alternativePort}`);
-            console.log(`🔧 Health check available at: http://localhost:${alternativePort}/health`);
-          });
-          
-          altServer.on('error', (altError) => {
-            console.error('🔧 Alternative port also failed:', altError);
-          });
-        } else {
-          console.error('🔧 Server error:', error);
-        }
-      });
-
-      // Initialize database (with retry logic)
+      // Initialize database
       console.log('🔧 Initializing database...');
-      let dbConnected = false;
-      try {
-        await database.connect();
-        dbConnected = true;
-        console.log('🔧 Database connected successfully');
-      } catch (error) {
-        console.error('🔧 Database connection failed:', error.message);
-        console.log('🔧 Bot service will continue without database connection');
-      }
+      await database.connect();
 
-      // Initialize bot services (only if database is connected)
-      if (dbConnected) {
-        try {
-          console.log('🔧 Initializing bot services...');
-          await this.botManager.initialize();
+      // Initialize bot services (both WhatsApp and Telegram)
+      console.log('🔧 Initializing bot services...');
+      await this.botManager.initialize();
 
-          // Start scheduler
-          console.log('🔧 Starting scheduler...');
-          this.schedulerService.start();
+      // Start scheduler
+      console.log('🔧 Starting scheduler...');
+      this.schedulerService.start();
 
-          // Start health check heartbeat
-          console.log('🔧 Starting health check heartbeat...');
-          this.healthCheckService.start();
-
-          logger.info('Delivery Bot started successfully!');
-          console.log('\n🤖 Multi-Platform Delivery Bot is running!');
-          console.log('📱 WhatsApp: Scan the QR code above to authenticate');
-          console.log('📱 Telegram: Bot is ready to receive messages');
-          console.log('⚙️  Configure your group IDs in src/config/config.js');
-          console.log('📊 The bot will automatically send daily reports at 10 PM');
-          console.log('📋 Pending orders will be shown at 10:30 PM');
-        } catch (error) {
-          console.error('🔧 Bot services initialization failed:', error.message);
-          console.log('🔧 Bot service will continue with health check server only');
-        }
-      } else {
-        console.log('🔧 Bot services skipped due to database connection failure');
-      }
+      // Start health check heartbeat
+      console.log('🔧 Starting health check heartbeat...');
+      this.healthCheckService.start();
 
       // Setup graceful shutdown
       this.setupGracefulShutdown();
 
-      console.log('\n🔧 Health check server is running and ready for Railway');
-      console.log('Press Ctrl+C to stop the bot');
+      logger.info('Delivery Bot started successfully!');
+      console.log('\n🤖 Multi-Platform Delivery Bot is running!');
+      console.log('📱 WhatsApp: Scan the QR code above to authenticate');
+      console.log('📱 Telegram: Bot is ready to receive messages');
+      console.log('⚙️  Configure your group IDs in src/config/config.js');
+      console.log('📊 The bot will automatically send daily reports at 10 PM');
+      console.log('📋 Pending orders will be shown at 10:30 PM');
+      console.log('\nPress Ctrl+C to stop the bot');
 
     } catch (error) {
       logger.error('Failed to start Delivery Bot:', error);
@@ -287,6 +228,41 @@ if (process.env.NODE_ENV === 'production') {
   memoryMonitor.start();
   logger.info('Memory monitoring started (bot process)');
 }
+
+// Start health check server IMMEDIATELY (before anything else)
+console.log('🔧 ==========================================');
+console.log('🔧 STARTING BOT SERVICE');
+console.log('🔧 ==========================================');
+console.log('🔧 Starting health check server immediately...');
+console.log('🔧 Health check server will listen on port:', HEALTH_PORT);
+console.log('🔧 Environment:', process.env.NODE_ENV);
+console.log('🔧 BOT_PORT:', process.env.BOT_PORT);
+console.log('🔧 PORT:', process.env.PORT);
+
+const server = healthApp.listen(HEALTH_PORT, () => {
+  console.log(`🔧 Bot health check server running on port ${HEALTH_PORT}`);
+  console.log(`🔧 Health check available at: http://localhost:${HEALTH_PORT}/health`);
+  console.log(`🔧 Health check server started successfully!`);
+});
+
+// Handle server errors
+server.on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`🔧 Port ${HEALTH_PORT} is already in use. Trying alternative port...`);
+    // Try alternative port
+    const alternativePort = HEALTH_PORT + 1;
+    const altServer = healthApp.listen(alternativePort, () => {
+      console.log(`🔧 Bot health check server running on alternative port ${alternativePort}`);
+      console.log(`🔧 Health check available at: http://localhost:${alternativePort}/health`);
+    });
+    
+    altServer.on('error', (altError) => {
+      console.error('🔧 Alternative port also failed:', altError);
+    });
+  } else {
+    console.error('🔧 Server error:', error);
+  }
+});
 
 // Start the bot
 const bot = new DeliveryBot();

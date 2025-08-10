@@ -4,7 +4,7 @@
   "description": "WhatsApp Bot for Business",
   "main": "src/index.js",
   "scripts": {
-    "start": "node --max-old-space-size=512 --expose-gc src/index.js",
+    "start": "npm run wait-for-db && npm run migrate && node --max-old-space-size=512 --expose-gc src/index.js",
     "start:web": "node --max-old-space-size=512 --expose-gc src/server.js",
     "dev": "concurrently \"nodemon --max-old-space-size=512 --expose-gc src/index.js\" \"nodemon --max-old-space-size=512 --expose-gc src/server.js\"",
     "dev:bot": "nodemon --max-old-space-size=512 --expose-gc src/index.js",
