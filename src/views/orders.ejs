@@ -7,8 +7,25 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="icon" href="/logo-icon copy.svg">
     <link href="/css/orders-dashboard.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <style>
+        /* Test styles to ensure mobile navigation works */
+        .mobile-nav-overlay {
+            z-index: 2000 !important;
+        }
+        .hamburger-menu {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .hamburger-menu {
+                display: flex !important;
+            }
+            .header-right .nav-link,
+            .header-right .dropdown,
+            .header-right #theme-toggle {
+                display: none !important;
+            }
+        }
+    </style>
 
 </head>
 <body>
@@ -21,7 +38,7 @@
                         <i class="fas fa-box-open"></i>
         </div>
                     <div class="logo-text">
-                        <span class="main-title" style="color: var(--primary-color); font-weight: 700; font-size: 1.5rem;">Orders Overview</span>
+                        <span class="main-title">Orders Overview</span>
       </div>
                 </a>
     </div>
@@ -1303,54 +1320,71 @@
         }
 
         // Mobile navigation functionality
-        const hamburgerMenu = document.getElementById('hamburgerMenu');
-        const mobileNavOverlay = document.getElementById('mobileNavOverlay');
-        const closeMobileNav = document.getElementById('closeMobileNav');
-        const mobileThemeToggle = document.getElementById('mobileThemeToggle');
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Setting up mobile navigation...');
+            const hamburgerMenu = document.getElementById('hamburgerMenu');
+            const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+            const closeMobileNav = document.getElementById('closeMobileNav');
+            const mobileThemeToggle = document.getElementById('mobileThemeToggle');
 
-        // Open mobile menu
-        hamburgerMenu.addEventListener('click', function() {
-            mobileNavOverlay.classList.add('show');
-            document.body.style.overflow = 'hidden';
-        });
-
-        // Close mobile menu
-        function closeMobileMenu() {
-            mobileNavOverlay.classList.remove('show');
-            document.body.style.overflow = '';
-        }
-
-        closeMobileNav.addEventListener('click', closeMobileMenu);
-
-        // Close mobile menu when clicking outside
-        mobileNavOverlay.addEventListener('click', function(e) {
-            if (e.target === mobileNavOverlay) {
-                closeMobileMenu();
-            }
-        });
-
-        // Close mobile menu with Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && mobileNavOverlay.classList.contains('show')) {
-                closeMobileMenu();
-            }
-        });
-
-        // Mobile theme toggle
-        mobileThemeToggle.addEventListener('click', function() {
-            if (window.themeManager) {
-                window.themeManager.toggleTheme();
-            }
-        });
-
-        // Close mobile menu when clicking on navigation links
-        const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
-        mobileNavLinks.forEach(link => {
-            link.addEventListener('click', function() {
-                if (!this.classList.contains('mobile-theme-toggle')) {
-                    closeMobileMenu();
-                }
+            console.log('Elements found:', {
+                hamburgerMenu: !!hamburgerMenu,
+                mobileNavOverlay: !!mobileNavOverlay,
+                closeMobileNav: !!closeMobileNav,
+                mobileThemeToggle: !!mobileThemeToggle
             });
+
+            if (hamburgerMenu && mobileNavOverlay && closeMobileNav) {
+                // Open mobile menu
+                hamburgerMenu.addEventListener('click', function() {
+                    console.log('Hamburger clicked!');
+                    mobileNavOverlay.classList.add('show');
+                    document.body.style.overflow = 'hidden';
+                });
+
+                // Close mobile menu
+                function closeMobileMenu() {
+                    mobileNavOverlay.classList.remove('show');
+                    document.body.style.overflow = '';
+                }
+
+                closeMobileNav.addEventListener('click', closeMobileMenu);
+
+                // Close mobile menu when clicking outside
+                mobileNavOverlay.addEventListener('click', function(e) {
+                    if (e.target === mobileNavOverlay) {
+                        closeMobileMenu();
+                    }
+                });
+
+                // Close mobile menu with Escape key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && mobileNavOverlay.classList.contains('show')) {
+                        closeMobileMenu();
+                    }
+                });
+
+                // Close mobile menu when clicking on navigation links
+                const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+                mobileNavLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        if (!this.classList.contains('mobile-theme-toggle')) {
+                            closeMobileMenu();
+                        }
+                    });
+                });
+            } else {
+                console.error('Mobile navigation elements not found!');
+            }
+
+            // Mobile theme toggle
+            if (mobileThemeToggle) {
+                mobileThemeToggle.addEventListener('click', function() {
+                    if (window.themeManager) {
+                        window.themeManager.toggleTheme();
+                    }
+                });
+            }
         });
     </script>
 
@@ -1383,6 +1417,8 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <script src="/js/theme-utils.js"></script>
 </body>
 </html> 
