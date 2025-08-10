@@ -21,21 +21,32 @@ const database = {
   // Get the Knex instance
   query: db,
   
+  // Track connection status
+  _isConnected: false,
+  
   // Connect to the database
   async connect() {
     try {
       await db.raw('SELECT 1');
+      this._isConnected = true;
       logger.info('Database connection established successfully');
     } catch (error) {
+      this._isConnected = false;
       logger.error('Database connection failed:', error);
       throw error;
     }
+  },
+  
+  // Check if connected
+  isConnected() {
+    return this._isConnected;
   },
   
   // Close the database connection
   async close() {
     try {
       await db.destroy();
+      this._isConnected = false;
       logger.info('Database connection closed successfully');
     } catch (error) {
       logger.error('Error closing database connection:', error);

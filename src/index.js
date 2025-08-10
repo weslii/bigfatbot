@@ -57,6 +57,19 @@ healthApp.get('/health', (req, res) => {
   console.log('🔧 User agent:', req.headers['user-agent']);
   console.log('🔧 Host:', req.headers.host);
   
+  // Check database connection status
+  let dbStatus = 'unknown';
+  try {
+    const database = require('./config/database');
+    if (database && database.isConnected && database.isConnected()) {
+      dbStatus = 'connected';
+    } else {
+      dbStatus = 'disconnected';
+    }
+  } catch (error) {
+    dbStatus = 'error';
+  }
+  
   // Simple health check that always works
   res.status(200).json({
     status: 'ok',
@@ -65,6 +78,7 @@ healthApp.get('/health', (req, res) => {
     environment: process.env.NODE_ENV || 'development',
     port: HEALTH_PORT,
     uptime: process.uptime(),
+    database_status: dbStatus,
     message: 'Bot service is running'
   });
 });
@@ -153,33 +167,52 @@ class DeliveryBot {
         }
       });
 
-      // Initialize database
+      // Initialize database (with retry logic)
       console.log('🔧 Initializing database...');
-      await database.connect();
+      let dbConnected = false;
+      try {
+        await database.connect();
+        dbConnected = true;
+        console.log('🔧 Database connected successfully');
+      } catch (error) {
+        console.error('🔧 Database connection failed:', error.message);
+        console.log('🔧 Bot service will continue without database connection');
+      }
 
-      // Initialize bot services (both WhatsApp and Telegram)
-      console.log('🔧 Initializing bot services...');
-      await this.botManager.initialize();
+      // Initialize bot services (only if database is connected)
+      if (dbConnected) {
+        try {
+          console.log('🔧 Initializing bot services...');
+          await this.botManager.initialize();
 
-      // Start scheduler
-      console.log('🔧 Starting scheduler...');
-      this.schedulerService.start();
+          // Start scheduler
+          console.log('🔧 Starting scheduler...');
+          this.schedulerService.start();
 
-      // Start health check heartbeat
-      console.log('🔧 Starting health check heartbeat...');
-      this.healthCheckService.start();
+          // Start health check heartbeat
+          console.log('🔧 Starting health check heartbeat...');
+          this.healthCheckService.start();
+
+          logger.info('Delivery Bot started successfully!');
+          console.log('\n🤖 Multi-Platform Delivery Bot is running!');
+          console.log('📱 WhatsApp: Scan the QR code above to authenticate');
+          console.log('📱 Telegram: Bot is ready to receive messages');
+          console.log('⚙️  Configure your group IDs in src/config/config.js');
+          console.log('📊 The bot will automatically send daily reports at 10 PM');
+          console.log('📋 Pending orders will be shown at 10:30 PM');
+        } catch (error) {
+          console.error('🔧 Bot services initialization failed:', error.message);
+          console.log('🔧 Bot service will continue with health check server only');
+        }
+      } else {
+        console.log('🔧 Bot services skipped due to database connection failure');
+      }
 
       // Setup graceful shutdown
       this.setupGracefulShutdown();
 
-      logger.info('Delivery Bot started successfully!');
-      console.log('\n🤖 Multi-Platform Delivery Bot is running!');
-      console.log('📱 WhatsApp: Scan the QR code above to authenticate');
-      console.log('📱 Telegram: Bot is ready to receive messages');
-      console.log('⚙️  Configure your group IDs in src/config/config.js');
-      console.log('📊 The bot will automatically send daily reports at 10 PM');
-      console.log('📋 Pending orders will be shown at 10:30 PM');
-      console.log('\nPress Ctrl+C to stop the bot');
+      console.log('\n🔧 Health check server is running and ready for Railway');
+      console.log('Press Ctrl+C to stop the bot');
 
     } catch (error) {
       logger.error('Failed to start Delivery Bot:', error);
