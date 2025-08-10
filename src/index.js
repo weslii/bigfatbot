@@ -34,11 +34,11 @@ const express = require('express');
 const healthApp = express();
 const isProduction = process.env.NODE_ENV === 'production';
 
-// Determine the correct port for the bot service (matching basic-novi approach)
+// Determine the correct port for the bot service
 let HEALTH_PORT;
 if (isProduction) {
-  // In production, use PORT (same as web service)
-  HEALTH_PORT = process.env.PORT;
+  // In production, use BOT_PORT or PORT+1 to avoid conflicts
+  HEALTH_PORT = process.env.BOT_PORT || (process.env.PORT ? parseInt(process.env.PORT) + 1 : 3001);
 } else {
   // In development, use BOT_PORT or 3001
   HEALTH_PORT = process.env.BOT_PORT || 3001;
@@ -74,9 +74,23 @@ class DeliveryBot {
 
       logger.info('Starting Delivery Bot...');
 
-      // Start health check server after bot is initialized (matching basic-novi approach)
-      healthApp.listen(HEALTH_PORT, () => {
+      // Start health check server after bot is initialized
+      const server = healthApp.listen(HEALTH_PORT, () => {
         console.log(`Bot health check server running on port ${HEALTH_PORT}`);
+      });
+
+      // Handle server errors
+      server.on('error', (error) => {
+        if (error.code === 'EADDRINUSE') {
+          console.error(`Port ${HEALTH_PORT} is already in use. Trying alternative port...`);
+          // Try alternative port
+          const alternativePort = HEALTH_PORT + 1;
+          healthApp.listen(alternativePort, () => {
+            console.log(`Bot health check server running on alternative port ${alternativePort}`);
+          });
+        } else {
+          console.error('Server error:', error);
+        }
       });
 
       // Initialize database

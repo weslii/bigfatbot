@@ -19,4 +19,5 @@ memoryLimit = "512M"
 
 # Environment variables
 [env]
-NODE_ENV = "production" 
+NODE_ENV = "production"
+BOT_PORT = "3001" 
