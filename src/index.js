@@ -37,8 +37,8 @@ const isProduction = process.env.NODE_ENV === 'production';
 // Determine the correct port for the bot service
 let HEALTH_PORT;
 if (isProduction) {
-  // In production, use BOT_PORT or PORT+1 to avoid conflicts
-  HEALTH_PORT = process.env.BOT_PORT || (process.env.PORT ? parseInt(process.env.PORT) + 1 : 3001);
+  // In production, use Railway's assigned PORT
+  HEALTH_PORT = process.env.PORT || 3001;
 } else {
   // In development, use BOT_PORT or 3001
   HEALTH_PORT = process.env.BOT_PORT || 3001;
