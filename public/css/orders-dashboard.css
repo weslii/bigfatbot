@@ -1411,12 +1411,14 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     z-index: 2000;
     opacity: 0;
     visibility: hidden;
+    pointer-events: none;
     transition: all 0.3s ease;
 }
 
 .mobile-nav-overlay.show {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
 }
 
 .mobile-nav-content {

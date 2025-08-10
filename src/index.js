@@ -38,7 +38,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 let HEALTH_PORT;
 if (isProduction) {
   // In production, use Railway's assigned PORT
-  HEALTH_PORT = process.env.PORT || 3001;
+  HEALTH_PORT = 39483;
 } else {
   // In development, use BOT_PORT or 3001
   HEALTH_PORT = process.env.BOT_PORT || 3001;
