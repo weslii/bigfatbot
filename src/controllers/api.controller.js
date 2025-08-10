@@ -5,6 +5,71 @@ const db = require('../config/database');
 const { generateOrdersCSV, generateOrdersPDF, generateBusinessesCSV } = require('../utils/exportHelpers');
 
 module.exports = {
+  // Bulk update order statuses
+  bulkUpdateOrders: async (req, res) => {
+    try {
+      const { orderIds, status, userId } = req.body;
+      if (!Array.isArray(orderIds) || orderIds.length === 0 || !status || !userId) {
+        return res.status(400).json({ error: 'orderIds[], status and userId are required' });
+      }
+
+      // Validate allowed statuses
+      const validStatuses = ['pending', 'processing', 'delivered', 'cancelled'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ error: 'Invalid status value' });
+      }
+
+      // Only update orders belonging to this user's businesses
+      const userBusinesses = await db.query('groups')
+        .select('business_id')
+        .where('user_id', userId)
+        .groupBy('business_id');
+      const businessIds = userBusinesses.map(b => b.business_id);
+      if (businessIds.length === 0) {
+        return res.status(400).json({ error: 'No businesses for this user' });
+      }
+
+      const updated = await db.query('orders')
+        .whereIn('id', orderIds)
+        .whereIn('business_id', businessIds)
+        .update({ status, updated_at: new Date(), updated_by: userId });
+
+      return res.json({ success: true, updatedCount: updated });
+    } catch (error) {
+      logger.error('Bulk update orders error:', error);
+      res.status(500).json({ error: 'Failed to bulk update orders' });
+    }
+  },
+
+  // Bulk delete orders
+  bulkDeleteOrders: async (req, res) => {
+    try {
+      const { orderIds, userId } = req.body;
+      if (!Array.isArray(orderIds) || orderIds.length === 0 || !userId) {
+        return res.status(400).json({ error: 'orderIds[] and userId are required' });
+      }
+
+      // Only delete orders belonging to this user's businesses
+      const userBusinesses = await db.query('groups')
+        .select('business_id')
+        .where('user_id', userId)
+        .groupBy('business_id');
+      const businessIds = userBusinesses.map(b => b.business_id);
+      if (businessIds.length === 0) {
+        return res.status(400).json({ error: 'No businesses for this user' });
+      }
+
+      const deleted = await db.query('orders')
+        .whereIn('id', orderIds)
+        .whereIn('business_id', businessIds)
+        .del();
+
+      return res.json({ success: true, deletedCount: deleted });
+    } catch (error) {
+      logger.error('Bulk delete orders error:', error);
+      res.status(500).json({ error: 'Failed to bulk delete orders' });
+    }
+  },
   // Health check endpoint
   healthCheck: async (req, res) => {
     try {

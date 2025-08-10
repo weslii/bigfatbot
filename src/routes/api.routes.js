@@ -34,6 +34,9 @@ router.post('/orders/:orderId/status', apiController.updateOrderStatus);
 router.delete('/orders/:orderId', apiController.deleteOrder);
 router.put('/orders/:orderId', apiController.updateOrder);
 router.get('/orders/count', apiController.getOrderCount);
+// Bulk order operations
+router.post('/orders/bulk-update', apiController.bulkUpdateOrders);
+router.delete('/orders/bulk-delete', apiController.bulkDeleteOrders);
 
 // Groups API endpoints
 router.post('/groups', apiController.addGroup);

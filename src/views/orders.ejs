@@ -210,6 +210,23 @@
                     <i class="fas fa-box"></i> Orders (<span id="orders-count"><%= totalOrders %></span>)
                 </h3>
                 <div class="header-actions-right">
+                    <form id="bulkActionsForm" class="d-flex align-items-center" onsubmit="return false;" style="gap:0.5rem;">
+                        <div class="dropdown">
+                            <button class="btn btn-secondary" id="bulkMenuBtn">
+                                <i class="fas fa-check-square"></i> Bulk Actions
+                            </button>
+                            <div class="dropdown-content" id="bulkMenu" style="min-width:220px;">
+                                <button class="dropdown-item" onclick="bulkSelectAll()"><i class="fas fa-list-check"></i> Select all on page</button>
+                                <button class="dropdown-item" onclick="bulkClearSelection()"><i class="fas fa-xmark"></i> Clear selection</button>
+                                <hr/>
+                                <button class="dropdown-item" onclick="confirmBulkUpdate('processing')"><i class="fas fa-arrows-rotate"></i> Mark as Processing</button>
+                                <button class="dropdown-item" onclick="confirmBulkUpdate('delivered')"><i class="fas fa-check"></i> Mark as Delivered</button>
+                                <button class="dropdown-item" onclick="confirmBulkUpdate('cancelled')"><i class="fas fa-ban"></i> Mark as Cancelled</button>
+                                <hr/>
+                                <button class="dropdown-item" onclick="confirmBulkDelete()" style="color:var(--danger-color)"><i class="fas fa-trash"></i> Delete selected</button>
+                            </div>
+                        </div>
+                    </form>
                     <form id="pageSizeForm" class="d-flex align-items-center">
                         <select class="form-select" style="width: auto;" name="pageSize">
               <option value="10" <%= pageSize == 10 ? 'selected' : '' %>>10 per page</option>
@@ -229,6 +246,7 @@
                     <table class="data-table">
               <thead>
                 <tr>
+                  <th style="width:36px;"><input type="checkbox" id="selectAllCheckbox" onclick="toggleSelectAll(this)"></th>
                   <th>Order ID</th>
                                 <th>Business</th>
                   <th>Customer</th>
@@ -241,6 +259,7 @@
                             <% if (orders && orders.length) { %>
                                 <% orders.forEach(function(order) { %>
                     <tr>
+                        <td><input type="checkbox" class="row-select" data-id="<%= order.id %>"></td>
                                         <td><strong><%= order.order_id %></strong></td>
                                         <td><span class="business-badge"><%= order.business_name %></span></td>
                                         <td><%= order.customer_name %></td>
@@ -405,6 +424,57 @@
         }
 
         setupDropdown('profileDropdown', 'profileMenu');
+        // Bulk menu dropdown
+        setupDropdown('bulkMenuBtn', 'bulkMenu');
+        // Bulk selection helpers
+        function toggleSelectAll(master) {
+            document.querySelectorAll('.row-select').forEach(cb => { cb.checked = master.checked; });
+        }
+        function bulkSelectAll() {
+            document.querySelectorAll('.row-select').forEach(cb => { cb.checked = true; });
+        }
+        function bulkClearSelection() {
+            document.querySelectorAll('.row-select').forEach(cb => { cb.checked = false; });
+            const master = document.getElementById('selectAllCheckbox');
+            if (master) master.checked = false;
+        }
+        function getSelectedOrderIds() {
+            return Array.from(document.querySelectorAll('.row-select:checked')).map(cb => cb.getAttribute('data-id'));
+        }
+        async function confirmBulkUpdate(status) {
+            const ids = getSelectedOrderIds();
+            if (ids.length === 0) { showNotification('Select at least one order', 'error'); return; }
+            const ok = confirm(`Apply status "${status}" to ${ids.length} orders?`);
+            if (!ok) return;
+            try {
+                const resp = await fetch('/api/orders/bulk-update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderIds: ids, status, userId: '<%= userId %>' })
+                });
+                const data = await resp.json();
+                if (!resp.ok || !data.success) throw new Error(data.error || 'Bulk update failed');
+                showNotification(`Updated ${data.updatedCount} orders`, 'success');
+                window.location.reload();
+            } catch (e) { showNotification(e.message, 'error'); }
+        }
+        async function confirmBulkDelete() {
+            const ids = getSelectedOrderIds();
+            if (ids.length === 0) { showNotification('Select at least one order', 'error'); return; }
+            const ok = confirm(`Delete ${ids.length} selected orders? This cannot be undone.`);
+            if (!ok) return;
+            try {
+                const resp = await fetch('/api/orders/bulk-delete', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderIds: ids, userId: '<%= userId %>' })
+                });
+                const data = await resp.json();
+                if (!resp.ok || !data.success) throw new Error(data.error || 'Bulk delete failed');
+                showNotification(`Deleted ${data.deletedCount} orders`, 'success');
+                window.location.reload();
+            } catch (e) { showNotification(e.message, 'error'); }
+        }
 
         // Hide dropdown when clicking outside
         window.addEventListener('click', (event) => {
