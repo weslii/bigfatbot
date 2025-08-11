@@ -24,6 +24,9 @@ class NotificationService {
     // Timer management for continuous error notifications
     this.activeErrorTimers = new Map(); // Track active timers by error type
     this.errorNotificationInterval = 20000; // 20 seconds
+    
+    // Configuration for continuous notifications
+    this.continuousNotificationsEnabled = process.env.DISABLE_CONTINUOUS_NOTIFICATIONS !== 'true';
   }
 
   initializeEmailTransporter() {
@@ -429,6 +432,12 @@ class NotificationService {
 
   // Continuous error notification methods
   startContinuousErrorNotification(errorType, error, additionalInfo = {}) {
+    // Check if continuous notifications are disabled
+    if (!this.continuousNotificationsEnabled) {
+      logger.info(`Continuous notifications are disabled. Skipping ${errorType} error notification.`);
+      return;
+    }
+    
     // Stop any existing timer for this error type
     this.stopContinuousErrorNotification(errorType);
     
@@ -520,6 +529,22 @@ class NotificationService {
       };
     }
     return activeTimers;
+  }
+
+  // Method to enable/disable continuous notifications
+  setContinuousNotificationsEnabled(enabled) {
+    this.continuousNotificationsEnabled = enabled;
+    logger.info(`Continuous notifications ${enabled ? 'enabled' : 'disabled'}`);
+    
+    // If disabling, stop all active continuous notifications
+    if (!enabled) {
+      this.stopAllContinuousErrorNotifications();
+    }
+  }
+
+  // Method to check if continuous notifications are enabled
+  isContinuousNotificationsEnabled() {
+    return this.continuousNotificationsEnabled;
   }
 }
 

@@ -3,4 +3,8 @@ NODE_ENV=development
 PORT=3000
 
 # Logging
-LOG_LEVEL=info 
+LOG_LEVEL=info
+
+# Notifications
+# Set to 'true' to disable continuous error notifications (they will still send once, but won't repeat every 20 seconds)
+DISABLE_CONTINUOUS_NOTIFICATIONS=false 
