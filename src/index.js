@@ -185,7 +185,11 @@ console.log('🔧 Health check server will listen on port:', HEALTH_PORT);
 
 const server = healthApp.listen(HEALTH_PORT, () => {
   console.log(`🔧 Bot health check server running on port ${HEALTH_PORT}`);
-  console.log(`🔧 Health check available at: http://localhost:${HEALTH_PORT}/health`);
+  if (process.env.NODE_ENV === 'production') {
+    console.log(`🔧 Health check available at: /health (Railway will handle the domain)`);
+  } else {
+    console.log(`🔧 Health check available at: http://localhost:${HEALTH_PORT}/health`);
+  }
 });
 
 // Handle server errors
@@ -205,6 +209,18 @@ server.on('error', (error) => {
   } else {
     console.error('🔧 Server error:', error);
   }
+});
+
+// Add a catch-all route for the bot service health check
+healthApp.use('*', (req, res) => {
+  console.log(`🔧 Bot service received request: ${req.method} ${req.path}`);
+  res.status(200).json({
+    status: 'ok',
+    service: 'bot',
+    message: 'Bot service is running',
+    uptime: process.uptime(),
+    port: HEALTH_PORT
+  });
 });
 
 // Start the bot
