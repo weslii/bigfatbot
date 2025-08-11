@@ -6,8 +6,6 @@ buildCommand = "npm run build"
 [[services.web]]
 name = "web"
 command = "npm run start:prod"
-healthcheckPath = "/health"
-healthcheckTimeout = 300
 memoryLimit = "512M"
 
 [[services.workers]]
