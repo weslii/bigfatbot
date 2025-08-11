@@ -1302,20 +1302,60 @@
         }
 
         // Mobile navigation functionality
+        console.log('Loading mobile navigation...');
         const hamburgerMenu = document.getElementById('hamburgerMenu');
         const mobileNavOverlay = document.getElementById('mobileNavOverlay');
         const closeMobileNav = document.getElementById('closeMobileNav');
         const mobileThemeToggle = document.getElementById('mobileThemeToggle');
+        
+        console.log('hamburgerMenu:', hamburgerMenu);
+        console.log('mobileNavOverlay:', mobileNavOverlay);
+        console.log('closeMobileNav:', closeMobileNav);
+        
+        if (!hamburgerMenu) {
+            console.error('Hamburger menu element not found!');
+            return;
+        }
+        
+        if (!mobileNavOverlay) {
+            console.error('Mobile nav overlay element not found!');
+            return;
+        }
 
         // Open mobile menu
-        hamburgerMenu.addEventListener('click', function() {
+        hamburgerMenu.addEventListener('click', function(e) {
+            console.log('Hamburger menu clicked!');
+            e.preventDefault();
+            e.stopPropagation();
             mobileNavOverlay.classList.add('show');
+            mobileNavOverlay.style.opacity = '1';
+            mobileNavOverlay.style.visibility = 'visible';
+            mobileNavOverlay.style.pointerEvents = 'auto';
+            
+            // Also animate the content
+            const mobileNavContent = mobileNavOverlay.querySelector('.mobile-nav-content');
+            if (mobileNavContent) {
+                mobileNavContent.style.transform = 'translateX(0)';
+            }
+            
             document.body.style.overflow = 'hidden';
+            console.log('Mobile nav should be visible now');
         });
 
         // Close mobile menu
         function closeMobileMenu() {
+            console.log('Closing mobile menu...');
             mobileNavOverlay.classList.remove('show');
+            mobileNavOverlay.style.opacity = '0';
+            mobileNavOverlay.style.visibility = 'hidden';
+            mobileNavOverlay.style.pointerEvents = 'none';
+            
+            // Reset content position
+            const mobileNavContent = mobileNavOverlay.querySelector('.mobile-nav-content');
+            if (mobileNavContent) {
+                mobileNavContent.style.transform = 'translateX(100%)';
+            }
+            
             document.body.style.overflow = '';
         }
 

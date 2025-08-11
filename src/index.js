@@ -29,30 +29,12 @@ const BotServiceManager = require('./services/BotServiceManager');
 const SchedulerService = require('./services/SchedulerService');
 const HealthCheckService = require('./services/HealthCheckService');
 
-// --- Health check endpoint for Railway worker ---
-const express = require('express');
-const healthApp = express();
+// Bot service runs as a worker - no public endpoints needed
 const isProduction = process.env.NODE_ENV === 'production';
 
-// Determine the correct port for the bot service
-let HEALTH_PORT;
-if (isProduction) {
-  // In production, use BOT_PORT if available, otherwise use PORT+1 to avoid conflicts
-  HEALTH_PORT = process.env.BOT_PORT || (process.env.PORT ? parseInt(process.env.PORT) + 1 : 3001);
-} else {
-  // In development, use BOT_PORT or 3001
-  HEALTH_PORT = process.env.BOT_PORT || 3001;
-}
-
-console.log(`🔧 Bot service will use port: ${HEALTH_PORT}`);
+console.log(`🔧 Bot service starting in ${isProduction ? 'production' : 'development'} mode`);
 console.log(`🔧 Environment: ${process.env.NODE_ENV}`);
-console.log(`🔧 BOT_PORT: ${process.env.BOT_PORT}`);
-console.log(`🔧 PORT: ${process.env.PORT}`);
-
-healthApp.get('/health', (req, res) => {
-  console.log('🔧 Bot service health check accessed');
-  res.status(200).send('ok');
-});
+console.log(`🔧 BOT_ONLY: ${process.env.BOT_ONLY}`);
 
 
 
@@ -74,8 +56,8 @@ class DeliveryBot {
 
       logger.info('Starting Delivery Bot...');
 
-      // Health check server is already started at the top level
-      console.log('🔧 Health check server is already running');
+      // Bot service runs as a background worker
+      console.log('🔧 Bot service running as background worker');
 
       // Initialize database
       console.log('🔧 Initializing database...');
@@ -179,49 +161,8 @@ if (process.env.NODE_ENV === 'production') {
   logger.info('Memory monitoring started (bot process)');
 }
 
-// Start health check server IMMEDIATELY (before anything else)
-console.log('🔧 Starting health check server immediately...');
-console.log('🔧 Health check server will listen on port:', HEALTH_PORT);
-
-const server = healthApp.listen(HEALTH_PORT, () => {
-  console.log(`🔧 Bot health check server running on port ${HEALTH_PORT}`);
-  if (process.env.NODE_ENV === 'production') {
-    console.log(`🔧 Health check available at: /health (Railway will handle the domain)`);
-  } else {
-    console.log(`🔧 Health check available at: http://localhost:${HEALTH_PORT}/health`);
-  }
-});
-
-// Handle server errors
-server.on('error', (error) => {
-  if (error.code === 'EADDRINUSE') {
-    console.error(`🔧 Port ${HEALTH_PORT} is already in use. Trying alternative port...`);
-    // Try alternative port
-    const alternativePort = HEALTH_PORT + 1;
-    const altServer = healthApp.listen(alternativePort, () => {
-      console.log(`🔧 Bot health check server running on alternative port ${alternativePort}`);
-      console.log(`🔧 Health check available at: http://localhost:${alternativePort}/health`);
-    });
-    
-    altServer.on('error', (altError) => {
-      console.error('🔧 Alternative port also failed:', altError);
-    });
-  } else {
-    console.error('🔧 Server error:', error);
-  }
-});
-
-// Add a catch-all route for the bot service health check
-healthApp.use('*', (req, res) => {
-  console.log(`🔧 Bot service received request: ${req.method} ${req.path}`);
-  res.status(200).json({
-    status: 'ok',
-    service: 'bot',
-    message: 'Bot service is running',
-    uptime: process.uptime(),
-    port: HEALTH_PORT
-  });
-});
+// Bot service runs as a worker - no HTTP server needed
+console.log('🔧 Bot service starting as background worker...');
 
 // Start the bot
 const bot = new DeliveryBot();
