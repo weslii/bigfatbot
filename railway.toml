@@ -18,6 +18,7 @@ memoryLimit = "512M"
 # Environment variables
 [env]
 NODE_ENV = "production"
+TELEGRAM_FORCE_POLLING = "true"
 
 # Service-specific environment variables
 [[services.web.env]]
