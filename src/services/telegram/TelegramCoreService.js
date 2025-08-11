@@ -28,8 +28,10 @@ class TelegramCoreService {
         throw new Error('TELEGRAM_BOT_TOKEN environment variable is required');
       }
 
-      // Force polling in development (or when explicitly requested)
-      const forcePolling = process.env.TELEGRAM_FORCE_POLLING === 'true' || process.env.NODE_ENV !== 'production';
+      // Force polling in development, bot-only mode, or when explicitly requested
+      const forcePolling = process.env.TELEGRAM_FORCE_POLLING === 'true' || 
+                          process.env.NODE_ENV !== 'production' || 
+                          process.env.BOT_ONLY === 'true';
       if (forcePolling) {
         try {
           const tempBot = new TelegramBot(token);
@@ -54,13 +56,15 @@ class TelegramCoreService {
         this.botInfo = await this.bot.getMe();
         this.isAuthenticated = true;
         await this.storeConnectionStatus('connected', this.botInfo.username);
-        logger.info('Telegram started in polling mode (development)');
+        const reason = process.env.BOT_ONLY === 'true' ? 'bot-only mode' : 'development';
+        logger.info(`Telegram started in polling mode (${reason})`);
         
         // Send service restart notification (non-blocking)
         try {
+          const reason = process.env.BOT_ONLY === 'true' ? 'Bot-Only' : 'Dev';
           await NotificationService.notifyServiceRestart('Telegram Service', {
             'Start Time': new Date().toISOString(),
-            'Status': 'Running (Polling - Dev)',
+            'Status': `Running (Polling - ${reason})`,
             'Bot Username': this.botInfo.username
           });
         } catch (_) {}
