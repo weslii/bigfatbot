@@ -75,7 +75,7 @@ class TelegramCoreService {
         // Use webhook mode
         this.bot = new TelegramBot(token, { 
           webHook: { 
-            port: process.env.PORT || 3000,
+            port: process.env.BOT_PORT || 3001,
             host: '0.0.0.0'
           } 
         });
