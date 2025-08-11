@@ -24,4 +24,5 @@ NODE_ENV = "production"
 WEB_ONLY = "true"
 
 [[services.workers.env]]
-BOT_ONLY = "true" 
+BOT_ONLY = "true"
+DISABLE_HEARTBEAT = "true" 
