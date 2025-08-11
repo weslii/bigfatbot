@@ -14,6 +14,7 @@ memoryLimit = "512M"
 name = "whatsapp-bot"
 command = "npm start"
 memoryLimit = "512M"
+healthcheck = false
 
 # Environment variables
 [env]
@@ -24,5 +25,4 @@ NODE_ENV = "production"
 WEB_ONLY = "true"
 
 [[services.workers.env]]
-BOT_ONLY = "true"
-DISABLE_HEARTBEAT = "true" 
+BOT_ONLY = "true" 
