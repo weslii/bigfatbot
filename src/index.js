@@ -33,21 +33,13 @@ const HealthCheckService = require('./services/HealthCheckService');
 const express = require('express');
 const healthApp = express();
 const isProduction = process.env.NODE_ENV === 'production';
-
-// Use the same port logic as basic-novi (which worked)
-const HEALTH_PORT = isProduction ? process.env.PORT : (process.env.BOT_PORT || 3001);
-
-console.log(`🔧 Bot service will use port: ${HEALTH_PORT}`);
-console.log(`🔧 Environment: ${process.env.NODE_ENV}`);
-console.log(`🔧 PORT: ${process.env.PORT}`);
-console.log(`🔧 BOT_PORT: ${process.env.BOT_PORT}`);
+const HEALTH_PORT = isProduction
+  ? process.env.PORT
+  : (process.env.BOT_PORT || 3001);
 
 healthApp.get('/health', (req, res) => {
-  console.log('🔧 Bot service health check accessed');
   res.status(200).send('ok');
 });
-
-
 
 class DeliveryBot {
   constructor() {
@@ -67,27 +59,25 @@ class DeliveryBot {
 
       logger.info('Starting Delivery Bot...');
 
-      // Bot service runs as a background worker
-      console.log('🔧 Bot service running as background worker');
-
       // Initialize database
-      console.log('🔧 Initializing database...');
       await database.connect();
 
       // Initialize bot services (both WhatsApp and Telegram)
-      console.log('🔧 Initializing bot services...');
       await this.botManager.initialize();
 
       // Start scheduler
-      console.log('🔧 Starting scheduler...');
       this.schedulerService.start();
 
       // Start health check heartbeat
-      console.log('🔧 Starting health check heartbeat...');
       this.healthCheckService.start();
 
       // Setup graceful shutdown
       this.setupGracefulShutdown();
+
+      // Start health check server after bot is initialized
+      healthApp.listen(HEALTH_PORT, () => {
+        console.log(`Bot health check server running on port ${HEALTH_PORT}`);
+      });
 
       logger.info('Delivery Bot started successfully!');
       console.log('\n🤖 Multi-Platform Delivery Bot is running!');
@@ -100,9 +90,7 @@ class DeliveryBot {
 
     } catch (error) {
       logger.error('Failed to start Delivery Bot:', error);
-      console.error('🔧 Bot initialization failed, but health check server should still be running');
-      // Don't exit immediately - let the health check server continue running
-      // process.exit(1);
+      process.exit(1);
     }
   }
 
@@ -175,30 +163,4 @@ if (process.env.NODE_ENV === 'production') {
 // Start the bot
 const bot = new DeliveryBot();
 bot.start();
-
-// Start health check server AFTER bot initialization (like basic-novi)
-const server = healthApp.listen(HEALTH_PORT, () => {
-  console.log(`🔧 Bot health check server running on port ${HEALTH_PORT}`);
-  console.log(`🔧 Health check available at: /health`);
-});
-
-// Handle server errors
-server.on('error', (error) => {
-  if (error.code === 'EADDRINUSE') {
-    console.error(`🔧 Port ${HEALTH_PORT} is already in use. Trying alternative port...`);
-    // Try alternative port
-    const alternativePort = HEALTH_PORT + 1;
-    const altServer = healthApp.listen(alternativePort, () => {
-      console.log(`🔧 Bot health check server running on alternative port ${alternativePort}`);
-      console.log(`🔧 Health check available at: /health`);
-    });
-    
-    altServer.on('error', (altError) => {
-      console.error('🔧 Alternative port also failed:', altError);
-      console.error('🔧 Bot service will continue without health check server');
-    });
-  } else {
-    console.error('🔧 Server error:', error);
-  }
-});
 pollBotControl();

@@ -3,8 +3,4 @@ NODE_ENV=development
 PORT=3000
 
 # Logging
-LOG_LEVEL=info
-
-# Telegram Configuration
-TELEGRAM_BOT_TOKEN=your-telegram-bot-token
-TELEGRAM_FORCE_POLLING=true 
+LOG_LEVEL=info 

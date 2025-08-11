@@ -27,11 +27,6 @@ const inventoryRoutes = require('./routes/inventory.routes');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Log port information for debugging
-console.log(`🌐 Web service will use port: ${port}`);
-console.log(`🌐 Environment: ${process.env.NODE_ENV}`);
-console.log(`🌐 PORT: ${process.env.PORT}`);
-
 // Basic middleware setup (must be before routes)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -49,16 +44,6 @@ app.locals.formatCurrency = function(amount) {
 
 // Set trust proxy for Railway or any proxy environment
 app.set('trust proxy', 1);
-
-// Root endpoint for Railway
-app.get('/', (req, res) => {
-  console.log('🌐 Root endpoint accessed');
-  res.status(200).json({
-    status: 'ok',
-    service: 'web',
-    message: 'BigFatBot Web Service is running'
-  });
-});
 
 // Initialize session middleware
 async function initializeSession() {
@@ -106,32 +91,12 @@ async function initializeBotServices() {
       return true;
     }
 
-    // Check if this is the web service in Railway (should not start bot services)
-    if (process.env.NODE_ENV === 'production' && process.env.RAILWAY_SERVICE_NAME === 'web') {
-      logger.info('Railway web service detected - skipping bot service initialization');
-      return true;
-    }
-
-    // Check if we're running the web service command (start:prod)
-    if (process.env.NODE_ENV === 'production' && process.argv.includes('start:prod')) {
-      logger.info('Web service command detected - skipping bot service initialization');
-      return true;
-    }
-
     // Check for WEB_ONLY environment variable for local development
     if (process.env.WEB_ONLY === 'true') {
       logger.info('WEB_ONLY mode detected - skipping bot service initialization');
       return true;
     }
 
-    // Check for BOT_ONLY environment variable (bot service should not start bot services in web app)
-    if (process.env.BOT_ONLY === 'true') {
-      logger.info('BOT_ONLY mode detected - skipping bot service initialization in web app');
-      return true;
-    }
-
-    // Only initialize bot services if we're not in web-only mode
-    logger.info('Initializing bot services...');
     const botManager = BotServiceManager.getInstance();
     await botManager.initialize();
     logger.info('Bot services initialized successfully');

@@ -78,7 +78,6 @@ WHATSAPP_SESSION_PATH=./sessions
 TELEGRAM_BOT_TOKEN=your-telegram-bot-token
 TELEGRAM_BOT_USERNAME=your-telegram-bot-username
 TELEGRAM_CHAT_ID=your-telegram-chat-id
-TELEGRAM_FORCE_POLLING=true
 
 # OpenAI API Key (for AI order parsing)
 OPENAI_API_KEY=your-openai-api-key
@@ -140,7 +139,6 @@ npm run start:web
 - Callback query handling
 - Setup command with confirmation buttons
 - Message editing and deletion
-- **Polling Mode**: Always uses polling instead of webhooks for better reliability
 
 ## 🏢 Business Setup
 
