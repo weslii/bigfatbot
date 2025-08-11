@@ -29,12 +29,23 @@ const BotServiceManager = require('./services/BotServiceManager');
 const SchedulerService = require('./services/SchedulerService');
 const HealthCheckService = require('./services/HealthCheckService');
 
-// Bot service runs as a worker - no public endpoints needed
+// --- Health check endpoint for Railway worker ---
+const express = require('express');
+const healthApp = express();
 const isProduction = process.env.NODE_ENV === 'production';
 
-console.log(`🔧 Bot service starting in ${isProduction ? 'production' : 'development'} mode`);
+// Use the same port logic as basic-novi (which worked)
+const HEALTH_PORT = isProduction ? process.env.PORT : (process.env.BOT_PORT || 3001);
+
+console.log(`🔧 Bot service will use port: ${HEALTH_PORT}`);
 console.log(`🔧 Environment: ${process.env.NODE_ENV}`);
-console.log(`🔧 BOT_ONLY: ${process.env.BOT_ONLY}`);
+console.log(`🔧 PORT: ${process.env.PORT}`);
+console.log(`🔧 BOT_PORT: ${process.env.BOT_PORT}`);
+
+healthApp.get('/health', (req, res) => {
+  console.log('🔧 Bot service health check accessed');
+  res.status(200).send('ok');
+});
 
 
 
@@ -161,10 +172,13 @@ if (process.env.NODE_ENV === 'production') {
   logger.info('Memory monitoring started (bot process)');
 }
 
-// Bot service runs as a worker - no HTTP server needed
-console.log('🔧 Bot service starting as background worker...');
-
 // Start the bot
 const bot = new DeliveryBot();
 bot.start();
+
+// Start health check server AFTER bot initialization (like basic-novi)
+healthApp.listen(HEALTH_PORT, () => {
+  console.log(`🔧 Bot health check server running on port ${HEALTH_PORT}`);
+  console.log(`🔧 Health check available at: /health`);
+});
 pollBotControl();

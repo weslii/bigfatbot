@@ -13,8 +13,9 @@ memoryLimit = "512M"
 [[services.workers]]
 name = "whatsapp-bot"
 command = "npm start"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
 memoryLimit = "512M"
-healthcheck = false
 
 # Environment variables
 [env]
