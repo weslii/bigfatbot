@@ -34,8 +34,8 @@ const express = require('express');
 const healthApp = express();
 const isProduction = process.env.NODE_ENV === 'production';
 
-// Use the same port logic as basic-novi (which worked)
-const HEALTH_PORT = isProduction ? process.env.PORT : (process.env.BOT_PORT || 3001);
+// Use a different port for the bot service to avoid conflicts
+const HEALTH_PORT = isProduction ? (process.env.BOT_PORT || 3001) : (process.env.BOT_PORT || 3001);
 
 console.log(`🔧 Bot service will use port: ${HEALTH_PORT}`);
 console.log(`🔧 Environment: ${process.env.NODE_ENV}`);
@@ -177,8 +177,28 @@ const bot = new DeliveryBot();
 bot.start();
 
 // Start health check server AFTER bot initialization (like basic-novi)
-healthApp.listen(HEALTH_PORT, () => {
+const server = healthApp.listen(HEALTH_PORT, () => {
   console.log(`🔧 Bot health check server running on port ${HEALTH_PORT}`);
   console.log(`🔧 Health check available at: /health`);
+});
+
+// Handle server errors
+server.on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`🔧 Port ${HEALTH_PORT} is already in use. Trying alternative port...`);
+    // Try alternative port
+    const alternativePort = HEALTH_PORT + 1;
+    const altServer = healthApp.listen(alternativePort, () => {
+      console.log(`🔧 Bot health check server running on alternative port ${alternativePort}`);
+      console.log(`🔧 Health check available at: /health`);
+    });
+    
+    altServer.on('error', (altError) => {
+      console.error('🔧 Alternative port also failed:', altError);
+      console.error('🔧 Bot service will continue without health check server');
+    });
+  } else {
+    console.error('🔧 Server error:', error);
+  }
 });
 pollBotControl();
