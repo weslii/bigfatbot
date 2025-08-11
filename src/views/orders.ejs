@@ -7,6 +7,66 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="icon" href="/logo-icon copy.svg">
         <link href="/css/orders-dashboard.css" rel="stylesheet">
+    <style>
+        /* Ensure mobile navigation is properly hidden by default */
+        .mobile-nav-overlay {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: rgba(0, 0, 0, 0.5) !important;
+            backdrop-filter: blur(4px) !important;
+            z-index: 2000 !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        .mobile-nav-overlay.show {
+            opacity: 1 !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+        }
+        
+        .mobile-nav-content {
+            position: absolute !important;
+            top: 0 !important;
+            right: 0 !important;
+            width: 280px !important;
+            height: 100% !important;
+            background: var(--card-bg) !important;
+            backdrop-filter: blur(16px) !important;
+            border-left: 1px solid var(--card-border) !important;
+            padding: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            transform: translateX(100%) !important;
+            transition: transform 0.3s ease !important;
+        }
+        
+        .mobile-nav-overlay.show .mobile-nav-content {
+            transform: translateX(0) !important;
+        }
+        
+        /* Hide hamburger menu by default and show on mobile */
+        .hamburger-menu {
+            display: none !important;
+        }
+        
+        @media (max-width: 768px) {
+            .hamburger-menu {
+                display: flex !important;
+            }
+            
+            .header-right .nav-link,
+            .header-right .dropdown,
+            .header-right #theme-toggle {
+                display: none !important;
+            }
+        }
+    </style>
  
 
 </head>
@@ -55,8 +115,8 @@
     </header>
 
     <!-- Mobile Navigation Overlay -->
-    <div class="mobile-nav-overlay" id="mobileNavOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; visibility: hidden; pointer-events: none; z-index: 2000; background: rgba(0,0,0,0.5); transition: all 0.3s ease;">
-        <div class="mobile-nav-content" style="position: absolute; top: 0; right: 0; width: 280px; height: 100%; transform: translateX(100%); transition: transform 0.3s ease; background: var(--card-bg); border-left: 1px solid var(--card-border); display: flex; flex-direction: column;">
+    <div class="mobile-nav-overlay" id="mobileNavOverlay">
+        <div class="mobile-nav-content">
             <div class="mobile-nav-header">
                 <span class="mobile-nav-title">Menu</span>
                 <button class="btn btn-icon close-mobile-nav" id="closeMobileNav">
@@ -1302,60 +1362,20 @@
         }
 
         // Mobile navigation functionality
-        console.log('Loading mobile navigation...');
         const hamburgerMenu = document.getElementById('hamburgerMenu');
         const mobileNavOverlay = document.getElementById('mobileNavOverlay');
         const closeMobileNav = document.getElementById('closeMobileNav');
         const mobileThemeToggle = document.getElementById('mobileThemeToggle');
-        
-        console.log('hamburgerMenu:', hamburgerMenu);
-        console.log('mobileNavOverlay:', mobileNavOverlay);
-        console.log('closeMobileNav:', closeMobileNav);
-        
-        if (!hamburgerMenu) {
-            console.error('Hamburger menu element not found!');
-            return;
-        }
-        
-        if (!mobileNavOverlay) {
-            console.error('Mobile nav overlay element not found!');
-            return;
-        }
 
         // Open mobile menu
-        hamburgerMenu.addEventListener('click', function(e) {
-            console.log('Hamburger menu clicked!');
-            e.preventDefault();
-            e.stopPropagation();
+        hamburgerMenu.addEventListener('click', function() {
             mobileNavOverlay.classList.add('show');
-            mobileNavOverlay.style.opacity = '1';
-            mobileNavOverlay.style.visibility = 'visible';
-            mobileNavOverlay.style.pointerEvents = 'auto';
-            
-            // Also animate the content
-            const mobileNavContent = mobileNavOverlay.querySelector('.mobile-nav-content');
-            if (mobileNavContent) {
-                mobileNavContent.style.transform = 'translateX(0)';
-            }
-            
             document.body.style.overflow = 'hidden';
-            console.log('Mobile nav should be visible now');
         });
 
         // Close mobile menu
         function closeMobileMenu() {
-            console.log('Closing mobile menu...');
             mobileNavOverlay.classList.remove('show');
-            mobileNavOverlay.style.opacity = '0';
-            mobileNavOverlay.style.visibility = 'hidden';
-            mobileNavOverlay.style.pointerEvents = 'none';
-            
-            // Reset content position
-            const mobileNavContent = mobileNavOverlay.querySelector('.mobile-nav-content');
-            if (mobileNavContent) {
-                mobileNavContent.style.transform = 'translateX(100%)';
-            }
-            
             document.body.style.overflow = '';
         }
 
