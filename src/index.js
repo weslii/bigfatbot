@@ -34,12 +34,10 @@ const express = require('express');
 const healthApp = express();
 const isProduction = process.env.NODE_ENV === 'production';
 
-// Health check uses normal PORT (publicly exposed), bot service uses BOT_PORT
+// Use the same port logic as basic-novi (which worked)
 const HEALTH_PORT = isProduction ? process.env.PORT : (process.env.BOT_PORT || 3001);
-const BOT_SERVICE_PORT = process.env.BOT_PORT || 3001;
 
-console.log(`🔧 Health check will use port: ${HEALTH_PORT}`);
-console.log(`🔧 Bot service will use port: ${BOT_SERVICE_PORT}`);
+console.log(`🔧 Bot service will use port: ${HEALTH_PORT}`);
 console.log(`🔧 Environment: ${process.env.NODE_ENV}`);
 console.log(`🔧 PORT: ${process.env.PORT}`);
 console.log(`🔧 BOT_PORT: ${process.env.BOT_PORT}`);
