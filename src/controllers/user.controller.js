@@ -231,7 +231,7 @@ module.exports = {
       }
 
       // Get time range from query params
-      const timeRange = parseInt(req.query.timeRange) || 30;
+      const timeRange = parseInt(req.query.timeRange) || 7;
 
       // Get analytics data
       const analyticsData = await AnalyticsService.getUserAnalytics(userId, timeRange);

@@ -121,12 +121,12 @@
             </div>
             <div class="page-actions">
                 <div class="date-filter">
-                    <select id="timeRange" class="form-select">
-                        <option value="7">Last 7 days</option>
-                        <option value="30" selected>Last 30 days</option>
-                        <option value="90">Last 90 days</option>
-                        <option value="365">Last year</option>
-                    </select>
+                                         <select id="timeRange" class="form-select">
+                         <option value="7" selected>Last 7 days</option>
+                         <option value="30">Last 30 days</option>
+                         <option value="90">Last 90 days</option>
+                         <option value="365">Last year</option>
+                     </select>
                 </div>
             </div>
         </div>
@@ -1108,10 +1108,10 @@
             datasets: [{
                 data: analyticsData.orderStatus.data,
                 backgroundColor: [
-                    '#10b981',
-                    '#f59e0b',
-                    '#ef4444',
-                    '#6b7280'
+                    '#ef4444',  // Cancelled - red
+                    '#10b981',  // Delivered - green
+                    '#f59e0b',  // Pending - orange
+                    '#3b82f6'   // Processing - blue
                 ]
             }]
         },
@@ -1171,7 +1171,16 @@
     });
 
     // Time range filter
-    document.getElementById('timeRange').addEventListener('change', function() {
+    const timeRangeSelect = document.getElementById('timeRange');
+    
+    // Set the correct selected option based on URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentTimeRange = urlParams.get('timeRange');
+    if (currentTimeRange) {
+        timeRangeSelect.value = currentTimeRange;
+    }
+    
+    timeRangeSelect.addEventListener('change', function() {
         // Reload page with new time range
         const timeRange = this.value;
         window.location.href = `/analytics?timeRange=${timeRange}`;
