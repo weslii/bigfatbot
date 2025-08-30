@@ -5,9 +5,12 @@ const NotificationService = require('../NotificationService');
 class WhatsAppCoreService {
   constructor() {
     this.client = new Client({
-      authStrategy: new LocalAuth(),
+      authStrategy: new LocalAuth({
+        clientId: 'bigfatbot-whatsapp',
+        dataPath: './.wwebjs_auth'
+      }),
       puppeteer: {
-        headless: true,
+        headless: false,
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
@@ -22,44 +25,67 @@ class WhatsAppCoreService {
           '--disable-features=TranslateUI',
           '--disable-ipc-flooding-protection',
           '--memory-pressure-off',
-          '--max_old_space_size=512', // Limit V8 memory
+          '--max_old_space_size=512',
+          '--js-flags=--max-old-space-size=512',
+          '--disable-web-security',
+          '--disable-features=VizDisplayCompositor',
+          '--disable-extensions-except',
+          '--disable-extensions',
+          '--disable-plugins',
+          '--disable-images',
+          '--disable-javascript-harmony-shipping',
+          '--disable-background-networking',
+          '--disable-default-apps',
+          '--disable-sync',
+          '--disable-translate',
+          '--hide-scrollbars',
+          '--mute-audio',
+          '--safebrowsing-disable-auto-update',
+          '--disable-client-side-phishing-detection',
+          '--disable-component-update',
+          '--disable-domain-reliability',
+          '--disable-features=AudioServiceOutOfProcess',
+          '--disable-background-timer-throttling',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-renderer-backgrounding',
+          '--disable-features=TranslateUI',
+          '--disable-ipc-flooding-protection',
+          '--memory-pressure-off',
+          '--max_old_space_size=512',
+          '--js-flags=--max-old-space-size=512',
+          '--disable-blink-features=AutomationControlled',
+          '--disable-web-security',
+          '--allow-running-insecure-content',
+          '--disable-features=VizDisplayCompositor',
+          '--disable-dev-shm-usage',
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-gpu-sandbox',
+          '--disable-software-rasterizer',
+          '--disable-background-timer-throttling',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-renderer-backgrounding',
+          '--disable-features=TranslateUI',
+          '--disable-ipc-flooding-protection',
+          '--memory-pressure-off',
+          '--max_old_space_size=512',
           '--js-flags=--max-old-space-size=512'
         ],
         defaultViewport: {
           width: 800,
           height: 600
-        }
+        },
+        timeout: 60000,
+        protocolTimeout: 60000
       },
       // Memory optimization options
       disableWelcome: true,
-      useChrome: false, // Use system Chrome if available
-      browserArgs: [
-        '--disable-extensions',
-        '--disable-plugins',
-        '--disable-images',
-        '--disable-javascript-harmony-shipping',
-        '--disable-background-networking',
-          '--disable-default-apps',
-          '--disable-sync',
-          '--disable-translate',
-          '--hide-scrollbars',
-        '--mute-audio',
-        '--no-first-run',
-        '--safebrowsing-disable-auto-update',
-        '--disable-client-side-phishing-detection',
-        '--disable-component-update',
-        '--disable-domain-reliability',
-        '--disable-features=AudioServiceOutOfProcess',
-        '--disable-ipc-flooding-protection',
-        '--disable-background-timer-throttling',
-        '--disable-backgrounding-occluded-windows',
-        '--disable-renderer-backgrounding',
-        '--disable-features=TranslateUI',
-        '--disable-ipc-flooding-protection',
-        '--memory-pressure-off',
-        '--max_old_space_size=512',
-        '--js-flags=--max-old-space-size=512'
-      ]
+      useChrome: false,
+      takeoverOnConflict: true,
+      takeoverTimeoutMs: 10000,
+      qrMaxRetries: 5,
+      authTimeoutMs: 60000,
+      restartOnAuthFail: true
     });
 
     this.isAuthenticated = false;

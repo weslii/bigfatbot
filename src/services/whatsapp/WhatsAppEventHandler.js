@@ -59,6 +59,29 @@ class WhatsAppEventHandler {
       
       // Store connection status in database for cross-process access
       this.core.storeConnectionStatus('authenticated', this.core.client.info?.wid?.user);
+      
+      // WORKAROUND: If ready event doesn't fire within 10 seconds, manually trigger ready state
+      setTimeout(async () => {
+        if (this.core.client && this.core.client.info && this.core.client.info.wid) {
+          logger.info('=== MANUAL READY STATE TRIGGERED (authenticated event workaround) ===');
+          this.core.isAuthenticated = true;
+          this.core.latestQrDataUrl = null;
+          logger.info('WhatsApp client is ready (manual trigger)');
+          
+          // Store connection status in database for cross-process access
+          await this.core.storeConnectionStatus('connected', this.core.client.info?.wid?.user);
+          
+          // Send connection restored notification
+          try {
+            await NotificationService.notifyConnectionRestored({
+              'Reconnection Time': 'Manual trigger',
+              'Previous Status': 'Authenticated but ready event missing'
+            });
+          } catch (notificationError) {
+            logger.error('Error sending connection restored notification:', notificationError);
+          }
+        }
+      }, 10000); // 10 second delay
     });
 
     this.core.client.on('auth_failure', async (error) => {
