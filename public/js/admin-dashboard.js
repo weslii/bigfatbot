@@ -890,6 +890,8 @@ function closeOrderDetailsModal() {
 async function restartBot(platform) {
   const platformName = platform === 'whatsapp' ? 'WhatsApp' : platform === 'telegram' ? 'Telegram' : 'All Platforms';
   
+  console.log(`Attempting to restart ${platformName} bot...`);
+  
   // Add confirmation dialog
   if (!confirm(`Are you sure you want to restart the ${platformName} bot? This will temporarily disconnect the bot.`)) {
     return;
@@ -912,6 +914,7 @@ async function restartBot(platform) {
     
     // Get admin user ID from the page
     const adminId = getAdminId();
+    console.log('Admin ID:', adminId);
     
     const response = await fetch(`/api/bot/restart`, {
       method: 'POST',
@@ -924,7 +927,15 @@ async function restartBot(platform) {
       })
     });
     
+    console.log('Response status:', response.status);
+    console.log('Response headers:', response.headers);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const result = await response.json();
+    console.log('Restart result:', result);
     
     if (result.success) {
       if (result.authenticated === false && result.message && /authenticat|qr/i.test(result.message)) {
@@ -953,7 +964,17 @@ async function restartBot(platform) {
     }
   } catch (error) {
     console.error('Restart error:', error);
-    showNotification(`Error: Failed to restart ${platformName} bot`, 'error');
+    showNotification(`Error: Failed to restart ${platformName} bot - ${error.message}`, 'error');
+    
+    // Restore button state on error
+    const buttons = document.querySelectorAll(`[onclick*="restartBot('${platform}')"]`);
+    buttons.forEach(button => {
+      button.disabled = false;
+      button.innerHTML = button.innerHTML.replace('<i class="fas fa-spinner fa-spin"></i> Restarting...', 
+        platform === 'whatsapp' ? '<i class="fab fa-whatsapp"></i> Restart WhatsApp' :
+        platform === 'telegram' ? '<i class="fab fa-telegram"></i> Restart Telegram' :
+        '<i class="fas fa-sync-alt"></i> Restart All');
+    });
   }
 }
 
