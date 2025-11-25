@@ -24,12 +24,70 @@ class WhatsAppMessageHandler {
     logger.info('WhatsAppMessageHandler initialized');
   }
 
+  /**
+   * Get contact using client.getContactById() - the newer API method
+   * Falls back to creating contact from message properties if API fails
+   * For group messages, uses message.author; for direct messages, uses message.from
+   */
+  async getContact(message) {
+    // For group messages, message.author contains the sender's contact ID
+    // For direct messages, message.from contains the contact ID
+    const contactId = message.author || message.from;
+    
+    if (!contactId) {
+      logger.warn('No contact ID found in message, creating minimal contact object');
+      return this.createContactFromMessage(message);
+    }
+
+    try {
+      // Use the newer API method: client.getContactById()
+      return await this.core.client.getContactById(contactId);
+    } catch (error) {
+      // If getContactById() fails, fallback to creating contact from message properties
+      logger.warn('getContactById() failed, using message properties fallback:', error.message);
+      return this.createContactFromMessage(message);
+    }
+  }
+
+  /**
+   * Create a contact object directly from message properties
+   * This is a reliable fallback when API methods fail
+   */
+  createContactFromMessage(message) {
+    const contactId = message.author || message.from;
+    const number = contactId ? contactId.split('@')[0] : null;
+    
+    // Check if message is from bot itself
+    let isMe = false;
+    try {
+      if (this.core?.client?.info?.wid) {
+        const botId = typeof this.core.client.info.wid === 'string' 
+          ? this.core.client.info.wid.split('@')[0]
+          : this.core.client.info.wid.user;
+        isMe = number === botId;
+      }
+    } catch (infoError) {
+      logger.debug('Could not determine if message is from bot:', infoError.message);
+    }
+
+    return {
+      id: { _serialized: contactId },
+      number: number,
+      name: message.notifyName || message.pushName || number || 'Unknown',
+      pushname: message.notifyName || message.pushName || null,
+      isMe: isMe,
+      isUser: !isMe,
+      isGroup: false,
+      isBusiness: false
+    };
+  }
+
   async handleMessage(message) {
     const start = Date.now();
     let success = false;
     try {
       const chat = await message.getChat();
-      const contact = await message.getContact();
+      const contact = await this.getContact(message);
       
       // Handle setup command FIRST (before checking if group is registered)
       if (message.body.startsWith('/setup')) {
