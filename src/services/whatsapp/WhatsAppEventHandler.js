@@ -36,6 +36,49 @@ class WhatsAppEventHandler {
       logger.info('WhatsApp client is ready');
       logger.info('isAuthenticated set to:', this.core.isAuthenticated);
       
+      // ========================================================================
+      // TEMPORARY WORKAROUND: Fix for whatsapp-web.js markedUnread error
+      // ========================================================================
+      // Issue: GitHub Issue #5718 - "Cannot read properties of undefined (reading 'markedUnread')"
+      // PR: GitHub PR #5719 - Fixes the issue by using markSeen instead of sendSeen
+      // Status: PR is open but not yet merged into the official npm package
+      // 
+      // Problem: WhatsApp Web changed its internal structure in January 2026, causing
+      //          whatsapp-web.js's sendSeen() function to fail when trying to access
+      //          the markedUnread property on chat objects that aren't fully initialized.
+      //
+      // Solution: This runtime patch applies the same fix as PR #5719 - it replaces
+      //           the sendSeen function to use markSeen() instead of sendSeen(), which
+      //           doesn't have the markedUnread dependency issue.
+      //
+      // TODO: REMOVE THIS PATCH when:
+      //       1. PR #5719 is merged into whatsapp-web.js
+      //       2. A new version of whatsapp-web.js is published to npm with the fix
+      //       3. The package is updated: npm update whatsapp-web.js
+      //       4. Verify the fix is working in the new version
+      //
+      // Reference: https://github.com/pedroslopez/whatsapp-web.js/issues/5718
+      //            https://github.com/pedroslopez/whatsapp-web.js/pull/5719
+      // ========================================================================
+      try {
+        await this.core.client.pupPage?.evaluate(`
+          window.WWebJS.sendSeen = async (chatId) => {
+            const chat = await window.WWebJS.getChat(chatId, { getAsModel: false });
+            if (chat) {
+              window.Store.WAWebStreamModel.Stream.markAvailable();
+              await window.Store.SendSeen.markSeen(chat);
+              window.Store.WAWebStreamModel.Stream.markUnavailable();
+              return true;
+            }
+            return false;
+          };
+        `);
+        logger.info('✅ Applied sendSeen patch (workaround for issue #5718 / PR #5719)');
+      } catch (patchError) {
+        logger.warn('⚠️ Failed to apply sendSeen patch:', patchError);
+        // Don't fail the ready event if patch fails - messages might still work
+      }
+      
       // Store connection status in database for cross-process access
       await this.core.storeConnectionStatus('connected', this.core.client.info?.wid?.user);
       
