@@ -304,6 +304,17 @@
                         </div>
                     </div>
 
+                    <!-- Performance by team member (Orders by submitter) -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Orders by submitter</h3>
+                            <p>Who submitted orders to the sales group (performance by team member)</p>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="submitterStatsChart"></canvas>
+                        </div>
+                    </div>
+
                     <!-- Order Metrics -->
                     <div class="metrics-group-card">
                         <div class="metrics-group-header">
@@ -1148,6 +1159,36 @@
             },
             scales: {
                 y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Orders by submitter (Performance by team member)
+    const submitterStats = analyticsData.submitterStats || { labels: [], data: [] };
+    const submitterStatsCtx = document.getElementById('submitterStatsChart').getContext('2d');
+    new Chart(submitterStatsCtx, {
+        type: 'bar',
+        data: {
+            labels: submitterStats.labels,
+            datasets: [{
+                label: 'Orders submitted',
+                data: submitterStats.data,
+                backgroundColor: '#10b981'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
                     beginAtZero: true
                 }
             }

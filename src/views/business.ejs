@@ -235,6 +235,7 @@
                                             <tr>
                                                 <th>Order ID</th>
                                                 <th>Customer</th>
+                                                <th>Submitted by</th>
                                                 <th>Items</th>
                                                 <th>Status</th>
                                                 <th>Date</th>
@@ -246,6 +247,7 @@
                                                 <tr>
                                                     <td><strong><%= order.order_id %></strong></td>
                                                     <td><%= order.customer_name %></td>
+                                                    <td><%= order.submitted_by || '—' %></td>
                                                     <td>
                                                         <% 
                                                         let itemsDisplay = '';
@@ -1872,6 +1874,10 @@
                             <div class="order-detail-item">
                                 <label class="order-detail-label">Customer Name</label>
                                 <div class="order-detail-value">${order.customer_name}</div>
+                            </div>
+                            <div class="order-detail-item">
+                                <label class="order-detail-label">Submitted by</label>
+                                <div class="order-detail-value">${order.submitted_by || '—'}</div>
                             </div>
                             <div class="order-detail-item">
                                 <label class="order-detail-label">Customer Phone</label>

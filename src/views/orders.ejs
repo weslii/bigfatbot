@@ -310,6 +310,7 @@
                   <th>Order ID</th>
                                 <th>Business</th>
                   <th>Customer</th>
+                  <th>Submitted by</th>
                   <th>Status</th>
                                 <th>Created</th>
                   <th>Actions</th>
@@ -323,6 +324,7 @@
                                         <td><strong><%= order.order_id %></strong></td>
                                         <td><span class="business-badge"><%= order.business_name %></span></td>
                                         <td><%= order.customer_name %></td>
+                                        <td><%= order.submitted_by || '—' %></td>
                       <td>
                                             <span class="status-badge <%= order.status %>"><%= order.status %></span>
                       </td>
@@ -344,7 +346,7 @@
                   <% }); %>
                 <% } else { %>
                   <tr>
-                                    <td colspan="6" class="no-orders">
+                                    <td colspan="8" class="no-orders">
                                         <i class="fas fa-box-open"></i>
                                         <p>No orders found matching your criteria.</p>
                     </td>
@@ -620,6 +622,7 @@
                     <h4>Order ID: ${order.order_id}</h4>
                         <p><strong>Business:</strong> ${order.business_name || 'N/A'}</p>
                         <p><strong>Customer Name:</strong> ${order.customer_name || 'N/A'}</p>
+                        <p><strong>Submitted by:</strong> ${order.submitted_by || '—'}</p>
                         <p><strong>Customer Phone:</strong> ${order.customer_phone || 'N/A'}</p>
                         <p><strong>Delivery Address:</strong> ${order.address || 'N/A'}</p>
                     <p><strong>Status:</strong> <span class="status-badge ${order.status}">${order.status}</span></p>

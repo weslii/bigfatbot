@@ -294,6 +294,7 @@
                                                 <tr>
                                                     <th>Order ID</th>
                                                     <th>Customer</th>
+                                                    <th>Submitted by</th>
                                                     <th>Status</th>
                                                     <th>Date</th>
                                                 </tr>
@@ -303,6 +304,7 @@
                                                     <tr>
                                                         <td><%= order.order_id %></td>
                                                         <td><%= order.customer_name %></td>
+                                                        <td><%= order.submitted_by || '—' %></td>
                                                         <td><span class="status-badge <%= order.status %>"><%= order.status %></span></td>
                                                         <td><%= order.created_at ? new Date(order.created_at).toLocaleDateString() : '-' %></td>
                                                     </tr>
@@ -317,6 +319,7 @@
                                                 <tr>
                                                     <th>Order ID</th>
                                                     <th>Customer</th>
+                                                    <th>Submitted by</th>
                                                     <th>Status</th>
                                                     <th>Date</th>
                                                 </tr>
@@ -325,6 +328,7 @@
                                                 <tr>
                                                     <td>—</td>
                                                     <td>No recent orders</td>
+                                                    <td>—</td>
                                                     <td>—</td>
                                                     <td>—</td>
                                                 </tr>
@@ -424,7 +428,7 @@
                                         </div>
                                         <div class="activity-content">
                                             <div class="activity-title">Order <%= order.order_id %></div>
-                                            <div class="activity-description">Placed by <%= order.customer_name %></div>
+                                            <div class="activity-description">Placed by <%= order.customer_name %><% if (order.submitted_by) { %> · Submitted by <%= order.submitted_by %><% } %></div>
                                             <div class="activity-time"><%= order.created_at ? new Date(order.created_at).toLocaleString() : '-' %></div>
                                         </div>
                                     </div>

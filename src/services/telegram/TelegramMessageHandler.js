@@ -263,6 +263,7 @@ class TelegramMessageHandler {
         
         if (attemptedParsing) {
           if (orderData) {
+            orderData.submitted_by = senderName;
             orderData.business_id = groupInfo.business_id;
             const order = await OrderService.createOrder(groupInfo.business_id, orderData, this.confirmationService);
             

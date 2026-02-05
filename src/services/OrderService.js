@@ -70,7 +70,8 @@ class OrderService {
           total_revenue: matchingResult.totalRevenue,
           matched_items: matchedItemsToStore,
           matching_confidence: matchingResult.confidence,
-          matching_status: matchingResult.status
+          matching_status: matchingResult.status,
+          submitted_by: orderData.submitted_by || null
         })
         .returning('*');
 

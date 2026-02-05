@@ -898,6 +898,25 @@ class AdminService {
         if (order.status === 'cancelled') businessStats[businessName].cancelledOrders++;
       });
 
+      // Orders by submitter (performance by who sent order to sales group)
+      const submittedByMap = {};
+      orders.forEach(order => {
+        const name = order.submitted_by || 'Unknown';
+        if (!submittedByMap[name]) {
+          submittedByMap[name] = { orderCount: 0, totalRevenue: 0 };
+        }
+        submittedByMap[name].orderCount++;
+        submittedByMap[name].totalRevenue += parseFloat(order.total_revenue) || parseFloat(order.total_amount) || 0;
+      });
+      const submittedByEntries = Object.entries(submittedByMap)
+        .map(([label, v]) => ({ label, orderCount: v.orderCount, totalRevenue: v.totalRevenue }))
+        .sort((a, b) => b.orderCount - a.orderCount);
+      const submittedByStats = {
+        labels: submittedByEntries.map(e => e.label),
+        data: submittedByEntries.map(e => e.orderCount),
+        details: submittedByEntries
+      };
+
       // Get business and user statistics
       const businessQuery = database.query('groups');
       const userQuery = database.query('users');
@@ -980,6 +999,7 @@ class AdminService {
         cancelledOrders,
         statusCounts,
         businessStats,
+        submittedByStats,
         orders,
         totalBusinesses: totalBusinesses?.count || 0,
         activeBusinesses: activeBusinesses?.count || 0,

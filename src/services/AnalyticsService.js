@@ -35,6 +35,7 @@ class AnalyticsService {
         businessRevenue,
         businessOrders,
         orderStatus,
+        submitterStats,
         monthlyComparison,
         customerData
       ] = await Promise.all([
@@ -45,6 +46,7 @@ class AnalyticsService {
         this.getBusinessRevenue(businessIds, startDate, endDate),
         this.getBusinessOrders(businessIds, startDate, endDate),
         this.getOrderStatus(businessIds, startDate, endDate),
+        this.getSubmitterStats(businessIds, startDate, endDate),
         this.getMonthlyComparison(businessIds),
         this.getCustomerData(businessIds, startDate, endDate)
       ]);
@@ -72,6 +74,7 @@ class AnalyticsService {
         businessRevenue,
         businessOrders,
         orderStatus,
+        submitterStats,
         monthlyComparison,
         customerData,
 
@@ -284,6 +287,29 @@ class AnalyticsService {
     }
   }
 
+  async getSubmitterStats(businessIds, startDate, endDate) {
+    try {
+      const results = await database.query('orders')
+        .select(
+          database.query.raw("COALESCE(submitted_by, 'Unknown') as submitter_name"),
+          database.query.raw('COUNT(*) as order_count')
+        )
+        .whereIn('business_id', businessIds)
+        .where('created_at', '>=', startDate)
+        .where('created_at', '<=', endDate)
+        .groupByRaw("COALESCE(submitted_by, 'Unknown')")
+        .orderByRaw('COUNT(*) DESC');
+
+      return {
+        labels: results.map(r => r.submitter_name || 'Unknown'),
+        data: results.map(r => parseInt(r.order_count))
+      };
+    } catch (error) {
+      logger.error('Error getting submitter stats:', error);
+      return { labels: [], data: [] };
+    }
+  }
+
   async getMonthlyComparison(businessIds) {
     try {
       const currentMonth = new Date();
@@ -384,6 +410,7 @@ class AnalyticsService {
       businessRevenue: { labels: [], data: [] },
       businessOrders: { labels: [], data: [] },
       orderStatus: { labels: [], data: [] },
+      submitterStats: { labels: [], data: [] },
       monthlyComparison: { current: 0, previous: 0 },
       customerData: { activeCustomers: 0, previousActiveCustomers: 0 },
       highestDailyRevenue: 0,

@@ -92,6 +92,7 @@
                                     <th>Order ID</th>
                                     <th>Business</th>
                                     <th>Customer</th>
+                                    <th>Submitted by</th>
                                     <th>Status</th>
                                     <th>Date</th>
                                     <th>Actions</th>
@@ -103,6 +104,7 @@
                                     <td style="font-weight: 600; color: var(--text-primary);"><%= order.order_id %></td>
                                     <td style="color: var(--text-secondary);"><%= order.business_name %></td>
                                     <td style="color: var(--text-secondary);"><%= order.customer_name %></td>
+                                    <td style="color: var(--text-secondary);"><%= order.submitted_by || '—' %></td>
                                     <td>
                                         <% if (order.status === 'completed') { %>
                                             <span class="status-badge active">Completed</span>
@@ -143,6 +145,10 @@
                                                         <div class="detail-row">
                                                             <div class="detail-label">Customer:</div>
                                                             <div class="detail-value"><%= order.customer_name %></div>
+                                                        </div>
+                                                        <div class="detail-row">
+                                                            <div class="detail-label">Submitted by:</div>
+                                                            <div class="detail-value"><%= order.submitted_by || '—' %></div>
                                                         </div>
                                                         <div class="detail-row">
                                                             <div class="detail-label">Phone:</div>

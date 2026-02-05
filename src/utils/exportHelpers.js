@@ -6,6 +6,7 @@ function generateOrdersCSV(orders) {
     'Order ID',
     'Business',
     'Customer Name',
+    'Submitted by',
     'Customer Phone',
     'Address',
     'Items',
@@ -21,7 +22,8 @@ function generateOrdersCSV(orders) {
     const row = [
       `"${order.order_id || ''}"`,
       `"${order.business_name || ''}"`,
-      `"${order.customer_name || ''}"`,
+      `"${(order.customer_name || '').replace(/"/g, '""')}"`,
+      `"${(order.submitted_by || '').replace(/"/g, '""')}"`,
       `"${order.customer_phone || ''}"`,
       `"${order.address || ''}"`,
       `"${order.items || ''}"`,
@@ -127,8 +129,8 @@ function generateOrdersPDF(orders, res, businessName = null) {
   const tableTop = doc.y;
   const tableLeft = 30;
   const tableWidth = doc.page.width - 60;
-  const colWidths = [80, 100, 80, 80, 80, 60, 80, 80]; // Adjusted column widths
-  const headers = ['Order ID', 'Customer', 'Phone', 'Business', 'Status', 'Items', 'Delivery Date', 'Created'];
+  const colWidths = [80, 100, 80, 80, 80, 80, 60, 80, 80]; // Order ID, Customer, Submitted by, Phone, Business, Status, Items, Delivery Date, Created
+  const headers = ['Order ID', 'Customer', 'Submitted by', 'Phone', 'Business', 'Status', 'Items', 'Delivery Date', 'Created'];
   
   // Draw table header
   doc.rect(tableLeft, tableTop, tableWidth, 25).fill('#f3f4f6');
@@ -159,6 +161,7 @@ function generateOrdersPDF(orders, res, businessName = null) {
     const rowData = [
       order.order_id || 'N/A',
       (order.customer_name || 'N/A').substring(0, 15),
+      (order.submitted_by || '—').substring(0, 12),
       (order.customer_phone || 'N/A').substring(0, 12),
       (order.business_name || 'N/A').substring(0, 15),
       order.status || 'N/A',
@@ -169,7 +172,7 @@ function generateOrdersPDF(orders, res, businessName = null) {
     
     currentX = tableLeft + 5;
     rowData.forEach((cell, i) => {
-      if (i === 4) { // Status column
+      if (i === 5) { // Status column
         doc.fillColor(statusColor);
       } else {
         doc.fillColor('black');

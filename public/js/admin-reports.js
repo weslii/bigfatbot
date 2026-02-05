@@ -278,6 +278,7 @@ flatpickr('#date-range', {
 
 let businessUserBarChart = null;
 let ordersBarChart = null;
+let submitterStatsChart = null;
 let parsingPieChart = null;
 let parsingBarChart = null;
 
@@ -328,6 +329,31 @@ function renderOrdersBarChart(stats) {
       responsive: true,
       plugins: { legend: { display: false } },
       scales: { y: { beginAtZero: true } }
+    }
+  });
+}
+
+function renderSubmitterStatsChart(stats) {
+  const ctx = document.getElementById('submitterStatsChart').getContext('2d');
+  if (submitterStatsChart) submitterStatsChart.destroy();
+  const submittedByStats = stats.submittedByStats || { labels: [], data: [] };
+  const labels = submittedByStats.labels && submittedByStats.labels.length ? submittedByStats.labels : ['No data'];
+  const data = submittedByStats.data && submittedByStats.data.length ? submittedByStats.data : [0];
+  submitterStatsChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Orders submitted',
+        data,
+        backgroundColor: 'rgba(16, 185, 129, 0.7)'
+      }]
+    },
+    options: {
+      responsive: true,
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: { x: { beginAtZero: true } }
     }
   });
 }
@@ -383,6 +409,7 @@ function renderParsingBarChart(stats) {
 function renderAllCharts(stats) {
   renderBusinessUserBarChart(stats);
   renderOrdersBarChart(stats);
+  renderSubmitterStatsChart(stats);
   renderParsingPieChart(stats);
   renderParsingBarChart(stats);
 }
