@@ -36,58 +36,6 @@ class WhatsAppEventHandler {
       logger.info('WhatsApp client is ready');
       logger.info('isAuthenticated set to:', this.core.isAuthenticated);
       
-      // ========================================================================
-      // TEMPORARY WORKAROUND: Fix for whatsapp-web.js markedUnread error
-      // ========================================================================
-      // Issue: GitHub Issue #5718 - "Cannot read properties of undefined (reading 'markedUnread')"
-      // PR: GitHub PR #5729 - Better fix that includes threadId and chat parameters as object
-      // Status: PR #5729 is open but not yet merged into the official npm package
-      //        (PR #5719 was merged but doesn't fix blue read checkmarks)
-      // 
-      // Problem: WhatsApp Web changed its internal structure in January 2026, causing
-      //          whatsapp-web.js's sendSeen() function to fail when trying to access
-      //          the markedUnread property on chat objects. The old fix (PR #5719) used
-      //          markSeen() but broke blue read checkmarks. This fix uses sendSeen() with
-      //          proper object parameters: { chat: chat, threadId: undefined }
-      //
-      // Solution: This runtime patch applies the fix from PR #5729 - it updates sendSeen
-      //           to pass chat and threadId as an object instead of just the chat object.
-      //           This fixes both the markedUnread error AND preserves blue read checkmarks.
-      //
-      // TODO: REMOVE THIS PATCH when:
-      //       1. PR #5729 is merged into whatsapp-web.js
-      //       2. A new version of whatsapp-web.js is published to npm with the fix
-      //       3. The package is updated: npm update whatsapp-web.js
-      //       4. Verify the fix is working in the new version
-      //
-      // Reference: https://github.com/pedroslopez/whatsapp-web.js/issues/5718
-      //            https://github.com/pedroslopez/whatsapp-web.js/pull/5729 (BETTER FIX)
-      //            https://github.com/pedroslopez/whatsapp-web.js/pull/5719 (merged but incomplete)
-      // ========================================================================
-      try {
-        await this.core.client.pupPage?.evaluate(`
-          window.WWebJS.sendSeen = async (chatId) => {
-            const chat = await window.WWebJS.getChat(chatId, { getAsModel: false });
-            if (chat) {
-              window.Store.WAWebStreamModel.Stream.markAvailable();
-              // Use sendSeen with object parameters (PR #5729 fix)
-              // This fixes markedUnread error AND preserves blue read checkmarks
-              await window.Store.SendSeen.sendSeen({
-                chat: chat,
-                threadId: undefined
-              });
-              window.Store.WAWebStreamModel.Stream.markUnavailable();
-              return true;
-            }
-            return false;
-          };
-        `);
-        logger.info('✅ Applied sendSeen patch (workaround for issue #5718 / PR #5729 - best fix)');
-      } catch (patchError) {
-        logger.warn('⚠️ Failed to apply sendSeen patch:', patchError);
-        // Don't fail the ready event if patch fails - messages might still work
-      }
-      
       // Store connection status in database for cross-process access
       await this.core.storeConnectionStatus('connected', this.core.client.info?.wid?.user);
       
