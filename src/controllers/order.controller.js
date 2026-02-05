@@ -11,7 +11,7 @@ module.exports = {
         return res.redirect('/login');
       }
 
-      const { business, status, search, startDate = '', endDate = '', page = 1, pageSize = 10 } = req.query;
+      const { business, status, search, submittedBy, startDate = '', endDate = '', page = 1, pageSize = 10 } = req.query;
 
       // Get user's business IDs first to avoid duplicates
       const userBusinesses = await db.query('groups')
@@ -30,6 +30,9 @@ module.exports = {
       }
       if (status) {
         query.where('o.status', status);
+      }
+      if (submittedBy) {
+        query.where('o.submitted_by', submittedBy);
       }
       if (search) {
         query.where(function() {
@@ -61,6 +64,15 @@ module.exports = {
         .offset((page - 1) * pageSize);
         
       const businesses = userBusinesses;
+
+      // Distinct submitters for filter dropdown (user's orders only)
+      const submitters = await db.query('orders as o')
+        .select('o.submitted_by')
+        .whereIn('o.business_id', businessIds)
+        .whereNotNull('o.submitted_by')
+        .where('o.submitted_by', '!=', '')
+        .groupBy('o.submitted_by')
+        .orderBy('o.submitted_by', 'asc');
 
       // Chart Data - Use the same approach to avoid duplicates
       const baseChartQuery = db.query('orders as o')
@@ -103,12 +115,14 @@ module.exports = {
         title: 'Orders Management',
         orders,
         businesses,
+        submitters,
         totalOrders,
         totalPages,
         page: parseInt(page, 10),
         pageSize: parseInt(pageSize, 10),
         selectedBusiness: business,
         selectedStatus: status,
+        selectedSubmittedBy: submittedBy,
         search,
         startDate,
         endDate,
@@ -129,7 +143,7 @@ module.exports = {
   // Export functionality with streaming for large datasets
   exportOrders: async (req, res) => {
     try {
-      const { userId, business_id, status, search, format = 'csv', streaming = 'true' } = req.query;
+      const { userId, business_id, status, search, submittedBy, format = 'csv', streaming = 'true' } = req.query;
       // Get userId from session if not provided in query
       const currentUserId = userId || (req.session && req.session.userId ? String(req.session.userId) : null);
       if (!currentUserId) {
@@ -162,6 +176,9 @@ module.exports = {
       }
       if (status) {
         query = query.where('o.status', status);
+      }
+      if (submittedBy) {
+        query = query.where('o.submitted_by', submittedBy);
       }
       if (search) {
         query = query.where(function() {

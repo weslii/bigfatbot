@@ -982,7 +982,7 @@ module.exports = {
   // Export functionality
   exportOrders: async (req, res) => {
     try {
-      const { userId, business_id, status, search, format = 'csv', streaming = 'true' } = req.query;
+      const { userId, business_id, status, search, submittedBy, format = 'csv', streaming = 'true' } = req.query;
       
       // Get userId from session if not provided in query
       const currentUserId = userId || (req.session && req.session.userId ? String(req.session.userId) : null);
@@ -1016,6 +1016,9 @@ module.exports = {
       }
       if (status) {
         query = query.where('o.status', status);
+      }
+      if (submittedBy) {
+        query = query.where('o.submitted_by', submittedBy);
       }
       if (search) {
         query = query.where(function() {

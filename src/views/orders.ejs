@@ -240,6 +240,18 @@
             </div>
 
                     <div class="form-group">
+                        <label class="form-label" for="submittedByFilter">Submitted by</label>
+                        <select class="form-select" name="submittedBy" id="submittedByFilter">
+                            <option value="">All senders</option>
+                            <% if (typeof submitters !== 'undefined' && submitters && submitters.length) { %>
+                                <% submitters.forEach(function(s) { %>
+                                    <option value="<%= s.submitted_by %>" <%= selectedSubmittedBy === s.submitted_by ? 'selected' : '' %>><%= s.submitted_by %></option>
+                                <% }); %>
+                            <% } %>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
                         <label class="form-label" for="startDateFilter">Start Date</label>
                         <input type="date" class="form-input" name="startDate" id="startDateFilter"
                                value="<%= startDate ?? '' %>">
