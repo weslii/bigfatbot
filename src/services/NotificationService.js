@@ -9,7 +9,7 @@ const TELEGRAM_CHAT_ID = '1073212927';
 const EMAIL_CONFIG = {
   service: 'gmail',
   auth: {
-    user: 'wesleygreat58@gmail.com',
+    user: 'wesley@gmail.com',
     pass: 'xnrt qyna xwve wfja' // Your actual app password
   }
 };
