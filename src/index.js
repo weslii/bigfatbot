@@ -75,8 +75,14 @@ class DeliveryBot {
 
       // Apply current notifications setting immediately
       try {
-        const enabled = await AppSettingsService.getBoolean('continuous_notifications_enabled', true);
-        NotificationService.setContinuousNotificationsEnabled(enabled);
+        const [continuousEnabled, emailEnabled, telegramEnabled] = await Promise.all([
+          AppSettingsService.getBoolean('continuous_notifications_enabled', true),
+          AppSettingsService.getBoolean('email_notifications_enabled', true),
+          AppSettingsService.getBoolean('telegram_notifications_enabled', true),
+        ]);
+        NotificationService.setContinuousNotificationsEnabled(continuousEnabled);
+        NotificationService.setEmailNotificationsEnabled(emailEnabled);
+        NotificationService.setTelegramNotificationsEnabled(telegramEnabled);
       } catch (e) {
         logger.warn('Failed to apply notification settings on boot (continuing):', e.message);
       }
@@ -84,9 +90,20 @@ class DeliveryBot {
       // Refresh settings periodically so dashboard changes take effect quickly
       this.settingsRefreshInterval = setInterval(async () => {
         try {
-          const enabled = await AppSettingsService.getBoolean('continuous_notifications_enabled', true);
-          if (NotificationService.isContinuousNotificationsEnabled() !== enabled) {
-            NotificationService.setContinuousNotificationsEnabled(enabled);
+          const [continuousEnabled, emailEnabled, telegramEnabled] = await Promise.all([
+            AppSettingsService.getBoolean('continuous_notifications_enabled', true),
+            AppSettingsService.getBoolean('email_notifications_enabled', true),
+            AppSettingsService.getBoolean('telegram_notifications_enabled', true),
+          ]);
+
+          if (NotificationService.isContinuousNotificationsEnabled() !== continuousEnabled) {
+            NotificationService.setContinuousNotificationsEnabled(continuousEnabled);
+          }
+          if (NotificationService.isEmailNotificationsEnabled() !== emailEnabled) {
+            NotificationService.setEmailNotificationsEnabled(emailEnabled);
+          }
+          if (NotificationService.isTelegramNotificationsEnabled() !== telegramEnabled) {
+            NotificationService.setTelegramNotificationsEnabled(telegramEnabled);
           }
         } catch (e) {
           // keep quiet-ish to avoid log spam

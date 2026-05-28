@@ -27,6 +27,10 @@ class NotificationService {
     
     // Configuration for continuous notifications
     this.continuousNotificationsEnabled = process.env.DISABLE_CONTINUOUS_NOTIFICATIONS !== 'true';
+
+    // Channel toggles (can be overridden at runtime from DB/admin)
+    this.emailNotificationsEnabled = true;
+    this.telegramNotificationsEnabled = true;
   }
 
   initializeEmailTransporter() {
@@ -39,6 +43,10 @@ class NotificationService {
   }
 
   async sendTelegramMessage(text) {
+    if (!this.telegramNotificationsEnabled) {
+      logger.info('Telegram notifications disabled; skipping Telegram send');
+      return false;
+    }
     try {
       const response = await axios.post(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
         chat_id: TELEGRAM_CHAT_ID,
@@ -60,6 +68,10 @@ class NotificationService {
   }
 
   async sendCustomEmail(to, subject, html) {
+    if (!this.emailNotificationsEnabled) {
+      logger.info('Email notifications disabled; skipping email send');
+      return false;
+    }
     if (!this.emailTransporter) {
       logger.error('Email transporter not initialized');
       return false;
@@ -81,6 +93,10 @@ class NotificationService {
 
   // Update sendEmail to use Novi Bot Alert as display name
   async sendEmail(subject, text) {
+    if (!this.emailNotificationsEnabled) {
+      logger.info('Email notifications disabled; skipping email send');
+      return false;
+    }
     if (!this.emailTransporter) {
       logger.error('Email transporter not initialized');
       return false;
@@ -545,6 +561,24 @@ class NotificationService {
   // Method to check if continuous notifications are enabled
   isContinuousNotificationsEnabled() {
     return this.continuousNotificationsEnabled;
+  }
+
+  setEmailNotificationsEnabled(enabled) {
+    this.emailNotificationsEnabled = !!enabled;
+    logger.info(`Email notifications ${this.emailNotificationsEnabled ? 'enabled' : 'disabled'}`);
+  }
+
+  isEmailNotificationsEnabled() {
+    return this.emailNotificationsEnabled;
+  }
+
+  setTelegramNotificationsEnabled(enabled) {
+    this.telegramNotificationsEnabled = !!enabled;
+    logger.info(`Telegram notifications ${this.telegramNotificationsEnabled ? 'enabled' : 'disabled'}`);
+  }
+
+  isTelegramNotificationsEnabled() {
+    return this.telegramNotificationsEnabled;
   }
 }
 

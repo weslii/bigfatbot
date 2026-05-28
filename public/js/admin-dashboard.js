@@ -138,8 +138,10 @@ window.addEventListener('DOMContentLoaded', function() {
 async function initNotificationSettingsToggle() {
   const toggle = document.getElementById('continuousNotificationsToggle');
   if (!toggle) return;
+  const emailToggle = document.getElementById('emailNotificationsToggle');
 
   toggle.disabled = true;
+  if (emailToggle) emailToggle.disabled = true;
 
   try {
     const res = await fetch('/admin/api/settings/notifications');
@@ -147,27 +149,35 @@ async function initNotificationSettingsToggle() {
     if (!res.ok || !data?.success) throw new Error(data?.error || `HTTP ${res.status}`);
 
     toggle.checked = !!data.continuousNotificationsEnabled;
+    if (emailToggle) emailToggle.checked = !!data.emailNotificationsEnabled;
   } catch (e) {
     console.error('Failed to load notification settings:', e);
     showNotification('Failed to load notification settings', 'error');
   } finally {
     toggle.disabled = false;
+    if (emailToggle) emailToggle.disabled = false;
   }
 
-  toggle.addEventListener('change', async () => {
+  const save = async () => {
     toggle.disabled = true;
+    if (emailToggle) emailToggle.disabled = true;
     try {
       const res = await fetch('/admin/api/settings/notifications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ continuousNotificationsEnabled: toggle.checked })
+        body: JSON.stringify({
+          continuousNotificationsEnabled: toggle.checked,
+          emailNotificationsEnabled: emailToggle ? emailToggle.checked : true,
+          telegramNotificationsEnabled: true
+        })
       });
       const data = await res.json();
       if (!res.ok || !data?.success) throw new Error(data?.error || `HTTP ${res.status}`);
 
       toggle.checked = !!data.continuousNotificationsEnabled;
+      if (emailToggle) emailToggle.checked = !!data.emailNotificationsEnabled;
       showNotification(
-        toggle.checked ? 'Continuous notifications enabled' : 'Continuous notifications disabled',
+        'Notification settings saved',
         'success'
       );
     } catch (e) {
@@ -176,14 +186,21 @@ async function initNotificationSettingsToggle() {
       try {
         const res2 = await fetch('/admin/api/settings/notifications');
         const data2 = await res2.json();
-        if (res2.ok && data2?.success) toggle.checked = !!data2.continuousNotificationsEnabled;
+        if (res2.ok && data2?.success) {
+          toggle.checked = !!data2.continuousNotificationsEnabled;
+          if (emailToggle) emailToggle.checked = !!data2.emailNotificationsEnabled;
+        }
       } catch (_) {}
 
       showNotification('Failed to update notification settings', 'error');
     } finally {
       toggle.disabled = false;
+      if (emailToggle) emailToggle.disabled = false;
     }
-  });
+  };
+
+  toggle.addEventListener('change', save);
+  if (emailToggle) emailToggle.addEventListener('change', save);
 }
 
 // --- AJAX Pagination for Businesses and Orders Tabs ---

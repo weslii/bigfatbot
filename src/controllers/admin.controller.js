@@ -668,8 +668,18 @@ module.exports = {
 
   getNotificationSettings: async (req, res) => {
     try {
-      const enabled = await AppSettingsService.getBoolean('continuous_notifications_enabled', true);
-      res.json({ success: true, continuousNotificationsEnabled: enabled });
+      const [continuousEnabled, emailEnabled, telegramEnabled] = await Promise.all([
+        AppSettingsService.getBoolean('continuous_notifications_enabled', true),
+        AppSettingsService.getBoolean('email_notifications_enabled', true),
+        AppSettingsService.getBoolean('telegram_notifications_enabled', true),
+      ]);
+
+      res.json({
+        success: true,
+        continuousNotificationsEnabled: continuousEnabled,
+        emailNotificationsEnabled: emailEnabled,
+        telegramNotificationsEnabled: telegramEnabled,
+      });
     } catch (error) {
       logger.error('Get notification settings error:', error);
       res.status(500).json({ success: false, error: 'Failed to load notification settings' });
@@ -678,19 +688,29 @@ module.exports = {
 
   updateNotificationSettings: async (req, res) => {
     try {
-      const enabledRaw = req.body?.continuousNotificationsEnabled;
-      const enabled =
-        enabledRaw === true ||
-        enabledRaw === 'true' ||
-        enabledRaw === 1 ||
-        enabledRaw === '1';
+      const toBool = (v) => v === true || v === 'true' || v === 1 || v === '1';
 
-      await AppSettingsService.setBoolean('continuous_notifications_enabled', enabled);
+      const continuousEnabled = toBool(req.body?.continuousNotificationsEnabled);
+      const emailEnabled = toBool(req.body?.emailNotificationsEnabled);
+      const telegramEnabled = toBool(req.body?.telegramNotificationsEnabled);
+
+      await Promise.all([
+        AppSettingsService.setBoolean('continuous_notifications_enabled', continuousEnabled),
+        AppSettingsService.setBoolean('email_notifications_enabled', emailEnabled),
+        AppSettingsService.setBoolean('telegram_notifications_enabled', telegramEnabled),
+      ]);
 
       // Apply immediately to this running process (bot process refreshes from DB separately)
-      NotificationService.setContinuousNotificationsEnabled(enabled);
+      NotificationService.setContinuousNotificationsEnabled(continuousEnabled);
+      NotificationService.setEmailNotificationsEnabled(emailEnabled);
+      NotificationService.setTelegramNotificationsEnabled(telegramEnabled);
 
-      res.json({ success: true, continuousNotificationsEnabled: enabled });
+      res.json({
+        success: true,
+        continuousNotificationsEnabled: continuousEnabled,
+        emailNotificationsEnabled: emailEnabled,
+        telegramNotificationsEnabled: telegramEnabled,
+      });
     } catch (error) {
       logger.error('Update notification settings error:', error);
       res.status(500).json({ success: false, error: error.message || 'Failed to update notification settings' });
