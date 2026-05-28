@@ -18,6 +18,10 @@ const TO_EMAIL = 'wesleygreat58@gmail.com';
 
 class NotificationService {
   constructor() {
+    // Hard kill-switch: disables ALL notifications everywhere.
+    // Intended for emergencies / noisy deployments.
+    this.hardDisabled = process.env.DISABLE_NOTIFICATIONS === 'true';
+
     this.emailTransporter = null;
     this.initializeEmailTransporter();
     
@@ -34,6 +38,16 @@ class NotificationService {
     // Channel toggles (can be overridden at runtime from DB/admin)
     this.emailNotificationsEnabled = true;
     this.telegramNotificationsEnabled = true;
+
+    if (this.hardDisabled) {
+      // Ensure nothing sends and no timers survive.
+      this.continuousNotificationsEnabled = false;
+      this.disconnectedErrorNotificationsEnabled = false;
+      this.emailNotificationsEnabled = false;
+      this.telegramNotificationsEnabled = false;
+      this.stopAllContinuousErrorNotifications();
+      logger.warn('DISABLE_NOTIFICATIONS=true set; all notifications are disabled');
+    }
   }
 
   initializeEmailTransporter() {
@@ -46,6 +60,7 @@ class NotificationService {
   }
 
   async sendTelegramMessage(text) {
+    if (this.hardDisabled) return false;
     if (!this.telegramNotificationsEnabled) {
       logger.info('Telegram notifications disabled; skipping Telegram send');
       return false;
@@ -71,6 +86,7 @@ class NotificationService {
   }
 
   async sendCustomEmail(to, subject, html) {
+    if (this.hardDisabled) return false;
     if (!this.emailNotificationsEnabled) {
       logger.info('Email notifications disabled; skipping email send');
       return false;
@@ -96,6 +112,7 @@ class NotificationService {
 
   // Update sendEmail to use Novi Bot Alert as display name
   async sendEmail(subject, text) {
+    if (this.hardDisabled) return false;
     if (!this.emailNotificationsEnabled) {
       logger.info('Email notifications disabled; skipping email send');
       return false;
@@ -155,6 +172,7 @@ class NotificationService {
   }
 
   async notifyError(error, context = {}) {
+    if (this.hardDisabled) return { success: false, telegram: false, email: false };
     try {
       const summary = this.formatErrorSummary(error, context);
       const subject = `[Bot Alert] ${context.type || 'System'} Error`;
@@ -220,6 +238,7 @@ class NotificationService {
 
   // Success notification methods
   async notifySuccess(message, context = {}) {
+    if (this.hardDisabled) return { success: false, telegram: false, email: false };
     try {
       const { type = 'System', additionalInfo = {} } = context;
       
@@ -451,6 +470,7 @@ class NotificationService {
 
   // Continuous error notification methods
   startContinuousErrorNotification(errorType, error, additionalInfo = {}) {
+    if (this.hardDisabled) return;
     // Check if continuous notifications are disabled
     if (!this.continuousNotificationsEnabled) {
       logger.info(`Continuous notifications are disabled. Skipping ${errorType} error notification.`);
@@ -558,6 +578,11 @@ class NotificationService {
 
   // Method to enable/disable continuous notifications
   setContinuousNotificationsEnabled(enabled) {
+    if (this.hardDisabled) {
+      this.continuousNotificationsEnabled = false;
+      this.stopAllContinuousErrorNotifications();
+      return;
+    }
     this.continuousNotificationsEnabled = enabled;
     logger.info(`Continuous notifications ${enabled ? 'enabled' : 'disabled'}`);
     
@@ -573,6 +598,12 @@ class NotificationService {
   }
 
   setDisconnectedErrorNotificationsEnabled(enabled) {
+    if (this.hardDisabled) {
+      this.disconnectedErrorNotificationsEnabled = false;
+      this.stopContinuousErrorNotification('connection');
+      this.stopContinuousErrorNotification('service');
+      return;
+    }
     this.disconnectedErrorNotificationsEnabled = !!enabled;
     logger.info(
       `Disconnected error notifications ${this.disconnectedErrorNotificationsEnabled ? 'enabled' : 'disabled'}`
@@ -590,6 +621,10 @@ class NotificationService {
   }
 
   setEmailNotificationsEnabled(enabled) {
+    if (this.hardDisabled) {
+      this.emailNotificationsEnabled = false;
+      return;
+    }
     this.emailNotificationsEnabled = !!enabled;
     logger.info(`Email notifications ${this.emailNotificationsEnabled ? 'enabled' : 'disabled'}`);
   }
@@ -599,6 +634,10 @@ class NotificationService {
   }
 
   setTelegramNotificationsEnabled(enabled) {
+    if (this.hardDisabled) {
+      this.telegramNotificationsEnabled = false;
+      return;
+    }
     this.telegramNotificationsEnabled = !!enabled;
     logger.info(`Telegram notifications ${this.telegramNotificationsEnabled ? 'enabled' : 'disabled'}`);
   }
