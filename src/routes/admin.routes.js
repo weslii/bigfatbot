@@ -62,6 +62,8 @@ router.get('/api/orders', requireAdmin, adminController.getApiOrders);
 router.get('/api/orders/:orderId', requireAdmin, adminController.getApiOrderDetails);
 router.get('/api/analytics', requireAdmin, adminController.getApiAnalytics);
 router.get('/api/users', requireAdmin, adminController.getApiUsers);
+router.get('/api/settings/notifications', requireAdmin, adminController.getNotificationSettings);
+router.post('/api/settings/notifications', requireAdmin, adminController.updateNotificationSettings);
 
 // Export functionality
 router.get('/api/export/businesses', requireAdmin, adminController.exportBusinesses);

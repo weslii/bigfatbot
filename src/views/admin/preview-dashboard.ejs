@@ -207,6 +207,10 @@
                                         <span class="status-value"><%= stats && stats.lastActivity ? new Date(stats.lastActivity).toLocaleString() : 'N/A' %></span>
                                     </div>
                                     <hr>
+                                    <div class="status-toggle" style="margin-top: 0.75rem;">
+                                        <input type="checkbox" id="continuousNotificationsToggle">
+                                        <label for="continuousNotificationsToggle">Continuous error notifications</label>
+                                    </div>
                                     <div class="bot-actions">
                                         <button class="secondary-btn" onclick="refreshBotStatus()">
                                             <i class="fas fa-sync-alt"></i> Refresh Status

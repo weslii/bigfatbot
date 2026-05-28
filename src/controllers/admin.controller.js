@@ -2,6 +2,8 @@ const AdminService = require('../services/AdminService');
 const logger = require('../utils/logger');
 const db = require('../config/database');
 const { generateOrdersPDF, generateBusinessesPDF, generateBusinessesCSV, generateOrdersCSV } = require('../utils/exportHelpers');
+const AppSettingsService = require('../services/AppSettingsService');
+const NotificationService = require('../services/NotificationService');
 
 // PRESERVE botStartTime FROM ORIGINAL SERVER.JS
 const botStartTime = Date.now();
@@ -661,6 +663,37 @@ module.exports = {
     } catch (error) {
       logger.error('API users error:', error);
       res.status(500).json({ users: [] });
+    }
+  },
+
+  getNotificationSettings: async (req, res) => {
+    try {
+      const enabled = await AppSettingsService.getBoolean('continuous_notifications_enabled', true);
+      res.json({ success: true, continuousNotificationsEnabled: enabled });
+    } catch (error) {
+      logger.error('Get notification settings error:', error);
+      res.status(500).json({ success: false, error: 'Failed to load notification settings' });
+    }
+  },
+
+  updateNotificationSettings: async (req, res) => {
+    try {
+      const enabledRaw = req.body?.continuousNotificationsEnabled;
+      const enabled =
+        enabledRaw === true ||
+        enabledRaw === 'true' ||
+        enabledRaw === 1 ||
+        enabledRaw === '1';
+
+      await AppSettingsService.setBoolean('continuous_notifications_enabled', enabled);
+
+      // Apply immediately to this running process (bot process refreshes from DB separately)
+      NotificationService.setContinuousNotificationsEnabled(enabled);
+
+      res.json({ success: true, continuousNotificationsEnabled: enabled });
+    } catch (error) {
+      logger.error('Update notification settings error:', error);
+      res.status(500).json({ success: false, error: error.message || 'Failed to update notification settings' });
     }
   },
 

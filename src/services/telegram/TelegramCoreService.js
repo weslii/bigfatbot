@@ -41,7 +41,6 @@ class TelegramCoreService {
 
         this.bot = new TelegramBot(token, {
           polling: {
-            timeout: 10,
             limit: 100,
             retryTimeout: 5000,
             autoStart: true,
@@ -86,7 +85,6 @@ class TelegramCoreService {
         // Fallback to polling mode
         this.bot = new TelegramBot(token, {
           polling: {
-            timeout: 10,           // Request timeout in seconds
             limit: 100,            // Number of messages to retrieve per request
             retryTimeout: 5000,    // Retry delay on failure (5 seconds)
             autoStart: true,       // Start polling immediately
@@ -144,7 +142,7 @@ class TelegramCoreService {
           // Start in polling mode directly
           const token = process.env.TELEGRAM_BOT_TOKEN;
           this.bot = new TelegramBot(token, {
-            polling: { timeout: 10, limit: 100, retryTimeout: 5000, autoStart: true, params: { timeout: 10 } }
+            polling: { limit: 100, retryTimeout: 5000, autoStart: true, params: { timeout: 10 } }
           });
           this.connectionMode = 'polling';
           this.botInfo = await this.bot.getMe();

@@ -28,14 +28,21 @@ const database = require('./config/database');
 const BotServiceManager = require('./services/BotServiceManager');
 const SchedulerService = require('./services/SchedulerService');
 const HealthCheckService = require('./services/HealthCheckService');
+const NotificationService = require('./services/NotificationService');
+const AppSettingsService = require('./services/AppSettingsService');
 
 // --- Health check endpoint for Railway worker ---
 const express = require('express');
 const healthApp = express();
 const isProduction = process.env.NODE_ENV === 'production';
-const HEALTH_PORT = isProduction
-  ? process.env.PORT
-  : (process.env.BOT_PORT || 3001);
+const HEALTH_PORT = (() => {
+  const raw =
+    (isProduction ? process.env.PORT : null) ??
+    process.env.BOT_PORT ??
+    '3001';
+  const port = Number(raw);
+  return Number.isFinite(port) && port > 0 ? port : 3001;
+})();
 
 healthApp.get('/health', (req, res) => {
   res.status(200).send('ok');
@@ -47,6 +54,7 @@ class DeliveryBot {
     this.schedulerService = new SchedulerService(this.botManager.getWhatsAppService());
     this.healthCheckService = new HealthCheckService(this.botManager.getWhatsAppService());
     this.isShuttingDown = false;
+    this.settingsRefreshInterval = null;
   }
 
   async start() {
@@ -61,6 +69,30 @@ class DeliveryBot {
 
       // Initialize database
       await database.connect();
+
+      // Ensure settings row exists (non-fatal if migrations haven't run yet)
+      await AppSettingsService.ensureDefaults();
+
+      // Apply current notifications setting immediately
+      try {
+        const enabled = await AppSettingsService.getBoolean('continuous_notifications_enabled', true);
+        NotificationService.setContinuousNotificationsEnabled(enabled);
+      } catch (e) {
+        logger.warn('Failed to apply notification settings on boot (continuing):', e.message);
+      }
+
+      // Refresh settings periodically so dashboard changes take effect quickly
+      this.settingsRefreshInterval = setInterval(async () => {
+        try {
+          const enabled = await AppSettingsService.getBoolean('continuous_notifications_enabled', true);
+          if (NotificationService.isContinuousNotificationsEnabled() !== enabled) {
+            NotificationService.setContinuousNotificationsEnabled(enabled);
+          }
+        } catch (e) {
+          // keep quiet-ish to avoid log spam
+          logger.warn('Settings refresh failed (continuing):', e.message);
+        }
+      }, 15000);
 
       // Initialize bot services (both WhatsApp and Telegram)
       await this.botManager.initialize();
@@ -102,6 +134,11 @@ class DeliveryBot {
       logger.info(`Received ${signal}. Shutting down gracefully...`);
 
       try {
+        if (this.settingsRefreshInterval) {
+          clearInterval(this.settingsRefreshInterval);
+          this.settingsRefreshInterval = null;
+        }
+
         // Stop scheduler
         this.schedulerService.stop();
 

@@ -74,6 +74,7 @@ window.addEventListener('DOMContentLoaded', function() {
   // Initial load
   fetchAndRenderBusinesses(1);
   fetchAndRenderAnalytics(); // Load analytics on page load
+  initNotificationSettingsToggle();
   
   // Set up periodic refresh for bot status (every 30 seconds)
   setInterval(() => {
@@ -133,6 +134,57 @@ window.addEventListener('DOMContentLoaded', function() {
   // --- Real Analytics Fetch ---
   fetchAndRenderAnalytics();
 });
+
+async function initNotificationSettingsToggle() {
+  const toggle = document.getElementById('continuousNotificationsToggle');
+  if (!toggle) return;
+
+  toggle.disabled = true;
+
+  try {
+    const res = await fetch('/admin/api/settings/notifications');
+    const data = await res.json();
+    if (!res.ok || !data?.success) throw new Error(data?.error || `HTTP ${res.status}`);
+
+    toggle.checked = !!data.continuousNotificationsEnabled;
+  } catch (e) {
+    console.error('Failed to load notification settings:', e);
+    showNotification('Failed to load notification settings', 'error');
+  } finally {
+    toggle.disabled = false;
+  }
+
+  toggle.addEventListener('change', async () => {
+    toggle.disabled = true;
+    try {
+      const res = await fetch('/admin/api/settings/notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ continuousNotificationsEnabled: toggle.checked })
+      });
+      const data = await res.json();
+      if (!res.ok || !data?.success) throw new Error(data?.error || `HTTP ${res.status}`);
+
+      toggle.checked = !!data.continuousNotificationsEnabled;
+      showNotification(
+        toggle.checked ? 'Continuous notifications enabled' : 'Continuous notifications disabled',
+        'success'
+      );
+    } catch (e) {
+      console.error('Failed to update notification settings:', e);
+      // revert UI to previous known state by refetching
+      try {
+        const res2 = await fetch('/admin/api/settings/notifications');
+        const data2 = await res2.json();
+        if (res2.ok && data2?.success) toggle.checked = !!data2.continuousNotificationsEnabled;
+      } catch (_) {}
+
+      showNotification('Failed to update notification settings', 'error');
+    } finally {
+      toggle.disabled = false;
+    }
+  });
+}
 
 // --- AJAX Pagination for Businesses and Orders Tabs ---
 let businessesFilter = { search: '', status: '' };
