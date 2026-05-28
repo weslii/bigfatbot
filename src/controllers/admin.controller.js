@@ -668,8 +668,9 @@ module.exports = {
 
   getNotificationSettings: async (req, res) => {
     try {
-      const [continuousEnabled, emailEnabled, telegramEnabled] = await Promise.all([
+      const [continuousEnabled, disconnectedEnabled, emailEnabled, telegramEnabled] = await Promise.all([
         AppSettingsService.getBoolean('continuous_notifications_enabled', true),
+        AppSettingsService.getBoolean('disconnected_error_notifications_enabled', true),
         AppSettingsService.getBoolean('email_notifications_enabled', true),
         AppSettingsService.getBoolean('telegram_notifications_enabled', true),
       ]);
@@ -677,6 +678,7 @@ module.exports = {
       res.json({
         success: true,
         continuousNotificationsEnabled: continuousEnabled,
+        disconnectedErrorNotificationsEnabled: disconnectedEnabled,
         emailNotificationsEnabled: emailEnabled,
         telegramNotificationsEnabled: telegramEnabled,
       });
@@ -691,23 +693,27 @@ module.exports = {
       const toBool = (v) => v === true || v === 'true' || v === 1 || v === '1';
 
       const continuousEnabled = toBool(req.body?.continuousNotificationsEnabled);
+      const disconnectedEnabled = toBool(req.body?.disconnectedErrorNotificationsEnabled);
       const emailEnabled = toBool(req.body?.emailNotificationsEnabled);
       const telegramEnabled = toBool(req.body?.telegramNotificationsEnabled);
 
       await Promise.all([
         AppSettingsService.setBoolean('continuous_notifications_enabled', continuousEnabled),
+        AppSettingsService.setBoolean('disconnected_error_notifications_enabled', disconnectedEnabled),
         AppSettingsService.setBoolean('email_notifications_enabled', emailEnabled),
         AppSettingsService.setBoolean('telegram_notifications_enabled', telegramEnabled),
       ]);
 
       // Apply immediately to this running process (bot process refreshes from DB separately)
       NotificationService.setContinuousNotificationsEnabled(continuousEnabled);
+      NotificationService.setDisconnectedErrorNotificationsEnabled(disconnectedEnabled);
       NotificationService.setEmailNotificationsEnabled(emailEnabled);
       NotificationService.setTelegramNotificationsEnabled(telegramEnabled);
 
       res.json({
         success: true,
         continuousNotificationsEnabled: continuousEnabled,
+        disconnectedErrorNotificationsEnabled: disconnectedEnabled,
         emailNotificationsEnabled: emailEnabled,
         telegramNotificationsEnabled: telegramEnabled,
       });

@@ -75,12 +75,14 @@ class DeliveryBot {
 
       // Apply current notifications setting immediately
       try {
-        const [continuousEnabled, emailEnabled, telegramEnabled] = await Promise.all([
+        const [continuousEnabled, disconnectedEnabled, emailEnabled, telegramEnabled] = await Promise.all([
           AppSettingsService.getBoolean('continuous_notifications_enabled', true),
+          AppSettingsService.getBoolean('disconnected_error_notifications_enabled', true),
           AppSettingsService.getBoolean('email_notifications_enabled', true),
           AppSettingsService.getBoolean('telegram_notifications_enabled', true),
         ]);
         NotificationService.setContinuousNotificationsEnabled(continuousEnabled);
+        NotificationService.setDisconnectedErrorNotificationsEnabled(disconnectedEnabled);
         NotificationService.setEmailNotificationsEnabled(emailEnabled);
         NotificationService.setTelegramNotificationsEnabled(telegramEnabled);
       } catch (e) {
@@ -90,14 +92,18 @@ class DeliveryBot {
       // Refresh settings periodically so dashboard changes take effect quickly
       this.settingsRefreshInterval = setInterval(async () => {
         try {
-          const [continuousEnabled, emailEnabled, telegramEnabled] = await Promise.all([
+          const [continuousEnabled, disconnectedEnabled, emailEnabled, telegramEnabled] = await Promise.all([
             AppSettingsService.getBoolean('continuous_notifications_enabled', true),
+            AppSettingsService.getBoolean('disconnected_error_notifications_enabled', true),
             AppSettingsService.getBoolean('email_notifications_enabled', true),
             AppSettingsService.getBoolean('telegram_notifications_enabled', true),
           ]);
 
           if (NotificationService.isContinuousNotificationsEnabled() !== continuousEnabled) {
             NotificationService.setContinuousNotificationsEnabled(continuousEnabled);
+          }
+          if (NotificationService.isDisconnectedErrorNotificationsEnabled() !== disconnectedEnabled) {
+            NotificationService.setDisconnectedErrorNotificationsEnabled(disconnectedEnabled);
           }
           if (NotificationService.isEmailNotificationsEnabled() !== emailEnabled) {
             NotificationService.setEmailNotificationsEnabled(emailEnabled);

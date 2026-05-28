@@ -41,6 +41,7 @@ class AppSettingsService {
       const now = new Date();
       const defaults = [
         { key: 'continuous_notifications_enabled', value: { enabled: true } },
+        { key: 'disconnected_error_notifications_enabled', value: { enabled: true } },
         { key: 'email_notifications_enabled', value: { enabled: true } },
         { key: 'telegram_notifications_enabled', value: { enabled: true } },
       ];

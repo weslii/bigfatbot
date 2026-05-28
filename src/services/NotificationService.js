@@ -28,6 +28,9 @@ class NotificationService {
     // Configuration for continuous notifications
     this.continuousNotificationsEnabled = process.env.DISABLE_CONTINUOUS_NOTIFICATIONS !== 'true';
 
+    // Gate for disconnected/health-style spam notifications (connection/service flaps)
+    this.disconnectedErrorNotificationsEnabled = true;
+
     // Channel toggles (can be overridden at runtime from DB/admin)
     this.emailNotificationsEnabled = true;
     this.telegramNotificationsEnabled = true;
@@ -453,6 +456,12 @@ class NotificationService {
       logger.info(`Continuous notifications are disabled. Skipping ${errorType} error notification.`);
       return;
     }
+
+    // Optional: suppress connection/disconnected spam without disabling all notifications
+    if (!this.disconnectedErrorNotificationsEnabled && (errorType === 'connection' || errorType === 'service')) {
+      logger.info(`Disconnected error notifications are disabled. Skipping ${errorType} continuous notification.`);
+      return;
+    }
     
     // Stop any existing timer for this error type
     this.stopContinuousErrorNotification(errorType);
@@ -561,6 +570,23 @@ class NotificationService {
   // Method to check if continuous notifications are enabled
   isContinuousNotificationsEnabled() {
     return this.continuousNotificationsEnabled;
+  }
+
+  setDisconnectedErrorNotificationsEnabled(enabled) {
+    this.disconnectedErrorNotificationsEnabled = !!enabled;
+    logger.info(
+      `Disconnected error notifications ${this.disconnectedErrorNotificationsEnabled ? 'enabled' : 'disabled'}`
+    );
+
+    if (!this.disconnectedErrorNotificationsEnabled) {
+      // Stop existing continuous connection/service timers so spam halts immediately
+      this.stopContinuousErrorNotification('connection');
+      this.stopContinuousErrorNotification('service');
+    }
+  }
+
+  isDisconnectedErrorNotificationsEnabled() {
+    return this.disconnectedErrorNotificationsEnabled;
   }
 
   setEmailNotificationsEnabled(enabled) {
