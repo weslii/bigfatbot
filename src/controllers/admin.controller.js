@@ -692,23 +692,45 @@ module.exports = {
     try {
       const toBool = (v) => v === true || v === 'true' || v === 1 || v === '1';
 
-      const continuousEnabled = toBool(req.body?.continuousNotificationsEnabled);
-      const disconnectedEnabled = toBool(req.body?.disconnectedErrorNotificationsEnabled);
-      const emailEnabled = toBool(req.body?.emailNotificationsEnabled);
-      const telegramEnabled = toBool(req.body?.telegramNotificationsEnabled);
+      const ops = [];
+      const apply = [];
 
-      await Promise.all([
-        AppSettingsService.setBoolean('continuous_notifications_enabled', continuousEnabled),
-        AppSettingsService.setBoolean('disconnected_error_notifications_enabled', disconnectedEnabled),
-        AppSettingsService.setBoolean('email_notifications_enabled', emailEnabled),
-        AppSettingsService.setBoolean('telegram_notifications_enabled', telegramEnabled),
+      const has = (k) => Object.prototype.hasOwnProperty.call(req.body || {}, k);
+
+      if (has('continuousNotificationsEnabled')) {
+        const v = toBool(req.body.continuousNotificationsEnabled);
+        ops.push(AppSettingsService.setBoolean('continuous_notifications_enabled', v));
+        apply.push(() => NotificationService.setContinuousNotificationsEnabled(v));
+      }
+
+      if (has('disconnectedErrorNotificationsEnabled')) {
+        const v = toBool(req.body.disconnectedErrorNotificationsEnabled);
+        ops.push(AppSettingsService.setBoolean('disconnected_error_notifications_enabled', v));
+        apply.push(() => NotificationService.setDisconnectedErrorNotificationsEnabled(v));
+      }
+
+      if (has('emailNotificationsEnabled')) {
+        const v = toBool(req.body.emailNotificationsEnabled);
+        ops.push(AppSettingsService.setBoolean('email_notifications_enabled', v));
+        apply.push(() => NotificationService.setEmailNotificationsEnabled(v));
+      }
+
+      if (has('telegramNotificationsEnabled')) {
+        const v = toBool(req.body.telegramNotificationsEnabled);
+        ops.push(AppSettingsService.setBoolean('telegram_notifications_enabled', v));
+        apply.push(() => NotificationService.setTelegramNotificationsEnabled(v));
+      }
+
+      await Promise.all(ops);
+      for (const fn of apply) fn();
+
+      // Return the current full settings state
+      const [continuousEnabled, disconnectedEnabled, emailEnabled, telegramEnabled] = await Promise.all([
+        AppSettingsService.getBoolean('continuous_notifications_enabled', true),
+        AppSettingsService.getBoolean('disconnected_error_notifications_enabled', true),
+        AppSettingsService.getBoolean('email_notifications_enabled', true),
+        AppSettingsService.getBoolean('telegram_notifications_enabled', true),
       ]);
-
-      // Apply immediately to this running process (bot process refreshes from DB separately)
-      NotificationService.setContinuousNotificationsEnabled(continuousEnabled);
-      NotificationService.setDisconnectedErrorNotificationsEnabled(disconnectedEnabled);
-      NotificationService.setEmailNotificationsEnabled(emailEnabled);
-      NotificationService.setTelegramNotificationsEnabled(telegramEnabled);
 
       res.json({
         success: true,

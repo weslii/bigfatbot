@@ -1,6 +1,8 @@
 const WhatsAppService = require('./WhatsAppService');
 const TelegramService = require('./TelegramService');
 const logger = require('../utils/logger');
+const NotificationService = require('./NotificationService');
+const AppSettingsService = require('./AppSettingsService');
 
 class BotServiceManager {
   static instance = null;
@@ -16,11 +18,44 @@ class BotServiceManager {
     this.whatsappService = WhatsAppService.getInstance();
     this.telegramService = TelegramService.getInstance();
     this.isInitialized = false;
+    this.notificationSettingsInterval = null;
+  }
+
+  async applyNotificationSettingsOnce() {
+    await AppSettingsService.ensureDefaults();
+    const [continuousEnabled, disconnectedEnabled, emailEnabled, telegramEnabled] = await Promise.all([
+      AppSettingsService.getBoolean('continuous_notifications_enabled', true),
+      AppSettingsService.getBoolean('disconnected_error_notifications_enabled', true),
+      AppSettingsService.getBoolean('email_notifications_enabled', true),
+      AppSettingsService.getBoolean('telegram_notifications_enabled', true),
+    ]);
+
+    NotificationService.setContinuousNotificationsEnabled(continuousEnabled);
+    NotificationService.setDisconnectedErrorNotificationsEnabled(disconnectedEnabled);
+    NotificationService.setEmailNotificationsEnabled(emailEnabled);
+    NotificationService.setTelegramNotificationsEnabled(telegramEnabled);
   }
 
   async initialize() {
     try {
       logger.info('Initializing Bot Service Manager...');
+
+      // Apply notification settings in THIS process (web or bot)
+      try {
+        await this.applyNotificationSettingsOnce();
+      } catch (e) {
+        logger.warn('Failed to apply notification settings on init (continuing):', e.message);
+      }
+
+      if (!this.notificationSettingsInterval) {
+        this.notificationSettingsInterval = setInterval(async () => {
+          try {
+            await this.applyNotificationSettingsOnce();
+          } catch (e) {
+            logger.warn('Notification settings refresh failed (continuing):', e.message);
+          }
+        }, 15000);
+      }
       
       // Initialize both services
       await this.whatsappService.start();
@@ -37,6 +72,11 @@ class BotServiceManager {
   async shutdown() {
     try {
       logger.info('Shutting down Bot Service Manager...');
+
+      if (this.notificationSettingsInterval) {
+        clearInterval(this.notificationSettingsInterval);
+        this.notificationSettingsInterval = null;
+      }
       
       // Stop both services
       await this.whatsappService.stop();
