@@ -35,15 +35,15 @@ class MemoryMonitor {
   setThresholds() {
     if (this.isWebService) {
       // Safer thresholds for web service
-      this.warningThreshold = 250 * 1024 * 1024; // 250MB
-      this.criticalThreshold = 400 * 1024 * 1024; // 400MB
-      this.restartThreshold = 600 * 1024 * 1024;  // 600MB
+      this.warningThreshold = 400 * 1024 * 1024; // 250MB
+      this.criticalThreshold = 800 * 1024 * 1024; // 400MB
+      this.restartThreshold = 1000 * 1024 * 1024;  // 600MB
       logger.info('Web service memory thresholds: Warning=250MB, Critical=400MB, Restart=600MB');
     } else {
       // Original conservative thresholds for WhatsApp bot
-      this.warningThreshold = 500 * 1024 * 1024; // 500MB
-      this.criticalThreshold = 800 * 1024 * 1024; // 800MB
-      this.restartThreshold = 1200 * 1024 * 1024; // 1.2GB
+      this.warningThreshold = 700 * 1024 * 1024; // 500MB
+      this.criticalThreshold = 1000 * 1024 * 1024; // 800MB
+      this.restartThreshold = 1500 * 1024 * 1024; // 1.2GB
       logger.info('WhatsApp bot memory thresholds: Warning=500MB, Critical=800MB, Restart=1.2GB');
     }
   }
